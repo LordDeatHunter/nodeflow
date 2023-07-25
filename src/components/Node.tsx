@@ -1,10 +1,4 @@
-import {
-  For,
-  Show,
-  createEffect,
-  createMemo,
-  type Component
-} from "solid-js";
+import { For, Show, createEffect, createMemo, type Component } from "solid-js";
 import { nodes } from "../utils/NodeStorage";
 import Curve from "./Curve";
 import { heldNode, mousePos, setHeldNode } from "./Drawflow";
@@ -76,6 +70,7 @@ const Node: Component<NodeProps> = (props) => {
                 <div
                   ref={input.ref.set}
                   style={{
+                    "z-index": 1,
                     width: "10px",
                     height: "10px",
                     "background-color": "black",
@@ -105,6 +100,7 @@ const Node: Component<NodeProps> = (props) => {
                   <div
                     ref={output.ref.set}
                     style={{
+                      "z-index": 1,
                       width: "10px",
                       height: "10px",
                       "background-color": "black",
@@ -127,7 +123,6 @@ const Node: Component<NodeProps> = (props) => {
               when={!!output?.destinationNodeId && !!output?.destinationInputId}
             >
               <Curve
-                lineWeight={4}
                 nodeId={nodeId}
                 outputId={outputId}
                 destinationNodeId={output.destinationNodeId!}

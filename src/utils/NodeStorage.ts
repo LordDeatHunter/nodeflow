@@ -1,9 +1,9 @@
 import { createSignal } from "solid-js";
 import {
+  ModifiableCurveProps,
   NodeData,
   NodeInput,
   NodeOutput,
-  Position,
   SignalObject,
 } from "../types/types";
 
@@ -42,11 +42,22 @@ export const removeNode = (nodeId: string) => {
   });
 };
 
+export const createCurveProps = (): SignalObject<ModifiableCurveProps> => {
+  const [lineWeight, setLineWeight] = createSignal(4);
+  const [lineColor, setLineColor] = createSignal("black");
+  const [curvePropsSignal, setCurveProps] = createSignal<ModifiableCurveProps>({
+    strokeWeight: { get: lineWeight, set: setLineWeight },
+    lineColor: { get: lineColor, set: setLineColor },
+  });
+  return { get: curvePropsSignal, set: setCurveProps };
+};
+
 export const addConnection = (
   sourceNodeId: string,
   sourceOutputId: string,
   destinationNodeId: string,
-  destinationInputId: string
+  destinationInputId: string,
+  curveProps?: SignalObject<ModifiableCurveProps>
 ) => {
   const sourceNode = nodes()[sourceNodeId];
   const destinationNode = nodes()[destinationNodeId];
@@ -60,10 +71,13 @@ export const addConnection = (
     return;
   }
 
+  curveProps ??= createCurveProps();
+
   sourceNode.outputs.get()[sourceOutputId].set({
     ...sourceNode.outputs.get()[sourceOutputId].get(),
     destinationNodeId,
     destinationInputId,
+    curveProps,
   });
 };
 
@@ -85,27 +99,33 @@ export const addInput = (nodeId: string, inputId?: string) => {
   node.inputs.get()[inputId] = { get: input, set: setInput };
 };
 
-export const addOutput = (nodeId: string, outputId?: string) => {
+export const addOutput = (
+  nodeId: string,
+  outputId?: string,
+  curveProps?: SignalObject<ModifiableCurveProps>
+) => {
   const node = nodes()[nodeId];
   if (!node) {
     return;
   }
 
   outputId ??= node.outputs.get().length.toString();
+  curveProps ??= createCurveProps();
   const [position, setPosition] = createSignal({ x: 0, y: 0 });
   const [ref, setRef] = createSignal<HTMLDivElement>();
   const [output, setOutput] = createSignal<NodeOutput>({
     connectorId: outputId,
     ref: { get: ref, set: setRef },
     position: { get: position, set: setPosition },
+    curveProps,
   });
   node.outputs.get()[outputId] = { get: output, set: setOutput };
 };
 
-export const getInputPosition = (
+export const getInputRect = (
   nodeId: string,
   connectorId: string
-): Position | undefined => {
+): DOMRect | undefined => {
   const node = nodes()[nodeId];
   if (!node) {
     return;
@@ -118,10 +138,10 @@ export const getInputPosition = (
     ?.getBoundingClientRect();
 };
 
-export const getOutputPosition = (
+export const getOutputRect = (
   nodeId: string,
   connectorId: string
-): Position | undefined =>
+): DOMRect | undefined =>
   nodes()
     [nodeId]?.outputs?.get()
     ?.[connectorId]?.get()

@@ -28,4 +28,10 @@ export interface NodeOutput {
   destinationNodeId?: string;
   destinationInputId?: string;
   position: SignalObject<Position>;
+  curveProps?: SignalObject<ModifiableCurveProps>;
+}
+
+export interface ModifiableCurveProps {
+  strokeWeight?: SignalObject<number>;
+  lineColor?: SignalObject<string>;
 }

@@ -1,27 +1,26 @@
 import { createEffect, createSignal, on } from "solid-js";
-import {
-    getInputPosition,
-    getOutputPosition,
-    nodes,
-} from "../utils/NodeStorage";
-import { shiftPosition } from "../utils/math-utils";
+import { ModifiableCurveProps, SignalObject } from "../types/types";
+import { getInputRect, getOutputRect, nodes } from "../utils/NodeStorage";
+import { addPositions } from "../utils/math-utils";
 
 const createCurve = (
   startNodeId: string,
   outputId: string,
   endNodeId: string,
-  inputId: string,
-  lineWeight = 4
+  inputId: string
 ) => {
-  const start = shiftPosition(
-    getOutputPosition(startNodeId, outputId) ?? { x: 0, y: 0 },
-    lineWeight
-  );
+  const defaultRect = { x: 0, y: 0, width: 0, height: 0 };
+  const startRect = getOutputRect(startNodeId, outputId) ?? defaultRect;
+  const start = addPositions(startRect, {
+    x: startRect.width / 2,
+    y: startRect.width / 2,
+  });
 
-  const end = shiftPosition(
-    getInputPosition(endNodeId, inputId) ?? { x: 0, y: 0 },
-    lineWeight
-  );
+  const endRect = getInputRect(endNodeId, inputId) ?? defaultRect;
+  const end = addPositions(endRect, {
+    x: endRect.width / 2,
+    y: startRect.width / 2,
+  });
 
   const xCurve = 0;
   const yCurve = (end.y - start.y) / 1.5;
@@ -35,34 +34,27 @@ const createCurve = (
   };
 };
 
-const Curve = (props: {
-  lineWeight: number;
+interface CurveProps {
   nodeId: string;
   outputId: string;
   destinationNodeId: string;
   destinationInputId: string;
-}) => {
-  const {
-    lineWeight,
-    nodeId,
-    outputId,
-    destinationNodeId,
-    destinationInputId,
-  } = props;
+}
+
+const Curve = (props: CurveProps) => {
+  const { nodeId, outputId, destinationNodeId, destinationInputId } = props;
   const [curve, setCurve] = createSignal<ReturnType<typeof createCurve>>();
+
+  const curveProps: SignalObject<ModifiableCurveProps> = nodes()
+    [nodeId].outputs.get()
+    [outputId].get().curveProps!;
 
   const startNode = nodes()[nodeId];
   const endNode = nodes()[destinationNodeId];
 
   const updateCurve = () => {
     setCurve(
-      createCurve(
-        nodeId,
-        outputId,
-        destinationNodeId,
-        destinationInputId,
-        lineWeight
-      )
+      createCurve(nodeId, outputId, destinationNodeId, destinationInputId)
     );
   };
 
@@ -75,7 +67,6 @@ const Curve = (props: {
         position: "absolute",
         width: "100%",
         height: "100%",
-        "z-index": 1,
         "pointer-events": "none",
       }}
     >
@@ -90,7 +81,7 @@ const Curve = (props: {
           id="pointer"
         >
           <polyline
-            points="0,4 4,2 0,0"
+            points="0,0 4,2 0,4"
             fill="none"
             stroke-width="1"
             stroke="black"
@@ -100,8 +91,8 @@ const Curve = (props: {
       </defs>
       <path
         d={curve()?.path}
-        stroke="black"
-        stroke-width={lineWeight}
+        stroke={curveProps.get()?.lineColor?.get() ?? "black"}
+        stroke-width={curveProps.get()?.strokeWeight?.get() ?? 1}
         fill="transparent"
         marker-end="url(#pointer)"
       />
