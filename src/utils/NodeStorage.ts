@@ -42,9 +42,9 @@ export const removeNode = (nodeId: string) => {
   });
 };
 
-export const createCurveProps = (): SignalObject<ModifiableCurveProps> => {
-  const [lineWeight, setLineWeight] = createSignal(4);
-  const [lineColor, setLineColor] = createSignal("black");
+export const createCurveProps = (defaultLineWeight = 4, defaultLineColor = "black"): SignalObject<ModifiableCurveProps> => {
+  const [lineWeight, setLineWeight] = createSignal(defaultLineWeight);
+  const [lineColor, setLineColor] = createSignal(defaultLineColor);
   const [curvePropsSignal, setCurveProps] = createSignal<ModifiableCurveProps>({
     strokeWeight: { get: lineWeight, set: setLineWeight },
     lineColor: { get: lineColor, set: setLineColor },

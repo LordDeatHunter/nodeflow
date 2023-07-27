@@ -44,6 +44,7 @@ const Node: Component<NodeProps> = (props) => {
           });
         }}
         style={{
+          "z-index": 2,
           width: "100px",
           height: "100px",
           "background-color": currentNodeSelected() ? "red" : "blue",
@@ -96,20 +97,18 @@ const Node: Component<NodeProps> = (props) => {
             {([outputId, outputSignal]) => {
               const output = outputSignal.get();
               return (
-                <>
-                  <div
-                    ref={output.ref.set}
-                    style={{
-                      "z-index": 1,
-                      width: "10px",
-                      height: "10px",
-                      "background-color": "black",
-                      position: "relative",
-                      top: `${output.position.get().y}px`,
-                      left: `${output.position.get().x}px`,
-                    }}
-                  />
-                </>
+                <div
+                  ref={output.ref.set}
+                  style={{
+                    "z-index": 1,
+                    width: "10px",
+                    height: "10px",
+                    "background-color": "black",
+                    position: "relative",
+                    top: `${output.position.get().y}px`,
+                    left: `${output.position.get().x}px`,
+                  }}
+                />
               );
             }}
           </For>

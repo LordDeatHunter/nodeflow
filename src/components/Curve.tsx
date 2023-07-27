@@ -64,6 +64,7 @@ const Curve = (props: CurveProps) => {
   return (
     <svg
       style={{
+        "z-index": 3,
         position: "absolute",
         width: "100%",
         height: "100%",
