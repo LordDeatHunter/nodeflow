@@ -1,7 +1,7 @@
 import { For, Show, createEffect, createMemo, type Component } from "solid-js";
 import { nodes } from "../utils/NodeStorage";
 import Curve from "./Curve";
-import { heldNode, mousePos, setHeldNode } from "./Drawflow";
+import { drawflowPos, heldNode, mousePos, setHeldNode } from "./Drawflow";
 
 interface NodeProps {
   nodeId: string;
@@ -34,6 +34,7 @@ const Node: Component<NodeProps> = (props) => {
       <div
         ref={nodes()[nodeId].ref.set}
         onMouseDown={(event) => {
+          event.stopPropagation();
           const { x, y } = nodes()[nodeId].position.get();
           setHeldNode({
             nodeId,
@@ -48,8 +49,8 @@ const Node: Component<NodeProps> = (props) => {
           width: "100px",
           height: "100px",
           "background-color": currentNodeSelected() ? "red" : "blue",
-          left: `${nodes()[nodeId].position.get().x}px`,
-          top: `${nodes()[nodeId].position.get().y}px`,
+          left: `${nodes()[nodeId].position.get().x + drawflowPos().x}px`,
+          top: `${nodes()[nodeId].position.get().y + drawflowPos().y}px`,
           position: "absolute",
           "user-select": "none",
         }}

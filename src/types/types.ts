@@ -3,7 +3,7 @@ export interface Position {
   y: number;
 }
 export interface HeldNode {
-  nodeId: string;
+  nodeId?: string;
   position: Position;
 }
 export interface NodeData {
@@ -15,7 +15,7 @@ export interface NodeData {
 }
 export interface SignalObject<T> {
   get: () => T;
-  set: (value: T) => void;
+  set: (value: T | ((prev: T) => void)) => void;
 }
 export interface NodeInput {
   ref: SignalObject<HTMLDivElement | undefined>;

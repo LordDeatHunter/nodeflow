@@ -2,6 +2,7 @@ import { createEffect, createSignal, on } from "solid-js";
 import { ModifiableCurveProps, SignalObject } from "../types/types";
 import { getInputRect, getOutputRect, nodes } from "../utils/NodeStorage";
 import { addPositions } from "../utils/math-utils";
+import { drawflowPos } from "./Drawflow";
 
 const createCurve = (
   startNodeId: string,
@@ -58,8 +59,11 @@ const Curve = (props: CurveProps) => {
     );
   };
 
-  createEffect(on(startNode.position.get, () => updateCurve()));
-  createEffect(on(endNode.position.get, () => updateCurve()));
+  createEffect(
+    on([startNode.position.get, endNode.position.get, drawflowPos], () =>
+      updateCurve()
+    )
+  );
 
   return (
     <svg
