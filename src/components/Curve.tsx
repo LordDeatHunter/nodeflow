@@ -2,7 +2,7 @@ import { createEffect, createSignal, on } from "solid-js";
 import { ModifiableCurveProps, SignalObject } from "../types/types";
 import { getInputRect, getOutputRect, nodes } from "../utils/NodeStorage";
 import { addPositions } from "../utils/math-utils";
-import { drawflowPos } from "./Drawflow";
+import { drawflowPos, zoomLevel } from "./Drawflow";
 
 const createCurve = (
   startNodeId: string,
@@ -22,6 +22,12 @@ const createCurve = (
     x: endRect.width / 2,
     y: startRect.width / 2,
   });
+
+  const zoom = zoomLevel();
+  start.x /= zoom;
+  start.y /= zoom;
+  end.x /= zoom;
+  end.y /= zoom;
 
   const xCurve = 0;
   const yCurve = (end.y - start.y) / 1.5;

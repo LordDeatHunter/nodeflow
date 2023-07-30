@@ -1,7 +1,14 @@
 import { For, Show, createEffect, createMemo, type Component } from "solid-js";
+import { Position } from "../types/types";
 import { nodes } from "../utils/NodeStorage";
 import Curve from "./Curve";
-import { drawflowPos, heldNode, mousePos, setHeldNode } from "./Drawflow";
+import {
+  drawflowPos,
+  heldNode,
+  mousePos,
+  setHeldNode,
+  zoomLevel,
+} from "./Drawflow";
 
 interface NodeProps {
   nodeId: string;
@@ -23,10 +30,18 @@ const Node: Component<NodeProps> = (props) => {
       y: 0,
     };
     const pos = {
-      x: mouseX - currentX,
-      y: mouseY - currentY,
+      x: mouseX / zoomLevel() - currentX,
+      y: mouseY / zoomLevel() - currentY,
     };
     nodes()[nodeId].position.set(pos);
+  });
+
+  const calculatedPosition = createMemo<Position>(() => {
+    const { x, y } = nodes()[nodeId].position.get();
+    return {
+      x: x + drawflowPos().x,
+      y: y + drawflowPos().y,
+    };
   });
 
   return (
@@ -39,8 +54,8 @@ const Node: Component<NodeProps> = (props) => {
           setHeldNode({
             nodeId,
             position: {
-              x: event.clientX - x,
-              y: event.clientY - y,
+              x: event.clientX / zoomLevel() - x,
+              y: event.clientY / zoomLevel() - y,
             },
           });
         }}
@@ -49,8 +64,8 @@ const Node: Component<NodeProps> = (props) => {
           width: "100px",
           height: "100px",
           "background-color": currentNodeSelected() ? "red" : "blue",
-          left: `${nodes()[nodeId].position.get().x + drawflowPos().x}px`,
-          top: `${nodes()[nodeId].position.get().y + drawflowPos().y}px`,
+          left: `${calculatedPosition().x}px`,
+          top: `${calculatedPosition().y}px`,
           position: "absolute",
           "user-select": "none",
         }}
@@ -66,7 +81,7 @@ const Node: Component<NodeProps> = (props) => {
           }}
         >
           <For each={Object.entries(nodes()[nodeId].inputs.get())}>
-            {([_, inputSignal]) => {
+            {([, inputSignal]) => {
               const input = inputSignal.get();
               return (
                 <div
@@ -95,7 +110,7 @@ const Node: Component<NodeProps> = (props) => {
           }}
         >
           <For each={Object.entries(nodes()[nodeId].outputs.get())}>
-            {([outputId, outputSignal]) => {
+            {([, outputSignal]) => {
               const output = outputSignal.get();
               return (
                 <div
