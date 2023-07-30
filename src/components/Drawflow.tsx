@@ -1,6 +1,13 @@
 import { Component, For, createSignal } from "solid-js";
 import { HeldNode, Position } from "../types/types";
 import { nodes } from "../utils/NodeStorage";
+import {
+  convertSizeToPosition,
+  dividePosition,
+  multiplyPosition,
+  subtractPositions,
+} from "../utils/math-utils";
+import { getScreenSize } from "../utils/screen-utils";
 import Node from "./Node";
 
 export const [heldNode, setHeldNode] = createSignal<HeldNode | null>(null);
@@ -38,25 +45,21 @@ const Drawflow: Component = () => {
         const oldZoom = zoomLevel();
         const newZoom = oldZoom + e.deltaY * -0.001;
         setZoomLevel((prev) => prev + e.deltaY * -0.001);
-        const screenSize = {
-          x: window.innerWidth * oldZoom,
-          y: window.innerHeight * oldZoom,
-        };
-        const newScreenSize = {
-          x: window.innerWidth * newZoom,
-          y: window.innerHeight * newZoom,
-        };
-        const mousePos = {
-          x: e.clientX,
-          y: e.clientY,
-        };
-        const offset = {
-          x: mousePos.x - newScreenSize.x / 2,
-          y: mousePos.y - newScreenSize.y / 2,
-        };
+        const mousePos = { x: e.clientX, y: e.clientY };
+        const windowDimensions = convertSizeToPosition(getScreenSize());
+        const oldScreenSize = multiplyPosition(windowDimensions, oldZoom);
+        const newScreenSize = multiplyPosition(windowDimensions, newZoom);
+        const oldOffset = dividePosition(
+          subtractPositions(mousePos, dividePosition(oldScreenSize, 2)),
+          oldZoom
+        );
+        const newOffset = dividePosition(
+          subtractPositions(mousePos, dividePosition(newScreenSize, 2)),
+          newZoom
+        );
         setDrawflowPos((prev) => ({
-          x: prev.x - offset.x / oldZoom + offset.x / zoomLevel(),
-          y: prev.y - offset.y / oldZoom + offset.y / zoomLevel(),
+          x: prev.x - oldOffset.x + newOffset.x,
+          y: prev.y - oldOffset.y + newOffset.y,
         }));
       }}
       onMouseDown={(event) => {

@@ -2,6 +2,10 @@ export interface Position {
   x: number;
   y: number;
 }
+export interface Size {
+  width: number;
+  height: number;
+}
 export interface HeldNode {
   nodeId?: string;
   position: Position;
