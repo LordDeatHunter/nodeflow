@@ -2,6 +2,7 @@ import { Component, For, createSignal } from "solid-js";
 import { HeldNode, Position } from "../types/types";
 import { nodes } from "../utils/NodeStorage";
 import {
+  clamp,
   convertSizeToPosition,
   dividePosition,
   multiplyPosition,
@@ -17,6 +18,9 @@ export const [drawflowPos, setDrawflowPos] = createSignal<Position>({
   y: 0,
 });
 export const [zoomLevel, setZoomLevel] = createSignal<number>(1);
+const MAX_ZOOM = 200;
+const MIN_ZOOM = 0.02;
+const ZOOM_MULTIPLIER = 0.002;
 
 const Drawflow: Component = () => {
   return (
@@ -43,8 +47,13 @@ const Drawflow: Component = () => {
       onWheel={(e) => {
         e.preventDefault();
         const oldZoom = zoomLevel();
-        const newZoom = oldZoom + e.deltaY * -0.001;
-        setZoomLevel((prev) => prev + e.deltaY * -0.001);
+        const newZoom = clamp(
+          oldZoom + oldZoom * e.deltaY * -ZOOM_MULTIPLIER,
+          MIN_ZOOM,
+          MAX_ZOOM
+        );
+        if (newZoom < MIN_ZOOM || newZoom > MAX_ZOOM) return;
+        setZoomLevel(newZoom);
         const mousePos = { x: e.clientX, y: e.clientY };
         const windowDimensions = convertSizeToPosition(getScreenSize());
         const oldScreenSize = multiplyPosition(windowDimensions, oldZoom);

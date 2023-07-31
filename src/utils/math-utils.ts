@@ -49,3 +49,6 @@ export const dividePosition = (
   x: position.x / amount,
   y: position.y / amount,
 });
+
+export const clamp = (value: number, min: number, max: number): number =>
+  Math.min(Math.max(value, min), max);
