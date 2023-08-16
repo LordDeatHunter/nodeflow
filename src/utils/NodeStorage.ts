@@ -35,6 +35,9 @@ export const addNode = (x = 0, y = 0): NodeData | undefined => {
   return newNode;
 };
 
+export const getNode = (nodeId: string): NodeData | undefined =>
+  nodes()[nodeId];
+
 export const removeNode = (nodeId: string) => {
   setNodes((prev) => {
     const { [nodeId]: _, ...rest } = prev;
@@ -42,7 +45,10 @@ export const removeNode = (nodeId: string) => {
   });
 };
 
-export const createCurveProps = (defaultLineWeight = 4, defaultLineColor = "black"): SignalObject<ModifiableCurveProps> => {
+export const createCurveProps = (
+  defaultLineWeight = 4,
+  defaultLineColor = "black"
+): SignalObject<ModifiableCurveProps> => {
   const [lineWeight, setLineWeight] = createSignal(defaultLineWeight);
   const [lineColor, setLineColor] = createSignal(defaultLineColor);
   const [curvePropsSignal, setCurveProps] = createSignal<ModifiableCurveProps>({
@@ -59,8 +65,8 @@ export const addConnection = (
   destinationInputId: string,
   curveProps?: SignalObject<ModifiableCurveProps>
 ) => {
-  const sourceNode = nodes()[sourceNodeId];
-  const destinationNode = nodes()[destinationNodeId];
+  const sourceNode = getNode(sourceNodeId);
+  const destinationNode = getNode(destinationNodeId);
 
   if (
     !sourceNode ||
@@ -82,7 +88,7 @@ export const addConnection = (
 };
 
 export const addInput = (nodeId: string, inputId?: string) => {
-  const node = nodes()[nodeId];
+  const node = getNode(nodeId);
   if (!node) {
     return;
   }
@@ -104,7 +110,7 @@ export const addOutput = (
   outputId?: string,
   curveProps?: SignalObject<ModifiableCurveProps>
 ) => {
-  const node = nodes()[nodeId];
+  const node = getNode(nodeId);
   if (!node) {
     return;
   }
@@ -126,7 +132,7 @@ export const getInputRect = (
   nodeId: string,
   connectorId: string
 ): DOMRect | undefined => {
-  const node = nodes()[nodeId];
+  const node = getNode(nodeId);
   if (!node) {
     return;
   }

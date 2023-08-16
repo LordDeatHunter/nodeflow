@@ -1,12 +1,13 @@
 import { For, Show, createEffect, createMemo, type Component } from "solid-js";
 import { Position } from "../types/types";
-import { nodes } from "../utils/NodeStorage";
+import { getNode } from "../utils/NodeStorage";
 import Curve from "./Curve";
 import {
   drawflowPos,
   heldNode,
   mousePos,
   setHeldNode,
+  setMousePos,
   zoomLevel,
 } from "./Drawflow";
 
@@ -33,31 +34,41 @@ const Node: Component<NodeProps> = (props) => {
       x: mouseX / zoomLevel() - currentX,
       y: mouseY / zoomLevel() - currentY,
     };
-    nodes()[nodeId].position.set(pos);
+    getNode(nodeId)!.position.set(pos);
   });
 
   const calculatedPosition = createMemo<Position>(() => {
-    const { x, y } = nodes()[nodeId].position.get();
+    const { x, y } = getNode(nodeId)!.position.get();
     return {
       x: x + drawflowPos().x,
       y: y + drawflowPos().y,
     };
   });
 
+  const selectNode = (position: Position) => {
+    setMousePos(position);
+    const { x, y } = getNode(nodeId)!.position.get();
+    setHeldNode({
+      nodeId,
+      position: {
+        x: position.x / zoomLevel() - x,
+        y: position.y / zoomLevel() - y,
+      },
+    });
+  };
+
   return (
     <>
       <div
-        ref={nodes()[nodeId].ref.set}
+        ref={getNode(nodeId)!.ref.set}
         onMouseDown={(event) => {
           event.stopPropagation();
-          const { x, y } = nodes()[nodeId].position.get();
-          setHeldNode({
-            nodeId,
-            position: {
-              x: event.clientX / zoomLevel() - x,
-              y: event.clientY / zoomLevel() - y,
-            },
-          });
+          selectNode({ x: event.clientX, y: event.clientY });
+        }}
+        onTouchStart={(event) => {
+          event.stopPropagation();
+          const touch = event.touches[0];
+          selectNode({ x: touch.clientX, y: touch.clientY });
         }}
         style={{
           "z-index": 2,
@@ -80,7 +91,7 @@ const Node: Component<NodeProps> = (props) => {
             top: "-4px",
           }}
         >
-          <For each={Object.entries(nodes()[nodeId].inputs.get())}>
+          <For each={Object.entries(getNode(nodeId)!.inputs.get())}>
             {([, inputSignal]) => {
               const input = inputSignal.get();
               return (
@@ -109,7 +120,7 @@ const Node: Component<NodeProps> = (props) => {
             bottom: "-4px",
           }}
         >
-          <For each={Object.entries(nodes()[nodeId].outputs.get())}>
+          <For each={Object.entries(getNode(nodeId)!.outputs.get())}>
             {([, outputSignal]) => {
               const output = outputSignal.get();
               return (
@@ -130,7 +141,7 @@ const Node: Component<NodeProps> = (props) => {
           </For>
         </div>
       </div>
-      <For each={Object.entries(nodes()[nodeId].outputs.get())}>
+      <For each={Object.entries(getNode(nodeId)!.outputs.get())}>
         {([outputId, outputSignal]) => {
           const output = outputSignal.get();
           return (

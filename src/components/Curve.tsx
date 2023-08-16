@@ -1,6 +1,11 @@
 import { createEffect, createSignal, on } from "solid-js";
 import { ModifiableCurveProps, SignalObject } from "../types/types";
-import { getInputRect, getOutputRect, nodes } from "../utils/NodeStorage";
+import {
+  getInputRect,
+  getNode,
+  getOutputRect,
+  nodes,
+} from "../utils/NodeStorage";
 import { addPositions } from "../utils/math-utils";
 import { drawflowPos, zoomLevel } from "./Drawflow";
 
@@ -56,8 +61,9 @@ const Curve = (props: CurveProps) => {
     [nodeId].outputs.get()
     [outputId].get().curveProps!;
 
-  const startNode = nodes()[nodeId];
-  const endNode = nodes()[destinationNodeId];
+  const startNode = getNode(nodeId);
+  const endNode = getNode(destinationNodeId);
+  if (!startNode || !endNode) return;
 
   const updateCurve = () => {
     setCurve(
