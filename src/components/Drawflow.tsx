@@ -129,8 +129,12 @@ const Drawflow: Component = () => {
         updateBackgroundPosition(subtractPositions(mousePos(), prevPos));
       }}
     >
-      <For each={Object.keys(nodes())}>
-        {(nodeId) => <Node nodeId={nodeId} />}
+      <For each={Object.entries(nodes())}>
+        {([nodeId, nodeData]) => (
+          <Node css={nodeData.css.get} nodeId={nodeId}>
+            <h1>ID: {nodeId}</h1>
+          </Node>
+        )}
       </For>
     </div>
   );

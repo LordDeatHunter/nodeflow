@@ -16,6 +16,7 @@ export interface NodeData {
   nodeId: string;
   inputs: SignalObject<Record<string, SignalObject<NodeInput>>>;
   outputs: SignalObject<Record<string, SignalObject<NodeOutput>>>;
+  css: SignalObject<string>;
 }
 export interface SignalObject<T> {
   get: () => T;
@@ -29,13 +30,11 @@ export interface NodeInput {
 export interface NodeOutput {
   ref: SignalObject<HTMLDivElement | undefined>;
   connectorId: string;
+  destinations: SignalObject<OutputDestination[]>;
+  position: SignalObject<Position>;
+}
+export interface OutputDestination {
   destinationNodeId?: string;
   destinationInputId?: string;
-  position: SignalObject<Position>;
-  curveProps?: SignalObject<ModifiableCurveProps>;
-}
-
-export interface ModifiableCurveProps {
-  strokeWeight?: SignalObject<number>;
-  lineColor?: SignalObject<string>;
+  css: SignalObject<string>;
 }

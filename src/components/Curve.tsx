@@ -1,11 +1,5 @@
 import { createEffect, createSignal, on } from "solid-js";
-import { ModifiableCurveProps, SignalObject } from "../types/types";
-import {
-  getInputRect,
-  getNode,
-  getOutputRect,
-  nodes,
-} from "../utils/NodeStorage";
+import { getInputRect, getNode, getOutputRect } from "../utils/NodeStorage";
 import { addPositions } from "../utils/math-utils";
 import { drawflowPos, zoomLevel } from "./Drawflow";
 
@@ -51,15 +45,12 @@ interface CurveProps {
   outputId: string;
   destinationNodeId: string;
   destinationInputId: string;
+  css: () => string;
 }
 
 const Curve = (props: CurveProps) => {
   const { nodeId, outputId, destinationNodeId, destinationInputId } = props;
   const [curve, setCurve] = createSignal<ReturnType<typeof createCurve>>();
-
-  const curveProps: SignalObject<ModifiableCurveProps> = nodes()
-    [nodeId].outputs.get()
-    [outputId].get().curveProps!;
 
   const startNode = getNode(nodeId);
   const endNode = getNode(destinationNodeId);
@@ -108,10 +99,11 @@ const Curve = (props: CurveProps) => {
       </defs>
       <path
         d={curve()?.path}
-        stroke={curveProps.get()?.lineColor?.get() ?? "black"}
-        stroke-width={curveProps.get()?.strokeWeight?.get() ?? 1}
+        stroke="black"
+        stroke-width={1}
         fill="transparent"
         marker-end="url(#pointer)"
+        class={props.css()}
       />
     </svg>
   );

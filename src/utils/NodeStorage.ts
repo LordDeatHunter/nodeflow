@@ -1,20 +1,21 @@
 import { createSignal } from "solid-js";
 import {
-  ModifiableCurveProps,
   NodeData,
   NodeInput,
   NodeOutput,
+  OutputDestination,
   SignalObject,
 } from "../types/types";
 
 export const [nodes, setNodes] = createSignal<Record<string, NodeData>>({});
 
-export const addNode = (x = 0, y = 0): NodeData | undefined => {
+export const addNode = (x = 0, y = 0, css?: string): NodeData | undefined => {
   let newNode;
   setNodes((prev) => {
     const newId = Object.keys(prev).length + 1;
     const [position, setPosition] = createSignal({ x, y });
     const [ref, setRef] = createSignal();
+    const [getCss, setCss] = createSignal(css ?? "");
 
     const [inputs, setInputs] = createSignal<SignalObject<NodeInput>[]>([]);
     const [outputs, setOutputs] = createSignal<SignalObject<NodeOutput>[]>([]);
@@ -25,6 +26,7 @@ export const addNode = (x = 0, y = 0): NodeData | undefined => {
       ref: { get: ref, set: setRef },
       inputs: { get: inputs, set: setInputs },
       outputs: { get: outputs, set: setOutputs },
+      css: { get: getCss, set: setCss },
     };
 
     return {
@@ -45,25 +47,12 @@ export const removeNode = (nodeId: string) => {
   });
 };
 
-export const createCurveProps = (
-  defaultLineWeight = 4,
-  defaultLineColor = "black"
-): SignalObject<ModifiableCurveProps> => {
-  const [lineWeight, setLineWeight] = createSignal(defaultLineWeight);
-  const [lineColor, setLineColor] = createSignal(defaultLineColor);
-  const [curvePropsSignal, setCurveProps] = createSignal<ModifiableCurveProps>({
-    strokeWeight: { get: lineWeight, set: setLineWeight },
-    lineColor: { get: lineColor, set: setLineColor },
-  });
-  return { get: curvePropsSignal, set: setCurveProps };
-};
-
 export const addConnection = (
   sourceNodeId: string,
   sourceOutputId: string,
   destinationNodeId: string,
   destinationInputId: string,
-  curveProps?: SignalObject<ModifiableCurveProps>
+  css?: string
 ) => {
   const sourceNode = getNode(sourceNodeId);
   const destinationNode = getNode(destinationNodeId);
@@ -77,14 +66,19 @@ export const addConnection = (
     return;
   }
 
-  curveProps ??= createCurveProps();
+  const [getCss, setCss] = createSignal(css ?? "");
+  const outputDestinations = sourceNode.outputs
+    .get()
+    [sourceOutputId].get().destinations;
 
-  sourceNode.outputs.get()[sourceOutputId].set({
-    ...sourceNode.outputs.get()[sourceOutputId].get(),
-    destinationNodeId,
-    destinationInputId,
-    curveProps,
-  });
+  outputDestinations.set([
+    ...outputDestinations.get(),
+    {
+      destinationNodeId,
+      destinationInputId,
+      css: { get: getCss, set: setCss },
+    },
+  ]);
 };
 
 export const addInput = (nodeId: string, inputId?: string) => {
@@ -105,25 +99,23 @@ export const addInput = (nodeId: string, inputId?: string) => {
   node.inputs.get()[inputId] = { get: input, set: setInput };
 };
 
-export const addOutput = (
-  nodeId: string,
-  outputId?: string,
-  curveProps?: SignalObject<ModifiableCurveProps>
-) => {
+export const addOutput = (nodeId: string, outputId?: string) => {
   const node = getNode(nodeId);
   if (!node) {
     return;
   }
 
+  const [getDestination, setDestination] = createSignal<OutputDestination[]>(
+    []
+  );
   outputId ??= node.outputs.get().length.toString();
-  curveProps ??= createCurveProps();
   const [position, setPosition] = createSignal({ x: 0, y: 0 });
   const [ref, setRef] = createSignal<HTMLDivElement>();
   const [output, setOutput] = createSignal<NodeOutput>({
     connectorId: outputId,
     ref: { get: ref, set: setRef },
     position: { get: position, set: setPosition },
-    curveProps,
+    destinations: { get: getDestination, set: setDestination },
   });
   node.outputs.get()[outputId] = { get: output, set: setOutput };
 };

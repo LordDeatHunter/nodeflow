@@ -13,10 +13,12 @@ import {
 
 interface NodeProps {
   nodeId: string;
+  children?: any;
+  css: () => string;
 }
 
 const Node: Component<NodeProps> = (props) => {
-  const { nodeId } = props;
+  const { nodeId, children } = props;
 
   const currentNodeSelected = createMemo<boolean>(
     () => heldNode()?.nodeId === nodeId,
@@ -71,24 +73,19 @@ const Node: Component<NodeProps> = (props) => {
           selectNode({ x: touch.clientX, y: touch.clientY });
         }}
         style={{
-          "z-index": 2,
-          width: "100px",
-          height: "100px",
-          "background-color": currentNodeSelected() ? "red" : "blue",
           left: `${calculatedPosition().x}px`,
           top: `${calculatedPosition().y}px`,
-          position: "absolute",
-          "user-select": "none",
         }}
+        class={props?.css()}
       >
-        <h1>{nodeId}</h1>
+        {children}
         <div
           style={{
             position: "absolute",
             display: "flex",
             "justify-content": "space-evenly",
             width: "100%",
-            top: "-4px",
+            top: "-6px",
           }}
         >
           <For each={Object.entries(getNode(nodeId)!.inputs.get())}>
@@ -105,6 +102,7 @@ const Node: Component<NodeProps> = (props) => {
                     position: "relative",
                     top: `${input.position.get().y}px`,
                     left: `${input.position.get().x}px`,
+                    "border-radius": "50%",
                   }}
                 />
               );
@@ -117,7 +115,7 @@ const Node: Component<NodeProps> = (props) => {
             display: "flex",
             "justify-content": "space-evenly",
             width: "100%",
-            bottom: "-4px",
+            bottom: "-6px",
           }}
         >
           <For each={Object.entries(getNode(nodeId)!.outputs.get())}>
@@ -134,6 +132,7 @@ const Node: Component<NodeProps> = (props) => {
                     position: "relative",
                     top: `${output.position.get().y}px`,
                     left: `${output.position.get().x}px`,
+                    "border-radius": "50%",
                   }}
                 />
               );
@@ -145,16 +144,24 @@ const Node: Component<NodeProps> = (props) => {
         {([outputId, outputSignal]) => {
           const output = outputSignal.get();
           return (
-            <Show
-              when={!!output?.destinationNodeId && !!output?.destinationInputId}
-            >
-              <Curve
-                nodeId={nodeId}
-                outputId={outputId}
-                destinationNodeId={output.destinationNodeId!}
-                destinationInputId={output.destinationInputId!}
-              />
-            </Show>
+            <For each={output.destinations.get()}>
+              {(outputConnection) => (
+                <Show
+                  when={
+                    !!outputConnection?.destinationNodeId &&
+                    !!outputConnection?.destinationInputId
+                  }
+                >
+                  <Curve
+                    nodeId={nodeId}
+                    outputId={outputId}
+                    destinationNodeId={outputConnection.destinationNodeId!}
+                    destinationInputId={outputConnection.destinationInputId!}
+                    css={outputConnection.css.get}
+                  />
+                </Show>
+              )}
+            </For>
           );
         }}
       </For>

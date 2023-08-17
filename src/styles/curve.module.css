@@ -1,0 +1,17 @@
+.father {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  stroke: #84c3ff;
+  stroke-width: 5px;
+}
+
+.mother {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  stroke: #ff84c3;
+  stroke-width: 5px;
+}
