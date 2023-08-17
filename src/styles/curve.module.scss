@@ -1,17 +1,17 @@
-.father {
+@mixin base-curve {
   position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  stroke: #84c3ff;
   stroke-width: 5px;
 }
 
+.father {
+  @include base-curve;
+  stroke: #84c3ff;
+}
+
 .mother {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
+  @include base-curve;
   stroke: #ff84c3;
-  stroke-width: 5px;
 }

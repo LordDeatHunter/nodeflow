@@ -1,7 +1,7 @@
 import { type Component } from "solid-js";
 import Drawflow from "./components/Drawflow";
-import curveCss from "./styles/curve.module.css";
-import nodeCss from "./styles/node.module.css";
+import curveCss from "./styles/curve.module.scss";
+import nodeCss from "./styles/node.module.scss";
 import {
   addConnection,
   addInput,

@@ -6,19 +6,17 @@
   user-select: none;
   border-radius: 12px;
   border: 2px solid black;
+  &:hover {
+    background-color: lightblue;
+    z-index: 3;
+  }
+  &:active {
+    box-shadow: 0px 0px 10px 5px gray;
+    cursor: grabbing;
+    z-index: 3;
+  }
   cursor: grab;
   box-shadow: 0px 0px 5px 0px black;
   transition: background-color 0.2s ease-in-out 0s,
     border-color 0.2s ease-in-out 0s, box-shadow 0.2s ease-in-out 0s;
-}
-
-.node:hover {
-  background-color: lightblue;
-  z-index: 3;
-}
-
-.node:active {
-  box-shadow: 0px 0px 10px 5px gray;
-  cursor: grabbing;
-  z-index: 3;
 }
