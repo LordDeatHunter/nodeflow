@@ -9,7 +9,7 @@ import {
 
 export const [nodes, setNodes] = createSignal<Record<string, NodeData>>({});
 
-export const addNode = (x = 0, y = 0, css?: string): NodeData | undefined => {
+export const addNode = (x = 0, y = 0, css?: string): NodeData => {
   let newNode;
   setNodes((prev) => {
     const newId = Object.keys(prev).length + 1;
@@ -34,7 +34,7 @@ export const addNode = (x = 0, y = 0, css?: string): NodeData | undefined => {
       [newId]: newNode,
     };
   });
-  return newNode;
+  return newNode!;
 };
 
 export const getNode = (nodeId: string): NodeData | undefined =>
@@ -42,6 +42,17 @@ export const getNode = (nodeId: string): NodeData | undefined =>
 
 export const removeNode = (nodeId: string) => {
   setNodes((prev) => {
+    Object.values(prev).forEach((node) =>
+      Object.values(node.outputs.get()).forEach((output) =>
+        output
+          .get()
+          .destinations.set((destinations) =>
+            destinations.filter(
+              (destination) => destination.destinationNodeId !== nodeId
+            )
+          )
+      )
+    );
     const { [nodeId]: _, ...rest } = prev;
     return rest;
   });
@@ -52,18 +63,31 @@ export const addConnection = (
   sourceOutputId: string,
   destinationNodeId: string,
   destinationInputId: string,
-  css?: string
+  css = "",
+  createMissingNodes = false
 ) => {
   const sourceNode = getNode(sourceNodeId);
   const destinationNode = getNode(destinationNodeId);
 
+  if (!sourceNode || !destinationNode) {
+    return;
+  }
+
   if (
-    !sourceNode ||
-    !destinationNode ||
     !(sourceOutputId in sourceNode.outputs.get()) ||
     !(destinationInputId in destinationNode.inputs.get())
   ) {
-    return;
+    if (!createMissingNodes) {
+      return;
+    }
+
+    if (!(sourceOutputId in sourceNode.outputs.get())) {
+      addOutput(sourceNodeId, sourceOutputId);
+    }
+
+    if (!(destinationInputId in destinationNode.inputs.get())) {
+      addInput(destinationNodeId, destinationInputId);
+    }
   }
 
   const [getCss, setCss] = createSignal(css ?? "");
@@ -145,3 +169,31 @@ export const getOutputRect = (
     ?.[connectorId]?.get()
     ?.ref.get()
     ?.getBoundingClientRect();
+
+export const getTotalConnectedInputs = (
+  nodeId: string,
+  inputId?: string
+): number => {
+  const node = getNode(nodeId);
+  if (!node) {
+    return 0;
+  }
+  return Object.values(nodes()).reduce(
+    (total, node) =>
+      total +
+      Object.values(node.outputs.get()).reduce(
+        (totalOutputs, output) =>
+          totalOutputs +
+          output
+            .get()
+            .destinations.get()
+            .filter(
+              (destination) =>
+                destination.destinationNodeId === nodeId &&
+                (inputId ? destination.destinationInputId === inputId : true)
+            ).length,
+        0
+      ),
+    0
+  );
+};

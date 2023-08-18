@@ -8,41 +8,44 @@ import {
   addNode,
   addOutput,
   getNode,
+  getTotalConnectedInputs,
+  nodes,
 } from "./utils/NodeStorage";
 
-for (let i = 0; i < 5; i++) {
-  for (let j = 0; j < 5; j++) {
-    const newNode = addNode(
-      Math.random() * 2000,
-      Math.random() * 2000,
-      nodeCss.node
-    );
-    const inputs = 2 + Math.floor(Math.random() * 4);
-    for (let k = 0; k < inputs; k++) addInput(newNode!.nodeId);
-    addOutput(newNode!.nodeId);
-    addOutput(newNode!.nodeId);
-  }
-}
+const customData: Record<string, { gender: "M" | "F" }> = {};
 
-for (let i = 0; i < 25; i++) {
-  const from = Math.floor(Math.random() * 25);
-  const to = Math.floor(Math.random() * 25);
+for (let i = 0; i < 50; i++) {
+  const newNode = addNode(
+    Math.random() * 2000,
+    Math.random() * 2000,
+    nodeCss.node
+  )!;
+  addOutput(newNode.nodeId);
+  addInput(newNode.nodeId);
+  addInput(newNode.nodeId);
+  customData[newNode.nodeId] = {
+    gender: Math.floor(Math.random() * 2) === 1 ? "M" : "F",
+  };
+}
+const totalNodes = Object.keys(nodes()).length;
+
+for (let i = 0; i < totalNodes; i++) {
+  const from = Math.floor(Math.random() * totalNodes);
+  const to = Math.floor(Math.random() * totalNodes);
   const fromNode = getNode(from.toString());
   const toNode = getNode(to.toString());
   if (!fromNode || !toNode) continue;
-  const fromOutputs = Object.keys(fromNode.outputs.get()).length;
-  const toInputs = Object.keys(toNode.inputs.get()).length;
-  const fromOutput = Math.floor(Math.random() * fromOutputs);
-  const toInput = Math.floor(Math.random() * toInputs);
+  const toInput = customData[from.toString()].gender === "M" ? "0" : "1";
 
   if (from === to) continue;
+  if (getTotalConnectedInputs(to.toString(), toInput) > 0) continue;
 
   addConnection(
     from.toString(),
-    fromOutput.toString(),
+    "0",
     to.toString(),
     toInput.toString(),
-    fromOutput == 1 ? curveCss.father : curveCss.mother
+    toInput == "1" ? curveCss.father : curveCss.mother
   );
 }
 

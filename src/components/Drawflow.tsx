@@ -1,6 +1,6 @@
 import { Component, For, createSignal } from "solid-js";
 import { HeldNode, Position } from "../types/types";
-import { nodes } from "../utils/NodeStorage";
+import { nodes, removeNode } from "../utils/NodeStorage";
 import {
   clamp,
   convertSizeToPosition,
@@ -64,6 +64,7 @@ const Drawflow: Component = () => {
 
   return (
     <div
+      tabIndex="0"
       style={{
         position: "absolute",
         overflow: "hidden",
@@ -92,6 +93,14 @@ const Drawflow: Component = () => {
             y: event.clientY / zoomLevel() - drawflowPos().y,
           },
         });
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Delete") {
+          const held = heldNode();
+          if (held?.nodeId) {
+            removeNode(held.nodeId);
+          }
+        }
       }}
       onTouchStart={(event) => {
         event.stopPropagation();
