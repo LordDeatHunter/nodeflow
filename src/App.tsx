@@ -18,7 +18,8 @@ for (let i = 0; i < 50; i++) {
   const newNode = addNode(
     Math.random() * 2000,
     Math.random() * 2000,
-    nodeCss.node
+    nodeCss.node,
+    nodeCss.selectedNode
   )!;
   addOutput(newNode.nodeId);
   addInput(newNode.nodeId);

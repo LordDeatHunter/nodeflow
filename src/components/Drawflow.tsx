@@ -155,7 +155,11 @@ const Drawflow: Component = () => {
     >
       <For each={Object.entries(nodes())}>
         {([nodeId, nodeData]) => (
-          <Node css={nodeData.css.get} nodeId={nodeId}>
+          <Node
+            css={nodeData.css.get}
+            selectedCss={nodeData.selectedCss.get}
+            nodeId={nodeId}
+          >
             <h1>ID: {nodeId}</h1>
           </Node>
         )}

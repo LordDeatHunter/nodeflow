@@ -18,13 +18,20 @@ export const [mouseData, setMouseData] = createStore<MouseData>({
   heldNodeId: undefined,
 });
 
-export const addNode = (x = 0, y = 0, css?: string): NodeData => {
+export const addNode = (
+  x = 0,
+  y = 0,
+  css?: string,
+  selectedCss?: string
+): NodeData => {
   let newNode;
   setNodes((prev) => {
     const newId = Object.keys(prev).length + 1;
     const [position, setPosition] = createSignal({ x, y });
     const [ref, setRef] = createSignal();
+    // TODO: handle styles better
     const [getCss, setCss] = createSignal(css ?? "");
+    const [getSelectedCss, setSelectedCss] = createSignal(selectedCss ?? "");
 
     const [inputs, setInputs] = createSignal<SignalObject<NodeInput>[]>([]);
     const [outputs, setOutputs] = createSignal<SignalObject<NodeOutput>[]>([]);
@@ -36,6 +43,7 @@ export const addNode = (x = 0, y = 0, css?: string): NodeData => {
       inputs: { get: inputs, set: setInputs },
       outputs: { get: outputs, set: setOutputs },
       css: { get: getCss, set: setCss },
+      selectedCss: { get: getSelectedCss, set: setSelectedCss },
     };
 
     return {

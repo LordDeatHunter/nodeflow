@@ -8,6 +8,7 @@ interface NodeProps {
   nodeId: string;
   children?: any;
   css: () => string;
+  selectedCss: () => string;
 }
 
 const Node: Component<NodeProps> = (props) => {
@@ -65,7 +66,10 @@ const Node: Component<NodeProps> = (props) => {
           left: `${calculatedPosition().x}px`,
           top: `${calculatedPosition().y}px`,
         }}
-        class={props?.css()}
+        classList={{
+          [props?.css()]: true,
+          [props?.selectedCss()]: mouseData.heldNodeId === nodeId,
+        }}
       >
         {children}
         <div
