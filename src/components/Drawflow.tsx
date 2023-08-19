@@ -1,6 +1,5 @@
-import { Component, For, createSignal } from "solid-js";
-import { HeldNode, Position } from "../types/types";
-import { nodes, removeNode } from "../utils/NodeStorage";
+import { Component, createSignal, For } from "solid-js";
+import { Position } from "../types/types";
 import {
   clamp,
   convertSizeToPosition,
@@ -8,11 +7,15 @@ import {
   multiplyPosition,
   subtractPositions,
 } from "../utils/math-utils";
+import {
+  mouseData,
+  nodes,
+  removeNode,
+  setMouseData,
+} from "../utils/NodeStorage";
 import { getScreenSize } from "../utils/screen-utils";
 import Node from "./Node";
 
-export const [heldNode, setHeldNode] = createSignal<HeldNode | null>(null);
-export const [mousePos, setMousePos] = createSignal<Position>({ x: 0, y: 0 });
 export const [drawflowPos, setDrawflowPos] = createSignal<Position>({
   x: 0,
   y: 0,
@@ -34,7 +37,7 @@ const Drawflow: Component = () => {
       MAX_ZOOM
     );
     if (newZoom < MIN_ZOOM || newZoom > MAX_ZOOM) return;
-    setHeldNode(null);
+    setMouseData("dragging", false);
     setZoomLevel(newZoom);
     const windowDimensions = convertSizeToPosition(getScreenSize());
     const oldScreenSize = multiplyPosition(windowDimensions, oldZoom);
@@ -55,7 +58,7 @@ const Drawflow: Component = () => {
   };
 
   const updateBackgroundPosition = (moveDistance: Position) => {
-    if (heldNode()?.nodeId || !heldNode()?.position) return;
+    if (mouseData.heldNodeId || !mouseData.dragging) return;
     setDrawflowPos((prev) => ({
       x: prev.x + moveDistance.x / zoomLevel(),
       y: prev.y + moveDistance.y / zoomLevel(),
@@ -74,11 +77,11 @@ const Drawflow: Component = () => {
         height: `${window.innerHeight / zoomLevel()}px`,
       }}
       onMouseMove={(e) => {
-        setMousePos({ x: e.clientX, y: e.clientY });
+        setMouseData("mousePosition", { x: e.clientX, y: e.clientY });
         updateBackgroundPosition({ x: e.movementX, y: e.movementY });
       }}
       onPointerUp={() => {
-        setHeldNode(null);
+        setMouseData("dragging", false);
       }}
       onWheel={(e) => {
         e.preventDefault();
@@ -86,35 +89,40 @@ const Drawflow: Component = () => {
       }}
       onMouseDown={(event) => {
         event.stopPropagation();
-        setMousePos({ x: event.clientX, y: event.clientY });
-        setHeldNode({
-          position: {
+        setMouseData({
+          dragging: true,
+          heldNodeId: undefined,
+          mousePosition: { x: event.clientX, y: event.clientY },
+          startPosition: {
             x: event.clientX / zoomLevel() - drawflowPos().x,
             y: event.clientY / zoomLevel() - drawflowPos().y,
           },
         });
       }}
       onKeyDown={(e) => {
-        if (e.key === "Delete") {
-          const held = heldNode();
-          if (held?.nodeId) {
-            removeNode(held.nodeId);
-          }
+        if (e.code === "Delete" && mouseData.heldNodeId) {
+          removeNode(mouseData.heldNodeId);
         }
       }}
       onTouchStart={(event) => {
         event.stopPropagation();
         const touch = event.touches[0];
-        setMousePos({ x: touch.clientX, y: touch.clientY });
-        if (event.touches.length == 2) {
-          setHeldNode(null);
+        if (event.touches.length === 2) {
+          setMouseData({
+            dragging: false,
+            heldNodeId: undefined,
+            mousePosition: { x: touch.clientX, y: touch.clientY },
+          });
           const { pageX: touch1X, pageY: touch1Y } = event.touches[0];
           const { pageX: touch2X, pageY: touch2Y } = event.touches[1];
           setDist(Math.hypot(touch1X - touch2X, touch1Y - touch2Y));
           return;
         }
-        setHeldNode({
-          position: {
+        setMouseData({
+          dragging: event.touches.length === 1,
+          heldNodeId: undefined,
+          mousePosition: { x: touch.clientX, y: touch.clientY },
+          startPosition: {
             x: touch.clientX / zoomLevel() - drawflowPos().x,
             y: touch.clientY / zoomLevel() - drawflowPos().y,
           },
@@ -133,9 +141,16 @@ const Drawflow: Component = () => {
           setDist(currDist);
           return;
         }
-        const prevPos = mousePos();
-        setMousePos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
-        updateBackgroundPosition(subtractPositions(mousePos(), prevPos));
+        setMouseData("mousePosition", (mousePosition) => {
+          const newMousePos = {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY,
+          };
+          updateBackgroundPosition(
+            subtractPositions(newMousePos, mousePosition)
+          );
+          return newMousePos;
+        });
       }}
     >
       <For each={Object.entries(nodes())}>

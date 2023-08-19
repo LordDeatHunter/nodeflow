@@ -6,9 +6,11 @@ export interface Size {
   width: number;
   height: number;
 }
-export interface HeldNode {
-  nodeId?: string;
-  position: Position;
+export interface MouseData {
+  heldNodeId?: string;
+  startPosition?: Position;
+  dragging: boolean;
+  mousePosition: Position;
 }
 export interface NodeData {
   ref: SignalObject<HTMLDivElement | undefined>;

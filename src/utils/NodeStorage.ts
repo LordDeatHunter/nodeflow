@@ -1,5 +1,7 @@
 import { createSignal } from "solid-js";
+import { createStore } from "solid-js/store";
 import {
+  MouseData,
   NodeData,
   NodeInput,
   NodeOutput,
@@ -7,7 +9,14 @@ import {
   SignalObject,
 } from "../types/types";
 
+// TODO: this should probably be a store
 export const [nodes, setNodes] = createSignal<Record<string, NodeData>>({});
+export const [mouseData, setMouseData] = createStore<MouseData>({
+  dragging: false,
+  mousePosition: { x: 0, y: 0 },
+  startPosition: undefined,
+  heldNodeId: undefined,
+});
 
 export const addNode = (x = 0, y = 0, css?: string): NodeData => {
   let newNode;
@@ -144,6 +153,7 @@ export const addOutput = (nodeId: string, outputId?: string) => {
   node.outputs.get()[outputId] = { get: output, set: setOutput };
 };
 
+// TODO: investigate if there are more performant ways to do this (e.g. with transform: translate)
 export const getInputRect = (
   nodeId: string,
   connectorId: string

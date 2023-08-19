@@ -1,15 +1,8 @@
-import { For, Show, createEffect, createMemo, type Component } from "solid-js";
+import { type Component, createEffect, createMemo, For, Show } from "solid-js";
 import { Position } from "../types/types";
-import { getNode } from "../utils/NodeStorage";
+import { getNode, mouseData, setMouseData } from "../utils/NodeStorage";
 import Curve from "./Curve";
-import {
-  drawflowPos,
-  heldNode,
-  mousePos,
-  setHeldNode,
-  setMousePos,
-  zoomLevel,
-} from "./Drawflow";
+import { drawflowPos, zoomLevel } from "./Drawflow";
 
 interface NodeProps {
   nodeId: string;
@@ -20,21 +13,16 @@ interface NodeProps {
 const Node: Component<NodeProps> = (props) => {
   const { nodeId, children } = props;
 
-  const currentNodeSelected = createMemo<boolean>(
-    () => heldNode()?.nodeId === nodeId,
-    false
-  );
-
   createEffect(() => {
-    if (!currentNodeSelected()) return;
-    const { x: mouseX, y: mouseY } = mousePos();
-    const { x: currentX, y: currentY } = heldNode()?.position ?? {
+    if (mouseData.heldNodeId !== nodeId || !mouseData.dragging) return;
+    const { x: mouseX, y: mouseY } = mouseData.mousePosition;
+    const { x: startX, y: startY } = mouseData.startPosition ?? {
       x: 0,
       y: 0,
     };
     const pos = {
-      x: mouseX / zoomLevel() - currentX,
-      y: mouseY / zoomLevel() - currentY,
+      x: mouseX / zoomLevel() - startX,
+      y: mouseY / zoomLevel() - startY,
     };
     getNode(nodeId)!.position.set(pos);
   });
@@ -48,11 +36,12 @@ const Node: Component<NodeProps> = (props) => {
   });
 
   const selectNode = (position: Position) => {
-    setMousePos(position);
     const { x, y } = getNode(nodeId)!.position.get();
-    setHeldNode({
-      nodeId,
-      position: {
+    setMouseData({
+      dragging: true,
+      heldNodeId: nodeId,
+      mousePosition: position,
+      startPosition: {
         x: position.x / zoomLevel() - x,
         y: position.y / zoomLevel() - y,
       },
