@@ -7,7 +7,6 @@ import {
   addInput,
   addNode,
   addOutput,
-  getNode,
   getTotalConnectedInputs,
   nodes,
 } from "./utils/NodeStorage";
@@ -15,12 +14,10 @@ import {
 const customData: Record<string, { gender: "M" | "F" }> = {};
 
 for (let i = 0; i < 50; i++) {
-  const newNode = addNode(
-    Math.random() * 2000,
-    Math.random() * 2000,
-    nodeCss.node,
-    nodeCss.selectedNode
-  )!;
+  const newNode = addNode(Math.random() * 2000, Math.random() * 2000, {
+    normal: nodeCss.node,
+    selected: nodeCss.selectedNode,
+  })!;
   addOutput(newNode.nodeId);
   addInput(newNode.nodeId);
   addInput(newNode.nodeId);
@@ -28,13 +25,13 @@ for (let i = 0; i < 50; i++) {
     gender: Math.floor(Math.random() * 2) === 1 ? "M" : "F",
   };
 }
-const totalNodes = Object.keys(nodes()).length;
+const totalNodes = Object.keys(nodes).length;
 
 for (let i = 0; i < totalNodes; i++) {
   const from = Math.floor(Math.random() * totalNodes);
   const to = Math.floor(Math.random() * totalNodes);
-  const fromNode = getNode(from.toString());
-  const toNode = getNode(to.toString());
+  const fromNode = nodes[from.toString()];
+  const toNode = nodes[to.toString()];
   if (!fromNode || !toNode) continue;
   const toInput = customData[from.toString()].gender === "M" ? "0" : "1";
 

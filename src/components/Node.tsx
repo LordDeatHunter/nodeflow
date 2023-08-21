@@ -1,14 +1,13 @@
 import { type Component, createEffect, createMemo, For, Show } from "solid-js";
-import { Position } from "../types/types";
-import { getNode, mouseData, setMouseData } from "../utils/NodeStorage";
+import { NodeCss, Position } from "../types/types";
+import { mouseData, nodes, setMouseData, setNodes } from "../utils/NodeStorage";
 import Curve from "./Curve";
-import { drawflowPos, zoomLevel } from "./Drawflow";
+import drawflow, { drawflowPos, zoomLevel } from "./Drawflow";
 
 interface NodeProps {
   nodeId: string;
   children?: any;
-  css: () => string;
-  selectedCss: () => string;
+  css: NodeCss;
 }
 
 const Node: Component<NodeProps> = (props) => {
@@ -25,11 +24,12 @@ const Node: Component<NodeProps> = (props) => {
       x: mouseX / zoomLevel() - startX,
       y: mouseY / zoomLevel() - startY,
     };
-    getNode(nodeId)!.position.set(pos);
+
+    setNodes(nodeId, "position", pos);
   });
 
   const calculatedPosition = createMemo<Position>(() => {
-    const { x, y } = getNode(nodeId)!.position.get();
+    const { x, y } = nodes[nodeId].position;
     return {
       x: x + drawflowPos().x,
       y: y + drawflowPos().y,
@@ -37,7 +37,7 @@ const Node: Component<NodeProps> = (props) => {
   });
 
   const selectNode = (position: Position) => {
-    const { x, y } = getNode(nodeId)!.position.get();
+    const { x, y } = nodes[nodeId]!.position;
     setMouseData({
       dragging: true,
       heldNodeId: nodeId,
@@ -52,7 +52,7 @@ const Node: Component<NodeProps> = (props) => {
   return (
     <>
       <div
-        ref={getNode(nodeId)!.ref.set}
+        ref={(el) => setNodes(nodeId, "ref", el)}
         onMouseDown={(event) => {
           event.stopPropagation();
           selectNode({ x: event.clientX, y: event.clientY });
@@ -67,8 +67,8 @@ const Node: Component<NodeProps> = (props) => {
           top: `${calculatedPosition().y}px`,
         }}
         classList={{
-          [props?.css()]: true,
-          [props?.selectedCss()]: mouseData.heldNodeId === nodeId,
+          [props?.css?.normal ?? ""]: true,
+          [props?.css?.selected ?? ""]: mouseData.heldNodeId === nodeId,
         }}
       >
         {children}
@@ -81,25 +81,20 @@ const Node: Component<NodeProps> = (props) => {
             top: "-6px",
           }}
         >
-          <For each={Object.entries(getNode(nodeId)!.inputs.get())}>
-            {([, inputSignal]) => {
-              const input = inputSignal.get();
-              return (
-                <div
-                  ref={input.ref.set}
-                  style={{
-                    "z-index": 1,
-                    width: "10px",
-                    height: "10px",
-                    "background-color": "black",
-                    position: "relative",
-                    top: `${input.position.get().y}px`,
-                    left: `${input.position.get().x}px`,
-                    "border-radius": "50%",
-                  }}
-                />
-              );
-            }}
+          <For each={Object.entries(nodes[nodeId].inputs)}>
+            {([inputId]) => (
+              <div
+                ref={(el) => setNodes(nodeId, "inputs", inputId, "ref", el)}
+                style={{
+                  "z-index": 1,
+                  width: "10px",
+                  height: "10px",
+                  "background-color": "black",
+                  position: "relative",
+                  "border-radius": "50%",
+                }}
+              />
+            )}
           </For>
         </div>
         <div
@@ -111,52 +106,44 @@ const Node: Component<NodeProps> = (props) => {
             bottom: "-6px",
           }}
         >
-          <For each={Object.entries(getNode(nodeId)!.outputs.get())}>
-            {([, outputSignal]) => {
-              const output = outputSignal.get();
-              return (
-                <div
-                  ref={output.ref.set}
-                  style={{
-                    "z-index": 1,
-                    width: "10px",
-                    height: "10px",
-                    "background-color": "black",
-                    position: "relative",
-                    top: `${output.position.get().y}px`,
-                    left: `${output.position.get().x}px`,
-                    "border-radius": "50%",
-                  }}
-                />
-              );
-            }}
+          <For each={Object.entries(nodes[nodeId].outputs)}>
+            {([outputId]) => (
+              <div
+                ref={(el) => setNodes(nodeId, "outputs", outputId, "ref", el)}
+                style={{
+                  "z-index": 1,
+                  width: "10px",
+                  height: "10px",
+                  "background-color": "black",
+                  position: "relative",
+                  "border-radius": "50%",
+                }}
+              />
+            )}
           </For>
         </div>
       </div>
-      <For each={Object.entries(getNode(nodeId)!.outputs.get())}>
-        {([outputId, outputSignal]) => {
-          const output = outputSignal.get();
-          return (
-            <For each={output.destinations.get()}>
-              {(outputConnection) => (
-                <Show
-                  when={
-                    !!outputConnection?.destinationNodeId &&
-                    !!outputConnection?.destinationInputId
-                  }
-                >
-                  <Curve
-                    nodeId={nodeId}
-                    outputId={outputId}
-                    destinationNodeId={outputConnection.destinationNodeId!}
-                    destinationInputId={outputConnection.destinationInputId!}
-                    css={outputConnection.css.get}
-                  />
-                </Show>
-              )}
-            </For>
-          );
-        }}
+      <For each={Object.entries(nodes[nodeId]!.outputs)}>
+        {([outputId, output]) => (
+          <For each={output.destinations}>
+            {(outputConnection) => (
+              <Show
+                when={
+                  !!outputConnection?.destinationNodeId &&
+                  !!outputConnection?.destinationInputId
+                }
+              >
+                <Curve
+                  nodeId={nodeId}
+                  outputId={outputId}
+                  destinationNodeId={outputConnection.destinationNodeId!}
+                  destinationInputId={outputConnection.destinationInputId!}
+                  css={outputConnection.css}
+                />
+              </Show>
+            )}
+          </For>
+        )}
       </For>
     </>
   );

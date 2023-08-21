@@ -103,6 +103,9 @@ const Drawflow: Component = () => {
         if (e.code === "Delete" && mouseData.heldNodeId) {
           removeNode(mouseData.heldNodeId);
         }
+        if (e.code === "Space" && mouseData.heldNodeId) {
+          console.log(nodes[mouseData.heldNodeId]);
+        }
       }}
       onTouchStart={(event) => {
         event.stopPropagation();
@@ -153,13 +156,9 @@ const Drawflow: Component = () => {
         });
       }}
     >
-      <For each={Object.entries(nodes())}>
+      <For each={Object.entries(nodes)}>
         {([nodeId, nodeData]) => (
-          <Node
-            css={nodeData.css.get}
-            selectedCss={nodeData.selectedCss.get}
-            nodeId={nodeId}
-          >
+          <Node css={nodeData.css} nodeId={nodeId}>
             <h1>ID: {nodeId}</h1>
           </Node>
         )}

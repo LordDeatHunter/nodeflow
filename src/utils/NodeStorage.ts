@@ -1,16 +1,8 @@
-import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
-import {
-  MouseData,
-  NodeData,
-  NodeInput,
-  NodeOutput,
-  OutputDestination,
-  SignalObject,
-} from "../types/types";
+import { MouseData, NodeCss, NodeData } from "../types/types";
+import { untrack } from "solid-js";
 
-// TODO: this should probably be a store
-export const [nodes, setNodes] = createSignal<Record<string, NodeData>>({});
+export const [nodes, setNodes] = createStore<Record<string, NodeData>>({});
 export const [mouseData, setMouseData] = createStore<MouseData>({
   dragging: false,
   mousePosition: { x: 0, y: 0 },
@@ -18,61 +10,48 @@ export const [mouseData, setMouseData] = createStore<MouseData>({
   heldNodeId: undefined,
 });
 
-export const addNode = (
-  x = 0,
-  y = 0,
-  css?: string,
-  selectedCss?: string
-): NodeData => {
-  let newNode;
+export const addNode = (x = 0, y = 0, css?: NodeCss): NodeData => {
+  let newNode: NodeData | undefined;
   setNodes((prev) => {
-    const newId = Object.keys(prev).length + 1;
-    const [position, setPosition] = createSignal({ x, y });
-    const [ref, setRef] = createSignal();
-    // TODO: handle styles better
-    const [getCss, setCss] = createSignal(css ?? "");
-    const [getSelectedCss, setSelectedCss] = createSignal(selectedCss ?? "");
-
-    const [inputs, setInputs] = createSignal<SignalObject<NodeInput>[]>([]);
-    const [outputs, setOutputs] = createSignal<SignalObject<NodeOutput>[]>([]);
+    const newId = (Object.keys(prev).length + 1).toString();
 
     newNode = {
-      position: { get: position, set: setPosition },
-      nodeId: newId.toString(),
-      ref: { get: ref, set: setRef },
-      inputs: { get: inputs, set: setInputs },
-      outputs: { get: outputs, set: setOutputs },
-      css: { get: getCss, set: setCss },
-      selectedCss: { get: getSelectedCss, set: setSelectedCss },
+      position: { x, y },
+      nodeId: newId,
+      ref: undefined,
+      inputs: {},
+      outputs: {},
+      css: {
+        normal: css?.normal,
+        selected: css?.selected,
+      },
     };
 
     return {
-      ...prev,
       [newId]: newNode,
     };
   });
   return newNode!;
 };
 
-export const getNode = (nodeId: string): NodeData | undefined =>
-  nodes()[nodeId];
-
+// TODO: prevent this from resetting the curve's position
 export const removeNode = (nodeId: string) => {
-  setNodes((prev) => {
-    Object.values(prev).forEach((node) =>
-      Object.values(node.outputs.get()).forEach((output) =>
-        output
-          .get()
-          .destinations.set((destinations) =>
-            destinations.filter(
-              (destination) => destination.destinationNodeId !== nodeId
-            )
-          )
-      )
-    );
-    const { [nodeId]: _, ...rest } = prev;
-    return rest;
-  });
+  Object.values(nodes).forEach((node) =>
+    Object.values(node.outputs).forEach((output) => {
+      const filteredDestinations = output.destinations.filter(
+        (destination) => destination.destinationNodeId !== nodeId
+      );
+      if (filteredDestinations.length === output.destinations.length) return;
+      setNodes(
+        node.nodeId,
+        "outputs",
+        output.connectorId,
+        "destinations",
+        filteredDestinations
+      );
+    })
+  );
+  setNodes(nodeId, undefined!);
 };
 
 export const addConnection = (
@@ -83,133 +62,95 @@ export const addConnection = (
   css = "",
   createMissingNodes = false
 ) => {
-  const sourceNode = getNode(sourceNodeId);
-  const destinationNode = getNode(destinationNodeId);
+  const sourceNode = nodes[sourceNodeId];
+  const destinationNode = nodes[destinationNodeId];
 
   if (!sourceNode || !destinationNode) {
     return;
   }
 
   if (
-    !(sourceOutputId in sourceNode.outputs.get()) ||
-    !(destinationInputId in destinationNode.inputs.get())
+    !(sourceOutputId in sourceNode.outputs) ||
+    !(destinationInputId in destinationNode.inputs)
   ) {
     if (!createMissingNodes) {
       return;
     }
 
-    if (!(sourceOutputId in sourceNode.outputs.get())) {
+    if (!(sourceOutputId in sourceNode.outputs.get)) {
       addOutput(sourceNodeId, sourceOutputId);
     }
 
-    if (!(destinationInputId in destinationNode.inputs.get())) {
+    if (!(destinationInputId in destinationNode.inputs)) {
       addInput(destinationNodeId, destinationInputId);
     }
   }
 
-  const [getCss, setCss] = createSignal(css ?? "");
-  const outputDestinations = sourceNode.outputs
-    .get()
-    [sourceOutputId].get().destinations;
-
-  outputDestinations.set([
-    ...outputDestinations.get(),
+  setNodes(
+    sourceNodeId,
+    "outputs",
+    sourceOutputId,
+    "destinations",
+    sourceNode.outputs[sourceOutputId].destinations.length,
     {
       destinationNodeId,
       destinationInputId,
-      css: { get: getCss, set: setCss },
-    },
-  ]);
+      css,
+    }
+  );
 };
 
 export const addInput = (nodeId: string, inputId?: string) => {
-  const node = getNode(nodeId);
+  const node = nodes[nodeId];
   if (!node) {
     return;
   }
 
-  inputId ??= node.inputs.get().length.toString();
-  const [position, setPosition] = createSignal({ x: 0, y: 0 });
-  const [ref, setRef] = createSignal<HTMLDivElement>();
-  const [input, setInput] = createSignal<NodeInput>({
-    connectorId: inputId,
-    ref: { get: ref, set: setRef },
-    position: { get: position, set: setPosition },
-  });
+  inputId ??= Object.keys(node.inputs).length.toString();
 
-  node.inputs.get()[inputId] = { get: input, set: setInput };
+  setNodes(nodeId, "inputs", inputId, {
+    connectorId: inputId,
+    ref: undefined,
+    position: { x: 0, y: 0 },
+    size: { width: 0, height: 0 },
+  });
 };
 
 export const addOutput = (nodeId: string, outputId?: string) => {
-  const node = getNode(nodeId);
+  const node = nodes[nodeId];
   if (!node) {
     return;
   }
 
-  const [getDestination, setDestination] = createSignal<OutputDestination[]>(
-    []
-  );
-  outputId ??= node.outputs.get().length.toString();
-  const [position, setPosition] = createSignal({ x: 0, y: 0 });
-  const [ref, setRef] = createSignal<HTMLDivElement>();
-  const [output, setOutput] = createSignal<NodeOutput>({
+  outputId ??= Object.keys(node.outputs).length.toString();
+
+  setNodes(nodeId, "outputs", outputId, {
     connectorId: outputId,
-    ref: { get: ref, set: setRef },
-    position: { get: position, set: setPosition },
-    destinations: { get: getDestination, set: setDestination },
+    ref: undefined,
+    position: { x: 0, y: 0 },
+    destinations: [],
+    size: { width: 0, height: 0 },
   });
-  node.outputs.get()[outputId] = { get: output, set: setOutput };
 };
-
-// TODO: investigate if there are more performant ways to do this (e.g. with transform: translate)
-export const getInputRect = (
-  nodeId: string,
-  connectorId: string
-): DOMRect | undefined => {
-  const node = getNode(nodeId);
-  if (!node) {
-    return;
-  }
-
-  return node.inputs
-    .get()
-    [connectorId]?.get()
-    ?.ref.get()
-    ?.getBoundingClientRect();
-};
-
-export const getOutputRect = (
-  nodeId: string,
-  connectorId: string
-): DOMRect | undefined =>
-  nodes()
-    [nodeId]?.outputs?.get()
-    ?.[connectorId]?.get()
-    ?.ref.get()
-    ?.getBoundingClientRect();
 
 export const getTotalConnectedInputs = (
   nodeId: string,
   inputId?: string
 ): number => {
-  const node = getNode(nodeId);
-  if (!node) {
+  if (!nodes[nodeId]) {
     return 0;
   }
-  return Object.values(nodes()).reduce(
+  return Object.values(nodes).reduce(
     (total, node) =>
       total +
-      Object.values(node.outputs.get()).reduce(
+      Object.values(node.outputs).reduce(
         (totalOutputs, output) =>
           totalOutputs +
-          output
-            .get()
-            .destinations.get()
-            .filter(
-              (destination) =>
-                destination.destinationNodeId === nodeId &&
-                (inputId ? destination.destinationInputId === inputId : true)
-            ).length,
+          output.destinations.filter(
+            (destination) =>
+              destination.destinationNodeId === nodeId &&
+              (inputId ? destination.destinationInputId === inputId : true)
+          ).length,
         0
       ),
     0

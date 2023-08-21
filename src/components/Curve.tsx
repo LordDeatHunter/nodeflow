@@ -1,72 +1,79 @@
-import { createEffect, createSignal, on } from "solid-js";
-import { getInputRect, getNode, getOutputRect } from "../utils/NodeStorage";
-import { addPositions } from "../utils/math-utils";
-import { drawflowPos, zoomLevel } from "./Drawflow";
-
-const createCurve = (
-  startNodeId: string,
-  outputId: string,
-  endNodeId: string,
-  inputId: string
-) => {
-  const defaultRect = { x: 0, y: 0, width: 0, height: 0 };
-  const startRect = getOutputRect(startNodeId, outputId) ?? defaultRect;
-  const start = addPositions(startRect, {
-    x: startRect.width / 2,
-    y: startRect.width / 2,
-  });
-
-  const endRect = getInputRect(endNodeId, inputId) ?? defaultRect;
-  const end = addPositions(endRect, {
-    x: endRect.width / 2,
-    y: startRect.width / 2,
-  });
-
-  const zoom = zoomLevel();
-  start.x /= zoom;
-  start.y /= zoom;
-  end.x /= zoom;
-  end.y /= zoom;
-
-  const xCurve = 0;
-  const yCurve = (end.y - start.y) / 1.5;
-
-  return {
-    start,
-    end,
-    path: `M ${start.x} ${start.y} C ${start.x + xCurve} ${start.y + yCurve}, ${
-      end.x - xCurve
-    } ${end.y - yCurve}, ${end.x} ${end.y}`,
-  };
-};
+import { createMemo } from "solid-js";
+import { nodes } from "../utils/NodeStorage";
+import { addPositions, dividePosition } from "../utils/math-utils";
+import { drawflowPos } from "./Drawflow";
 
 interface CurveProps {
   nodeId: string;
   outputId: string;
   destinationNodeId: string;
   destinationInputId: string;
-  css: () => string;
+  css: string;
 }
 
 const Curve = (props: CurveProps) => {
   const { nodeId, outputId, destinationNodeId, destinationInputId } = props;
-  const [curve, setCurve] = createSignal<ReturnType<typeof createCurve>>();
 
-  const startNode = getNode(nodeId);
-  const endNode = getNode(destinationNodeId);
+  const startNode = nodes[nodeId];
+  const endNode = nodes[destinationNodeId];
   if (!startNode || !endNode) return;
 
-  const updateCurve = () => {
-    setCurve(
-      createCurve(nodeId, outputId, destinationNodeId, destinationInputId)
-    );
-  };
+  const curve = createMemo(() => {
+    const output = nodes[nodeId].outputs[outputId];
+    const input = nodes[destinationNodeId].inputs[destinationInputId];
+    const pos = drawflowPos();
 
-  createEffect(
-    on([startNode.position.get, endNode.position.get, drawflowPos], () =>
-      updateCurve()
-    )
-  );
+    const start = addPositions(
+      nodes[nodeId].position,
+      {
+        x: output.ref?.offsetLeft ?? 0,
+        y: output.ref?.offsetTop ?? 0,
+      },
+      {
+        x: output.ref?.parentElement?.offsetLeft ?? 0,
+        y: output.ref?.parentElement?.offsetTop ?? 0,
+      },
+      dividePosition(
+        {
+          x: output.ref?.offsetWidth ?? 0,
+          y: output.ref?.offsetHeight ?? 0,
+        },
+        2
+      ),
+      pos
+    );
+
+    const end = addPositions(
+      nodes[destinationNodeId].position,
+      {
+        x: input.ref?.offsetLeft ?? 0,
+        y: input.ref?.offsetTop ?? 0,
+      },
+      {
+        x: input.ref?.parentElement?.offsetLeft ?? 0,
+        y: input.ref?.parentElement?.offsetTop ?? 0,
+      },
+      dividePosition(
+        {
+          x: input.ref?.offsetWidth ?? 0,
+          y: input.ref?.offsetHeight ?? 0,
+        },
+        2
+      ),
+      pos
+    );
+
+    const xCurve = 0;
+    const yCurve = (end.y - start.y) / 1.5;
+
+    return {
+      start,
+      end,
+      path: `M ${start.x} ${start.y} C ${start.x + xCurve} ${
+        start.y + yCurve
+      }, ${end.x - xCurve} ${end.y - yCurve}, ${end.x} ${end.y}`,
+    };
+  });
 
   return (
     <svg
@@ -103,7 +110,7 @@ const Curve = (props: CurveProps) => {
         stroke-width={1}
         fill="transparent"
         marker-end="url(#pointer)"
-        class={props.css()}
+        class={props.css}
       />
     </svg>
   );
