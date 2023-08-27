@@ -41,88 +41,115 @@ const Node: Component<NodeProps> = (props) => {
   };
 
   return (
-    <>
+    <div
+      ref={(el) =>
+        setTimeout(() => {
+          if (!el) return;
+          setNodes(nodeId, "ref", el);
+        })
+      }
+      onMouseDown={(event) => {
+        event.stopPropagation();
+        selectNode({ x: event.clientX, y: event.clientY });
+      }}
+      onTouchStart={(event) => {
+        event.stopPropagation();
+        const touch = event.touches[0];
+        selectNode({ x: touch.clientX, y: touch.clientY });
+      }}
+      style={{
+        left: `${nodes[nodeId].position.x}px`,
+        top: `${nodes[nodeId].position.y}px`,
+      }}
+      classList={{
+        [props?.css?.normal ?? ""]: true,
+        [props?.css?.selected ?? ""]: mouseData.heldNodeId === nodeId,
+      }}
+    >
+      {children}
       <div
-        ref={(el) => setTimeout(() => setNodes(nodeId, "ref", el))}
-        onMouseDown={(event) => {
-          event.stopPropagation();
-          selectNode({ x: event.clientX, y: event.clientY });
-        }}
-        onTouchStart={(event) => {
-          event.stopPropagation();
-          const touch = event.touches[0];
-          selectNode({ x: touch.clientX, y: touch.clientY });
-        }}
         style={{
-          left: `${nodes[nodeId].position.x}px`,
-          top: `${nodes[nodeId].position.y}px`,
-        }}
-        classList={{
-          [props?.css?.normal ?? ""]: true,
-          [props?.css?.selected ?? ""]: mouseData.heldNodeId === nodeId,
+          position: "absolute",
+          display: "flex",
+          "justify-content": "space-evenly",
+          width: "100%",
+          top: "-6px",
         }}
       >
-        {children}
-        <div
-          style={{
-            position: "absolute",
-            display: "flex",
-            "justify-content": "space-evenly",
-            width: "100%",
-            top: "-6px",
-          }}
-        >
-          <For each={Object.entries(nodes[nodeId].inputs)}>
-            {([inputId]) => (
-              <div
-                ref={(el) =>
-                  setTimeout(() =>
-                    setNodes(nodeId, "inputs", inputId, "ref", el)
-                  )
-                }
-                style={{
-                  "z-index": 1,
-                  width: "10px",
-                  height: "10px",
-                  "background-color": "black",
-                  position: "relative",
-                  "border-radius": "50%",
-                }}
-              />
-            )}
-          </For>
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            display: "flex",
-            "justify-content": "space-evenly",
-            width: "100%",
-            bottom: "-6px",
-          }}
-        >
-          <For each={Object.entries(nodes[nodeId].outputs)}>
-            {([outputId]) => (
-              <div
-                style={{
-                  "z-index": 1,
-                  width: "10px",
-                  height: "10px",
-                  "background-color": "black",
-                  position: "relative",
-                  "border-radius": "50%",
-                }}
-                ref={(el) => {
-                  setTimeout(() =>
-                    setNodes(nodeId, "outputs", outputId, "ref", el)
-                  );
-                }}
-              />
-            )}
-          </For>
-        </div>
+        <For each={Object.entries(nodes[nodeId].inputs)}>
+          {([inputId]) => (
+            <div
+              ref={(el) =>
+                setTimeout(() => {
+                  if (!el) return;
+                  setNodes(nodeId, "inputs", inputId, (prev) => ({
+                    ...prev,
+                    ref: el,
+                    position: {
+                      x: (el?.parentElement?.offsetLeft ?? 0) + el.offsetLeft,
+                      y: (el?.parentElement?.offsetTop ?? 0) + el.offsetTop,
+                    },
+                    size: {
+                      width: el.offsetWidth,
+                      height: el.offsetHeight,
+                    },
+                  }));
+                })
+              }
+              style={{
+                "z-index": 1,
+                width: "10px",
+                height: "10px",
+                "background-color": "black",
+                position: "relative",
+                "border-radius": "50%",
+              }}
+            />
+          )}
+        </For>
       </div>
-    </>
+      <div
+        style={{
+          position: "absolute",
+          display: "flex",
+          "justify-content": "space-evenly",
+          width: "100%",
+          bottom: "-6px",
+        }}
+      >
+        <For each={Object.entries(nodes[nodeId].outputs)}>
+          {([outputId]) => (
+            <div
+              style={{
+                "z-index": 1,
+                width: "10px",
+                height: "10px",
+                "background-color": "black",
+                position: "relative",
+                "border-radius": "50%",
+              }}
+              ref={(el) => {
+                setTimeout(() => {
+                  if (!el) return;
+                  setNodes(nodeId, "outputs", outputId, (prev) => ({
+                    ...prev,
+                    ref: el,
+                    position: {
+                      x: (el?.parentElement?.offsetLeft ?? 0) + el.offsetLeft,
+                      y: (el?.parentElement?.offsetTop ?? 0) + el.offsetTop,
+                    },
+                    size: {
+                      width: el.offsetWidth,
+                      height: el.offsetHeight,
+                    },
+                  }));
+                });
+              }}
+            />
+          )}
+        </For>
+      </div>
+    </div>
   );
 };
 

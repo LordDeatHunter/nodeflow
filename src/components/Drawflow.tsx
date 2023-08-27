@@ -183,7 +183,10 @@ const Drawflow: Component = () => {
                       <Show
                         when={
                           !!outputConnection?.destinationNodeId &&
-                          !!outputConnection?.destinationInputId
+                          !!outputConnection?.destinationInputId &&
+                          Object.keys(nodes).includes(
+                            outputConnection.destinationNodeId!
+                          )
                         }
                       >
                         <Curve

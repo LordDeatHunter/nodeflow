@@ -47,7 +47,14 @@ export interface NodeOutput {
 export interface OutputDestination {
   destinationNodeId?: string;
   destinationInputId?: string;
+  path?: VectorPath;
   css: string;
+}
+
+export interface VectorPath {
+  path: string;
+  start: Position;
+  end: Position;
 }
 
 export interface SignalObject<T> {

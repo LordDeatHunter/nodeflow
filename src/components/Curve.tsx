@@ -1,6 +1,11 @@
-import { createMemo } from "solid-js";
-import { nodes } from "../utils/NodeStorage";
-import { addPositions, dividePosition } from "../utils/math-utils";
+import { createEffect } from "solid-js";
+import { nodes, setNodes } from "../utils/NodeStorage";
+import {
+  addPositions,
+  convertSizeToPosition,
+  dividePosition,
+} from "../utils/math-utils";
+import { produce } from "solid-js/store";
 
 interface CurveProps {
   nodeId: string;
@@ -16,59 +21,56 @@ const Curve = (props: CurveProps) => {
   const startNode = nodes[nodeId];
   const endNode = nodes[destinationNodeId];
   if (!startNode || !endNode) return;
+  const destination = startNode.outputs[outputId]?.destinations?.find(
+    (destination) =>
+      destination.destinationNodeId === destinationNodeId &&
+      destination.destinationInputId === destinationInputId
+  );
+  if (!destination) return;
 
-  const curve = createMemo(() => {
-    const output = nodes[nodeId].outputs[outputId];
-    const input = nodes[destinationNodeId].inputs[destinationInputId];
+  createEffect(() => {
+    const output = startNode.outputs[outputId];
+    const input = endNode.inputs[destinationInputId];
 
     const start = addPositions(
-      nodes[nodeId].position,
-      {
-        x: output.ref?.offsetLeft ?? 0,
-        y: output.ref?.offsetTop ?? 0,
-      },
-      {
-        x: output.ref?.parentElement?.offsetLeft ?? 0,
-        y: output.ref?.parentElement?.offsetTop ?? 0,
-      },
-      dividePosition(
-        {
-          x: output.ref?.offsetWidth ?? 0,
-          y: output.ref?.offsetHeight ?? 0,
-        },
-        2
-      )
+      startNode.position,
+      output.position,
+      dividePosition(convertSizeToPosition(output.size), 2)
     );
 
     const end = addPositions(
-      nodes[destinationNodeId].position,
-      {
-        x: input.ref?.offsetLeft ?? 0,
-        y: input.ref?.offsetTop ?? 0,
-      },
-      {
-        x: input.ref?.parentElement?.offsetLeft ?? 0,
-        y: input.ref?.parentElement?.offsetTop ?? 0,
-      },
-      dividePosition(
-        {
-          x: input.ref?.offsetWidth ?? 0,
-          y: input.ref?.offsetHeight ?? 0,
-        },
-        2
-      )
+      endNode.position,
+      input.position,
+      dividePosition(convertSizeToPosition(output.size), 2)
     );
 
     const xCurve = 0;
     const yCurve = (end.y - start.y) / 1.5;
 
-    return {
+    const path = {
       start,
       end,
       path: `M ${start.x} ${start.y} C ${start.x + xCurve} ${
         start.y + yCurve
       }, ${end.x - xCurve} ${end.y - yCurve}, ${end.x} ${end.y}`,
     };
+
+    setNodes(
+      nodeId,
+      "outputs",
+      outputId,
+      "destinations",
+      produce((destinations) => {
+        const destination = destinations.find(
+          (destination) =>
+            destination.destinationNodeId === destinationNodeId &&
+            destination.destinationInputId === destinationInputId
+        );
+        if (destination) {
+          destination.path = path;
+        }
+      })
+    );
   });
 
   return (
@@ -102,7 +104,7 @@ const Curve = (props: CurveProps) => {
         </marker>
       </defs>
       <path
-        d={curve()?.path}
+        d={destination?.path?.path}
         stroke="black"
         stroke-width={1}
         fill="transparent"

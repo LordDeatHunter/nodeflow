@@ -1,6 +1,5 @@
-import { createStore } from "solid-js/store";
+import { createStore, produce } from "solid-js/store";
 import { MouseData, NodeCss, NodeData } from "../types/types";
-import { untrack } from "solid-js";
 
 export const [nodes, setNodes] = createStore<Record<string, NodeData>>({});
 export const [mouseData, setMouseData] = createStore<MouseData>({
@@ -36,22 +35,19 @@ export const addNode = (x = 0, y = 0, css?: NodeCss): NodeData => {
 
 // TODO: prevent this from resetting the curve's position
 export const removeNode = (nodeId: string) => {
-  Object.values(nodes).forEach((node) =>
-    Object.values(node.outputs).forEach((output) => {
-      const filteredDestinations = output.destinations.filter(
-        (destination) => destination.destinationNodeId !== nodeId
-      );
-      if (filteredDestinations.length === output.destinations.length) return;
-      setNodes(
-        node.nodeId,
-        "outputs",
-        output.connectorId,
-        "destinations",
-        filteredDestinations
+  setNodes(
+    produce((newNodes) => {
+      delete newNodes[nodeId];
+      Object.values(newNodes).forEach((node) =>
+        Object.values(node.outputs).forEach((output) => {
+          newNodes[node.nodeId].outputs[output.connectorId].destinations =
+            output.destinations.filter(
+              (destination) => destination.destinationNodeId !== nodeId
+            );
+        })
       );
     })
   );
-  setNodes(nodeId, undefined!);
 };
 
 export const addConnection = (
