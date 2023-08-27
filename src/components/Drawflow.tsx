@@ -1,4 +1,4 @@
-import { Component, createSignal, For } from "solid-js";
+import { Component, createSignal, For, Show } from "solid-js";
 import { Position } from "../types/types";
 import {
   clamp,
@@ -15,6 +15,7 @@ import {
 } from "../utils/NodeStorage";
 import { getScreenSize } from "../utils/screen-utils";
 import Node from "./Node";
+import Curve from "./Curve";
 
 export const [drawflowPos, setDrawflowPos] = createSignal<Position>({
   x: 0,
@@ -40,14 +41,18 @@ const Drawflow: Component = () => {
     setMouseData("dragging", false);
     setZoomLevel(newZoom);
     const windowDimensions = convertSizeToPosition(getScreenSize());
+    const centeredZoomLocation = subtractPositions(
+      zoomLocation,
+      dividePosition(windowDimensions, 2)
+    );
     const oldScreenSize = multiplyPosition(windowDimensions, oldZoom);
     const newScreenSize = multiplyPosition(windowDimensions, newZoom);
     const oldOffset = dividePosition(
-      subtractPositions(zoomLocation, dividePosition(oldScreenSize, 2)),
+      subtractPositions(centeredZoomLocation, dividePosition(oldScreenSize, 2)),
       oldZoom
     );
     const newOffset = dividePosition(
-      subtractPositions(zoomLocation, dividePosition(newScreenSize, 2)),
+      subtractPositions(centeredZoomLocation, dividePosition(newScreenSize, 2)),
       newZoom
     );
     setDrawflowPos((prev) => ({
@@ -71,10 +76,8 @@ const Drawflow: Component = () => {
       style={{
         position: "absolute",
         overflow: "hidden",
-        transform: `scale(${zoomLevel()})`,
-        "transform-origin": "top left",
-        width: `${window.innerWidth / zoomLevel()}px`,
-        height: `${window.innerHeight / zoomLevel()}px`,
+        width: `${window.innerWidth}px`,
+        height: `${window.innerHeight}px`,
       }}
       onMouseMove={(e) => {
         setMouseData("mousePosition", { x: e.clientX, y: e.clientY });
@@ -156,13 +159,53 @@ const Drawflow: Component = () => {
         });
       }}
     >
-      <For each={Object.entries(nodes)}>
-        {([nodeId, nodeData]) => (
-          <Node css={nodeData.css} nodeId={nodeId}>
-            <h1>ID: {nodeId}</h1>
-          </Node>
-        )}
-      </For>
+      <div
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          transform: `scale(${zoomLevel()}) translate(${drawflowPos().x}px, ${
+            drawflowPos().y
+          }px)`,
+          "transform-origin": "center",
+        }}
+      >
+        <For each={Object.entries(nodes)}>
+          {([nodeId, nodeData]) => (
+            <>
+              <Node css={nodeData.css} nodeId={nodeId}>
+                <h1>ID: {nodeId}</h1>
+              </Node>
+              <For each={Object.entries(nodes[nodeId]!.outputs)}>
+                {([outputId, output]) => (
+                  <For each={output.destinations}>
+                    {(outputConnection) => (
+                      <Show
+                        when={
+                          !!outputConnection?.destinationNodeId &&
+                          !!outputConnection?.destinationInputId
+                        }
+                      >
+                        <Curve
+                          nodeId={nodeId}
+                          outputId={outputId}
+                          destinationNodeId={
+                            outputConnection.destinationNodeId!
+                          }
+                          destinationInputId={
+                            outputConnection.destinationInputId!
+                          }
+                          css={outputConnection.css}
+                        />
+                      </Show>
+                    )}
+                  </For>
+                )}
+              </For>
+            </>
+          )}
+        </For>
+      </div>
     </div>
   );
 };

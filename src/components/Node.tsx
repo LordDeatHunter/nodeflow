@@ -1,8 +1,7 @@
-import { type Component, createEffect, createMemo, For, Show } from "solid-js";
+import { type Component, createEffect, For } from "solid-js";
 import { NodeCss, Position } from "../types/types";
 import { mouseData, nodes, setMouseData, setNodes } from "../utils/NodeStorage";
-import Curve from "./Curve";
-import drawflow, { drawflowPos, zoomLevel } from "./Drawflow";
+import { zoomLevel } from "./Drawflow";
 
 interface NodeProps {
   nodeId: string;
@@ -28,14 +27,6 @@ const Node: Component<NodeProps> = (props) => {
     setNodes(nodeId, "position", pos);
   });
 
-  const calculatedPosition = createMemo<Position>(() => {
-    const { x, y } = nodes[nodeId].position;
-    return {
-      x: x + drawflowPos().x,
-      y: y + drawflowPos().y,
-    };
-  });
-
   const selectNode = (position: Position) => {
     const { x, y } = nodes[nodeId]!.position;
     setMouseData({
@@ -52,7 +43,7 @@ const Node: Component<NodeProps> = (props) => {
   return (
     <>
       <div
-        ref={(el) => setNodes(nodeId, "ref", el)}
+        ref={(el) => setTimeout(() => setNodes(nodeId, "ref", el))}
         onMouseDown={(event) => {
           event.stopPropagation();
           selectNode({ x: event.clientX, y: event.clientY });
@@ -63,8 +54,8 @@ const Node: Component<NodeProps> = (props) => {
           selectNode({ x: touch.clientX, y: touch.clientY });
         }}
         style={{
-          left: `${calculatedPosition().x}px`,
-          top: `${calculatedPosition().y}px`,
+          left: `${nodes[nodeId].position.x}px`,
+          top: `${nodes[nodeId].position.y}px`,
         }}
         classList={{
           [props?.css?.normal ?? ""]: true,
@@ -84,7 +75,11 @@ const Node: Component<NodeProps> = (props) => {
           <For each={Object.entries(nodes[nodeId].inputs)}>
             {([inputId]) => (
               <div
-                ref={(el) => setNodes(nodeId, "inputs", inputId, "ref", el)}
+                ref={(el) =>
+                  setTimeout(() =>
+                    setNodes(nodeId, "inputs", inputId, "ref", el)
+                  )
+                }
                 style={{
                   "z-index": 1,
                   width: "10px",
@@ -109,7 +104,6 @@ const Node: Component<NodeProps> = (props) => {
           <For each={Object.entries(nodes[nodeId].outputs)}>
             {([outputId]) => (
               <div
-                ref={(el) => setNodes(nodeId, "outputs", outputId, "ref", el)}
                 style={{
                   "z-index": 1,
                   width: "10px",
@@ -118,33 +112,16 @@ const Node: Component<NodeProps> = (props) => {
                   position: "relative",
                   "border-radius": "50%",
                 }}
+                ref={(el) => {
+                  setTimeout(() =>
+                    setNodes(nodeId, "outputs", outputId, "ref", el)
+                  );
+                }}
               />
             )}
           </For>
         </div>
       </div>
-      <For each={Object.entries(nodes[nodeId]!.outputs)}>
-        {([outputId, output]) => (
-          <For each={output.destinations}>
-            {(outputConnection) => (
-              <Show
-                when={
-                  !!outputConnection?.destinationNodeId &&
-                  !!outputConnection?.destinationInputId
-                }
-              >
-                <Curve
-                  nodeId={nodeId}
-                  outputId={outputId}
-                  destinationNodeId={outputConnection.destinationNodeId!}
-                  destinationInputId={outputConnection.destinationInputId!}
-                  css={outputConnection.css}
-                />
-              </Show>
-            )}
-          </For>
-        )}
-      </For>
     </>
   );
 };

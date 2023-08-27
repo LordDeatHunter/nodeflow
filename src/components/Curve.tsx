@@ -1,7 +1,6 @@
 import { createMemo } from "solid-js";
 import { nodes } from "../utils/NodeStorage";
 import { addPositions, dividePosition } from "../utils/math-utils";
-import { drawflowPos } from "./Drawflow";
 
 interface CurveProps {
   nodeId: string;
@@ -21,7 +20,6 @@ const Curve = (props: CurveProps) => {
   const curve = createMemo(() => {
     const output = nodes[nodeId].outputs[outputId];
     const input = nodes[destinationNodeId].inputs[destinationInputId];
-    const pos = drawflowPos();
 
     const start = addPositions(
       nodes[nodeId].position,
@@ -39,8 +37,7 @@ const Curve = (props: CurveProps) => {
           y: output.ref?.offsetHeight ?? 0,
         },
         2
-      ),
-      pos
+      )
     );
 
     const end = addPositions(
@@ -59,8 +56,7 @@ const Curve = (props: CurveProps) => {
           y: input.ref?.offsetHeight ?? 0,
         },
         2
-      ),
-      pos
+      )
     );
 
     const xCurve = 0;
@@ -83,6 +79,7 @@ const Curve = (props: CurveProps) => {
         width: "100%",
         height: "100%",
         "pointer-events": "none",
+        overflow: "visible",
       }}
     >
       <defs>
