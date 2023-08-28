@@ -1,5 +1,11 @@
 import { createStore, produce } from "solid-js/store";
-import { MouseData, NodeCss, NodeData } from "../types/types";
+import {
+  MouseData,
+  NodeCss,
+  NodeData,
+  Optional,
+  Position,
+} from "../types/types";
 
 export const [nodes, setNodes] = createStore<Record<string, NodeData>>({});
 export const [mouseData, setMouseData] = createStore<MouseData>({
@@ -8,9 +14,22 @@ export const [mouseData, setMouseData] = createStore<MouseData>({
   startPosition: undefined,
   heldNodeId: undefined,
 });
+export const [drawflow, setDrawflow] = createStore<{
+  position: Position;
+  zoomLevel: number;
+}>({
+  position: { x: 0, y: 0 },
+  zoomLevel: 1,
+});
+
+export const Constants = {
+  MAX_ZOOM: 200,
+  MIN_ZOOM: 0.02,
+  ZOOM_MULTIPLIER: 0.005,
+} as const;
 
 export const addNode = (x = 0, y = 0, css?: NodeCss): NodeData => {
-  let newNode: NodeData | undefined;
+  let newNode: Optional<NodeData>;
   setNodes((prev) => {
     const newId = (Object.keys(prev).length + 1).toString();
 

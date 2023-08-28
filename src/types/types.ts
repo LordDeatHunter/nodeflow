@@ -1,3 +1,5 @@
+export type Optional<T> = T | undefined;
+
 export interface Position {
   x: number;
   y: number;

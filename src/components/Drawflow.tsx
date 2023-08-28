@@ -8,38 +8,30 @@ import {
   subtractPositions,
 } from "../utils/math-utils";
 import {
+  Constants,
+  drawflow,
   mouseData,
   nodes,
   removeNode,
+  setDrawflow,
   setMouseData,
-} from "../utils/NodeStorage";
+} from "../utils/drawflow-storage";
 import { getScreenSize } from "../utils/screen-utils";
 import Node from "./Node";
 import Curve from "./Curve";
 
-export const [drawflowPos, setDrawflowPos] = createSignal<Position>({
-  x: 0,
-  y: 0,
-});
-export const [zoomLevel, setZoomLevel] = createSignal<number>(1);
-
-export const MAX_ZOOM = 200;
-export const MIN_ZOOM = 0.02;
-export const ZOOM_MULTIPLIER = 0.005;
-
 const Drawflow: Component = () => {
-  const [dist, setDist] = createSignal(0);
+  const [pinchDistance, setPinchDistance] = createSignal(0);
 
   const updateZoom = (distance: number, zoomLocation: Position): void => {
-    const oldZoom = zoomLevel();
+    const oldZoom = drawflow.zoomLevel;
     const newZoom = clamp(
-      oldZoom + oldZoom * distance * ZOOM_MULTIPLIER,
-      MIN_ZOOM,
-      MAX_ZOOM
+      oldZoom + oldZoom * distance * Constants.ZOOM_MULTIPLIER,
+      Constants.MIN_ZOOM,
+      Constants.MAX_ZOOM
     );
-    if (newZoom < MIN_ZOOM || newZoom > MAX_ZOOM) return;
+    if (newZoom < Constants.MIN_ZOOM || newZoom > Constants.MAX_ZOOM) return;
     setMouseData("dragging", false);
-    setZoomLevel(newZoom);
     const windowDimensions = convertSizeToPosition(getScreenSize());
     const centeredZoomLocation = subtractPositions(
       zoomLocation,
@@ -55,18 +47,20 @@ const Drawflow: Component = () => {
       subtractPositions(centeredZoomLocation, dividePosition(newScreenSize, 2)),
       newZoom
     );
-    setDrawflowPos((prev) => ({
-      x: prev.x - oldOffset.x + newOffset.x,
-      y: prev.y - oldOffset.y + newOffset.y,
+    setDrawflow((prev) => ({
+      position: {
+        x: prev.position.x - oldOffset.x + newOffset.x,
+        y: prev.position.y - oldOffset.y + newOffset.y,
+      },
+      zoomLevel: newZoom,
     }));
-    return;
   };
 
   const updateBackgroundPosition = (moveDistance: Position) => {
     if (mouseData.heldNodeId || !mouseData.dragging) return;
-    setDrawflowPos((prev) => ({
-      x: prev.x + moveDistance.x / zoomLevel(),
-      y: prev.y + moveDistance.y / zoomLevel(),
+    setDrawflow("position", (prev) => ({
+      x: prev.x + moveDistance.x / drawflow.zoomLevel,
+      y: prev.y + moveDistance.y / drawflow.zoomLevel,
     }));
   };
 
@@ -97,8 +91,8 @@ const Drawflow: Component = () => {
           heldNodeId: undefined,
           mousePosition: { x: event.clientX, y: event.clientY },
           startPosition: {
-            x: event.clientX / zoomLevel() - drawflowPos().x,
-            y: event.clientY / zoomLevel() - drawflowPos().y,
+            x: event.clientX / drawflow.zoomLevel - drawflow.position.x,
+            y: event.clientY / drawflow.zoomLevel - drawflow.position.y,
           },
         });
       }}
@@ -113,25 +107,26 @@ const Drawflow: Component = () => {
       onTouchStart={(event) => {
         event.stopPropagation();
         const touch = event.touches[0];
+        const mousePosition = { x: touch.clientX, y: touch.clientY };
         if (event.touches.length === 2) {
           setMouseData({
             dragging: false,
             heldNodeId: undefined,
-            mousePosition: { x: touch.clientX, y: touch.clientY },
+            mousePosition,
           });
           const { pageX: touch1X, pageY: touch1Y } = event.touches[0];
           const { pageX: touch2X, pageY: touch2Y } = event.touches[1];
-          setDist(Math.hypot(touch1X - touch2X, touch1Y - touch2Y));
+          setPinchDistance(Math.hypot(touch1X - touch2X, touch1Y - touch2Y));
           return;
         }
         setMouseData({
           dragging: event.touches.length === 1,
           heldNodeId: undefined,
-          mousePosition: { x: touch.clientX, y: touch.clientY },
-          startPosition: {
-            x: touch.clientX / zoomLevel() - drawflowPos().x,
-            y: touch.clientY / zoomLevel() - drawflowPos().y,
-          },
+          mousePosition,
+          startPosition: subtractPositions(
+            dividePosition(mousePosition, drawflow.zoomLevel),
+            drawflow.position
+          ),
         });
       }}
       onTouchMove={(e) => {
@@ -143,8 +138,8 @@ const Drawflow: Component = () => {
             x: (touch1X + touch2X) / 2,
             y: (touch1Y + touch2Y) / 2,
           };
-          updateZoom(currDist - dist(), centerPosition);
-          setDist(currDist);
+          updateZoom(currDist - pinchDistance(), centerPosition);
+          setPinchDistance(currDist);
           return;
         }
         setMouseData("mousePosition", (mousePosition) => {
@@ -164,9 +159,7 @@ const Drawflow: Component = () => {
           position: "absolute",
           width: "100%",
           height: "100%",
-          transform: `scale(${zoomLevel()}) translate(${drawflowPos().x}px, ${
-            drawflowPos().y
-          }px)`,
+          transform: `scale(${drawflow.zoomLevel}) translate(${drawflow.position.x}px, ${drawflow.position.y}px)`,
           "transform-origin": "center",
         }}
       >

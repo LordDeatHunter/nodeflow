@@ -1,7 +1,12 @@
 import { type Component, createEffect, For } from "solid-js";
 import { NodeCss, Position } from "../types/types";
-import { mouseData, nodes, setMouseData, setNodes } from "../utils/NodeStorage";
-import { zoomLevel } from "./Drawflow";
+import {
+  drawflow,
+  mouseData,
+  nodes,
+  setMouseData,
+  setNodes,
+} from "../utils/drawflow-storage";
 
 interface NodeProps {
   nodeId: string;
@@ -20,8 +25,8 @@ const Node: Component<NodeProps> = (props) => {
       y: 0,
     };
     const pos = {
-      x: mouseX / zoomLevel() - startX,
-      y: mouseY / zoomLevel() - startY,
+      x: mouseX / drawflow.zoomLevel - startX,
+      y: mouseY / drawflow.zoomLevel - startY,
     };
 
     setNodes(nodeId, "position", pos);
@@ -34,8 +39,8 @@ const Node: Component<NodeProps> = (props) => {
       heldNodeId: nodeId,
       mousePosition: position,
       startPosition: {
-        x: position.x / zoomLevel() - x,
-        y: position.y / zoomLevel() - y,
+        x: position.x / drawflow.zoomLevel - x,
+        y: position.y / drawflow.zoomLevel - y,
       },
     });
   };
