@@ -26,6 +26,7 @@ export const Constants = {
   MAX_ZOOM: 200,
   MIN_ZOOM: 0.02,
   ZOOM_MULTIPLIER: 0.005,
+  MOVE_DISTANCE: 100,
 } as const;
 
 export const addNode = (x = 0, y = 0, css?: NodeCss): NodeData => {

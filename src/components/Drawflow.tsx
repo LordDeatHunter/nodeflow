@@ -56,8 +56,11 @@ const Drawflow: Component = () => {
     }));
   };
 
-  const updateBackgroundPosition = (moveDistance: Position) => {
-    if (mouseData.heldNodeId || !mouseData.dragging) return;
+  const updateBackgroundPosition = (
+    moveDistance: Position,
+    keyboard = false
+  ) => {
+    if (mouseData.heldNodeId || (!mouseData.dragging && !keyboard)) return;
     setDrawflow("position", (prev) => ({
       x: prev.x + moveDistance.x / drawflow.zoomLevel,
       y: prev.y + moveDistance.y / drawflow.zoomLevel,
@@ -102,6 +105,32 @@ const Drawflow: Component = () => {
         }
         if (e.code === "Space" && mouseData.heldNodeId) {
           console.log(nodes[mouseData.heldNodeId]);
+        }
+        switch (e.code) {
+          case "ArrowLeft":
+            updateBackgroundPosition(
+              { x: Constants.MOVE_DISTANCE, y: 0 },
+              true
+            );
+            break;
+          case "ArrowRight":
+            updateBackgroundPosition(
+              { x: -Constants.MOVE_DISTANCE, y: 0 },
+              true
+            );
+            break;
+          case "ArrowUp":
+            updateBackgroundPosition(
+              { x: 0, y: Constants.MOVE_DISTANCE },
+              true
+            );
+            break;
+          case "ArrowDown":
+            updateBackgroundPosition(
+              { x: 0, y: -Constants.MOVE_DISTANCE },
+              true
+            );
+            break;
         }
       }}
       onTouchStart={(event) => {
