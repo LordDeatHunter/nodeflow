@@ -5,7 +5,6 @@ import {
   convertSizeToPosition,
   dividePosition,
 } from "../utils/math-utils";
-import { produce } from "solid-js/store";
 
 interface CurveProps {
   nodeId: string;
@@ -21,12 +20,15 @@ const Curve = (props: CurveProps) => {
   const startNode = nodes[nodeId];
   const endNode = nodes[destinationNodeId];
   if (!startNode || !endNode) return;
-  const destination = startNode.outputs[outputId]?.destinations?.find(
-    (destination) =>
-      destination.destinationNodeId === destinationNodeId &&
-      destination.destinationInputId === destinationInputId
-  );
-  if (!destination) return;
+  const destinations = startNode.outputs[outputId]?.destinations;
+  const destinationIndex =
+    destinations?.findIndex(
+      (destination) =>
+        destination.destinationNodeId === destinationNodeId &&
+        destination.destinationInputId === destinationInputId
+    ) ?? -1;
+  if (destinationIndex < 0) return;
+  const destination = destinations![destinationIndex];
 
   createEffect(() => {
     const output = startNode.outputs[outputId];
@@ -41,7 +43,7 @@ const Curve = (props: CurveProps) => {
     const end = addPositions(
       endNode.position,
       input.position,
-      dividePosition(convertSizeToPosition(output.size), 2)
+      dividePosition(convertSizeToPosition(input.size), 2)
     );
 
     const xCurve = 0;
@@ -60,16 +62,9 @@ const Curve = (props: CurveProps) => {
       "outputs",
       outputId,
       "destinations",
-      produce((destinations) => {
-        const destination = destinations.find(
-          (destination) =>
-            destination.destinationNodeId === destinationNodeId &&
-            destination.destinationInputId === destinationInputId
-        );
-        if (destination) {
-          destination.path = path;
-        }
-      })
+      destinationIndex,
+      "path",
+      path
     );
   });
 
@@ -104,7 +99,7 @@ const Curve = (props: CurveProps) => {
         </marker>
       </defs>
       <path
-        d={destination?.path?.path}
+        d={destination.path?.path}
         stroke="black"
         stroke-width={1}
         fill="transparent"
