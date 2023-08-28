@@ -1,3 +1,5 @@
+export type Optional<T> = T | undefined;
+
 export interface Position {
   x: number;
   y: number;
@@ -16,35 +18,48 @@ export interface MouseData {
 }
 
 export interface NodeData {
-  ref: SignalObject<HTMLDivElement | undefined>;
-  position: SignalObject<Position>;
+  ref?: HTMLDivElement;
+  position: Position;
   nodeId: string;
-  inputs: SignalObject<Record<string, SignalObject<NodeInput>>>;
-  outputs: SignalObject<Record<string, SignalObject<NodeOutput>>>;
-  css: SignalObject<string>;
-  selectedCss: SignalObject<string>;
+  inputs: Record<string, NodeInput>;
+  outputs: Record<string, NodeOutput>;
+  css: NodeCss;
 }
 
-export interface SignalObject<T> {
-  get: () => T;
-  set: (value: T | ((prev: T) => void)) => void;
+export interface NodeCss {
+  normal?: string;
+  selected?: string;
 }
 
 export interface NodeInput {
-  ref: SignalObject<HTMLDivElement | undefined>;
+  ref: HTMLDivElement;
   connectorId: string;
-  position: SignalObject<Position>;
+  position: Position;
+  size: Size;
 }
 
 export interface NodeOutput {
-  ref: SignalObject<HTMLDivElement | undefined>;
+  ref: HTMLDivElement;
   connectorId: string;
-  destinations: SignalObject<OutputDestination[]>;
-  position: SignalObject<Position>;
+  destinations: OutputDestination[];
+  position: Position;
+  size: Size;
 }
 
 export interface OutputDestination {
   destinationNodeId?: string;
   destinationInputId?: string;
-  css: SignalObject<string>;
+  path?: VectorPath;
+  css: string;
+}
+
+export interface VectorPath {
+  path: string;
+  start: Position;
+  end: Position;
+}
+
+export interface SignalObject<T> {
+  get: () => T;
+  set: (value: T | ((prev: T) => void)) => void;
 }

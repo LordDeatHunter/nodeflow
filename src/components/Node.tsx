@@ -1,14 +1,17 @@
-import { type Component, createEffect, createMemo, For, Show } from "solid-js";
-import { Position } from "../types/types";
-import { getNode, mouseData, setMouseData } from "../utils/NodeStorage";
-import Curve from "./Curve";
-import { drawflowPos, zoomLevel } from "./Drawflow";
+import { type Component, createEffect, For } from "solid-js";
+import { NodeCss, Position } from "../types/types";
+import {
+  drawflow,
+  mouseData,
+  nodes,
+  setMouseData,
+  setNodes,
+} from "../utils/drawflow-storage";
 
 interface NodeProps {
   nodeId: string;
   children?: any;
-  css: () => string;
-  selectedCss: () => string;
+  css: NodeCss;
 }
 
 const Node: Component<NodeProps> = (props) => {
@@ -22,143 +25,136 @@ const Node: Component<NodeProps> = (props) => {
       y: 0,
     };
     const pos = {
-      x: mouseX / zoomLevel() - startX,
-      y: mouseY / zoomLevel() - startY,
+      x: mouseX / drawflow.zoomLevel - startX,
+      y: mouseY / drawflow.zoomLevel - startY,
     };
-    getNode(nodeId)!.position.set(pos);
-  });
 
-  const calculatedPosition = createMemo<Position>(() => {
-    const { x, y } = getNode(nodeId)!.position.get();
-    return {
-      x: x + drawflowPos().x,
-      y: y + drawflowPos().y,
-    };
+    setNodes(nodeId, "position", pos);
   });
 
   const selectNode = (position: Position) => {
-    const { x, y } = getNode(nodeId)!.position.get();
+    const { x, y } = nodes[nodeId]!.position;
     setMouseData({
       dragging: true,
       heldNodeId: nodeId,
       mousePosition: position,
       startPosition: {
-        x: position.x / zoomLevel() - x,
-        y: position.y / zoomLevel() - y,
+        x: position.x / drawflow.zoomLevel - x,
+        y: position.y / drawflow.zoomLevel - y,
       },
     });
   };
 
   return (
-    <>
+    <div
+      ref={(el) =>
+        setTimeout(() => {
+          if (!el) return;
+          setNodes(nodeId, "ref", el);
+        })
+      }
+      onMouseDown={(event) => {
+        event.stopPropagation();
+        selectNode({ x: event.clientX, y: event.clientY });
+      }}
+      onTouchStart={(event) => {
+        event.stopPropagation();
+        const touch = event.touches[0];
+        selectNode({ x: touch.clientX, y: touch.clientY });
+      }}
+      style={{
+        left: `${nodes[nodeId].position.x}px`,
+        top: `${nodes[nodeId].position.y}px`,
+      }}
+      classList={{
+        [props?.css?.normal ?? ""]: true,
+        [props?.css?.selected ?? ""]: mouseData.heldNodeId === nodeId,
+      }}
+    >
+      {children}
       <div
-        ref={getNode(nodeId)!.ref.set}
-        onMouseDown={(event) => {
-          event.stopPropagation();
-          selectNode({ x: event.clientX, y: event.clientY });
-        }}
-        onTouchStart={(event) => {
-          event.stopPropagation();
-          const touch = event.touches[0];
-          selectNode({ x: touch.clientX, y: touch.clientY });
-        }}
         style={{
-          left: `${calculatedPosition().x}px`,
-          top: `${calculatedPosition().y}px`,
-        }}
-        classList={{
-          [props?.css()]: true,
-          [props?.selectedCss()]: mouseData.heldNodeId === nodeId,
+          position: "absolute",
+          display: "flex",
+          "justify-content": "space-evenly",
+          width: "100%",
+          top: "-6px",
         }}
       >
-        {children}
-        <div
-          style={{
-            position: "absolute",
-            display: "flex",
-            "justify-content": "space-evenly",
-            width: "100%",
-            top: "-6px",
-          }}
-        >
-          <For each={Object.entries(getNode(nodeId)!.inputs.get())}>
-            {([, inputSignal]) => {
-              const input = inputSignal.get();
-              return (
-                <div
-                  ref={input.ref.set}
-                  style={{
-                    "z-index": 1,
-                    width: "10px",
-                    height: "10px",
-                    "background-color": "black",
-                    position: "relative",
-                    top: `${input.position.get().y}px`,
-                    left: `${input.position.get().x}px`,
-                    "border-radius": "50%",
-                  }}
-                />
-              );
-            }}
-          </For>
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            display: "flex",
-            "justify-content": "space-evenly",
-            width: "100%",
-            bottom: "-6px",
-          }}
-        >
-          <For each={Object.entries(getNode(nodeId)!.outputs.get())}>
-            {([, outputSignal]) => {
-              const output = outputSignal.get();
-              return (
-                <div
-                  ref={output.ref.set}
-                  style={{
-                    "z-index": 1,
-                    width: "10px",
-                    height: "10px",
-                    "background-color": "black",
-                    position: "relative",
-                    top: `${output.position.get().y}px`,
-                    left: `${output.position.get().x}px`,
-                    "border-radius": "50%",
-                  }}
-                />
-              );
-            }}
-          </For>
-        </div>
+        <For each={Object.entries(nodes[nodeId].inputs)}>
+          {([inputId]) => (
+            <div
+              ref={(el) =>
+                setTimeout(() => {
+                  if (!el) return;
+                  setNodes(nodeId, "inputs", inputId, (prev) => ({
+                    ...prev,
+                    ref: el,
+                    position: {
+                      x: (el?.parentElement?.offsetLeft ?? 0) + el.offsetLeft,
+                      y: (el?.parentElement?.offsetTop ?? 0) + el.offsetTop,
+                    },
+                    size: {
+                      width: el.offsetWidth,
+                      height: el.offsetHeight,
+                    },
+                  }));
+                })
+              }
+              style={{
+                "z-index": 1,
+                width: "10px",
+                height: "10px",
+                "background-color": "black",
+                position: "relative",
+                "border-radius": "50%",
+              }}
+            />
+          )}
+        </For>
       </div>
-      <For each={Object.entries(getNode(nodeId)!.outputs.get())}>
-        {([outputId, outputSignal]) => {
-          const output = outputSignal.get();
-          return (
-            <For each={output.destinations.get()}>
-              {(outputConnection) => (
-                <Show
-                  when={
-                    !!outputConnection?.destinationNodeId &&
-                    !!outputConnection?.destinationInputId
-                  }
-                >
-                  <Curve
-                    nodeId={nodeId}
-                    outputId={outputId}
-                    destinationNodeId={outputConnection.destinationNodeId!}
-                    destinationInputId={outputConnection.destinationInputId!}
-                    css={outputConnection.css.get}
-                  />
-                </Show>
-              )}
-            </For>
-          );
+      <div
+        style={{
+          position: "absolute",
+          display: "flex",
+          "justify-content": "space-evenly",
+          width: "100%",
+          bottom: "-6px",
         }}
-      </For>
-    </>
+      >
+        <For each={Object.entries(nodes[nodeId].outputs)}>
+          {([outputId]) => (
+            <div
+              style={{
+                "z-index": 1,
+                width: "10px",
+                height: "10px",
+                "background-color": "black",
+                position: "relative",
+                "border-radius": "50%",
+              }}
+              ref={(el) => {
+                setTimeout(() => {
+                  if (!el) return;
+                  setNodes(nodeId, "outputs", outputId, (prev) => ({
+                    ...prev,
+                    ref: el,
+                    position: {
+                      x: (el?.parentElement?.offsetLeft ?? 0) + el.offsetLeft,
+                      y: (el?.parentElement?.offsetTop ?? 0) + el.offsetTop,
+                    },
+                    size: {
+                      width: el.offsetWidth,
+                      height: el.offsetHeight,
+                    },
+                  }));
+                });
+              }}
+            />
+          )}
+        </For>
+      </div>
+    </div>
   );
 };
 
