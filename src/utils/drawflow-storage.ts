@@ -30,8 +30,8 @@ export const Constants = {
   MIN_ZOOM: 0.02,
   ZOOM_MULTIPLIER: 0.005,
   MOVE_DISTANCE: 100,
-  MAX_SPEED: 20,
-  MOVE_SPEED_INCREASE: 3,
+  MAX_SPEED: 15,
+  MOVE_SPEED_INCREASE: 1.5,
   MOVE_SLOWDOWN: 10,
   SQRT_2_OVER_2: 0.7071067811865476,
 } as const;
@@ -40,7 +40,7 @@ export const updateBackgroundPosition = (
   moveDistance: Position,
   keyboard = false
 ) => {
-  if (mouseData.heldNodeId || (!mouseData.dragging && !keyboard)) return;
+  if (mouseData.heldNodeId || keyboard === mouseData.dragging) return;
   setDrawflow("position", (prev) => ({
     x: prev.x + moveDistance.x / drawflow.zoomLevel,
     y: prev.y + moveDistance.y / drawflow.zoomLevel,
