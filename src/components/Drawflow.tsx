@@ -10,11 +10,13 @@ import {
 import {
   Constants,
   drawflow,
+  heldKeys,
   mouseData,
   nodes,
   removeNode,
   setDrawflow,
   setMouseData,
+  updateBackgroundPosition,
 } from "../utils/drawflow-storage";
 import { getScreenSize } from "../utils/screen-utils";
 import Node from "./Node";
@@ -56,17 +58,6 @@ const Drawflow: Component = () => {
     }));
   };
 
-  const updateBackgroundPosition = (
-    moveDistance: Position,
-    keyboard = false
-  ) => {
-    if (mouseData.heldNodeId || (!mouseData.dragging && !keyboard)) return;
-    setDrawflow("position", (prev) => ({
-      x: prev.x + moveDistance.x / drawflow.zoomLevel,
-      y: prev.y + moveDistance.y / drawflow.zoomLevel,
-    }));
-  };
-
   return (
     <div
       tabIndex="0"
@@ -89,6 +80,7 @@ const Drawflow: Component = () => {
       }}
       onMouseDown={(event) => {
         event.stopPropagation();
+        heldKeys.clear();
         setMouseData({
           dragging: true,
           heldNodeId: undefined,
@@ -106,32 +98,10 @@ const Drawflow: Component = () => {
         if (e.code === "Space" && mouseData.heldNodeId) {
           console.log(nodes[mouseData.heldNodeId]);
         }
-        switch (e.code) {
-          case "ArrowLeft":
-            updateBackgroundPosition(
-              { x: Constants.MOVE_DISTANCE, y: 0 },
-              true
-            );
-            break;
-          case "ArrowRight":
-            updateBackgroundPosition(
-              { x: -Constants.MOVE_DISTANCE, y: 0 },
-              true
-            );
-            break;
-          case "ArrowUp":
-            updateBackgroundPosition(
-              { x: 0, y: Constants.MOVE_DISTANCE },
-              true
-            );
-            break;
-          case "ArrowDown":
-            updateBackgroundPosition(
-              { x: 0, y: -Constants.MOVE_DISTANCE },
-              true
-            );
-            break;
-        }
+        heldKeys.add(e.code);
+      }}
+      onKeyUp={(e) => {
+        heldKeys.delete(e.code);
       }}
       onTouchStart={(event) => {
         event.stopPropagation();
@@ -147,6 +117,9 @@ const Drawflow: Component = () => {
           const { pageX: touch2X, pageY: touch2Y } = event.touches[1];
           setPinchDistance(Math.hypot(touch1X - touch2X, touch1Y - touch2Y));
           return;
+        }
+        if (event.touches.length === 1) {
+          heldKeys.clear();
         }
         setMouseData({
           dragging: event.touches.length === 1,

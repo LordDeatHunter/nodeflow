@@ -6,6 +6,7 @@ import {
   Optional,
   Position,
 } from "../types/types";
+import { clamp } from "./math-utils";
 
 export const [nodes, setNodes] = createStore<Record<string, NodeData>>({});
 export const [mouseData, setMouseData] = createStore<MouseData>({
@@ -17,9 +18,11 @@ export const [mouseData, setMouseData] = createStore<MouseData>({
 export const [drawflow, setDrawflow] = createStore<{
   position: Position;
   zoomLevel: number;
+  currentMoveSpeed: Position;
 }>({
   position: { x: 0, y: 0 },
   zoomLevel: 1,
+  currentMoveSpeed: { x: 0, y: 0 },
 });
 
 export const Constants = {
@@ -27,7 +30,79 @@ export const Constants = {
   MIN_ZOOM: 0.02,
   ZOOM_MULTIPLIER: 0.005,
   MOVE_DISTANCE: 100,
+  MAX_SPEED: 20,
+  MOVE_SPEED_INCREASE: 3,
+  MOVE_SLOWDOWN: 10,
+  SQRT_2_OVER_2: 0.7071067811865476,
 } as const;
+
+export const updateBackgroundPosition = (
+  moveDistance: Position,
+  keyboard = false
+) => {
+  if (mouseData.heldNodeId || (!mouseData.dragging && !keyboard)) return;
+  setDrawflow("position", (prev) => ({
+    x: prev.x + moveDistance.x / drawflow.zoomLevel,
+    y: prev.y + moveDistance.y / drawflow.zoomLevel,
+  }));
+};
+
+export const heldKeys = new Set<string>();
+
+const horizontalKeys = ["ArrowLeft", "ArrowRight"] as const;
+const verticalKeys = ["ArrowUp", "ArrowDown"] as const;
+
+const calculateMovement = (
+  hasMovement: boolean,
+  initialSpeed: number,
+  positiveMovement: boolean,
+  negativeMovement: boolean
+) => {
+  let speed = initialSpeed;
+  if (hasMovement) {
+    speed = clamp(
+      speed +
+        (positiveMovement ? Constants.MOVE_SPEED_INCREASE : 0) -
+        (negativeMovement ? Constants.MOVE_SPEED_INCREASE : 0),
+      -Constants.MAX_SPEED,
+      Constants.MAX_SPEED
+    );
+  } else {
+    speed = clamp(
+      speed * (1 - 1 / Constants.MOVE_SLOWDOWN),
+      -Constants.MAX_SPEED,
+      Constants.MAX_SPEED
+    );
+  }
+  if (speed <= 0.1 && speed >= -0.1) speed = 0;
+  return speed;
+};
+
+setInterval(() => {
+  setDrawflow("currentMoveSpeed", (prevPosition) => {
+    // TODO: change with const strings instead of array access
+    const movingLeft = heldKeys.has(horizontalKeys[0]);
+    const movingRight = heldKeys.has(horizontalKeys[1]);
+    const movingUp = heldKeys.has(verticalKeys[0]);
+    const movingDown = heldKeys.has(verticalKeys[1]);
+
+    return {
+      x: calculateMovement(
+        movingLeft || movingRight,
+        prevPosition.x,
+        movingLeft,
+        movingRight
+      ),
+      y: calculateMovement(
+        movingUp || movingDown,
+        prevPosition.y,
+        movingUp,
+        movingDown
+      ),
+    };
+  });
+  updateBackgroundPosition(drawflow.currentMoveSpeed, true);
+}, 1);
 
 export const addNode = (x = 0, y = 0, css?: NodeCss): NodeData => {
   let newNode: Optional<NodeData>;
