@@ -32,7 +32,7 @@ export const Constants = {
   MOVE_DISTANCE: 100,
   MAX_SPEED: 15,
   MOVE_SPEED_INCREASE: 1.5,
-  MOVE_SLOWDOWN: 10,
+  MOVE_SLOWDOWN: 0.85,
   SQRT_2_OVER_2: 0.7071067811865476,
 } as const;
 
@@ -69,7 +69,7 @@ const calculateMovement = (
     );
   } else {
     speed = clamp(
-      speed * (1 - 1 / Constants.MOVE_SLOWDOWN),
+      speed * Constants.MOVE_SLOWDOWN,
       -Constants.MAX_SPEED,
       Constants.MAX_SPEED
     );
@@ -86,11 +86,15 @@ export const resetMovement = () => {
   heldKeys.delete(verticalKeys[1]);
 };
 
+export const deselectNode = () => {
+  setMouseData("heldNodeId", undefined);
+  resetMovement();
+};
+
 export const updateNodePosition = (moveSpeed: Position) => {
   if (!mouseData.heldNodeId) return;
   const node = nodes[mouseData.heldNodeId];
   if (!node) return;
-  console.log(moveSpeed.x + " " + moveSpeed.y);
   const { x, y } = node.position;
   setNodes(mouseData.heldNodeId, "position", {
     x: x + moveSpeed.x,
@@ -156,7 +160,6 @@ export const addNode = (x = 0, y = 0, css?: NodeCss): NodeData => {
   return newNode!;
 };
 
-// TODO: prevent this from resetting the curve's position
 export const removeNode = (nodeId: string) => {
   setNodes(
     produce((newNodes) => {
@@ -171,6 +174,7 @@ export const removeNode = (nodeId: string) => {
       );
     })
   );
+  deselectNode();
 };
 
 export const addConnection = (

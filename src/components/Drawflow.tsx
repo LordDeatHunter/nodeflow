@@ -9,6 +9,7 @@ import {
 } from "../utils/math-utils";
 import {
   Constants,
+  deselectNode,
   drawflow,
   heldKeys,
   mouseData,
@@ -95,6 +96,9 @@ const Drawflow: Component = () => {
       onKeyDown={(e) => {
         if (e.code === "Delete" && mouseData.heldNodeId) {
           removeNode(mouseData.heldNodeId);
+        }
+        if (e.code === "Escape") {
+          deselectNode();
         }
         if (e.code === "Space" && mouseData.heldNodeId) {
           console.log(nodes[mouseData.heldNodeId]);
