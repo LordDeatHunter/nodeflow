@@ -6,7 +6,14 @@ import {
   Optional,
   Position,
 } from "../types/types";
-import { clamp } from "./math-utils";
+import {
+  clamp,
+  convertSizeToPosition,
+  dividePosition,
+  multiplyPosition,
+  subtractPositions,
+} from "./math-utils";
+import { getScreenSize } from "./screen-utils";
 
 export const [nodes, setNodes] = createStore<Record<string, NodeData>>({});
 export const [mouseData, setMouseData] = createStore<MouseData>({
@@ -28,6 +35,7 @@ export const [drawflow, setDrawflow] = createStore<{
 export const Constants = {
   MAX_ZOOM: 200,
   MIN_ZOOM: 0.02,
+  KEYBOARD_ZOOM_AMOUNT: 15,
   ZOOM_MULTIPLIER: 0.005,
   MOVE_DISTANCE: 100,
   MAX_SPEED: 15,
@@ -35,6 +43,39 @@ export const Constants = {
   MOVE_SLOWDOWN: 0.85,
   SQRT_2_OVER_2: 0.7071067811865476,
 } as const;
+
+export const updateZoom = (distance: number, zoomLocation: Position): void => {
+  const oldZoom = drawflow.zoomLevel;
+  const newZoom = clamp(
+    oldZoom + oldZoom * distance * Constants.ZOOM_MULTIPLIER,
+    Constants.MIN_ZOOM,
+    Constants.MAX_ZOOM
+  );
+  if (newZoom < Constants.MIN_ZOOM || newZoom > Constants.MAX_ZOOM) return;
+  setMouseData("dragging", false);
+  const windowDimensions = convertSizeToPosition(getScreenSize());
+  const centeredZoomLocation = subtractPositions(
+    zoomLocation,
+    dividePosition(windowDimensions, 2)
+  );
+  const oldScreenSize = multiplyPosition(windowDimensions, oldZoom);
+  const newScreenSize = multiplyPosition(windowDimensions, newZoom);
+  const oldOffset = dividePosition(
+    subtractPositions(centeredZoomLocation, dividePosition(oldScreenSize, 2)),
+    oldZoom
+  );
+  const newOffset = dividePosition(
+    subtractPositions(centeredZoomLocation, dividePosition(newScreenSize, 2)),
+    newZoom
+  );
+  setDrawflow((prev) => ({
+    position: {
+      x: prev.position.x - oldOffset.x + newOffset.x,
+      y: prev.position.y - oldOffset.y + newOffset.y,
+    },
+    zoomLevel: newZoom,
+  }));
+};
 
 export const updateBackgroundPosition = (
   moveDistance: Position,
@@ -134,7 +175,7 @@ setInterval(() => {
   } else {
     updateNodePosition(drawflow.currentMoveSpeed);
   }
-});
+}, 10);
 
 export const addNode = (x = 0, y = 0, css?: NodeCss): NodeData => {
   let newNode: Optional<NodeData>;

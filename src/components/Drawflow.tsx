@@ -1,12 +1,5 @@
 import { Component, createSignal, For, Show } from "solid-js";
-import { Position } from "../types/types";
-import {
-  clamp,
-  convertSizeToPosition,
-  dividePosition,
-  multiplyPosition,
-  subtractPositions,
-} from "../utils/math-utils";
+import { dividePosition, subtractPositions } from "../utils/math-utils";
 import {
   Constants,
   deselectNode,
@@ -16,49 +9,15 @@ import {
   nodes,
   removeNode,
   resetMovement,
-  setDrawflow,
   setMouseData,
   updateBackgroundPosition,
+  updateZoom,
 } from "../utils/drawflow-storage";
-import { getScreenSize } from "../utils/screen-utils";
 import Node from "./Node";
 import Curve from "./Curve";
 
 const Drawflow: Component = () => {
   const [pinchDistance, setPinchDistance] = createSignal(0);
-
-  const updateZoom = (distance: number, zoomLocation: Position): void => {
-    const oldZoom = drawflow.zoomLevel;
-    const newZoom = clamp(
-      oldZoom + oldZoom * distance * Constants.ZOOM_MULTIPLIER,
-      Constants.MIN_ZOOM,
-      Constants.MAX_ZOOM
-    );
-    if (newZoom < Constants.MIN_ZOOM || newZoom > Constants.MAX_ZOOM) return;
-    setMouseData("dragging", false);
-    const windowDimensions = convertSizeToPosition(getScreenSize());
-    const centeredZoomLocation = subtractPositions(
-      zoomLocation,
-      dividePosition(windowDimensions, 2)
-    );
-    const oldScreenSize = multiplyPosition(windowDimensions, oldZoom);
-    const newScreenSize = multiplyPosition(windowDimensions, newZoom);
-    const oldOffset = dividePosition(
-      subtractPositions(centeredZoomLocation, dividePosition(oldScreenSize, 2)),
-      oldZoom
-    );
-    const newOffset = dividePosition(
-      subtractPositions(centeredZoomLocation, dividePosition(newScreenSize, 2)),
-      newZoom
-    );
-    setDrawflow((prev) => ({
-      position: {
-        x: prev.position.x - oldOffset.x + newOffset.x,
-        y: prev.position.y - oldOffset.y + newOffset.y,
-      },
-      zoomLevel: newZoom,
-    }));
-  };
 
   return (
     <div
@@ -94,14 +53,33 @@ const Drawflow: Component = () => {
         });
       }}
       onKeyDown={(e) => {
-        if (e.code === "Delete" && mouseData.heldNodeId) {
-          removeNode(mouseData.heldNodeId);
-        }
-        if (e.code === "Escape") {
-          deselectNode();
-        }
-        if (e.code === "Space" && mouseData.heldNodeId) {
-          console.log(nodes[mouseData.heldNodeId]);
+        switch (e.code) {
+          case "Delete":
+            if (mouseData.heldNodeId) {
+              removeNode(mouseData.heldNodeId);
+            }
+            break;
+          case "Escape":
+            deselectNode();
+            break;
+          case "Space":
+            if (mouseData.heldNodeId) {
+              console.log(nodes[mouseData.heldNodeId]);
+            }
+            break;
+          case "Equal":
+          case "Minus":
+            if (e.ctrlKey) {
+              e.preventDefault();
+              updateZoom(
+                Constants.KEYBOARD_ZOOM_AMOUNT * (e.code === "Equal" ? 1 : -1),
+                {
+                  x: window.innerWidth / 2,
+                  y: window.innerHeight / 2,
+                }
+              );
+            }
+            break;
         }
         heldKeys.add(e.code);
       }}
