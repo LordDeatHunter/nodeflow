@@ -14,6 +14,7 @@ import {
   mouseData,
   nodes,
   removeNode,
+  resetMovement,
   setDrawflow,
   setMouseData,
   updateBackgroundPosition,
@@ -80,7 +81,7 @@ const Drawflow: Component = () => {
       }}
       onMouseDown={(event) => {
         event.stopPropagation();
-        heldKeys.clear();
+        resetMovement();
         setMouseData({
           dragging: true,
           heldNodeId: undefined,

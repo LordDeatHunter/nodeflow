@@ -53,17 +53,17 @@ const horizontalKeys = ["ArrowLeft", "ArrowRight"] as const;
 const verticalKeys = ["ArrowUp", "ArrowDown"] as const;
 
 const calculateMovement = (
-  hasMovement: boolean,
+  isMoving: boolean,
   initialSpeed: number,
   positiveMovement: boolean,
-  negativeMovement: boolean
+  negativeMovement: boolean,
+  inverse = false
 ) => {
   let speed = initialSpeed;
-  if (hasMovement) {
+  if (isMoving) {
+    const change = Constants.MOVE_SPEED_INCREASE * (inverse ? -1 : 1);
     speed = clamp(
-      speed +
-        (positiveMovement ? Constants.MOVE_SPEED_INCREASE : 0) -
-        (negativeMovement ? Constants.MOVE_SPEED_INCREASE : 0),
+      speed + (positiveMovement ? change : 0) - (negativeMovement ? change : 0),
       -Constants.MAX_SPEED,
       Constants.MAX_SPEED
     );
@@ -78,31 +78,59 @@ const calculateMovement = (
   return speed;
 };
 
-setInterval(() => {
-  setDrawflow("currentMoveSpeed", (prevPosition) => {
-    // TODO: change with const strings instead of array access
-    const movingLeft = heldKeys.has(horizontalKeys[0]);
-    const movingRight = heldKeys.has(horizontalKeys[1]);
-    const movingUp = heldKeys.has(verticalKeys[0]);
-    const movingDown = heldKeys.has(verticalKeys[1]);
+export const resetMovement = () => {
+  setDrawflow("currentMoveSpeed", { x: 0, y: 0 });
+  heldKeys.delete(horizontalKeys[0]);
+  heldKeys.delete(horizontalKeys[1]);
+  heldKeys.delete(verticalKeys[0]);
+  heldKeys.delete(verticalKeys[1]);
+};
 
-    return {
-      x: calculateMovement(
-        movingLeft || movingRight,
-        prevPosition.x,
-        movingLeft,
-        movingRight
-      ),
-      y: calculateMovement(
-        movingUp || movingDown,
-        prevPosition.y,
-        movingUp,
-        movingDown
-      ),
-    };
+export const updateNodePosition = (moveSpeed: Position) => {
+  if (!mouseData.heldNodeId) return;
+  const node = nodes[mouseData.heldNodeId];
+  if (!node) return;
+  console.log(moveSpeed.x + " " + moveSpeed.y);
+  const { x, y } = node.position;
+  setNodes(mouseData.heldNodeId, "position", {
+    x: x + moveSpeed.x,
+    y: y + moveSpeed.y,
   });
-  updateBackgroundPosition(drawflow.currentMoveSpeed, true);
-}, 1);
+};
+
+setInterval(() => {
+  // TODO: change with const strings instead of array access
+  const movingLeft = heldKeys.has(horizontalKeys[0]);
+  const movingRight = heldKeys.has(horizontalKeys[1]);
+  const movingUp = heldKeys.has(verticalKeys[0]);
+  const movingDown = heldKeys.has(verticalKeys[1]);
+
+  const isDraggingNode = mouseData.heldNodeId !== undefined;
+
+  const moveSpeed = {
+    x: calculateMovement(
+      movingLeft || movingRight,
+      drawflow.currentMoveSpeed.x,
+      movingRight,
+      movingLeft,
+      !isDraggingNode
+    ),
+    y: calculateMovement(
+      movingUp || movingDown,
+      drawflow.currentMoveSpeed.y,
+      movingDown,
+      movingUp,
+      !isDraggingNode
+    ),
+  };
+
+  setDrawflow("currentMoveSpeed", moveSpeed);
+  if (!mouseData.heldNodeId) {
+    updateBackgroundPosition(drawflow.currentMoveSpeed, true);
+  } else {
+    updateNodePosition(drawflow.currentMoveSpeed);
+  }
+});
 
 export const addNode = (x = 0, y = 0, css?: NodeCss): NodeData => {
   let newNode: Optional<NodeData>;
