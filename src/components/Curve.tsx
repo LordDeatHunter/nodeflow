@@ -36,12 +36,14 @@ const Curve = (props: CurveProps) => {
 
     const start = addPositions(
       startNode.position,
+      startNode.offset,
       output.position,
       dividePosition(convertSizeToPosition(output.size), 2)
     );
 
     const end = addPositions(
       endNode.position,
+      endNode.offset,
       input.position,
       dividePosition(convertSizeToPosition(input.size), 2)
     );
@@ -73,8 +75,8 @@ const Curve = (props: CurveProps) => {
       style={{
         "z-index": 3,
         position: "absolute",
-        width: "100%",
-        height: "100%",
+        width: 0,
+        height: 0,
         "pointer-events": "none",
         overflow: "visible",
       }}
@@ -95,7 +97,7 @@ const Curve = (props: CurveProps) => {
             stroke-width="1"
             stroke="black"
             transform="matrix(1,0,0,1,1,2)"
-          ></polyline>
+          />
         </marker>
       </defs>
       <path

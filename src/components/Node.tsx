@@ -50,7 +50,13 @@ const Node: Component<NodeProps> = (props) => {
       ref={(el) =>
         setTimeout(() => {
           if (!el) return;
-          setNodes(nodeId, "ref", el);
+          setNodes(nodeId, {
+            ref: el,
+            offset: {
+              x: el.clientLeft,
+              y: el.clientTop,
+            },
+          });
         })
       }
       onMouseDown={(event) => {
@@ -72,15 +78,7 @@ const Node: Component<NodeProps> = (props) => {
       }}
     >
       {children}
-      <div
-        style={{
-          position: "absolute",
-          display: "flex",
-          "justify-content": "space-evenly",
-          width: "100%",
-          top: "-6px",
-        }}
-      >
+      <div class={props.css?.inputsSection}>
         <For each={Object.entries(nodes[nodeId].inputs)}>
           {([inputId]) => (
             <div
@@ -101,38 +99,15 @@ const Node: Component<NodeProps> = (props) => {
                   }));
                 })
               }
-              style={{
-                "z-index": 1,
-                width: "10px",
-                height: "10px",
-                "background-color": "black",
-                position: "relative",
-                "border-radius": "50%",
-              }}
+              class={props.css?.inputConnector}
             />
           )}
         </For>
       </div>
-      <div
-        style={{
-          position: "absolute",
-          display: "flex",
-          "justify-content": "space-evenly",
-          width: "100%",
-          bottom: "-6px",
-        }}
-      >
+      <div class={props.css?.outputsSection}>
         <For each={Object.entries(nodes[nodeId].outputs)}>
           {([outputId]) => (
             <div
-              style={{
-                "z-index": 1,
-                width: "10px",
-                height: "10px",
-                "background-color": "black",
-                position: "relative",
-                "border-radius": "50%",
-              }}
               ref={(el) => {
                 setTimeout(() => {
                   if (!el) return;
@@ -150,6 +125,7 @@ const Node: Component<NodeProps> = (props) => {
                   }));
                 });
               }}
+              class={props.css?.outputConnector}
             />
           )}
         </For>

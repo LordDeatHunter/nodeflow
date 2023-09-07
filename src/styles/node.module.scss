@@ -12,12 +12,6 @@
     z-index: 3;
   }
 
-  &:active {
-    box-shadow: 0px 0px 10px 5px gray;
-    cursor: grabbing;
-    z-index: 3;
-  }
-
   cursor: grab;
   box-shadow: 0px 0px 5px 0px black;
   transition: background-color 0.2s ease-in-out 0s,
@@ -28,7 +22,58 @@
   @include baseNode;
 }
 
-.selectedNode {
+.selected-node {
   @include baseNode;
+  box-shadow: 0px 0px 10px 5px gray;
+  cursor: grabbing;
+  z-index: 3;
   background-color: lightblue;
+}
+
+$connector-size: 10px;
+$connector-border: 2px;
+
+@mixin connector {
+  position: relative;
+  width: $connector-size;
+  height: $connector-size;
+  border-radius: 100%;
+  border: $connector-border solid black;
+  z-index: 1;
+}
+
+.input-connector {
+  @include connector;
+  background-color: white;
+
+  &:hover {
+    background-color: lightblue;
+  }
+}
+
+.output-connector {
+  @include connector;
+  background-color: white;
+
+  &:hover {
+    background-color: lightblue;
+  }
+}
+
+@mixin connector-section {
+  position: absolute;
+  display: flex;
+  justify-content: space-evenly;
+  width: 100%;
+  height: 0;
+}
+
+.inputs-section {
+  @include connector-section;
+  top: -($connector-size + $connector-border) / 2;
+}
+
+.outputs-section {
+  @include connector-section;
+  bottom: ($connector-size + $connector-border) / 2;
 }

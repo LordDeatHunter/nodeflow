@@ -184,14 +184,12 @@ export const addNode = (x = 0, y = 0, css?: NodeCss): NodeData => {
 
     newNode = {
       position: { x, y },
+      offset: { x: 0, y: 0 },
       nodeId: newId,
       ref: undefined,
       inputs: {},
       outputs: {},
-      css: {
-        normal: css?.normal,
-        selected: css?.selected,
-      },
+      css: css ?? {},
     };
 
     return {

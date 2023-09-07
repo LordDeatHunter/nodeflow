@@ -20,6 +20,7 @@ export interface MouseData {
 export interface NodeData {
   ref?: HTMLDivElement;
   position: Position;
+  offset: Position;
   nodeId: string;
   inputs: Record<string, NodeInput>;
   outputs: Record<string, NodeOutput>;
@@ -29,21 +30,24 @@ export interface NodeData {
 export interface NodeCss {
   normal?: string;
   selected?: string;
+  inputsSection?: string;
+  inputConnector?: string;
+  outputsSection?: string;
+  outputConnector?: string;
 }
 
-export interface NodeInput {
+interface BaseNodeConnector {
   ref: HTMLDivElement;
   connectorId: string;
   position: Position;
   size: Size;
+  hovered: boolean;
 }
 
-export interface NodeOutput {
-  ref: HTMLDivElement;
-  connectorId: string;
+export interface NodeInput extends BaseNodeConnector {}
+
+export interface NodeOutput extends BaseNodeConnector {
   destinations: OutputDestination[];
-  position: Position;
-  size: Size;
 }
 
 export interface OutputDestination {
