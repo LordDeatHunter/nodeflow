@@ -1,4 +1,4 @@
-import { createEffect } from "solid-js";
+import { createEffect, createMemo } from "solid-js";
 import { nodes, setNodes } from "../utils/drawflow-storage";
 import {
   addPositions,
@@ -15,35 +15,51 @@ interface CurveProps {
 }
 
 const Curve = (props: CurveProps) => {
-  const { nodeId, outputId, destinationNodeId, destinationInputId } = props;
+  const startNode = createMemo(() => nodes[props.nodeId]);
+  const endNode = createMemo(() => nodes[props.destinationNodeId]);
 
-  const startNode = nodes[nodeId];
-  const endNode = nodes[destinationNodeId];
-  if (!startNode || !endNode) return;
-  const destinations = startNode.outputs[outputId]?.destinations;
-  const destinationIndex =
-    destinations?.findIndex(
-      (destination) =>
-        destination.destinationNodeId === destinationNodeId &&
-        destination.destinationInputId === destinationInputId
-    ) ?? -1;
-  if (destinationIndex < 0) return;
-  const destination = destinations![destinationIndex];
+  const destinations = createMemo(
+    () => startNode()?.outputs[props.outputId]?.destinations
+  );
+  const destinationIndex = createMemo(() =>
+    !startNode() || !endNode()
+      ? -1
+      : destinations()?.findIndex(
+          (destination) =>
+            destination.destinationNodeId === props.destinationNodeId &&
+            destination.destinationInputId === props.destinationInputId
+        ) ?? -1
+  );
 
   createEffect(() => {
-    const output = startNode.outputs[outputId];
-    const input = endNode.inputs[destinationInputId];
+    if (destinationIndex() < 0) {
+      return;
+    }
+
+    const {
+      position: startPosition,
+      outputs: startNodeOutputs,
+      offset: startNodeOffset,
+    } = startNode();
+    const {
+      position: endPosition,
+      inputs: endNodeInputs,
+      offset: endNodeOffset,
+    } = endNode();
+
+    const output = startNodeOutputs[props.outputId];
+    const input = endNodeInputs[props.destinationInputId];
 
     const start = addPositions(
-      startNode.position,
-      startNode.offset,
+      startPosition,
+      startNodeOffset,
       output.position,
       dividePosition(convertSizeToPosition(output.size), 2)
     );
 
     const end = addPositions(
-      endNode.position,
-      endNode.offset,
+      endPosition,
+      endNodeOffset,
       input.position,
       dividePosition(convertSizeToPosition(input.size), 2)
     );
@@ -60,11 +76,11 @@ const Curve = (props: CurveProps) => {
     };
 
     setNodes(
-      nodeId,
+      props.nodeId,
       "outputs",
-      outputId,
+      props.outputId,
       "destinations",
-      destinationIndex,
+      destinationIndex(),
       "path",
       path
     );
@@ -101,7 +117,7 @@ const Curve = (props: CurveProps) => {
         </marker>
       </defs>
       <path
-        d={destination.path?.path}
+        d={destinations()[destinationIndex()].path?.path}
         stroke="black"
         stroke-width={1}
         fill="transparent"

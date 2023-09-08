@@ -1,4 +1,4 @@
-import { type Component, createEffect, For } from "solid-js";
+import { type Component, createEffect, For, JSX } from "solid-js";
 import { NodeCss, Position } from "../types/types";
 import {
   drawflow,
@@ -10,7 +10,7 @@ import {
 
 interface NodeProps {
   nodeId: string;
-  children?: any;
+  children?: JSX.Element;
   css: NodeCss;
 }
 

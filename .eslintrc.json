@@ -1,0 +1,45 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:solid/typescript"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "plugins": [
+    "@typescript-eslint",
+    "solid"
+  ],
+  "rules": {
+    "semi": [
+      "error",
+      "always"
+    ],
+    "arrow-body-style": [
+      "error",
+      "as-needed"
+    ],
+    "block-scoped-var": "error",
+    "no-duplicate-imports": "error",
+    "no-lonely-if": "warn",
+    "no-param-reassign": "error",
+    "no-unneeded-ternary": "warn",
+    "no-useless-return": "warn",
+    "prefer-const": "error",
+    "prefer-arrow-callback": "warn",
+    "yoda": [
+      "error",
+      "never",
+      {
+        "exceptRange": true
+      }
+    ]
+  }
+}
