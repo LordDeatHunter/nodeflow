@@ -33,15 +33,15 @@ export const [drawflow, setDrawflow] = createStore<{
 });
 
 export const Constants = {
+  KEYBOARD_ZOOM_AMOUNT: 15,
+  MAX_SPEED: 15,
   MAX_ZOOM: 200,
   MIN_ZOOM: 0.02,
-  KEYBOARD_ZOOM_AMOUNT: 15,
-  ZOOM_MULTIPLIER: 0.005,
   MOVE_DISTANCE: 100,
-  MAX_SPEED: 15,
-  MOVE_SPEED_INCREASE: 1.5,
   MOVE_SLOWDOWN: 0.85,
+  MOVE_SPEED_INCREASE: 1.5,
   SQRT_2_OVER_2: 0.7071067811865476,
+  ZOOM_MULTIPLIER: 0.005,
 } as const;
 
 export const updateZoom = (distance: number, zoomLocation: Position): void => {
@@ -183,15 +183,13 @@ export const addNode = (x = 0, y = 0, css?: NodeCss): NodeData => {
     const newId = (Object.keys(prev).length + 1).toString();
 
     newNode = {
-      position: { x, y },
-      nodeId: newId,
-      ref: undefined,
+      css: css ?? {},
       inputs: {},
+      nodeId: newId,
+      offset: { x: 0, y: 0 },
       outputs: {},
-      css: {
-        normal: css?.normal,
-        selected: css?.selected,
-      },
+      position: { x, y },
+      ref: undefined,
     };
 
     return {
@@ -274,8 +272,8 @@ export const addInput = (nodeId: string, inputId?: string) => {
 
   setNodes(nodeId, "inputs", inputId, {
     connectorId: inputId,
-    ref: undefined,
     position: { x: 0, y: 0 },
+    ref: undefined,
     size: { width: 0, height: 0 },
   });
 };
@@ -290,9 +288,9 @@ export const addOutput = (nodeId: string, outputId?: string) => {
 
   setNodes(nodeId, "outputs", outputId, {
     connectorId: outputId,
-    ref: undefined,
-    position: { x: 0, y: 0 },
     destinations: [],
+    position: { x: 0, y: 0 },
+    ref: undefined,
     size: { width: 0, height: 0 },
   });
 };
@@ -313,7 +311,7 @@ export const getTotalConnectedInputs = (
           output.destinations.filter(
             (destination) =>
               destination.destinationNodeId === nodeId &&
-              (inputId ? destination.destinationInputId === inputId : true)
+              (!inputId || destination.destinationInputId === inputId)
           ).length,
         0
       ),

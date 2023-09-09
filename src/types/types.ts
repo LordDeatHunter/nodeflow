@@ -6,57 +6,61 @@ export interface Position {
 }
 
 export interface Size {
-  width: number;
   height: number;
+  width: number;
 }
 
 export interface MouseData {
-  heldNodeId?: string;
-  startPosition?: Position;
   dragging: boolean;
+  heldNodeId?: string;
   mousePosition: Position;
+  startPosition?: Position;
 }
 
 export interface NodeData {
-  ref?: HTMLDivElement;
-  position: Position;
-  nodeId: string;
-  inputs: Record<string, NodeInput>;
-  outputs: Record<string, NodeOutput>;
   css: NodeCss;
+  inputs: Record<string, NodeInput>;
+  nodeId: string;
+  offset: Position;
+  outputs: Record<string, NodeOutput>;
+  position: Position;
+  ref?: HTMLDivElement;
 }
 
 export interface NodeCss {
+  inputConnector?: string;
+  inputsSection?: string;
   normal?: string;
+  outputConnector?: string;
+  outputsSection?: string;
   selected?: string;
 }
 
-export interface NodeInput {
-  ref: HTMLDivElement;
+interface BaseNodeConnector {
   connectorId: string;
+  hovered: boolean;
   position: Position;
+  ref: HTMLDivElement;
   size: Size;
 }
 
-export interface NodeOutput {
-  ref: HTMLDivElement;
-  connectorId: string;
+export interface NodeInput extends BaseNodeConnector {}
+
+export interface NodeOutput extends BaseNodeConnector {
   destinations: OutputDestination[];
-  position: Position;
-  size: Size;
 }
 
 export interface OutputDestination {
-  destinationNodeId?: string;
-  destinationInputId?: string;
-  path?: VectorPath;
   css: string;
+  destinationInputId?: string;
+  destinationNodeId?: string;
+  path?: VectorPath;
 }
 
 export interface VectorPath {
+  end: Position;
   path: string;
   start: Position;
-  end: Position;
 }
 
 export interface SignalObject<T> {

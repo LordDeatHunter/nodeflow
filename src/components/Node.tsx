@@ -1,4 +1,4 @@
-import { type Component, createEffect, For } from "solid-js";
+import { type Component, createEffect, For, JSX } from "solid-js";
 import { NodeCss, Position } from "../types/types";
 import {
   drawflow,
@@ -9,16 +9,14 @@ import {
 } from "../utils/drawflow-storage";
 
 interface NodeProps {
-  nodeId: string;
-  children?: any;
+  children?: JSX.Element;
   css: NodeCss;
+  nodeId: string;
 }
 
 const Node: Component<NodeProps> = (props) => {
-  const { nodeId, children } = props;
-
   createEffect(() => {
-    if (mouseData.heldNodeId !== nodeId || !mouseData.dragging) return;
+    if (mouseData.heldNodeId !== props.nodeId || !mouseData.dragging) return;
     const { x: mouseX, y: mouseY } = mouseData.mousePosition;
     const { x: startX, y: startY } = mouseData.startPosition ?? {
       x: 0,
@@ -29,14 +27,14 @@ const Node: Component<NodeProps> = (props) => {
       y: mouseY / drawflow.zoomLevel - startY,
     };
 
-    setNodes(nodeId, "position", pos);
+    setNodes(props.nodeId, "position", pos);
   });
 
   const selectNode = (position: Position) => {
-    const { x, y } = nodes[nodeId]!.position;
+    const { x, y } = nodes[props.nodeId]!.position;
     setMouseData({
       dragging: true,
-      heldNodeId: nodeId,
+      heldNodeId: props.nodeId,
       mousePosition: position,
       startPosition: {
         x: position.x / drawflow.zoomLevel - x,
@@ -50,7 +48,13 @@ const Node: Component<NodeProps> = (props) => {
       ref={(el) =>
         setTimeout(() => {
           if (!el) return;
-          setNodes(nodeId, "ref", el);
+          setNodes(props.nodeId, {
+            offset: {
+              x: el.clientLeft,
+              y: el.clientTop,
+            },
+            ref: el,
+          });
         })
       }
       onMouseDown={(event) => {
@@ -63,37 +67,29 @@ const Node: Component<NodeProps> = (props) => {
         selectNode({ x: touch.clientX, y: touch.clientY });
       }}
       style={{
-        left: `${nodes[nodeId].position.x}px`,
-        top: `${nodes[nodeId].position.y}px`,
+        left: `${nodes[props.nodeId].position.x}px`,
+        top: `${nodes[props.nodeId].position.y}px`,
       }}
       classList={{
         [props?.css?.normal ?? ""]: true,
-        [props?.css?.selected ?? ""]: mouseData.heldNodeId === nodeId,
+        [props?.css?.selected ?? ""]: mouseData.heldNodeId === props.nodeId,
       }}
     >
-      {children}
-      <div
-        style={{
-          position: "absolute",
-          display: "flex",
-          "justify-content": "space-evenly",
-          width: "100%",
-          top: "-6px",
-        }}
-      >
-        <For each={Object.entries(nodes[nodeId].inputs)}>
+      {props.children}
+      <div class={props.css?.inputsSection}>
+        <For each={Object.entries(nodes[props.nodeId].inputs)}>
           {([inputId]) => (
             <div
               ref={(el) =>
                 setTimeout(() => {
                   if (!el) return;
-                  setNodes(nodeId, "inputs", inputId, (prev) => ({
+                  setNodes(props.nodeId, "inputs", inputId, (prev) => ({
                     ...prev,
-                    ref: el,
                     position: {
                       x: (el?.parentElement?.offsetLeft ?? 0) + el.offsetLeft,
                       y: (el?.parentElement?.offsetTop ?? 0) + el.offsetTop,
                     },
+                    ref: el,
                     size: {
                       width: el.offsetWidth,
                       height: el.offsetHeight,
@@ -101,48 +97,25 @@ const Node: Component<NodeProps> = (props) => {
                   }));
                 })
               }
-              style={{
-                "z-index": 1,
-                width: "10px",
-                height: "10px",
-                "background-color": "black",
-                position: "relative",
-                "border-radius": "50%",
-              }}
+              class={props.css?.inputConnector}
             />
           )}
         </For>
       </div>
-      <div
-        style={{
-          position: "absolute",
-          display: "flex",
-          "justify-content": "space-evenly",
-          width: "100%",
-          bottom: "-6px",
-        }}
-      >
-        <For each={Object.entries(nodes[nodeId].outputs)}>
+      <div class={props.css?.outputsSection}>
+        <For each={Object.entries(nodes[props.nodeId].outputs)}>
           {([outputId]) => (
             <div
-              style={{
-                "z-index": 1,
-                width: "10px",
-                height: "10px",
-                "background-color": "black",
-                position: "relative",
-                "border-radius": "50%",
-              }}
               ref={(el) => {
                 setTimeout(() => {
                   if (!el) return;
-                  setNodes(nodeId, "outputs", outputId, (prev) => ({
+                  setNodes(props.nodeId, "outputs", outputId, (prev) => ({
                     ...prev,
-                    ref: el,
                     position: {
                       x: (el?.parentElement?.offsetLeft ?? 0) + el.offsetLeft,
                       y: (el?.parentElement?.offsetTop ?? 0) + el.offsetTop,
                     },
+                    ref: el,
                     size: {
                       width: el.offsetWidth,
                       height: el.offsetHeight,
@@ -150,6 +123,7 @@ const Node: Component<NodeProps> = (props) => {
                   }));
                 });
               }}
+              class={props.css?.outputConnector}
             />
           )}
         </For>

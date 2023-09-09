@@ -15,8 +15,12 @@ const customData: Record<string, { gender: "M" | "F" }> = {};
 
 for (let i = 0; i < 50; i++) {
   const newNode = addNode(Math.random() * 2000, Math.random() * 2000, {
+    inputConnector: nodeCss["input-connector"],
+    inputsSection: nodeCss["inputs-section"],
     normal: nodeCss.node,
-    selected: nodeCss.selectedNode,
+    outputConnector: nodeCss["output-connector"],
+    outputsSection: nodeCss["outputs-section"],
+    selected: nodeCss["selected-node"],
   })!;
   addOutput(newNode.nodeId);
   addInput(newNode.nodeId);
@@ -32,11 +36,14 @@ for (let i = 0; i < totalNodes; i++) {
   const to = Math.floor(Math.random() * totalNodes);
   const fromNode = nodes[from.toString()];
   const toNode = nodes[to.toString()];
-  if (!fromNode || !toNode) continue;
-  const toInput = customData[from.toString()].gender === "M" ? "0" : "1";
+  if (!fromNode || !toNode) {
+    continue;
+  }
 
-  if (from === to) continue;
-  if (getTotalConnectedInputs(to.toString(), toInput) > 0) continue;
+  const toInput = customData[from.toString()].gender === "M" ? "0" : "1";
+  if (from === to || getTotalConnectedInputs(to.toString(), toInput) > 0) {
+    continue;
+  }
 
   addConnection(
     from.toString(),
@@ -47,8 +54,6 @@ for (let i = 0; i < totalNodes; i++) {
   );
 }
 
-const App: Component = () => {
-  return <Drawflow />;
-};
+const App: Component = () => <Drawflow />;
 
 export default App;
