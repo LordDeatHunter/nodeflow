@@ -18,24 +18,23 @@
     "solid"
   ],
   "rules": {
-    "semi": [
-      "error",
-      "always"
-    ],
     "arrow-body-style": [
       "error",
       "as-needed"
     ],
     "block-scoped-var": "error",
     "no-duplicate-imports": "error",
-    "no-lonely-if": "warn",
-    "no-param-reassign": "error",
-    "no-unneeded-ternary": "warn",
+    "no-lonely-if": "error",
+    "no-unneeded-ternary": "error",
     "no-useless-return": "warn",
-    "prefer-const": "error",
     "prefer-arrow-callback": "warn",
-    "yoda": [
+    "prefer-const": "error",
+    "semi": [
       "error",
+      "always"
+    ],
+    "yoda": [
+      "warn",
       "never",
       {
         "exceptRange": true

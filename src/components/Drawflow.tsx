@@ -23,10 +23,10 @@ const Drawflow: Component = () => {
     <div
       tabIndex="0"
       style={{
-        position: "absolute",
-        overflow: "hidden",
-        width: `${window.innerWidth}px`,
         height: `${window.innerHeight}px`,
+        overflow: "hidden",
+        position: "absolute",
+        width: `${window.innerWidth}px`,
       }}
       onMouseMove={(e) => {
         setMouseData("mousePosition", { x: e.clientX, y: e.clientY });
@@ -141,11 +141,11 @@ const Drawflow: Component = () => {
     >
       <div
         style={{
-          position: "absolute",
-          width: "100%",
           height: "100%",
+          position: "absolute",
           transform: `scale(${drawflow.zoomLevel}) translate(${drawflow.position.x}px, ${drawflow.position.y}px)`,
           "transform-origin": "center",
+          width: "100%",
         }}
       >
         <For each={Object.entries(nodes)}>

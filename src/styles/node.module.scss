@@ -39,6 +39,7 @@ $connector-border: 2px;
   height: $connector-size;
   border-radius: 100%;
   border: $connector-border solid black;
+  cursor: crosshair;
   z-index: 1;
 }
 
@@ -70,10 +71,10 @@ $connector-border: 2px;
 
 .inputs-section {
   @include connector-section;
-  top: -($connector-size + $connector-border) / 2;
+  top: calc(($connector-size + $connector-border) / -2)
 }
 
 .outputs-section {
   @include connector-section;
-  bottom: ($connector-size + $connector-border) / 2;
+  bottom: calc(($connector-size + $connector-border) / 2);
 }

@@ -6,42 +6,42 @@ export interface Position {
 }
 
 export interface Size {
-  width: number;
   height: number;
+  width: number;
 }
 
 export interface MouseData {
-  heldNodeId?: string;
-  startPosition?: Position;
   dragging: boolean;
+  heldNodeId?: string;
   mousePosition: Position;
+  startPosition?: Position;
 }
 
 export interface NodeData {
-  ref?: HTMLDivElement;
-  position: Position;
-  offset: Position;
-  nodeId: string;
-  inputs: Record<string, NodeInput>;
-  outputs: Record<string, NodeOutput>;
   css: NodeCss;
+  inputs: Record<string, NodeInput>;
+  nodeId: string;
+  offset: Position;
+  outputs: Record<string, NodeOutput>;
+  position: Position;
+  ref?: HTMLDivElement;
 }
 
 export interface NodeCss {
-  normal?: string;
-  selected?: string;
-  inputsSection?: string;
   inputConnector?: string;
-  outputsSection?: string;
+  inputsSection?: string;
+  normal?: string;
   outputConnector?: string;
+  outputsSection?: string;
+  selected?: string;
 }
 
 interface BaseNodeConnector {
-  ref: HTMLDivElement;
   connectorId: string;
-  position: Position;
-  size: Size;
   hovered: boolean;
+  position: Position;
+  ref: HTMLDivElement;
+  size: Size;
 }
 
 export interface NodeInput extends BaseNodeConnector {}
@@ -51,16 +51,16 @@ export interface NodeOutput extends BaseNodeConnector {
 }
 
 export interface OutputDestination {
-  destinationNodeId?: string;
-  destinationInputId?: string;
-  path?: VectorPath;
   css: string;
+  destinationInputId?: string;
+  destinationNodeId?: string;
+  path?: VectorPath;
 }
 
 export interface VectorPath {
+  end: Position;
   path: string;
   start: Position;
-  end: Position;
 }
 
 export interface SignalObject<T> {
