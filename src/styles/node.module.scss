@@ -43,9 +43,18 @@ $connector-border: 2px;
   z-index: 1;
 }
 
-.input-connector {
+.father-input-connector {
   @include connector;
-  background-color: white;
+  background-color: #c8e3ff;
+
+  &:hover {
+    background-color: lightblue;
+  }
+}
+
+.mother-input-connector {
+  @include connector;
+  background-color: #ffc8e3;
 
   &:hover {
     background-color: lightblue;

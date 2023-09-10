@@ -28,16 +28,15 @@ export interface NodeData {
 }
 
 export interface NodeCss {
-  inputConnector?: string;
   inputsSection?: string;
   normal?: string;
-  outputConnector?: string;
   outputsSection?: string;
   selected?: string;
 }
 
 interface BaseNodeConnector {
   connectorId: string;
+  css?: string;
   hovered: boolean;
   position: Position;
   ref: HTMLDivElement;

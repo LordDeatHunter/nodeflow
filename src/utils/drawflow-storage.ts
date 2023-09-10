@@ -262,7 +262,7 @@ export const addConnection = (
   );
 };
 
-export const addInput = (nodeId: string, inputId?: string) => {
+export const addInput = (nodeId: string, inputId?: string, css?: string) => {
   const node = nodes[nodeId];
   if (!node) {
     return;
@@ -272,13 +272,14 @@ export const addInput = (nodeId: string, inputId?: string) => {
 
   setNodes(nodeId, "inputs", inputId, {
     connectorId: inputId,
+    css,
     position: { x: 0, y: 0 },
     ref: undefined,
     size: { width: 0, height: 0 },
   });
 };
 
-export const addOutput = (nodeId: string, outputId?: string) => {
+export const addOutput = (nodeId: string, outputId?: string, css?: string) => {
   const node = nodes[nodeId];
   if (!node) {
     return;
@@ -288,6 +289,7 @@ export const addOutput = (nodeId: string, outputId?: string) => {
 
   setNodes(nodeId, "outputs", outputId, {
     connectorId: outputId,
+    css,
     destinations: [],
     position: { x: 0, y: 0 },
     ref: undefined,

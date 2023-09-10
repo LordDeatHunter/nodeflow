@@ -15,16 +15,14 @@ const customData: Record<string, { gender: "M" | "F" }> = {};
 
 for (let i = 0; i < 50; i++) {
   const newNode = addNode(Math.random() * 2000, Math.random() * 2000, {
-    inputConnector: nodeCss["input-connector"],
     inputsSection: nodeCss["inputs-section"],
     normal: nodeCss.node,
-    outputConnector: nodeCss["output-connector"],
     outputsSection: nodeCss["outputs-section"],
     selected: nodeCss["selected-node"],
-  })!;
-  addOutput(newNode.nodeId);
-  addInput(newNode.nodeId);
-  addInput(newNode.nodeId);
+  });
+  addOutput(newNode.nodeId, undefined, nodeCss["output-connector"]);
+  addInput(newNode.nodeId, undefined, nodeCss["mother-input-connector"]);
+  addInput(newNode.nodeId, undefined, nodeCss["father-input-connector"]);
   customData[newNode.nodeId] = {
     gender: Math.floor(Math.random() * 2) === 1 ? "M" : "F",
   };

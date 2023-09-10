@@ -78,7 +78,7 @@ const Node: Component<NodeProps> = (props) => {
       {props.children}
       <div class={props.css?.inputsSection}>
         <For each={Object.entries(nodes[props.nodeId].inputs)}>
-          {([inputId]) => (
+          {([inputId, input]) => (
             <div
               ref={(el) =>
                 setTimeout(() => {
@@ -97,14 +97,14 @@ const Node: Component<NodeProps> = (props) => {
                   }));
                 })
               }
-              class={props.css?.inputConnector}
+              class={input?.css}
             />
           )}
         </For>
       </div>
       <div class={props.css?.outputsSection}>
         <For each={Object.entries(nodes[props.nodeId].outputs)}>
-          {([outputId]) => (
+          {([outputId, output]) => (
             <div
               ref={(el) => {
                 setTimeout(() => {
@@ -123,7 +123,7 @@ const Node: Component<NodeProps> = (props) => {
                   }));
                 });
               }}
-              class={props.css?.outputConnector}
+              class={output?.css}
             />
           )}
         </For>
