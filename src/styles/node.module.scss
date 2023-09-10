@@ -39,7 +39,6 @@ $connector-border: 2px;
   height: $connector-size;
   border-radius: 100%;
   border: $connector-border solid black;
-  cursor: crosshair;
   z-index: 1;
 }
 
@@ -64,6 +63,7 @@ $connector-border: 2px;
 .output-connector {
   @include connector;
   background-color: white;
+  cursor: crosshair;
 
   &:hover {
     background-color: lightblue;

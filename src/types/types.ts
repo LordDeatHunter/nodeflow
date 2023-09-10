@@ -11,9 +11,10 @@ export interface Size {
 }
 
 export interface MouseData {
-  dragging: boolean;
+  draggingNode: boolean;
   heldNodeId?: string;
   mousePosition: Position;
+  heldOutputId?: string;
   startPosition?: Position;
 }
 
@@ -32,6 +33,10 @@ export interface NodeCss {
   normal?: string;
   outputsSection?: string;
   selected?: string;
+}
+
+export interface DrawflowCss {
+  newCurve?: string;
 }
 
 interface BaseNodeConnector {
@@ -53,10 +58,10 @@ export interface OutputDestination {
   css: string;
   destinationInputId?: string;
   destinationNodeId?: string;
-  path?: VectorPath;
+  path?: PathData;
 }
 
-export interface VectorPath {
+export interface PathData {
   end: Position;
   path: string;
   start: Position;

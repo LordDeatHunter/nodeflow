@@ -14,9 +14,15 @@ import {
   updateZoom,
 } from "../utils/drawflow-storage";
 import Node from "./Node";
+import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
+import { DrawflowCss } from "../types/types";
 
-const Drawflow: Component = () => {
+interface DrawflowProps {
+  css?: DrawflowCss;
+}
+
+const Drawflow: Component<DrawflowProps> = (props) => {
   const [pinchDistance, setPinchDistance] = createSignal(0);
 
   return (
@@ -33,7 +39,10 @@ const Drawflow: Component = () => {
         updateBackgroundPosition({ x: e.movementX, y: e.movementY });
       }}
       onPointerUp={() => {
-        setMouseData("dragging", false);
+        setMouseData(() => ({
+          draggingNode: false,
+          heldNodeId: undefined,
+        }));
       }}
       onWheel={(e) => {
         e.preventDefault();
@@ -43,7 +52,7 @@ const Drawflow: Component = () => {
         event.stopPropagation();
         resetMovement();
         setMouseData({
-          dragging: true,
+          draggingNode: true,
           heldNodeId: undefined,
           mousePosition: { x: event.clientX, y: event.clientY },
           startPosition: {
@@ -92,7 +101,7 @@ const Drawflow: Component = () => {
         const mousePosition = { x: touch.clientX, y: touch.clientY };
         if (event.touches.length === 2) {
           setMouseData({
-            dragging: false,
+            draggingNode: false,
             heldNodeId: undefined,
             mousePosition,
           });
@@ -105,7 +114,7 @@ const Drawflow: Component = () => {
           heldKeys.clear();
         }
         setMouseData({
-          dragging: event.touches.length === 1,
+          draggingNode: event.touches.length === 1,
           heldNodeId: undefined,
           mousePosition,
           startPosition: subtractPositions(
@@ -167,7 +176,7 @@ const Drawflow: Component = () => {
                           )
                         }
                       >
-                        <Curve
+                        <NodeCurve
                           nodeId={nodeId}
                           outputId={outputId}
                           destinationNodeId={
@@ -186,6 +195,7 @@ const Drawflow: Component = () => {
             </>
           )}
         </For>
+        <Curve css={props?.css?.newCurve} />
       </div>
     </div>
   );
