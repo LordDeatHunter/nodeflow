@@ -14,6 +14,7 @@ import {
   subtractPositions,
 } from "./math-utils";
 import { getScreenSize } from "./screen-utils";
+import { createMemo } from "solid-js";
 
 export const [nodes, setNodes] = createStore<Record<string, NodeData>>({});
 export const [mouseData, setMouseData] = createStore<MouseData>({
@@ -45,15 +46,20 @@ export const Constants = {
   ZOOM_MULTIPLIER: 0.005,
 } as const;
 
-export const getGlobalMousePosition = (): Position => {
-  const { x, y } = mouseData.mousePosition;
-  const { x: offsetX, y: offsetY } = drawflow.position;
-  const zoom = drawflow.zoomLevel;
+export const getGlobalMousePosition = createMemo((): Position => {
+  const { x, y } = mouseData.mousePosition; // screen coords
+  const { x: offsetX, y: offsetY } = drawflow.position; // chart coords (offset amount)
+  const zoom = drawflow.zoomLevel; // zoom multiplier
+  const screenCenter = dividePosition(
+    convertSizeToPosition(getScreenSize()),
+    2
+  );
+
   return {
-    x: x / zoom - offsetX,
-    y: y / zoom - offsetY,
+    x: (x - screenCenter.x) / zoom - offsetX + screenCenter.x,
+    y: (y - screenCenter.y) / zoom - offsetY + screenCenter.y,
   };
-};
+});
 
 export const updateZoom = (distance: number, zoomLocation: Position): void => {
   const oldZoom = drawflow.zoomLevel;
