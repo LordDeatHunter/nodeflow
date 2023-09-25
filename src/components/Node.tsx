@@ -1,6 +1,7 @@
 import { type Component, createEffect, For, JSX } from "solid-js";
 import { NodeCss, Position } from "../types/types";
 import {
+  addConnection,
   drawflow,
   mouseData,
   nodes,
@@ -16,7 +17,8 @@ interface NodeProps {
 
 const Node: Component<NodeProps> = (props) => {
   createEffect(() => {
-    if (mouseData.heldNodeId !== props.nodeId || !mouseData.dragging) return;
+    if (mouseData.heldNodeId !== props.nodeId || !mouseData.draggingNode)
+      return;
     const { x: mouseX, y: mouseY } = mouseData.mousePosition;
     const { x: startX, y: startY } = mouseData.startPosition ?? {
       x: 0,
@@ -33,8 +35,23 @@ const Node: Component<NodeProps> = (props) => {
   const selectNode = (position: Position) => {
     const { x, y } = nodes[props.nodeId]!.position;
     setMouseData({
-      dragging: true,
+      draggingNode: true,
+      heldOutputId: undefined,
       heldNodeId: props.nodeId,
+      mousePosition: position,
+      startPosition: {
+        x: position.x / drawflow.zoomLevel - x,
+        y: position.y / drawflow.zoomLevel - y,
+      },
+    });
+  };
+
+  const startCreatingConnection = (position: Position, outputId: string) => {
+    const { x, y } = nodes[props.nodeId]!.position;
+    setMouseData({
+      draggingNode: false,
+      heldNodeId: props.nodeId,
+      heldOutputId: outputId,
       mousePosition: position,
       startPosition: {
         x: position.x / drawflow.zoomLevel - x,
@@ -98,6 +115,21 @@ const Node: Component<NodeProps> = (props) => {
                 })
               }
               class={input?.css}
+              onPointerUp={(event) => {
+                event.stopPropagation();
+                if (!mouseData.heldOutputId) return;
+                addConnection(
+                  mouseData.heldNodeId!,
+                  mouseData.heldOutputId!,
+                  props.nodeId,
+                  inputId
+                );
+                setMouseData({
+                  draggingNode: false,
+                  heldNodeId: undefined,
+                  heldOutputId: undefined,
+                });
+              }}
             />
           )}
         </For>
@@ -124,6 +156,21 @@ const Node: Component<NodeProps> = (props) => {
                 });
               }}
               class={output?.css}
+              onMouseDown={(event) => {
+                event.stopPropagation();
+                startCreatingConnection(
+                  { x: event.clientX, y: event.clientY },
+                  outputId
+                );
+              }}
+              onTouchStart={(event) => {
+                event.stopPropagation();
+                const touch = event.touches[0];
+                startCreatingConnection(
+                  { x: touch.clientX, y: touch.clientY },
+                  outputId
+                );
+              }}
             />
           )}
         </For>

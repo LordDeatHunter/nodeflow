@@ -14,22 +14,24 @@ import {
   subtractPositions,
 } from "./math-utils";
 import { getScreenSize } from "./screen-utils";
+import { createMemo } from "solid-js";
 
 export const [nodes, setNodes] = createStore<Record<string, NodeData>>({});
 export const [mouseData, setMouseData] = createStore<MouseData>({
-  dragging: false,
+  draggingNode: false,
+  heldNodeId: undefined,
+  heldOutputId: undefined,
   mousePosition: { x: 0, y: 0 },
   startPosition: undefined,
-  heldNodeId: undefined,
 });
 export const [drawflow, setDrawflow] = createStore<{
+  currentMoveSpeed: Position;
   position: Position;
   zoomLevel: number;
-  currentMoveSpeed: Position;
 }>({
+  currentMoveSpeed: { x: 0, y: 0 },
   position: { x: 0, y: 0 },
   zoomLevel: 1,
-  currentMoveSpeed: { x: 0, y: 0 },
 });
 
 export const Constants = {
@@ -44,6 +46,23 @@ export const Constants = {
   ZOOM_MULTIPLIER: 0.005,
 } as const;
 
+export const globalMousePosition = createMemo((): Position => {
+  const { x, y } = mouseData.mousePosition; // screen coords
+  const { x: offsetX, y: offsetY } = drawflow.position; // chart coords (offset amount)
+  const zoom = drawflow.zoomLevel; // zoom multiplier
+
+  // TODO: change to drawflow div size instead of screen size
+  const screenCenter = dividePosition(
+    convertSizeToPosition(getScreenSize()),
+    2
+  );
+
+  return {
+    x: (x - screenCenter.x) / zoom - offsetX + screenCenter.x,
+    y: (y - screenCenter.y) / zoom - offsetY + screenCenter.y,
+  };
+});
+
 export const updateZoom = (distance: number, zoomLocation: Position): void => {
   const oldZoom = drawflow.zoomLevel;
   const newZoom = clamp(
@@ -52,7 +71,7 @@ export const updateZoom = (distance: number, zoomLocation: Position): void => {
     Constants.MAX_ZOOM
   );
   if (newZoom < Constants.MIN_ZOOM || newZoom > Constants.MAX_ZOOM) return;
-  setMouseData("dragging", false);
+  setMouseData("draggingNode", false);
   const windowDimensions = convertSizeToPosition(getScreenSize());
   const centeredZoomLocation = subtractPositions(
     zoomLocation,
@@ -81,7 +100,7 @@ export const updateBackgroundPosition = (
   moveDistance: Position,
   keyboard = false
 ) => {
-  if (mouseData.heldNodeId || keyboard === mouseData.dragging) return;
+  if (mouseData.heldNodeId || keyboard === mouseData.draggingNode) return;
   setDrawflow("position", (prev) => ({
     x: prev.x + moveDistance.x / drawflow.zoomLevel,
     y: prev.y + moveDistance.y / drawflow.zoomLevel,

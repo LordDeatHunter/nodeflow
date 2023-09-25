@@ -1,54 +1,28 @@
-import { createEffect, createMemo } from "solid-js";
-import { nodes, setNodes } from "../utils/drawflow-storage";
+import { Component, createMemo } from "solid-js";
+import {
+  globalMousePosition,
+  mouseData,
+  nodes,
+} from "../utils/drawflow-storage";
 import {
   addPositions,
   convertSizeToPosition,
   dividePosition,
 } from "../utils/math-utils";
+import { PathData } from "../types/types";
 
 interface CurveProps {
-  nodeId: string;
-  outputId: string;
-  destinationNodeId: string;
-  destinationInputId: string;
-  css: string;
+  css?: string;
 }
 
-const Curve = (props: CurveProps) => {
-  const startNode = createMemo(() => nodes[props.nodeId]);
-  const endNode = createMemo(() => nodes[props.destinationNodeId]);
-
-  const destinations = createMemo(
-    () => startNode()?.outputs[props.outputId]?.destinations
-  );
-  const destinationIndex = createMemo(() =>
-    !startNode() || !endNode()
-      ? -1
-      : destinations()?.findIndex(
-          (destination) =>
-            destination.destinationNodeId === props.destinationNodeId &&
-            destination.destinationInputId === props.destinationInputId
-        ) ?? -1
-  );
-
-  createEffect(() => {
-    if (destinationIndex() < 0) {
-      return;
+const Curve: Component<CurveProps> = (props) => {
+  const curveData = createMemo<PathData | undefined>(() => {
+    if (!mouseData.heldNodeId || !mouseData.heldOutputId) {
+      return undefined;
     }
-
-    const {
-      position: startPosition,
-      outputs: startNodeOutputs,
-      offset: startNodeOffset,
-    } = startNode();
-    const {
-      position: endPosition,
-      inputs: endNodeInputs,
-      offset: endNodeOffset,
-    } = endNode();
-
-    const output = startNodeOutputs[props.outputId];
-    const input = endNodeInputs[props.destinationInputId];
+    const { position: startPosition, offset: startNodeOffset } =
+      nodes[mouseData.heldNodeId];
+    const output = nodes[mouseData.heldNodeId].outputs[mouseData.heldOutputId];
 
     const start = addPositions(
       startPosition,
@@ -56,34 +30,18 @@ const Curve = (props: CurveProps) => {
       output.position,
       dividePosition(convertSizeToPosition(output.size), 2)
     );
-
-    const end = addPositions(
-      endPosition,
-      endNodeOffset,
-      input.position,
-      dividePosition(convertSizeToPosition(input.size), 2)
-    );
+    const end = globalMousePosition();
 
     const xCurve = 0;
     const yCurve = (end.y - start.y) / 1.5;
 
-    const path = {
+    return {
       start,
       end,
       path: `M ${start.x} ${start.y} C ${start.x + xCurve} ${
         start.y + yCurve
       }, ${end.x - xCurve} ${end.y - yCurve}, ${end.x} ${end.y}`,
     };
-
-    setNodes(
-      props.nodeId,
-      "outputs",
-      props.outputId,
-      "destinations",
-      destinationIndex(),
-      "path",
-      path
-    );
   });
 
   return (
@@ -97,31 +55,11 @@ const Curve = (props: CurveProps) => {
         overflow: "visible",
       }}
     >
-      <defs>
-        <marker
-          markerWidth="8"
-          markerHeight="8"
-          refX="4"
-          refY="4"
-          viewBox="0 0 8 8"
-          orient="auto"
-          id="pointer"
-        >
-          <polyline
-            points="0,0 4,2 0,4"
-            fill="none"
-            stroke-width="1"
-            stroke="black"
-            transform="matrix(1,0,0,1,1,2)"
-          />
-        </marker>
-      </defs>
       <path
-        d={destinations()[destinationIndex()].path?.path}
+        d={curveData()?.path}
         stroke="black"
         stroke-width={1}
         fill="transparent"
-        marker-end="url(#pointer)"
         class={props.css}
       />
     </svg>

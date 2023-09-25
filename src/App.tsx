@@ -2,6 +2,7 @@ import { type Component } from "solid-js";
 import Drawflow from "./components/Drawflow";
 import curveCss from "./styles/curve.module.scss";
 import nodeCss from "./styles/node.module.scss";
+import drawflowCss from "./styles/drawflow.module.scss";
 import {
   addConnection,
   addInput,
@@ -52,6 +53,8 @@ for (let i = 0; i < totalNodes; i++) {
   );
 }
 
-const App: Component = () => <Drawflow />;
+const App: Component = () => (
+  <Drawflow css={{ newCurve: drawflowCss["new-curve"] }} />
+);
 
 export default App;
