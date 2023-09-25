@@ -46,10 +46,12 @@ export const Constants = {
   ZOOM_MULTIPLIER: 0.005,
 } as const;
 
-export const getGlobalMousePosition = createMemo((): Position => {
+export const globalMousePosition = createMemo((): Position => {
   const { x, y } = mouseData.mousePosition; // screen coords
   const { x: offsetX, y: offsetY } = drawflow.position; // chart coords (offset amount)
   const zoom = drawflow.zoomLevel; // zoom multiplier
+
+  // TODO: change to drawflow div size instead of screen size
   const screenCenter = dividePosition(
     convertSizeToPosition(getScreenSize()),
     2

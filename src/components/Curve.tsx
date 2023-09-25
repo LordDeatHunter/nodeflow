@@ -1,6 +1,6 @@
 import { Component, createMemo } from "solid-js";
 import {
-  getGlobalMousePosition,
+  globalMousePosition,
   mouseData,
   nodes,
 } from "../utils/drawflow-storage";
@@ -30,7 +30,7 @@ const Curve: Component<CurveProps> = (props) => {
       output.position,
       dividePosition(convertSizeToPosition(output.size), 2)
     );
-    const end = getGlobalMousePosition();
+    const end = globalMousePosition();
 
     const xCurve = 0;
     const yCurve = (end.y - start.y) / 1.5;

@@ -39,9 +39,10 @@ const Drawflow: Component<DrawflowProps> = (props) => {
         updateBackgroundPosition({ x: e.movementX, y: e.movementY });
       }}
       onPointerUp={() => {
-        setMouseData(() => ({
+        setMouseData((prev) => ({
           draggingNode: false,
-          heldNodeId: undefined,
+          heldOutputId: undefined,
+          heldNodeId: prev.heldOutputId ? undefined : prev.heldNodeId,
         }));
       }}
       onWheel={(e) => {
