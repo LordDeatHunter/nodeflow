@@ -1,5 +1,6 @@
 import { createStore, produce } from "solid-js/store";
 import {
+  DrawflowData,
   MouseData,
   NodeCss,
   NodeData,
@@ -9,29 +10,28 @@ import {
 import {
   clamp,
   convertSizeToPosition,
+  defaultPosition,
   dividePosition,
   multiplyPosition,
   subtractPositions,
 } from "./math-utils";
 import { getScreenSize } from "./screen-utils";
 import { createMemo } from "solid-js";
+import { intersectionOfSets, isSetEmpty } from "./misc-utils";
 
 export const [nodes, setNodes] = createStore<Record<string, NodeData>>({});
 export const [mouseData, setMouseData] = createStore<MouseData>({
   draggingNode: false,
   heldNodeId: undefined,
   heldOutputId: undefined,
-  mousePosition: { x: 0, y: 0 },
+  mousePosition: defaultPosition(),
   startPosition: undefined,
 });
-export const [drawflow, setDrawflow] = createStore<{
-  currentMoveSpeed: Position;
-  position: Position;
-  zoomLevel: number;
-}>({
-  currentMoveSpeed: { x: 0, y: 0 },
-  position: { x: 0, y: 0 },
+export const [drawflow, setDrawflow] = createStore<DrawflowData>({
+  currentMoveSpeed: defaultPosition(),
+  position: defaultPosition(),
   zoomLevel: 1,
+  pinchDistance: 0,
 });
 
 export const Constants = {
@@ -109,8 +109,12 @@ export const updateBackgroundPosition = (
 
 export const heldKeys = new Set<string>();
 
-const horizontalKeys = ["ArrowLeft", "ArrowRight"] as const;
-const verticalKeys = ["ArrowUp", "ArrowDown"] as const;
+export const KEYS: Record<string, Set<string>> = {
+  MOVE_DOWN: new Set(["ArrowDown", "KeyS"]),
+  MOVE_LEFT: new Set(["ArrowLeft", "KeyA"]),
+  MOVE_RIGHT: new Set(["ArrowRight", "KeyD"]),
+  MOVE_UP: new Set(["ArrowUp", "KeyW"]),
+};
 
 const calculateMovement = (
   isMoving: boolean,
@@ -139,11 +143,11 @@ const calculateMovement = (
 };
 
 export const resetMovement = () => {
-  setDrawflow("currentMoveSpeed", { x: 0, y: 0 });
-  heldKeys.delete(horizontalKeys[0]);
-  heldKeys.delete(horizontalKeys[1]);
-  heldKeys.delete(verticalKeys[0]);
-  heldKeys.delete(verticalKeys[1]);
+  setDrawflow("currentMoveSpeed", defaultPosition());
+  KEYS.MOVE_LEFT.forEach((key) => heldKeys.delete(key));
+  KEYS.MOVE_RIGHT.forEach((key) => heldKeys.delete(key));
+  KEYS.MOVE_UP.forEach((key) => heldKeys.delete(key));
+  KEYS.MOVE_DOWN.forEach((key) => heldKeys.delete(key));
 };
 
 export const deselectNode = () => {
@@ -164,10 +168,12 @@ export const updateNodePosition = (moveSpeed: Position) => {
 
 setInterval(() => {
   // TODO: change with const strings instead of array access
-  const movingLeft = heldKeys.has(horizontalKeys[0]);
-  const movingRight = heldKeys.has(horizontalKeys[1]);
-  const movingUp = heldKeys.has(verticalKeys[0]);
-  const movingDown = heldKeys.has(verticalKeys[1]);
+  const movingLeft = !isSetEmpty(intersectionOfSets(heldKeys, KEYS.MOVE_LEFT));
+  const movingRight = !isSetEmpty(
+    intersectionOfSets(heldKeys, KEYS.MOVE_RIGHT)
+  );
+  const movingUp = !isSetEmpty(intersectionOfSets(heldKeys, KEYS.MOVE_UP));
+  const movingDown = !isSetEmpty(intersectionOfSets(heldKeys, KEYS.MOVE_DOWN));
 
   const isDraggingNode = mouseData.heldNodeId !== undefined;
 
@@ -205,7 +211,7 @@ export const addNode = (x = 0, y = 0, css?: NodeCss): NodeData => {
       css: css ?? {},
       inputs: {},
       nodeId: newId,
-      offset: { x: 0, y: 0 },
+      offset: defaultPosition(),
       outputs: {},
       position: { x, y },
       ref: undefined,
@@ -292,7 +298,7 @@ export const addInput = (nodeId: string, inputId?: string, css?: string) => {
   setNodes(nodeId, "inputs", inputId, {
     connectorId: inputId,
     css,
-    position: { x: 0, y: 0 },
+    position: defaultPosition(),
     ref: undefined,
     size: { width: 0, height: 0 },
   });
@@ -310,7 +316,7 @@ export const addOutput = (nodeId: string, outputId?: string, css?: string) => {
     connectorId: outputId,
     css,
     destinations: [],
-    position: { x: 0, y: 0 },
+    position: defaultPosition(),
     ref: undefined,
     size: { width: 0, height: 0 },
   });

@@ -6,23 +6,23 @@ export const convertSizeToPosition = (size: Size): Position => ({
 });
 
 export const addPositions = (...positions: Position[]): Position =>
-  positions.reduce((acc, curr) => ({ x: acc.x + curr.x, y: acc.y + curr.y }), {
-    x: 0,
-    y: 0,
-  });
+  positions.reduce(
+    (acc, curr) => ({ x: acc.x + curr.x, y: acc.y + curr.y }),
+    defaultPosition()
+  );
 
 export const subtractPositions = (...positions: Position[]): Position =>
   positions.reduce(
     (acc, curr, i) =>
       i === 0 ? curr : { x: acc.x - curr.x, y: acc.y - curr.y },
-    { x: 0, y: 0 }
+    defaultPosition()
   );
 
 export const multiplyPositions = (...positions: Position[]): Position =>
-  positions.reduce((acc, curr) => ({ x: acc.x * curr.x, y: acc.y * curr.y }), {
-    x: 0,
-    y: 0,
-  });
+  positions.reduce(
+    (acc, curr) => ({ x: acc.x * curr.x, y: acc.y * curr.y }),
+    defaultPosition()
+  );
 
 export const negatePosition = (position: Position): Position => ({
   x: -position.x,
@@ -52,3 +52,6 @@ export const dividePosition = (
 
 export const clamp = (value: number, min: number, max: number): number =>
   Math.min(Math.max(value, min), max);
+
+// TODO: expand position logic and move to separate file
+export const defaultPosition = (): Position => ({ x: 0, y: 0 });
