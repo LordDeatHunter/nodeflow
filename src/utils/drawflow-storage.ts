@@ -273,6 +273,16 @@ export const addConnection = (
     }
   }
 
+  if (
+    sourceNode.outputs[sourceOutputId].destinations.some(
+      (destination) =>
+        destination.destinationNodeId === destinationNodeId &&
+        destination.destinationInputId === destinationInputId
+    )
+  ) {
+    return;
+  }
+
   setNodes(
     sourceNodeId,
     "outputs",

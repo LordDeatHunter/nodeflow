@@ -40,6 +40,7 @@ $connector-border: 2px;
   border-radius: 100%;
   border: $connector-border solid black;
   z-index: 1;
+  cursor: crosshair;
 }
 
 .father-input-connector {
@@ -63,7 +64,6 @@ $connector-border: 2px;
 .output-connector {
   @include connector;
   background-color: white;
-  cursor: crosshair;
 
   &:hover {
     background-color: lightblue;

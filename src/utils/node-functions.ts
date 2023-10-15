@@ -21,20 +21,45 @@ export const nodeFunctions = {
 
 export const inputFunctions = {
   onPointerUp: (event: PointerEvent, nodeId: string, inputId: string) => {
-    event.stopPropagation();
     if (!mouseData.heldOutputId) return;
-    addConnection(
+    onNodesConnected(
       mouseData.heldNodeId!,
       mouseData.heldOutputId!,
       nodeId,
       inputId
     );
+  },
+};
+
+// TODO: implement this in another way, without direct access to the object, and move to separate file.
+export const NODE_CONNECTION_SUBSCRIPTIONS: Record<
+  string,
+  (
+    outputNodeId: string,
+    outputId: string,
+    inputNodeId: string,
+    inputId: string
+  ) => void
+> = {
+  "create-connection": addConnection,
+  "reset-mouse-data": () => {
     setMouseData({
       draggingNode: false,
       heldNodeId: undefined,
       heldOutputId: undefined,
     });
   },
+};
+
+export const onNodesConnected = (
+  outputNodeId: string,
+  outputId: string,
+  inputNodeId: string,
+  inputId: string
+) => {
+  Object.values(NODE_CONNECTION_SUBSCRIPTIONS).forEach((callback) =>
+    callback(outputNodeId, outputId, inputNodeId, inputId)
+  );
 };
 
 export const outputFunctions = {

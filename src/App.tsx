@@ -11,6 +11,7 @@ import {
   getTotalConnectedInputs,
   nodes,
 } from "./utils/drawflow-storage";
+import { NODE_CONNECTION_SUBSCRIPTIONS } from "./utils/node-functions";
 
 const customData: Record<string, { gender: "M" | "F" }> = {};
 
@@ -28,6 +29,28 @@ for (let i = 0; i < 50; i++) {
     gender: Math.floor(Math.random() * 2) === 1 ? "M" : "F",
   };
 }
+NODE_CONNECTION_SUBSCRIPTIONS["create-connection"] = (
+  outputNodeId,
+  outputId,
+  inputNodeId,
+  inputId
+) => {
+  if (
+    (customData[outputNodeId].gender === "M" && inputId === "0") ||
+    (customData[outputNodeId].gender === "F" && inputId === "1")
+  ) {
+    return;
+  }
+
+  addConnection(
+    outputNodeId,
+    outputId,
+    inputNodeId,
+    inputId,
+    inputId == "1" ? curveCss.father : curveCss.mother
+  );
+};
+
 const totalNodes = Object.keys(nodes).length;
 
 for (let i = 0; i < totalNodes; i++) {
