@@ -49,8 +49,8 @@ const Curve: Component<CurveProps> = (props) => {
       style={{
         "z-index": 3,
         position: "absolute",
-        width: 0,
-        height: 0,
+        width: "1px",
+        height: "1px",
         "pointer-events": "none",
         overflow: "visible",
       }}
