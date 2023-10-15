@@ -28,6 +28,13 @@ export interface NodeData {
   ref?: HTMLDivElement;
 }
 
+export interface DrawflowData {
+  currentMoveSpeed: Position;
+  position: Position;
+  zoomLevel: number;
+  pinchDistance: number;
+}
+
 export interface NodeCss {
   inputsSection?: string;
   normal?: string;
