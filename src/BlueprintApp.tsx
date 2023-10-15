@@ -1,7 +1,7 @@
 import { type Component } from "solid-js";
 import Drawflow from "./components/Drawflow";
 import curveCss from "./styles/curve.module.scss";
-import nodeCss from "./styles/node.module.scss";
+import nodeCss from "./styles/blueprint-node.module.scss";
 import drawflowCss from "./styles/drawflow.module.scss";
 import {
   addConnection,
@@ -13,8 +13,6 @@ import {
 } from "./utils/drawflow-storage";
 import { NODE_CONNECTION_SUBSCRIPTIONS } from "./utils/node-functions";
 
-const customData: Record<string, { gender: "M" | "F" }> = {};
-
 for (let i = 0; i < 50; i++) {
   const newNode = addNode(Math.random() * 2000, Math.random() * 2000, {
     inputsSection: nodeCss["inputs-section"],
@@ -22,33 +20,22 @@ for (let i = 0; i < 50; i++) {
     outputsSection: nodeCss["outputs-section"],
     selected: nodeCss["selected-node"],
   });
-  addOutput(newNode.nodeId, undefined, nodeCss["output-connector"]);
-  addInput(newNode.nodeId, undefined, nodeCss["mother-input-connector"]);
-  addInput(newNode.nodeId, undefined, nodeCss["father-input-connector"]);
-  customData[newNode.nodeId] = {
-    gender: Math.floor(Math.random() * 2) === 1 ? "M" : "F",
-  };
+  const outputs = 1 + Math.random() * 3;
+  for (let j = 0; j < outputs; j++) {
+    addOutput(newNode.nodeId, undefined, nodeCss["output-connector"]);
+  }
+  const inputs = 1 + Math.random() * 3;
+  for (let j = 0; j < inputs; j++) {
+    addInput(newNode.nodeId, undefined, nodeCss["input-connector"]);
+  }
 }
 NODE_CONNECTION_SUBSCRIPTIONS["create-connection"] = (
   outputNodeId,
   outputId,
   inputNodeId,
-  inputId
+  inputId,
 ) => {
-  if (
-    (customData[outputNodeId].gender === "M" && inputId === "0") ||
-    (customData[outputNodeId].gender === "F" && inputId === "1")
-  ) {
-    return;
-  }
-
-  addConnection(
-    outputNodeId,
-    outputId,
-    inputNodeId,
-    inputId,
-    inputId == "1" ? curveCss.father : curveCss.mother
-  );
+  addConnection(outputNodeId, outputId, inputNodeId, inputId, curveCss.father);
 };
 
 const totalNodes = Object.keys(nodes).length;
@@ -62,8 +49,12 @@ for (let i = 0; i < totalNodes; i++) {
     continue;
   }
 
-  const toInput = customData[from.toString()].gender === "M" ? "0" : "1";
-  if (from === to || getTotalConnectedInputs(to.toString(), toInput) > 0) {
+  const toInput = Math.floor(Math.random() * Object.keys(toNode.inputs).length);
+  console.log(toInput);
+  if (
+    from === to ||
+    getTotalConnectedInputs(to.toString(), toInput.toString()) > 0
+  ) {
     continue;
   }
 
@@ -72,12 +63,12 @@ for (let i = 0; i < totalNodes; i++) {
     "0",
     to.toString(),
     toInput.toString(),
-    toInput == "1" ? curveCss.father : curveCss.mother
+    curveCss.father,
   );
 }
 
-const App: Component = () => (
+const BlueprintApp: Component = () => (
   <Drawflow css={{ newCurve: drawflowCss["new-curve"] }} />
 );
 
-export default App;
+export default BlueprintApp;
