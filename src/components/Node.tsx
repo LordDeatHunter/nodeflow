@@ -6,9 +6,9 @@ import {
   setNodes,
 } from "../utils/drawflow-storage";
 import {
-  inputFunctions,
-  nodeFunctions,
-  outputFunctions,
+  InputFunctions,
+  NodeFunctions,
+  OutputFunctions,
 } from "../utils/node-functions";
 import { defaultPosition } from "../utils/math-utils";
 
@@ -55,8 +55,8 @@ const Node: Component<NodeProps> = (props) => {
         [node()?.css?.normal ?? ""]: true,
         [node()?.css?.selected ?? ""]: mouseData.heldNodeId === props.nodeId,
       }}
-      onMouseDown={(e) => nodeFunctions.onMouseDown(e, props.nodeId)}
-      onTouchStart={(e) => nodeFunctions.onTouchStart(e, props.nodeId)}
+      onMouseDown={(e) => NodeFunctions.onMouseDown(e, props.nodeId)}
+      onTouchStart={(e) => NodeFunctions.onTouchStart(e, props.nodeId)}
     >
       {node().display(props.nodeId)}
       <div class={node()?.css?.inputsSection}>
@@ -82,7 +82,7 @@ const Node: Component<NodeProps> = (props) => {
               }
               class={input?.css}
               onPointerUp={(e) =>
-                inputFunctions.onPointerUp(e, props.nodeId, inputId)
+                InputFunctions.onPointerUp(e, props.nodeId, inputId)
               }
             />
           )}
@@ -111,10 +111,10 @@ const Node: Component<NodeProps> = (props) => {
               }}
               class={output?.css}
               onMouseDown={(e) =>
-                outputFunctions.onMouseDown(e, props.nodeId, outputId)
+                OutputFunctions.onMouseDown(e, props.nodeId, outputId)
               }
               onTouchStart={(e) =>
-                outputFunctions.onTouchStart(e, props.nodeId, outputId)
+                OutputFunctions.onTouchStart(e, props.nodeId, outputId)
               }
             />
           )}

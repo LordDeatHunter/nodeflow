@@ -10,6 +10,7 @@ import {
   dividePosition,
 } from "../utils/math-utils";
 import { PathData } from "../types/types";
+import { CurveFunctions } from "../utils/curve-functions";
 
 interface CurveProps {
   css?: string;
@@ -28,19 +29,14 @@ const Curve: Component<CurveProps> = (props) => {
       startPosition,
       startNodeOffset,
       output.position,
-      dividePosition(convertSizeToPosition(output.size), 2)
+      dividePosition(convertSizeToPosition(output.size), 2),
     );
     const end = globalMousePosition();
-
-    const xCurve = 0;
-    const yCurve = (end.y - start.y) / 1.5;
 
     return {
       start,
       end,
-      path: `M ${start.x} ${start.y} C ${start.x + xCurve} ${
-        start.y + yCurve
-      }, ${end.x - xCurve} ${end.y - yCurve}, ${end.x} ${end.y}`,
+      path: CurveFunctions.createDraggingPathCurve(start, end),
     };
   });
 

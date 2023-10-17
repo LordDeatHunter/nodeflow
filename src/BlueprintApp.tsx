@@ -12,6 +12,7 @@ import {
   nodes,
 } from "./utils/drawflow-storage";
 import { NODE_CONNECTION_SUBSCRIPTIONS } from "./utils/node-functions";
+import { CurveFunctions, SetCurveFunction } from "./utils/curve-functions";
 
 for (let i = 0; i < 50; i++) {
   const newNode = addNode(Math.random() * 2000, Math.random() * 2000, {
@@ -39,6 +40,7 @@ NODE_CONNECTION_SUBSCRIPTIONS["create-connection"] = (
 ) => {
   addConnection(outputNodeId, outputId, inputNodeId, inputId, curveCss.father);
 };
+SetCurveFunction("getDefaultCurve", CurveFunctions.getHorizontalCurve);
 
 const totalNodes = Object.keys(nodes).length;
 

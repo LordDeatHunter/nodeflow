@@ -65,7 +65,7 @@ for (let i = 0; i < totalNodes; i++) {
     continue;
   }
 
-  const toInput = customData[from.toString()].gender === "M" ? "0" : "1";
+  const toInput = customData[from.toString()].gender === "M" ? "1" : "0";
   if (from === to || getTotalConnectedInputs(to.toString(), toInput) > 0) {
     continue;
   }

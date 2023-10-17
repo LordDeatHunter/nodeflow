@@ -4,7 +4,7 @@ import Node from "./Node";
 import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
 import { DrawflowCss } from "../types/types";
-import * as drawflowFunctions from "../utils/drawflow-functions";
+import { DrawflowFunctions } from "../utils/drawflow-functions";
 
 interface DrawflowProps {
   css?: DrawflowCss;
@@ -19,14 +19,7 @@ const Drawflow: Component<DrawflowProps> = (props) => (
       position: "absolute",
       width: `${window.innerWidth}px`,
     }}
-    onMouseMove={drawflowFunctions.onMouseMove}
-    onPointerUp={drawflowFunctions.onPointerUp}
-    onWheel={drawflowFunctions.onWheel}
-    onMouseDown={drawflowFunctions.onMouseDown}
-    onKeyDown={drawflowFunctions.onKeyDown}
-    onKeyUp={drawflowFunctions.onKeyUp}
-    onTouchStart={drawflowFunctions.onTouchStart}
-    onTouchMove={drawflowFunctions.onTouchMove}
+    {...DrawflowFunctions}
   >
     <div
       style={{
