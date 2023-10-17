@@ -17,10 +17,13 @@ const customData: Record<string, { gender: "M" | "F" }> = {};
 
 for (let i = 0; i < 50; i++) {
   const newNode = addNode(Math.random() * 2000, Math.random() * 2000, {
-    inputsSection: nodeCss["inputs-section"],
-    normal: nodeCss.node,
-    outputsSection: nodeCss["outputs-section"],
-    selected: nodeCss["selected-node"],
+    display: (nodeId: string) => <h1>Node {nodeId}</h1>,
+    css: {
+      inputsSection: nodeCss["inputs-section"],
+      normal: nodeCss.node,
+      outputsSection: nodeCss["outputs-section"],
+      selected: nodeCss["selected-node"],
+    },
   });
   addOutput(newNode.nodeId, undefined, nodeCss["output-connector"]);
   addInput(newNode.nodeId, undefined, nodeCss["mother-input-connector"]);

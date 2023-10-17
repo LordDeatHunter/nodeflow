@@ -15,10 +15,12 @@ import { NODE_CONNECTION_SUBSCRIPTIONS } from "./utils/node-functions";
 
 for (let i = 0; i < 50; i++) {
   const newNode = addNode(Math.random() * 2000, Math.random() * 2000, {
-    inputsSection: nodeCss["inputs-section"],
-    normal: nodeCss.node,
-    outputsSection: nodeCss["outputs-section"],
-    selected: nodeCss["selected-node"],
+    css: {
+      inputsSection: nodeCss["inputs-section"],
+      normal: nodeCss.node,
+      outputsSection: nodeCss["outputs-section"],
+      selected: nodeCss["selected-node"],
+    },
   });
   const outputs = 1 + Math.random() * 3;
   for (let j = 0; j < outputs; j++) {
@@ -50,7 +52,6 @@ for (let i = 0; i < totalNodes; i++) {
   }
 
   const toInput = Math.floor(Math.random() * Object.keys(toNode.inputs).length);
-  console.log(toInput);
   if (
     from === to ||
     getTotalConnectedInputs(to.toString(), toInput.toString()) > 0

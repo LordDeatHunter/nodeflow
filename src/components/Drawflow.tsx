@@ -38,11 +38,9 @@ const Drawflow: Component<DrawflowProps> = (props) => (
       }}
     >
       <For each={Object.entries(nodes)}>
-        {([nodeId, nodeData]) => (
+        {([nodeId]) => (
           <>
-            <Node css={nodeData.css} nodeId={nodeId}>
-              <h1>ID: {nodeId}</h1>
-            </Node>
+            <Node nodeId={nodeId} />
             <For each={Object.entries(nodes[nodeId]!.outputs)}>
               {([outputId, output]) => (
                 <For each={output.destinations}>
@@ -52,7 +50,7 @@ const Drawflow: Component<DrawflowProps> = (props) => (
                         !!outputConnection?.destinationNodeId &&
                         !!outputConnection?.destinationInputId &&
                         Object.keys(nodes).includes(
-                          outputConnection.destinationNodeId!
+                          outputConnection.destinationNodeId!,
                         )
                       }
                     >

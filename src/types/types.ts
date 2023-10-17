@@ -1,3 +1,5 @@
+import { JSX } from "solid-js";
+
 export type Optional<T> = T | undefined;
 
 export interface Position {
@@ -20,6 +22,7 @@ export interface MouseData {
 
 export interface NodeData {
   css: NodeCss;
+  readonly display: (nodeId: string) => JSX.Element | undefined;
   inputs: Record<string, NodeInput>;
   nodeId: string;
   offset: Position;
