@@ -1,5 +1,5 @@
 import { type Component } from "solid-js";
-import Drawflow from "./components/Drawflow";
+import Drawflow from "solid-drawflow/src/components/Drawflow";
 import curveCss from "./styles/curve.module.scss";
 import nodeCss from "./styles/node.module.scss";
 import drawflowCss from "./styles/drawflow.module.scss";
@@ -10,10 +10,8 @@ import {
   addOutput,
   getTotalConnectedInputs,
   nodes,
-} from "./utils/drawflow-storage";
-import { NODE_CONNECTION_SUBSCRIPTIONS } from "./utils/node-functions";
-
-const customData: Record<string, { gender: "M" | "F" }> = {};
+} from "solid-drawflow/src/utils/drawflow-storage";
+import { NODE_CONNECTION_SUBSCRIPTIONS } from "solid-drawflow/src/utils/node-functions";
 
 for (let i = 0; i < 50; i++) {
   const newNode = addNode(Math.random() * 2000, Math.random() * 2000, {
@@ -24,13 +22,13 @@ for (let i = 0; i < 50; i++) {
       outputsSection: nodeCss["outputs-section"],
       selected: nodeCss["selected-node"],
     },
+    customData: {
+      gender: Math.floor(Math.random() * 2) === 1 ? "M" : "F",
+    },
   });
   addOutput(newNode.nodeId, undefined, nodeCss["output-connector"]);
   addInput(newNode.nodeId, undefined, nodeCss["mother-input-connector"]);
   addInput(newNode.nodeId, undefined, nodeCss["father-input-connector"]);
-  customData[newNode.nodeId] = {
-    gender: Math.floor(Math.random() * 2) === 1 ? "M" : "F",
-  };
 }
 NODE_CONNECTION_SUBSCRIPTIONS["create-connection"] = (
   outputNodeId,
@@ -38,9 +36,11 @@ NODE_CONNECTION_SUBSCRIPTIONS["create-connection"] = (
   inputNodeId,
   inputId,
 ) => {
+  const outputNode = nodes[outputNodeId];
+
   if (
-    (customData[outputNodeId].gender === "M" && inputId === "0") ||
-    (customData[outputNodeId].gender === "F" && inputId === "1")
+    (outputNode.customData.gender === "M" && inputId === "0") ||
+    (outputNode.customData.gender === "F" && inputId === "1")
   ) {
     return;
   }
@@ -65,7 +65,7 @@ for (let i = 0; i < totalNodes; i++) {
     continue;
   }
 
-  const toInput = customData[from.toString()].gender === "M" ? "1" : "0";
+  const toInput = fromNode.customData.gender === "M" ? "1" : "0";
   if (from === to || getTotalConnectedInputs(to.toString(), toInput) > 0) {
     continue;
   }
@@ -79,8 +79,8 @@ for (let i = 0; i < totalNodes; i++) {
   );
 }
 
-const FamilyTreeApp: Component = () => (
+const App: Component = () => (
   <Drawflow css={{ newCurve: drawflowCss["new-curve"] }} />
 );
 
-export default FamilyTreeApp;
+export default App;

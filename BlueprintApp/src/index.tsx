@@ -2,7 +2,9 @@
 import { render } from "solid-js/web";
 
 import "./index.css";
-import FamilyTreeApp from "./FamilyTreeApp";
+import App from "./App";
+import "./types.d";
+import "solid-drawflow/src/types.d";
 
 const root = document.getElementById("root");
 
@@ -12,4 +14,4 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   );
 }
 
-render(() => <FamilyTreeApp />, root!);
+render(() => <App />, root!);

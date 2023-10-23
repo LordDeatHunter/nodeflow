@@ -2,7 +2,6 @@ import { createStore, produce } from "solid-js/store";
 import {
   DrawflowData,
   MouseData,
-  NodeCss,
   NodeData,
   Optional,
   Position,
@@ -16,7 +15,7 @@ import {
   subtractPositions,
 } from "./math-utils";
 import { getScreenSize } from "./screen-utils";
-import { createMemo, JSX } from "solid-js";
+import { createMemo } from "solid-js";
 import { intersectionOfSets, isSetEmpty } from "./misc-utils";
 
 export const [nodes, setNodes] = createStore<Record<string, NodeData>>({});
@@ -202,14 +201,7 @@ setInterval(() => {
   }
 }, 10);
 
-export const addNode = (
-  x = 0,
-  y = 0,
-  data: {
-    css?: NodeCss;
-    display?: (nodeId: string) => JSX.Element;
-  },
-): NodeData => {
+export const addNode = (x = 0, y = 0, data: Partial<NodeData>): NodeData => {
   let newNode: Optional<NodeData>;
   setNodes((prev) => {
     const newId = (Object.keys(prev).length + 1).toString();
@@ -223,6 +215,7 @@ export const addNode = (
       outputs: {},
       position: { x, y },
       ref: undefined,
+      customData: data.customData ?? {},
     };
 
     return {

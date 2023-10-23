@@ -1,8 +1,10 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
 
-import "./index2.css";
-import BlueprintApp from "./BlueprintApp";
+import "./index.css";
+import App from "./App";
+import "./types.d";
+import "solid-drawflow/src/types.d";
 
 const root = document.getElementById("root");
 
@@ -12,4 +14,4 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   );
 }
 
-render(() => <BlueprintApp />, root!);
+render(() => <App />, root!);

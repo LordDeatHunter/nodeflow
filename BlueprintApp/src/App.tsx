@@ -1,7 +1,7 @@
 import { type Component } from "solid-js";
-import Drawflow from "./components/Drawflow";
+import Drawflow from "solid-drawflow/src/components/Drawflow";
 import curveCss from "./styles/curve.module.scss";
-import nodeCss from "./styles/blueprint-node.module.scss";
+import nodeCss from "./styles/node.module.scss";
 import drawflowCss from "./styles/drawflow.module.scss";
 import {
   addConnection,
@@ -10,9 +10,12 @@ import {
   addOutput,
   getTotalConnectedInputs,
   nodes,
-} from "./utils/drawflow-storage";
-import { NODE_CONNECTION_SUBSCRIPTIONS } from "./utils/node-functions";
-import { CurveFunctions, SetCurveFunction } from "./utils/curve-functions";
+} from "solid-drawflow/src/utils/drawflow-storage";
+import { NODE_CONNECTION_SUBSCRIPTIONS } from "solid-drawflow/src/utils/node-functions";
+import {
+  CurveFunctions,
+  SetCurveFunction,
+} from "solid-drawflow/src/utils/curve-functions";
 
 for (let i = 0; i < 50; i++) {
   const newNode = addNode(Math.random() * 2000, Math.random() * 2000, {
@@ -38,7 +41,13 @@ NODE_CONNECTION_SUBSCRIPTIONS["create-connection"] = (
   inputNodeId,
   inputId,
 ) => {
-  addConnection(outputNodeId, outputId, inputNodeId, inputId, curveCss.father);
+  addConnection(
+    outputNodeId,
+    outputId,
+    inputNodeId,
+    inputId,
+    curveCss.connection,
+  );
 };
 SetCurveFunction("getDefaultCurve", CurveFunctions.getHorizontalCurve);
 
@@ -66,12 +75,12 @@ for (let i = 0; i < totalNodes; i++) {
     "0",
     to.toString(),
     toInput.toString(),
-    curveCss.father,
+    curveCss.connection,
   );
 }
 
-const BlueprintApp: Component = () => (
+const App: Component = () => (
   <Drawflow css={{ newCurve: drawflowCss["new-curve"] }} />
 );
 
-export default BlueprintApp;
+export default App;
