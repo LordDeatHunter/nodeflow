@@ -1,0 +1,12 @@
+@mixin base-curve {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  stroke-width: 5px;
+}
+
+.connection {
+  @include base-curve;
+  stroke: #84c3ff;
+}

@@ -2,7 +2,6 @@ import { createStore, produce } from "solid-js/store";
 import {
   DrawflowData,
   MouseData,
-  NodeCss,
   NodeData,
   Optional,
   Position,
@@ -54,7 +53,7 @@ export const globalMousePosition = createMemo((): Position => {
   // TODO: change to drawflow div size instead of screen size
   const screenCenter = dividePosition(
     convertSizeToPosition(getScreenSize()),
-    2
+    2,
   );
 
   return {
@@ -68,24 +67,24 @@ export const updateZoom = (distance: number, zoomLocation: Position): void => {
   const newZoom = clamp(
     oldZoom + oldZoom * distance * Constants.ZOOM_MULTIPLIER,
     Constants.MIN_ZOOM,
-    Constants.MAX_ZOOM
+    Constants.MAX_ZOOM,
   );
   if (newZoom < Constants.MIN_ZOOM || newZoom > Constants.MAX_ZOOM) return;
   setMouseData("draggingNode", false);
   const windowDimensions = convertSizeToPosition(getScreenSize());
   const centeredZoomLocation = subtractPositions(
     zoomLocation,
-    dividePosition(windowDimensions, 2)
+    dividePosition(windowDimensions, 2),
   );
   const oldScreenSize = multiplyPosition(windowDimensions, oldZoom);
   const newScreenSize = multiplyPosition(windowDimensions, newZoom);
   const oldOffset = dividePosition(
     subtractPositions(centeredZoomLocation, dividePosition(oldScreenSize, 2)),
-    oldZoom
+    oldZoom,
   );
   const newOffset = dividePosition(
     subtractPositions(centeredZoomLocation, dividePosition(newScreenSize, 2)),
-    newZoom
+    newZoom,
   );
   setDrawflow((prev) => ({
     position: {
@@ -98,7 +97,7 @@ export const updateZoom = (distance: number, zoomLocation: Position): void => {
 
 export const updateBackgroundPosition = (
   moveDistance: Position,
-  keyboard = false
+  keyboard = false,
 ) => {
   if (mouseData.heldNodeId || keyboard === mouseData.draggingNode) return;
   setDrawflow("position", (prev) => ({
@@ -121,7 +120,7 @@ const calculateMovement = (
   initialSpeed: number,
   positiveMovement: boolean,
   negativeMovement: boolean,
-  inverse = false
+  inverse = false,
 ) => {
   let speed = initialSpeed;
   if (isMoving) {
@@ -129,13 +128,13 @@ const calculateMovement = (
     speed = clamp(
       speed + (positiveMovement ? change : 0) - (negativeMovement ? change : 0),
       -Constants.MAX_SPEED,
-      Constants.MAX_SPEED
+      Constants.MAX_SPEED,
     );
   } else {
     speed = clamp(
       speed * Constants.MOVE_SLOWDOWN,
       -Constants.MAX_SPEED,
-      Constants.MAX_SPEED
+      Constants.MAX_SPEED,
     );
   }
   if (speed <= 0.1 && speed >= -0.1) speed = 0;
@@ -170,7 +169,7 @@ setInterval(() => {
   // TODO: change with const strings instead of array access
   const movingLeft = !isSetEmpty(intersectionOfSets(heldKeys, KEYS.MOVE_LEFT));
   const movingRight = !isSetEmpty(
-    intersectionOfSets(heldKeys, KEYS.MOVE_RIGHT)
+    intersectionOfSets(heldKeys, KEYS.MOVE_RIGHT),
   );
   const movingUp = !isSetEmpty(intersectionOfSets(heldKeys, KEYS.MOVE_UP));
   const movingDown = !isSetEmpty(intersectionOfSets(heldKeys, KEYS.MOVE_DOWN));
@@ -183,14 +182,14 @@ setInterval(() => {
       drawflow.currentMoveSpeed.x,
       movingRight,
       movingLeft,
-      !isDraggingNode
+      !isDraggingNode,
     ),
     y: calculateMovement(
       movingUp || movingDown,
       drawflow.currentMoveSpeed.y,
       movingDown,
       movingUp,
-      !isDraggingNode
+      !isDraggingNode,
     ),
   };
 
@@ -202,19 +201,21 @@ setInterval(() => {
   }
 }, 10);
 
-export const addNode = (x = 0, y = 0, css?: NodeCss): NodeData => {
+export const addNode = (x = 0, y = 0, data: Partial<NodeData>): NodeData => {
   let newNode: Optional<NodeData>;
   setNodes((prev) => {
     const newId = (Object.keys(prev).length + 1).toString();
 
     newNode = {
-      css: css ?? {},
+      css: data.css ?? {},
+      display: data.display ?? (() => undefined),
       inputs: {},
       nodeId: newId,
       offset: defaultPosition(),
       outputs: {},
       position: { x, y },
       ref: undefined,
+      customData: data.customData ?? {},
     };
 
     return {
@@ -232,11 +233,11 @@ export const removeNode = (nodeId: string) => {
         Object.values(node.outputs).forEach((output) => {
           newNodes[node.nodeId].outputs[output.connectorId].destinations =
             output.destinations.filter(
-              (destination) => destination.destinationNodeId !== nodeId
+              (destination) => destination.destinationNodeId !== nodeId,
             );
-        })
+        }),
       );
-    })
+    }),
   );
   deselectNode();
 };
@@ -247,7 +248,7 @@ export const addConnection = (
   destinationNodeId: string,
   destinationInputId: string,
   css = "",
-  createMissingNodes = false
+  createMissingNodes = false,
 ) => {
   const sourceNode = nodes[sourceNodeId];
   const destinationNode = nodes[destinationNodeId];
@@ -277,7 +278,7 @@ export const addConnection = (
     sourceNode.outputs[sourceOutputId].destinations.some(
       (destination) =>
         destination.destinationNodeId === destinationNodeId &&
-        destination.destinationInputId === destinationInputId
+        destination.destinationInputId === destinationInputId,
     )
   ) {
     return;
@@ -293,7 +294,7 @@ export const addConnection = (
       destinationNodeId,
       destinationInputId,
       css,
-    }
+    },
   );
 };
 
@@ -334,7 +335,7 @@ export const addOutput = (nodeId: string, outputId?: string, css?: string) => {
 
 export const getTotalConnectedInputs = (
   nodeId: string,
-  inputId?: string
+  inputId?: string,
 ): number => {
   if (!nodes[nodeId]) {
     return 0;
@@ -348,10 +349,10 @@ export const getTotalConnectedInputs = (
           output.destinations.filter(
             (destination) =>
               destination.destinationNodeId === nodeId &&
-              (!inputId || destination.destinationInputId === inputId)
+              (!inputId || destination.destinationInputId === inputId),
           ).length,
-        0
+        0,
       ),
-    0
+    0,
   );
 };

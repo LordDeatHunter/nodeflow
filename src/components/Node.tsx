@@ -1,5 +1,4 @@
-import { type Component, createEffect, For, JSX } from "solid-js";
-import { NodeCss } from "../types/types";
+import { type Component, createEffect, createMemo, For } from "solid-js";
 import {
   drawflow,
   mouseData,
@@ -7,15 +6,13 @@ import {
   setNodes,
 } from "../utils/drawflow-storage";
 import {
-  inputFunctions,
-  nodeFunctions,
-  outputFunctions,
+  InputFunctions,
+  NodeFunctions,
+  OutputFunctions,
 } from "../utils/node-functions";
 import { defaultPosition } from "../utils/math-utils";
 
 interface NodeProps {
-  children?: JSX.Element;
-  css: NodeCss;
   nodeId: string;
 }
 
@@ -34,6 +31,8 @@ const Node: Component<NodeProps> = (props) => {
     setNodes(props.nodeId, "position", pos);
   });
 
+  const node = createMemo(() => nodes[props.nodeId]);
+
   return (
     <div
       ref={(el) =>
@@ -49,19 +48,19 @@ const Node: Component<NodeProps> = (props) => {
         })
       }
       style={{
-        left: `${nodes[props.nodeId].position.x}px`,
-        top: `${nodes[props.nodeId].position.y}px`,
+        left: `${node().position.x}px`,
+        top: `${node().position.y}px`,
       }}
       classList={{
-        [props?.css?.normal ?? ""]: true,
-        [props?.css?.selected ?? ""]: mouseData.heldNodeId === props.nodeId,
+        [node()?.css?.normal ?? ""]: true,
+        [node()?.css?.selected ?? ""]: mouseData.heldNodeId === props.nodeId,
       }}
-      onMouseDown={(e) => nodeFunctions.onMouseDown(e, props.nodeId)}
-      onTouchStart={(e) => nodeFunctions.onTouchStart(e, props.nodeId)}
+      onMouseDown={(e) => NodeFunctions.onMouseDown(e, props.nodeId)}
+      onTouchStart={(e) => NodeFunctions.onTouchStart(e, props.nodeId)}
     >
-      {props.children}
-      <div class={props.css?.inputsSection}>
-        <For each={Object.entries(nodes[props.nodeId].inputs)}>
+      {node().display(props.nodeId)}
+      <div class={node()?.css?.inputsSection}>
+        <For each={Object.entries(node().inputs)}>
           {([inputId, input]) => (
             <div
               ref={(el) =>
@@ -83,14 +82,14 @@ const Node: Component<NodeProps> = (props) => {
               }
               class={input?.css}
               onPointerUp={(e) =>
-                inputFunctions.onPointerUp(e, props.nodeId, inputId)
+                InputFunctions.onPointerUp(e, props.nodeId, inputId)
               }
             />
           )}
         </For>
       </div>
-      <div class={props.css?.outputsSection}>
-        <For each={Object.entries(nodes[props.nodeId].outputs)}>
+      <div class={node()?.css?.outputsSection}>
+        <For each={Object.entries(node().outputs)}>
           {([outputId, output]) => (
             <div
               ref={(el) => {
@@ -112,10 +111,10 @@ const Node: Component<NodeProps> = (props) => {
               }}
               class={output?.css}
               onMouseDown={(e) =>
-                outputFunctions.onMouseDown(e, props.nodeId, outputId)
+                OutputFunctions.onMouseDown(e, props.nodeId, outputId)
               }
               onTouchStart={(e) =>
-                outputFunctions.onTouchStart(e, props.nodeId, outputId)
+                OutputFunctions.onTouchStart(e, props.nodeId, outputId)
               }
             />
           )}

@@ -4,7 +4,7 @@ import Node from "./Node";
 import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
 import { DrawflowCss } from "../types/types";
-import * as drawflowFunctions from "../utils/drawflow-functions";
+import { DrawflowFunctions } from "../utils/drawflow-functions";
 
 interface DrawflowProps {
   css?: DrawflowCss;
@@ -19,14 +19,7 @@ const Drawflow: Component<DrawflowProps> = (props) => (
       position: "absolute",
       width: `${window.innerWidth}px`,
     }}
-    onMouseMove={drawflowFunctions.onMouseMove}
-    onPointerUp={drawflowFunctions.onPointerUp}
-    onWheel={drawflowFunctions.onWheel}
-    onMouseDown={drawflowFunctions.onMouseDown}
-    onKeyDown={drawflowFunctions.onKeyDown}
-    onKeyUp={drawflowFunctions.onKeyUp}
-    onTouchStart={drawflowFunctions.onTouchStart}
-    onTouchMove={drawflowFunctions.onTouchMove}
+    {...DrawflowFunctions}
   >
     <div
       style={{
@@ -38,11 +31,9 @@ const Drawflow: Component<DrawflowProps> = (props) => (
       }}
     >
       <For each={Object.entries(nodes)}>
-        {([nodeId, nodeData]) => (
+        {([nodeId]) => (
           <>
-            <Node css={nodeData.css} nodeId={nodeId}>
-              <h1>ID: {nodeId}</h1>
-            </Node>
+            <Node nodeId={nodeId} />
             <For each={Object.entries(nodes[nodeId]!.outputs)}>
               {([outputId, output]) => (
                 <For each={output.destinations}>
@@ -52,7 +43,7 @@ const Drawflow: Component<DrawflowProps> = (props) => (
                         !!outputConnection?.destinationNodeId &&
                         !!outputConnection?.destinationInputId &&
                         Object.keys(nodes).includes(
-                          outputConnection.destinationNodeId!
+                          outputConnection.destinationNodeId!,
                         )
                       }
                     >

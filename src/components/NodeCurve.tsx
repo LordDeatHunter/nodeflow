@@ -5,6 +5,7 @@ import {
   convertSizeToPosition,
   dividePosition,
 } from "../utils/math-utils";
+import { CurveFunctions } from "../utils/curve-functions";
 
 interface NodeCurveProps {
   nodeId: string;
@@ -19,7 +20,7 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
   const endNode = createMemo(() => nodes[props.destinationNodeId]);
 
   const destinations = createMemo(
-    () => startNode()?.outputs[props.outputId]?.destinations
+    () => startNode()?.outputs[props.outputId]?.destinations,
   );
   const destinationIndex = createMemo(() =>
     !startNode() || !endNode()
@@ -27,8 +28,8 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       : destinations()?.findIndex(
           (destination) =>
             destination.destinationNodeId === props.destinationNodeId &&
-            destination.destinationInputId === props.destinationInputId
-        ) ?? -1
+            destination.destinationInputId === props.destinationInputId,
+        ) ?? -1,
   );
 
   createEffect(() => {
@@ -54,25 +55,20 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       startPosition,
       startNodeOffset,
       output.position,
-      dividePosition(convertSizeToPosition(output.size), 2)
+      dividePosition(convertSizeToPosition(output.size), 2),
     );
 
     const end = addPositions(
       endPosition,
       endNodeOffset,
       input.position,
-      dividePosition(convertSizeToPosition(input.size), 2)
+      dividePosition(convertSizeToPosition(input.size), 2),
     );
-
-    const xCurve = 0;
-    const yCurve = (end.y - start.y) / 1.5;
 
     const path = {
       start,
       end,
-      path: `M ${start.x} ${start.y} C ${start.x + xCurve} ${
-        start.y + yCurve
-      }, ${end.x - xCurve} ${end.y - yCurve}, ${end.x} ${end.y}`,
+      path: CurveFunctions.createNodePathCurve(start, end),
     };
 
     setNodes(
@@ -82,7 +78,7 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       "destinations",
       destinationIndex(),
       "path",
-      path
+      path,
     );
   });
 

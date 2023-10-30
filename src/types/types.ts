@@ -1,3 +1,5 @@
+import { JSX } from "solid-js";
+
 export type Optional<T> = T | undefined;
 
 export interface Position {
@@ -18,15 +20,17 @@ export interface MouseData {
   startPosition?: Position;
 }
 
-export interface NodeData {
+export type NodeData = {
   css: NodeCss;
+  readonly display: (nodeId: string) => JSX.Element | undefined;
   inputs: Record<string, NodeInput>;
   nodeId: string;
   offset: Position;
   outputs: Record<string, NodeOutput>;
   position: Position;
   ref?: HTMLDivElement;
-}
+  customData: CustomDataType;
+};
 
 export interface DrawflowData {
   currentMoveSpeed: Position;

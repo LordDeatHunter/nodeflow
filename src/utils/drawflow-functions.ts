@@ -32,16 +32,16 @@ export const onWheel = (e: WheelEvent) => {
   updateZoom(-e.deltaY, { x: e.clientX, y: e.clientY });
 };
 
-export const onMouseDown = (event: MouseEvent) => {
-  event.stopPropagation();
+export const onMouseDown = (e: MouseEvent) => {
+  e.stopPropagation();
   resetMovement();
   setMouseData({
     draggingNode: true,
     heldNodeId: undefined,
-    mousePosition: { x: event.clientX, y: event.clientY },
+    mousePosition: { x: e.clientX, y: e.clientY },
     startPosition: {
-      x: event.clientX / drawflow.zoomLevel - drawflow.position.x,
-      y: event.clientY / drawflow.zoomLevel - drawflow.position.y,
+      x: e.clientX / drawflow.zoomLevel - drawflow.position.x,
+      y: e.clientY / drawflow.zoomLevel - drawflow.position.y,
     },
   });
 };
@@ -70,7 +70,7 @@ export const onKeyDown = (e: KeyboardEvent) => {
           {
             x: window.innerWidth / 2,
             y: window.innerHeight / 2,
-          }
+          },
         );
       }
       break;
@@ -82,34 +82,34 @@ export const onKeyUp = (e: KeyboardEvent) => {
   heldKeys.delete(e.code);
 };
 
-export const onTouchStart = (event: TouchEvent) => {
-  event.stopPropagation();
-  const touch = event.touches[0];
+export const onTouchStart = (e: TouchEvent) => {
+  e.stopPropagation();
+  const touch = e.touches[0];
   const mousePosition = { x: touch.clientX, y: touch.clientY };
-  if (event.touches.length === 2) {
+  if (e.touches.length === 2) {
     setMouseData({
       draggingNode: false,
       heldNodeId: undefined,
       mousePosition,
     });
-    const { pageX: touch1X, pageY: touch1Y } = event.touches[0];
-    const { pageX: touch2X, pageY: touch2Y } = event.touches[1];
+    const { pageX: touch1X, pageY: touch1Y } = e.touches[0];
+    const { pageX: touch2X, pageY: touch2Y } = e.touches[1];
     setDrawflow(
       "pinchDistance",
-      Math.hypot(touch1X - touch2X, touch1Y - touch2Y)
+      Math.hypot(touch1X - touch2X, touch1Y - touch2Y),
     );
     return;
   }
-  if (event.touches.length === 1) {
+  if (e.touches.length === 1) {
     heldKeys.clear();
   }
   setMouseData({
-    draggingNode: event.touches.length === 1,
+    draggingNode: e.touches.length === 1,
     heldNodeId: undefined,
     mousePosition,
     startPosition: subtractPositions(
       dividePosition(mousePosition, drawflow.zoomLevel),
-      drawflow.position
+      drawflow.position,
     ),
   });
 };
@@ -135,4 +135,23 @@ export const onTouchMove = (e: TouchEvent) => {
     updateBackgroundPosition(subtractPositions(newMousePos, mousePosition));
     return newMousePos;
   });
+};
+
+export const DrawflowFunctions = {
+  onMouseMove,
+  onPointerUp,
+  onWheel,
+  onMouseDown,
+  onKeyDown,
+  onKeyUp,
+  onTouchStart,
+  onTouchMove,
+} as const;
+export type DrawflowFunctions = typeof DrawflowFunctions;
+
+export const SetDrawflowFunction = <T extends keyof DrawflowFunctions>(
+  name: T,
+  func: DrawflowFunctions[T],
+) => {
+  DrawflowFunctions[name] = func;
 };
