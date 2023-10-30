@@ -15,7 +15,6 @@ import { NODE_CONNECTION_SUBSCRIPTIONS } from "solid-drawflow/src/utils/node-fun
 
 for (let i = 0; i < 50; i++) {
   const newNode = addNode(Math.random() * 2000, Math.random() * 2000, {
-    display: (nodeId: string) => <h1>Node {nodeId}</h1>,
     css: {
       inputsSection: nodeCss["inputs-section"],
       normal: nodeCss.node,
@@ -25,6 +24,7 @@ for (let i = 0; i < 50; i++) {
     customData: {
       gender: Math.floor(Math.random() * 2) === 1 ? "M" : "F",
     },
+    display: (nodeId: string) => <h1>Node {nodeId}</h1>,
   });
   addOutput(newNode.nodeId, undefined, nodeCss["output-connector"]);
   addInput(newNode.nodeId, undefined, nodeCss["mother-input-connector"]);
