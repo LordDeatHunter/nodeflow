@@ -21,14 +21,14 @@ export const onNodeTouchStart = (event: TouchEvent, nodeId: string) => {
 export const onInputPointerUp = (
   event: PointerEvent,
   nodeId: string,
-  inputId: string,
+  connectorId: string,
 ) => {
   if (!mouseData.heldOutputId) return;
   onNodesConnected(
     mouseData.heldNodeId!,
     mouseData.heldOutputId!,
     nodeId,
-    inputId,
+    connectorId,
   );
 };
 
@@ -56,10 +56,10 @@ export const onNodesConnected = (
   outputNodeId: string,
   outputId: string,
   inputNodeId: string,
-  inputId: string,
+  connectorId: string,
 ) => {
   Object.values(NODE_CONNECTION_SUBSCRIPTIONS).forEach((callback) =>
-    callback(outputNodeId, outputId, inputNodeId, inputId),
+    callback(outputNodeId, outputId, inputNodeId, connectorId),
   );
 };
 
@@ -115,16 +115,12 @@ export const startCreatingConnection = (
   });
 };
 
-export const InputFunctions = {
-  onPointerUp: onInputPointerUp,
-} as const;
-export type InputFunctions = typeof InputFunctions;
-
-export const OutputFunctions = {
+export const ConnectorFunctions = {
   onMouseDown: onOutputMouseDown,
   onTouchStart: onOutputTouchStart,
+  onPointerUp: onInputPointerUp,
 };
-export type OutputFunctions = typeof OutputFunctions;
+export type OutputFunctions = typeof ConnectorFunctions;
 
 export const NodeFunctions = {
   onMouseDown: onNodeMouseDown,
@@ -132,17 +128,11 @@ export const NodeFunctions = {
 };
 export type NodeFunctions = typeof NodeFunctions;
 
-export const SetInputFunction = <T extends keyof InputFunctions>(
-  name: T,
-  value: InputFunctions[T],
-) => {
-  InputFunctions[name] = value;
-};
-export const SetOutputFunction = <T extends keyof OutputFunctions>(
+export const SetConnectorFunction = <T extends keyof OutputFunctions>(
   name: T,
   value: OutputFunctions[T],
 ) => {
-  OutputFunctions[name] = value;
+  ConnectorFunctions[name] = value;
 };
 export const SetNodeFunction = <T extends keyof NodeFunctions>(
   name: T,

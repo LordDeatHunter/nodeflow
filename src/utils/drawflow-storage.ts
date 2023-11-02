@@ -1,9 +1,10 @@
 import { createStore, produce } from "solid-js/store";
 import {
+  ConnectorSection,
   DrawflowData,
   MouseData,
+  NodeConnector,
   NodeData,
-  Optional,
   Position,
 } from "../types/types";
 import {
@@ -202,20 +203,19 @@ setInterval(() => {
 }, 10);
 
 export const addNode = (x = 0, y = 0, data: Partial<NodeData>): NodeData => {
-  let newNode: Optional<NodeData>;
+  let newNode: NodeData | undefined;
   setNodes((prev) => {
     const newId = (Object.keys(prev).length + 1).toString();
 
     newNode = {
+      connectorSections: {},
       css: data.css ?? {},
+      customData: data.customData,
       display: data.display ?? (() => undefined),
-      inputs: {},
       nodeId: newId,
       offset: defaultPosition(),
-      outputs: {},
       position: { x, y },
       ref: undefined,
-      customData: data.customData ?? {},
     };
 
     return {
@@ -230,11 +230,14 @@ export const removeNode = (nodeId: string) => {
     produce((newNodes) => {
       delete newNodes[nodeId];
       Object.values(newNodes).forEach((node) =>
-        Object.values(node.outputs).forEach((output) => {
-          newNodes[node.nodeId].outputs[output.connectorId].destinations =
-            output.destinations.filter(
+        Object.values(node.connectorSections).forEach((section) => {
+          Object.values(section.connectors).forEach((connector) => {
+            newNodes[node.nodeId].connectorSections[section.id].connectors[
+              connector.connectorId
+            ].destinations = connector.destinations.filter(
               (destination) => destination.destinationNodeId !== nodeId,
             );
+          });
         }),
       );
     }),
@@ -244,41 +247,47 @@ export const removeNode = (nodeId: string) => {
 
 export const addConnection = (
   sourceNodeId: string,
-  sourceOutputId: string,
+  sourceConnectorId: string,
   destinationNodeId: string,
-  destinationInputId: string,
+  destinationConnectorId: string,
   css = "",
-  createMissingNodes = false,
 ) => {
   const sourceNode = nodes[sourceNodeId];
   const destinationNode = nodes[destinationNodeId];
 
+  // Check if nodes exist
   if (!sourceNode || !destinationNode) {
     return;
   }
 
-  if (
-    !(sourceOutputId in sourceNode.outputs) ||
-    !(destinationInputId in destinationNode.inputs)
-  ) {
-    if (!createMissingNodes) {
-      return;
-    }
+  const sourceSection = getSectionFromConnector(
+    sourceNodeId,
+    sourceConnectorId,
+  );
+  const destinationSection = getSectionFromConnector(
+    destinationNodeId,
+    destinationConnectorId,
+  );
 
-    if (!(sourceOutputId in sourceNode.outputs.get)) {
-      addOutput(sourceNodeId, sourceOutputId);
-    }
+  // Check if sections exist
+  if (!sourceSection || !destinationSection) {
+    return;
+  }
 
-    if (!(destinationInputId in destinationNode.inputs)) {
-      addInput(destinationNodeId, destinationInputId);
-    }
+  const sourceConnector = sourceSection.connectors[sourceConnectorId];
+  const destinationConnector =
+    destinationSection.connectors[destinationConnectorId];
+
+  // Check if connectors exist
+  if (!sourceConnector || !destinationConnector) {
+    return;
   }
 
   if (
-    sourceNode.outputs[sourceOutputId].destinations.some(
+    sourceConnector.destinations.some(
       (destination) =>
         destination.destinationNodeId === destinationNodeId &&
-        destination.destinationInputId === destinationInputId,
+        destination.destinationConnectorId === destinationConnectorId,
     )
   ) {
     return;
@@ -286,73 +295,157 @@ export const addConnection = (
 
   setNodes(
     sourceNodeId,
-    "outputs",
-    sourceOutputId,
+    "connectorSections",
+    sourceSection.id,
+    "connectors",
+    sourceConnectorId,
     "destinations",
-    sourceNode.outputs[sourceOutputId].destinations.length,
+    sourceConnector.destinations.length,
     {
       destinationNodeId,
-      destinationInputId,
+      destinationConnectorId,
       css,
     },
   );
 };
 
-export const addInput = (nodeId: string, inputId?: string, css?: string) => {
+export const addConnector = (
+  nodeId: string,
+  sectionId: string,
+  connectorId: string | undefined,
+  data: Partial<NodeConnector>,
+) => {
   const node = nodes[nodeId];
   if (!node) {
     return;
   }
 
-  inputId ??= Object.keys(node.inputs).length.toString();
+  connectorId ??= getConnectorCount(node.nodeId).toString();
 
-  setNodes(nodeId, "inputs", inputId, {
-    connectorId: inputId,
-    css,
-    position: defaultPosition(),
+  if (getConnector(nodeId, connectorId)) {
+    return;
+  }
+
+  setNodes(nodeId, "connectorSections", sectionId, "connectors", connectorId, {
+    connectorId,
+    css: data?.css,
+    destinations: data?.destinations ?? [],
+    hovered: data?.hovered,
+    position: data?.position ?? defaultPosition(),
     ref: undefined,
     size: { width: 0, height: 0 },
+    type: data?.type,
   });
 };
 
-export const addOutput = (nodeId: string, outputId?: string, css?: string) => {
+export const getConnectorCount = (nodeId: string) => {
+  const node = nodes[nodeId];
+  if (!node) {
+    return 0;
+  }
+
+  return Object.values(node.connectorSections).reduce(
+    (total, section) => total + Object.keys(section.connectors).length,
+    0,
+  );
+};
+
+export const getConnector = (
+  nodeId: string,
+  connectorId: string,
+): undefined | NodeConnector => {
+  const node = nodes[nodeId];
+  if (!node) {
+    return undefined;
+  }
+
+  return getSectionFromConnector(nodeId, connectorId)?.connectors?.[
+    connectorId
+  ];
+};
+
+export const getSectionFromConnector = (
+  nodeId: string,
+  connectorId: string,
+): undefined | ConnectorSection => {
+  const node = nodes[nodeId];
+  if (!node) {
+    return undefined;
+  }
+
+  return Object.values(node.connectorSections).find(
+    (section) => section.connectors[connectorId],
+  );
+};
+
+export const addConnectorSection = (
+  nodeId: string,
+  sectionId?: string,
+  css?: string,
+) => {
   const node = nodes[nodeId];
   if (!node) {
     return;
   }
 
-  outputId ??= Object.keys(node.outputs).length.toString();
+  sectionId ??= Object.keys(node.connectorSections).length.toString();
 
-  setNodes(nodeId, "outputs", outputId, {
-    connectorId: outputId,
+  if (node.connectorSections[sectionId]) {
+    return;
+  }
+
+  setNodes(nodeId, "connectorSections", sectionId, {
+    connectors: {},
     css,
-    destinations: [],
-    position: defaultPosition(),
-    ref: undefined,
-    size: { width: 0, height: 0 },
+    id: sectionId,
   });
 };
 
+/**
+ * @param nodeId - the id of the node containing the connector
+ * @param connectorId - the id of the connector
+ * @returns the total number of connections coming into the specified connector
+ */
 export const getTotalConnectedInputs = (
   nodeId: string,
-  inputId?: string,
+  connectorId?: string,
 ): number => {
   if (!nodes[nodeId]) {
     return 0;
   }
+
   return Object.values(nodes).reduce(
     (total, node) =>
       total +
-      Object.values(node.outputs).reduce(
-        (totalOutputs, output) =>
-          totalOutputs +
-          output.destinations.filter(
-            (destination) =>
-              destination.destinationNodeId === nodeId &&
-              (!inputId || destination.destinationInputId === inputId),
-          ).length,
+      Object.values(node.connectorSections).reduce(
+        (totalConnections, section) =>
+          totalConnections +
+          Object.values(section.connectors).reduce(
+            (totalInputs, connector) =>
+              totalInputs +
+              connector.destinations.filter(
+                (destination) =>
+                  destination.destinationNodeId === nodeId &&
+                  (!connectorId ||
+                    destination.destinationConnectorId === connectorId),
+              ).length,
+            0,
+          ),
         0,
       ),
     0,
+  );
+};
+
+export const getAllConnectors = (nodeId: string): NodeConnector[] => {
+  const node = nodes[nodeId];
+  if (!node) {
+    return [];
+  }
+
+  return Object.values(node.connectorSections).reduce(
+    (connectors, section) =>
+      connectors.concat(Object.values(section.connectors)),
+    [] as NodeConnector[],
   );
 };

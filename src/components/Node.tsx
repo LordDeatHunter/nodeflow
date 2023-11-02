@@ -1,16 +1,13 @@
 import { type Component, createEffect, createMemo, For } from "solid-js";
 import {
+  ConnectorFunctions,
+  defaultPosition,
   drawflow,
   mouseData,
+  NodeFunctions,
   nodes,
   setNodes,
-} from "../utils/drawflow-storage";
-import {
-  InputFunctions,
-  NodeFunctions,
-  OutputFunctions,
-} from "../utils/node-functions";
-import { defaultPosition } from "../utils/math-utils";
+} from "../utils";
 
 interface NodeProps {
   nodeId: string;
@@ -59,67 +56,63 @@ const Node: Component<NodeProps> = (props) => {
       onTouchStart={(e) => NodeFunctions.onTouchStart(e, props.nodeId)}
     >
       {node().display(props.nodeId)}
-      <div class={node()?.css?.inputsSection}>
-        <For each={Object.entries(node().inputs)}>
-          {([inputId, input]) => (
-            <div
-              ref={(el) =>
-                setTimeout(() => {
-                  if (!el) return;
-                  setNodes(props.nodeId, "inputs", inputId, (prev) => ({
-                    ...prev,
-                    position: {
-                      x: (el?.parentElement?.offsetLeft ?? 0) + el.offsetLeft,
-                      y: (el?.parentElement?.offsetTop ?? 0) + el.offsetTop,
-                    },
-                    ref: el,
-                    size: {
-                      width: el.offsetWidth,
-                      height: el.offsetHeight,
-                    },
-                  }));
-                })
-              }
-              class={input?.css}
-              onPointerUp={(e) =>
-                InputFunctions.onPointerUp(e, props.nodeId, inputId)
-              }
-            />
-          )}
-        </For>
-      </div>
-      <div class={node()?.css?.outputsSection}>
-        <For each={Object.entries(node().outputs)}>
-          {([outputId, output]) => (
-            <div
-              ref={(el) => {
-                setTimeout(() => {
-                  if (!el) return;
-                  setNodes(props.nodeId, "outputs", outputId, (prev) => ({
-                    ...prev,
-                    position: {
-                      x: (el?.parentElement?.offsetLeft ?? 0) + el.offsetLeft,
-                      y: (el?.parentElement?.offsetTop ?? 0) + el.offsetTop,
-                    },
-                    ref: el,
-                    size: {
-                      width: el.offsetWidth,
-                      height: el.offsetHeight,
-                    },
-                  }));
-                });
-              }}
-              class={output?.css}
-              onMouseDown={(e) =>
-                OutputFunctions.onMouseDown(e, props.nodeId, outputId)
-              }
-              onTouchStart={(e) =>
-                OutputFunctions.onTouchStart(e, props.nodeId, outputId)
-              }
-            />
-          )}
-        </For>
-      </div>
+      <For each={Object.entries(node().connectorSections)}>
+        {([sectionId, section]) => (
+          <div class={section?.css}>
+            <For each={Object.entries(section.connectors)}>
+              {([connectorID, connector]) => (
+                <div
+                  ref={(el) =>
+                    setTimeout(() => {
+                      if (!el) return;
+                      setNodes(
+                        props.nodeId,
+                        "connectorSections",
+                        sectionId,
+                        "connectors",
+                        connectorID,
+                        (prev) => ({
+                          ...prev,
+                          position: {
+                            x:
+                              (el?.parentElement?.offsetLeft ?? 0) +
+                              el.offsetLeft,
+                            y:
+                              (el?.parentElement?.offsetTop ?? 0) +
+                              el.offsetTop,
+                          },
+                          ref: el,
+                          size: {
+                            width: el.offsetWidth,
+                            height: el.offsetHeight,
+                          },
+                        }),
+                      );
+                    })
+                  }
+                  class={connector?.css}
+                  onPointerUp={(e) =>
+                    // TODO: old input
+                    ConnectorFunctions.onPointerUp(e, props.nodeId, connectorID)
+                  }
+                  onMouseDown={(e) =>
+                    // TODO: old output
+                    ConnectorFunctions.onMouseDown(e, props.nodeId, connectorID)
+                  }
+                  onTouchStart={(e) =>
+                    // TODO: old output
+                    ConnectorFunctions.onTouchStart(
+                      e,
+                      props.nodeId,
+                      connectorID,
+                    )
+                  }
+                />
+              )}
+            </For>
+          </div>
+        )}
+      </For>
     </div>
   );
 };

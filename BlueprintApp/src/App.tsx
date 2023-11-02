@@ -5,9 +5,9 @@ import nodeCss from "./styles/node.module.scss";
 import drawflowCss from "./styles/drawflow.module.scss";
 import {
   addConnection,
-  addInput,
+  addConnector,
+  addConnectorSection,
   addNode,
-  addOutput,
   getTotalConnectedInputs,
   nodes,
 } from "solid-drawflow/src/utils/drawflow-storage";
@@ -16,23 +16,31 @@ import {
   CurveFunctions,
   SetCurveFunction,
 } from "solid-drawflow/src/utils/curve-functions";
+import { ConnectorTypes } from "solid-drawflow/src";
 
 for (let i = 0; i < 50; i++) {
   const newNode = addNode(Math.random() * 2000, Math.random() * 2000, {
     css: {
-      inputsSection: nodeCss["inputs-section"],
       normal: nodeCss.node,
-      outputsSection: nodeCss["outputs-section"],
       selected: nodeCss["selected-node"],
     },
   });
+  addConnectorSection(newNode.nodeId, "inputs", nodeCss["inputs-section"]);
+  addConnectorSection(newNode.nodeId, "outputs", nodeCss["outputs-section"]);
+
   const outputs = 1 + Math.random() * 3;
   for (let j = 0; j < outputs; j++) {
-    addOutput(newNode.nodeId, undefined, nodeCss["output-connector"]);
+    addConnector(newNode.nodeId, "outputs", undefined, {
+      type: ConnectorTypes.Output,
+      css: nodeCss["output-connector"],
+    });
   }
   const inputs = 1 + Math.random() * 3;
   for (let j = 0; j < inputs; j++) {
-    addInput(newNode.nodeId, undefined, nodeCss["input-connector"]);
+    addConnector(newNode.nodeId, "inputs", undefined, {
+      type: ConnectorTypes.Input,
+      css: nodeCss["input-connector"],
+    });
   }
 }
 NODE_CONNECTION_SUBSCRIPTIONS["create-connection"] = (
@@ -62,7 +70,10 @@ for (let i = 0; i < totalNodes; i++) {
     continue;
   }
 
-  const toInput = Math.floor(Math.random() * Object.keys(toNode.inputs).length);
+  const toInput = Math.floor(
+    Math.random() *
+      Object.keys(toNode.connectorSections["inputs"].connectors).length,
+  );
   if (
     from === to ||
     getTotalConnectedInputs(to.toString(), toInput.toString()) > 0
