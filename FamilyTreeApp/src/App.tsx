@@ -18,8 +18,9 @@ for (let i = 0; i < 50; i++) {
   const gender = Math.floor(Math.random() * 2) === 1 ? "M" : "F";
   const newNode = addNode(Math.random() * 2000, Math.random() * 2000, {
     css: {
-      normal: nodeCss.node,
-      selected: nodeCss["selected-node"],
+      normal: nodeCss[gender === "M" ? "male-node" : "female-node"],
+      selected:
+        nodeCss[gender === "M" ? "selected-male-node" : "selected-female-node"],
     },
     customData: { gender },
     display: (nodeId: string) => <h1>Node {nodeId}</h1>,
