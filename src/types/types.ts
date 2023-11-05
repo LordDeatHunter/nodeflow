@@ -72,6 +72,7 @@ export interface NodeConnectorEvents {
 export interface NodeConnector {
   connectorId: string;
   css?: string;
+  // TODO: consider making relations go both ways
   destinations: ConnectorDestination[];
   events: NodeConnectorEvents;
   hovered: boolean;
