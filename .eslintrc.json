@@ -13,26 +13,25 @@
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
-  "plugins": [
-    "@typescript-eslint",
-    "solid"
-  ],
+  "plugins": ["@typescript-eslint", "solid"],
   "rules": {
-    "arrow-body-style": [
-      "error",
-      "as-needed"
-    ],
+    "arrow-body-style": ["error", "as-needed"],
     "block-scoped-var": "error",
     "no-duplicate-imports": "error",
     "no-lonely-if": "error",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "varsIgnorePattern": "^_",
+        "argsIgnorePattern": "^_"
+      }
+    ],
     "no-unneeded-ternary": "error",
     "no-useless-return": "warn",
+    "object-shorthand": ["error", "always"],
     "prefer-arrow-callback": "warn",
     "prefer-const": "error",
-    "semi": [
-      "error",
-      "always"
-    ],
+    "semi": ["error", "always"],
     "yoda": [
       "warn",
       "never",

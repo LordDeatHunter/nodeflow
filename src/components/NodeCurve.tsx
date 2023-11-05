@@ -1,17 +1,20 @@
 import { Component, createEffect, createMemo } from "solid-js";
-import { nodes, setNodes } from "../utils/drawflow-storage";
 import {
   addPositions,
   convertSizeToPosition,
+  CurveFunctions,
   dividePosition,
-} from "../utils/math-utils";
-import { CurveFunctions } from "../utils/curve-functions";
+  getConnector,
+  getSectionFromConnector,
+  nodes,
+  setNodes,
+} from "../utils";
 
 interface NodeCurveProps {
   nodeId: string;
   outputId: string;
   destinationNodeId: string;
-  destinationInputId: string;
+  destinationConnectorId: string;
   css: string;
 }
 
@@ -20,7 +23,7 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
   const endNode = createMemo(() => nodes[props.destinationNodeId]);
 
   const destinations = createMemo(
-    () => startNode()?.outputs[props.outputId]?.destinations,
+    () => getConnector(props.nodeId, props.outputId)?.destinations,
   );
   const destinationIndex = createMemo(() =>
     !startNode() || !endNode()
@@ -28,7 +31,7 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       : destinations()?.findIndex(
           (destination) =>
             destination.destinationNodeId === props.destinationNodeId &&
-            destination.destinationInputId === props.destinationInputId,
+            destination.destinationConnectorId === props.destinationConnectorId,
         ) ?? -1,
   );
 
@@ -37,19 +40,19 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       return;
     }
 
-    const {
-      position: startPosition,
-      outputs: startNodeOutputs,
-      offset: startNodeOffset,
-    } = startNode();
-    const {
-      position: endPosition,
-      inputs: endNodeInputs,
-      offset: endNodeOffset,
-    } = endNode();
+    const { position: startPosition, offset: startNodeOffset } = startNode();
+    const { position: endPosition, offset: endNodeOffset } = endNode();
 
-    const output = startNodeOutputs[props.outputId];
-    const input = endNodeInputs[props.destinationInputId];
+    const outputSection = getSectionFromConnector(
+      props.nodeId,
+      props.outputId,
+    )!;
+    const inputSection = getSectionFromConnector(
+      props.destinationNodeId,
+      props.destinationConnectorId,
+    )!;
+    const input = inputSection.connectors[props.destinationConnectorId]!;
+    const output = outputSection.connectors[props.outputId]!;
 
     const start = addPositions(
       startPosition,
@@ -73,7 +76,9 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
 
     setNodes(
       props.nodeId,
-      "outputs",
+      "connectorSections",
+      outputSection.id,
+      "connectors",
       props.outputId,
       "destinations",
       destinationIndex(),
@@ -113,7 +118,7 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
         </marker>
       </defs>
       <path
-        d={destinations()[destinationIndex()].path?.path}
+        d={destinations()?.[destinationIndex()].path?.path}
         stroke="black"
         stroke-width={1}
         fill="transparent"

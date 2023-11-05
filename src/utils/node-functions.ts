@@ -1,11 +1,19 @@
 import { Position } from "../types/types";
 import {
   addConnection,
+  DefaultNodeConnectorEvents,
   drawflow,
   mouseData,
   nodes,
   setMouseData,
 } from "./drawflow-storage";
+
+DefaultNodeConnectorEvents.onMouseDown = (nodeId, outputId) => (event) =>
+  onOutputMouseDown(event, nodeId, outputId);
+DefaultNodeConnectorEvents.onTouchStart = (nodeId, outputId) => (event) =>
+  onOutputTouchStart(event, nodeId, outputId);
+DefaultNodeConnectorEvents.onPointerUp = (nodeId, outputId) => (_) =>
+  connectHeldNodes(nodeId, outputId);
 
 export const onNodeMouseDown = (event: MouseEvent, nodeId: string) => {
   event.stopPropagation();
@@ -18,17 +26,13 @@ export const onNodeTouchStart = (event: TouchEvent, nodeId: string) => {
   selectNode(nodeId, { x, y });
 };
 
-export const onInputPointerUp = (
-  event: PointerEvent,
-  nodeId: string,
-  inputId: string,
-) => {
+export const connectHeldNodes = (nodeId: string, connectorId: string) => {
   if (!mouseData.heldOutputId) return;
   onNodesConnected(
     mouseData.heldNodeId!,
     mouseData.heldOutputId!,
     nodeId,
-    inputId,
+    connectorId,
   );
 };
 
@@ -56,10 +60,10 @@ export const onNodesConnected = (
   outputNodeId: string,
   outputId: string,
   inputNodeId: string,
-  inputId: string,
+  connectorId: string,
 ) => {
   Object.values(NODE_CONNECTION_SUBSCRIPTIONS).forEach((callback) =>
-    callback(outputNodeId, outputId, inputNodeId, inputId),
+    callback(outputNodeId, outputId, inputNodeId, connectorId),
   );
 };
 
@@ -115,35 +119,13 @@ export const startCreatingConnection = (
   });
 };
 
-export const InputFunctions = {
-  onPointerUp: onInputPointerUp,
-} as const;
-export type InputFunctions = typeof InputFunctions;
-
-export const OutputFunctions = {
-  onMouseDown: onOutputMouseDown,
-  onTouchStart: onOutputTouchStart,
-};
-export type OutputFunctions = typeof OutputFunctions;
-
+// TODO: change these to be similar to ConnectorFunctions
 export const NodeFunctions = {
   onMouseDown: onNodeMouseDown,
   onTouchStart: onNodeTouchStart,
 };
 export type NodeFunctions = typeof NodeFunctions;
 
-export const SetInputFunction = <T extends keyof InputFunctions>(
-  name: T,
-  value: InputFunctions[T],
-) => {
-  InputFunctions[name] = value;
-};
-export const SetOutputFunction = <T extends keyof OutputFunctions>(
-  name: T,
-  value: OutputFunctions[T],
-) => {
-  OutputFunctions[name] = value;
-};
 export const SetNodeFunction = <T extends keyof NodeFunctions>(
   name: T,
   value: NodeFunctions[T],

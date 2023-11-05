@@ -5,30 +5,43 @@ import nodeCss from "./styles/node.module.scss";
 import drawflowCss from "./styles/drawflow.module.scss";
 import {
   addConnection,
-  addInput,
+  addConnector,
+  addConnectorSection,
   addNode,
-  addOutput,
   getTotalConnectedInputs,
   nodes,
 } from "solid-drawflow/src/utils/drawflow-storage";
 import { NODE_CONNECTION_SUBSCRIPTIONS } from "solid-drawflow/src/utils/node-functions";
+import { ConnectorTypes } from "solid-drawflow/src";
 
 for (let i = 0; i < 50; i++) {
+  const gender = Math.floor(Math.random() * 2) === 1 ? "M" : "F";
   const newNode = addNode(Math.random() * 2000, Math.random() * 2000, {
     css: {
-      inputsSection: nodeCss["inputs-section"],
       normal: nodeCss.node,
-      outputsSection: nodeCss["outputs-section"],
       selected: nodeCss["selected-node"],
     },
-    customData: {
-      gender: Math.floor(Math.random() * 2) === 1 ? "M" : "F",
-    },
+    customData: { gender },
     display: (nodeId: string) => <h1>Node {nodeId}</h1>,
   });
-  addOutput(newNode.nodeId, undefined, nodeCss["output-connector"]);
-  addInput(newNode.nodeId, undefined, nodeCss["mother-input-connector"]);
-  addInput(newNode.nodeId, undefined, nodeCss["father-input-connector"]);
+  addConnectorSection(newNode.nodeId, "inputs", nodeCss["inputs-section"]);
+  addConnectorSection(newNode.nodeId, "outputs", nodeCss["outputs-section"]);
+
+  addConnector(newNode.nodeId, "outputs", undefined, {
+    type: ConnectorTypes.Output,
+    css: nodeCss["output-connector"],
+    events: { onPointerUp: undefined },
+  });
+  addConnector(newNode.nodeId, "inputs", "F", {
+    type: ConnectorTypes.Input,
+    css: nodeCss["mother-input-connector"],
+    events: { onTouchStart: undefined, onMouseDown: undefined },
+  });
+  addConnector(newNode.nodeId, "inputs", "M", {
+    type: ConnectorTypes.Input,
+    css: nodeCss["father-input-connector"],
+    events: { onTouchStart: undefined, onMouseDown: undefined },
+  });
 }
 NODE_CONNECTION_SUBSCRIPTIONS["create-connection"] = (
   outputNodeId,
@@ -39,8 +52,8 @@ NODE_CONNECTION_SUBSCRIPTIONS["create-connection"] = (
   const outputNode = nodes[outputNodeId];
 
   if (
-    (outputNode.customData.gender === "M" && inputId === "0") ||
-    (outputNode.customData.gender === "F" && inputId === "1")
+    outputNode.customData!.gender !== inputId ||
+    getTotalConnectedInputs(inputNodeId, inputId) > 0
   ) {
     return;
   }
@@ -50,7 +63,7 @@ NODE_CONNECTION_SUBSCRIPTIONS["create-connection"] = (
     outputId,
     inputNodeId,
     inputId,
-    inputId == "1" ? curveCss.father : curveCss.mother,
+    inputId == "M" ? curveCss.father : curveCss.mother,
   );
 };
 
@@ -65,7 +78,7 @@ for (let i = 0; i < totalNodes; i++) {
     continue;
   }
 
-  const toInput = fromNode.customData.gender === "M" ? "1" : "0";
+  const toInput = fromNode.customData!.gender;
   if (from === to || getTotalConnectedInputs(to.toString(), toInput) > 0) {
     continue;
   }
@@ -75,7 +88,7 @@ for (let i = 0; i < totalNodes; i++) {
     "0",
     to.toString(),
     toInput.toString(),
-    toInput == "1" ? curveCss.father : curveCss.mother,
+    toInput == "M" ? curveCss.father : curveCss.mother,
   );
 }
 

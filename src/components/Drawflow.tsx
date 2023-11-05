@@ -1,10 +1,9 @@
 import { Component, For, Show } from "solid-js";
-import { drawflow, nodes } from "../utils/drawflow-storage";
+import { drawflow, DrawflowFunctions, getAllConnectors, nodes } from "../utils";
 import Node from "./Node";
 import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
 import { DrawflowCss } from "../types/types";
-import { DrawflowFunctions } from "../utils/drawflow-functions";
 
 interface DrawflowProps {
   css?: DrawflowCss;
@@ -34,14 +33,14 @@ const Drawflow: Component<DrawflowProps> = (props) => (
         {([nodeId]) => (
           <>
             <Node nodeId={nodeId} />
-            <For each={Object.entries(nodes[nodeId]!.outputs)}>
-              {([outputId, output]) => (
-                <For each={output.destinations}>
+            <For each={getAllConnectors(nodeId)}>
+              {(connector) => (
+                <For each={connector.destinations}>
                   {(outputConnection) => (
                     <Show
                       when={
                         !!outputConnection?.destinationNodeId &&
-                        !!outputConnection?.destinationInputId &&
+                        !!outputConnection?.destinationConnectorId &&
                         Object.keys(nodes).includes(
                           outputConnection.destinationNodeId!,
                         )
@@ -49,10 +48,10 @@ const Drawflow: Component<DrawflowProps> = (props) => (
                     >
                       <NodeCurve
                         nodeId={nodeId}
-                        outputId={outputId}
+                        outputId={connector.connectorId}
                         destinationNodeId={outputConnection.destinationNodeId!}
-                        destinationInputId={
-                          outputConnection.destinationInputId!
+                        destinationConnectorId={
+                          outputConnection.destinationConnectorId!
                         }
                         css={outputConnection.css}
                       />

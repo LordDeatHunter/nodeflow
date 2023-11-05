@@ -15,34 +15,42 @@ export interface Size {
 export interface MouseData {
   draggingNode: boolean;
   heldNodeId?: string;
-  mousePosition: Position;
   heldOutputId?: string;
+  mousePosition: Position;
   startPosition?: Position;
 }
 
+export type ConnectorSection = {
+  connectors: Record<string, NodeConnector>;
+  css?: string;
+  id: string;
+};
+
+export enum ConnectorTypes {
+  Input = "input",
+  Output = "output",
+}
+
 export type NodeData = {
+  connectorSections: Record<string, ConnectorSection>;
   css: NodeCss;
+  customData?: CustomDataType;
   readonly display: (nodeId: string) => JSX.Element | undefined;
-  inputs: Record<string, NodeInput>;
   nodeId: string;
   offset: Position;
-  outputs: Record<string, NodeOutput>;
   position: Position;
   ref?: HTMLDivElement;
-  customData: CustomDataType;
 };
 
 export interface DrawflowData {
   currentMoveSpeed: Position;
+  pinchDistance: number;
   position: Position;
   zoomLevel: number;
-  pinchDistance: number;
 }
 
 export interface NodeCss {
-  inputsSection?: string;
   normal?: string;
-  outputsSection?: string;
   selected?: string;
 }
 
@@ -50,24 +58,33 @@ export interface DrawflowCss {
   newCurve?: string;
 }
 
-interface BaseNodeConnector {
+type NodeConnectorEvent<T> = (
+  nodeId: string,
+  outputId: string,
+) => (event: T) => void;
+
+export interface NodeConnectorEvents {
+  onMouseDown?: NodeConnectorEvent<MouseEvent>;
+  onTouchStart?: NodeConnectorEvent<TouchEvent>;
+  onPointerUp?: NodeConnectorEvent<PointerEvent>;
+}
+
+export interface NodeConnector {
   connectorId: string;
   css?: string;
+  // TODO: consider making relations go both ways
+  destinations: ConnectorDestination[];
+  events: NodeConnectorEvents;
   hovered: boolean;
   position: Position;
   ref: HTMLDivElement;
   size: Size;
+  type: ConnectorTypes;
 }
 
-export interface NodeInput extends BaseNodeConnector {}
-
-export interface NodeOutput extends BaseNodeConnector {
-  destinations: OutputDestination[];
-}
-
-export interface OutputDestination {
+export interface ConnectorDestination {
   css: string;
-  destinationInputId?: string;
+  destinationConnectorId?: string;
   destinationNodeId?: string;
   path?: PathData;
 }
