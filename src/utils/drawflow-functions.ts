@@ -12,16 +12,12 @@ import {
   updateBackgroundPosition,
   updateZoom,
 } from "./drawflow-storage";
-import {
-  convertSizeToPosition,
-  dividePosition,
-  subtractPositions,
-} from "./math-utils";
 import { windowSize } from "./screen-utils";
+import { Position } from "./position";
 
 export const onMouseMove = (e: MouseEvent) => {
-  setMouseData("mousePosition", { x: e.clientX, y: e.clientY });
-  updateBackgroundPosition({ x: e.movementX, y: e.movementY });
+  setMouseData("mousePosition", new Position(e.clientX, e.clientY));
+  updateBackgroundPosition(new Position(e.movementX, e.movementY));
 };
 
 export const onPointerUp = () => {
@@ -34,7 +30,7 @@ export const onPointerUp = () => {
 
 export const onWheel = (e: WheelEvent) => {
   e.preventDefault();
-  updateZoom(-e.deltaY, { x: e.clientX, y: e.clientY });
+  updateZoom(-e.deltaY, new Position(e.clientX, e.clientY));
 };
 
 export const onMouseDown = (e: MouseEvent) => {
@@ -43,11 +39,11 @@ export const onMouseDown = (e: MouseEvent) => {
   setMouseData({
     draggingNode: true,
     heldNodeId: undefined,
-    mousePosition: { x: e.clientX, y: e.clientY },
-    startPosition: {
-      x: e.clientX / drawflow.zoomLevel - drawflow.position.x,
-      y: e.clientY / drawflow.zoomLevel - drawflow.position.y,
-    },
+    mousePosition: new Position(e.clientX, e.clientY),
+    startPosition: new Position(
+      e.clientX / drawflow.zoomLevel - drawflow.position.x,
+      e.clientY / drawflow.zoomLevel - drawflow.position.y,
+    ),
   });
 };
 
@@ -72,7 +68,7 @@ export const onKeyDown = (e: KeyboardEvent) => {
         e.preventDefault();
         updateZoom(
           Constants.KEYBOARD_ZOOM_AMOUNT * (e.code === "Equal" ? 1 : -1),
-          { ...dividePosition(convertSizeToPosition(windowSize()), 2) },
+          Position.fromSize(windowSize()).divideBy(2),
         );
       }
       break;
@@ -87,7 +83,7 @@ export const onKeyUp = (e: KeyboardEvent) => {
 export const onTouchStart = (e: TouchEvent) => {
   e.stopPropagation();
   const touch = e.touches[0];
-  const mousePosition = { x: touch.clientX, y: touch.clientY };
+  const mousePosition = new Position(touch.clientX, touch.clientY);
   if (e.touches.length === 2) {
     setMouseData({
       draggingNode: false,
@@ -109,10 +105,9 @@ export const onTouchStart = (e: TouchEvent) => {
     draggingNode: e.touches.length === 1,
     heldNodeId: undefined,
     mousePosition,
-    startPosition: subtractPositions(
-      dividePosition(mousePosition, drawflow.zoomLevel),
-      drawflow.position,
-    ),
+    startPosition: mousePosition
+      .divideBy(drawflow.zoomLevel)
+      .subtract(drawflow.position),
   });
 };
 
@@ -121,20 +116,20 @@ export const onTouchMove = (e: TouchEvent) => {
     const { pageX: touch1X, pageY: touch1Y } = e.touches[0];
     const { pageX: touch2X, pageY: touch2Y } = e.touches[1];
     const currDist = Math.hypot(touch1X - touch2X, touch1Y - touch2Y);
-    const centerPosition = {
-      x: (touch1X + touch2X) / 2,
-      y: (touch1Y + touch2Y) / 2,
-    };
+    const centerPosition = new Position(
+      (touch1X + touch2X) / 2,
+      (touch1Y + touch2Y) / 2,
+    );
     updateZoom(currDist - drawflow.pinchDistance, centerPosition);
     setDrawflow("pinchDistance", currDist);
     return;
   }
   setMouseData("mousePosition", (mousePosition) => {
-    const newMousePos = {
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY,
-    };
-    updateBackgroundPosition(subtractPositions(newMousePos, mousePosition));
+    const newMousePos = new Position(
+      e.touches[0].clientX,
+      e.touches[0].clientY,
+    );
+    updateBackgroundPosition(newMousePos.subtract(mousePosition));
     return newMousePos;
   });
 };

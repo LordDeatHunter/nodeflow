@@ -1,16 +1,8 @@
 import { JSX } from "solid-js";
+import { Position } from "../utils/position";
+import { Size } from "../utils/size";
 
 export type Optional<T> = T | undefined;
-
-export interface Position {
-  x: number;
-  y: number;
-}
-
-export interface Size {
-  height: number;
-  width: number;
-}
 
 export interface MouseData {
   draggingNode: boolean;

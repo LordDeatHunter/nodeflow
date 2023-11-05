@@ -1,17 +1,11 @@
-import { Position } from "../drawflow-types";
+import { Position } from "./position";
 
-export const getHorizontalCurve = (
-  start: Position,
-  end: Position,
-): Position => ({
-  x: (end.x - start.x) / 1.5,
-  y: 0,
-});
+// TODO: unify into a single function that works based on angle
+export const getHorizontalCurve = (start: Position, end: Position): Position =>
+  new Position((end.x - start.x) / 1.5, 0);
 
-export const getVerticalCurve = (start: Position, end: Position): Position => ({
-  x: 0,
-  y: (end.y - start.y) / 1.5,
-});
+export const getVerticalCurve = (start: Position, end: Position): Position =>
+  new Position(0, (end.y - start.y) / 1.5);
 
 export const getDefaultCurve = (start: Position, end: Position): Position =>
   CurveFunctions.getVerticalCurve(start, end);

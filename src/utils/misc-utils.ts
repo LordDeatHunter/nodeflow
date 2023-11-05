@@ -1,10 +1,10 @@
 export const intersection = <T>(...arr1: T[][]): T[] => {
   const firstArr = arr1[0];
-  const otherArrs = arr1.slice(1);
+  const otherArrays = arr1.slice(1);
 
-  return otherArrs.reduce(
+  return otherArrays.reduce(
     (acc, curr) => acc.filter((x) => curr.includes(x)),
-    firstArr
+    firstArr,
   );
 };
 
@@ -13,7 +13,7 @@ export const intersectionOfSets = <T>(...sets: Set<T>[]): Set<T> => {
   const otherSets = sets.slice(1);
   return otherSets.reduce(
     (acc, curr) => new Set([...acc].filter((x) => curr.has(x))),
-    firstSet
+    firstSet,
   );
 };
 export const isArrayEmpty = <T>(arr: T[]) => arr.length === 0;

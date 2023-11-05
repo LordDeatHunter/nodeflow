@@ -7,31 +7,25 @@ import {
   NodeConnectorEvents,
   NodeData,
   Optional,
-  Position,
 } from "../drawflow-types";
-import {
-  clamp,
-  convertSizeToPosition,
-  defaultPosition,
-  dividePosition,
-  multiplyPosition,
-  subtractPositions,
-} from "./math-utils";
+import { clamp } from "./math-utils";
 import { windowSize } from "./screen-utils";
 import { createMemo } from "solid-js";
 import { intersectionOfSets, isSetEmpty } from "./misc-utils";
+import { Size } from "./size";
+import { Position } from "./position";
 
 export const [nodes, setNodes] = createStore<Record<string, NodeData>>({});
 export const [mouseData, setMouseData] = createStore<MouseData>({
   draggingNode: false,
   heldNodeId: undefined,
   heldOutputId: undefined,
-  mousePosition: defaultPosition(),
+  mousePosition: Position.default(),
   startPosition: undefined,
 });
 export const [drawflow, setDrawflow] = createStore<DrawflowData>({
-  currentMoveSpeed: defaultPosition(),
-  position: defaultPosition(),
+  currentMoveSpeed: Position.default(),
+  position: Position.default(),
   zoomLevel: 1,
   pinchDistance: 0,
 });
@@ -54,12 +48,12 @@ export const globalMousePosition = createMemo<Position>(() => {
   const zoom = drawflow.zoomLevel; // zoom multiplier
 
   // TODO: change to drawflow div size instead of screen size
-  const screenCenter = dividePosition(convertSizeToPosition(windowSize()), 2);
+  const screenCenter = Position.fromSize(windowSize()).divideBy(2);
 
-  return {
-    x: (x - screenCenter.x) / zoom - offsetX + screenCenter.x,
-    y: (y - screenCenter.y) / zoom - offsetY + screenCenter.y,
-  };
+  return new Position(
+    (x - screenCenter.x) / zoom - offsetX + screenCenter.x,
+    (y - screenCenter.y) / zoom - offsetY + screenCenter.y,
+  );
 });
 
 export const updateZoom = (distance: number, zoomLocation: Position): void => {
@@ -71,26 +65,25 @@ export const updateZoom = (distance: number, zoomLocation: Position): void => {
   );
   if (newZoom < Constants.MIN_ZOOM || newZoom > Constants.MAX_ZOOM) return;
   setMouseData("draggingNode", false);
-  const windowDimensions = convertSizeToPosition(windowSize());
-  const centeredZoomLocation = subtractPositions(
-    zoomLocation,
-    dividePosition(windowDimensions, 2),
+  const windowDimensions = Position.fromSize(windowSize());
+  const centeredZoomLocation = zoomLocation.subtract(
+    windowDimensions.divideBy(2),
   );
-  const oldScreenSize = multiplyPosition(windowDimensions, oldZoom);
-  const newScreenSize = multiplyPosition(windowDimensions, newZoom);
-  const oldOffset = dividePosition(
-    subtractPositions(centeredZoomLocation, dividePosition(oldScreenSize, 2)),
-    oldZoom,
-  );
-  const newOffset = dividePosition(
-    subtractPositions(centeredZoomLocation, dividePosition(newScreenSize, 2)),
-    newZoom,
-  );
+  const oldScreenSize = windowDimensions.multiplyBy(oldZoom);
+  const newScreenSize = windowDimensions.multiplyBy(newZoom);
+  const oldOffset = centeredZoomLocation
+    .subtract(oldScreenSize.divideBy(2))
+    .divideBy(oldZoom);
+
+  const newOffset = centeredZoomLocation
+    .subtract(newScreenSize.divideBy(2))
+    .divideBy(newZoom);
+
   setDrawflow((prev) => ({
-    position: {
-      x: prev.position.x - oldOffset.x + newOffset.x,
-      y: prev.position.y - oldOffset.y + newOffset.y,
-    },
+    position: new Position(
+      prev.position.x - oldOffset.x + newOffset.x,
+      prev.position.y - oldOffset.y + newOffset.y,
+    ),
     zoomLevel: newZoom,
   }));
 };
@@ -100,10 +93,14 @@ export const updateBackgroundPosition = (
   keyboard = false,
 ) => {
   if (mouseData.heldNodeId || keyboard === mouseData.draggingNode) return;
-  setDrawflow("position", (prev) => ({
-    x: prev.x + moveDistance.x / drawflow.zoomLevel,
-    y: prev.y + moveDistance.y / drawflow.zoomLevel,
-  }));
+  setDrawflow(
+    "position",
+    (prev) =>
+      new Position(
+        prev.x + moveDistance.x / drawflow.zoomLevel,
+        prev.y + moveDistance.y / drawflow.zoomLevel,
+      ),
+  );
 };
 
 export const heldKeys = new Set<string>();
@@ -142,7 +139,7 @@ const calculateMovement = (
 };
 
 export const resetMovement = () => {
-  setDrawflow("currentMoveSpeed", defaultPosition());
+  setDrawflow("currentMoveSpeed", Position.default());
   KEYS.MOVE_LEFT.forEach((key) => heldKeys.delete(key));
   KEYS.MOVE_RIGHT.forEach((key) => heldKeys.delete(key));
   KEYS.MOVE_UP.forEach((key) => heldKeys.delete(key));
@@ -159,10 +156,11 @@ export const updateNodePosition = (moveSpeed: Position) => {
   const node = nodes[mouseData.heldNodeId];
   if (!node) return;
   const { x, y } = node.position;
-  setNodes(mouseData.heldNodeId, "position", {
-    x: x + moveSpeed.x,
-    y: y + moveSpeed.y,
-  });
+  setNodes(
+    mouseData.heldNodeId,
+    "position",
+    new Position(x + moveSpeed.x, y + moveSpeed.y),
+  );
 };
 
 setInterval(() => {
@@ -175,22 +173,22 @@ setInterval(() => {
 
   const isDraggingNode = mouseData.heldNodeId !== undefined;
 
-  const moveSpeed = {
-    x: calculateMovement(
+  const moveSpeed = new Position(
+    calculateMovement(
       movingLeft || movingRight,
       drawflow.currentMoveSpeed.x,
       movingRight,
       movingLeft,
       !isDraggingNode,
     ),
-    y: calculateMovement(
+    calculateMovement(
       movingUp || movingDown,
       drawflow.currentMoveSpeed.y,
       movingDown,
       movingUp,
       !isDraggingNode,
     ),
-  };
+  );
 
   setDrawflow("currentMoveSpeed", moveSpeed);
   if (!mouseData.heldNodeId) {
@@ -211,8 +209,8 @@ export const addNode = (x = 0, y = 0, data: Partial<NodeData>): NodeData => {
       customData: data.customData,
       display: data.display ?? (() => undefined),
       nodeId: newId,
-      offset: defaultPosition(),
-      position: { x, y },
+      offset: Position.default(),
+      position: new Position(x, y),
       ref: undefined,
     };
 
@@ -329,9 +327,9 @@ export const addConnector = (
     css: data?.css,
     destinations: data?.destinations ?? [],
     hovered: data?.hovered,
-    position: data?.position ?? defaultPosition(),
+    position: data?.position ?? Position.default(),
     ref: undefined,
-    size: { width: 0, height: 0 },
+    size: Size.default(),
     type: data?.type,
     events: {
       ...DefaultNodeConnectorEvents,

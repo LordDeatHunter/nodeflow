@@ -1,13 +1,8 @@
 import { type Component, createEffect, createMemo, For } from "solid-js";
-import {
-  defaultPosition,
-  drawflow,
-  mouseData,
-  NodeFunctions,
-  nodes,
-  setNodes,
-} from "../utils";
+import { drawflow, mouseData, NodeFunctions, nodes, setNodes } from "../utils";
 import { NodeData } from "../drawflow-types";
+import { Position } from "../utils/position";
+import { Size } from "../utils/size";
 
 interface NodeProps {
   nodeId: string;
@@ -19,11 +14,11 @@ const Node: Component<NodeProps> = (props) => {
       return;
     const { x: mouseX, y: mouseY } = mouseData.mousePosition;
     const { x: startX, y: startY } =
-      mouseData.startPosition ?? defaultPosition();
-    const pos = {
-      x: mouseX / drawflow.zoomLevel - startX,
-      y: mouseY / drawflow.zoomLevel - startY,
-    };
+      mouseData.startPosition ?? Position.default();
+    const pos = new Position(
+      mouseX / drawflow.zoomLevel - startX,
+      mouseY / drawflow.zoomLevel - startY,
+    );
 
     setNodes(props.nodeId, "position", pos);
   });
@@ -36,10 +31,7 @@ const Node: Component<NodeProps> = (props) => {
         setTimeout(() => {
           if (!el) return;
           setNodes(props.nodeId, {
-            offset: {
-              x: el.clientLeft,
-              y: el.clientTop,
-            },
+            offset: new Position(el.clientLeft, el.clientTop),
             ref: el,
           });
         })
@@ -73,19 +65,13 @@ const Node: Component<NodeProps> = (props) => {
                         connectorID,
                         (prev) => ({
                           ...prev,
-                          position: {
-                            x:
-                              (el?.parentElement?.offsetLeft ?? 0) +
+                          position: new Position(
+                            (el?.parentElement?.offsetLeft ?? 0) +
                               el.offsetLeft,
-                            y:
-                              (el?.parentElement?.offsetTop ?? 0) +
-                              el.offsetTop,
-                          },
+                            (el?.parentElement?.offsetTop ?? 0) + el.offsetTop,
+                          ),
                           ref: el,
-                          size: {
-                            width: el.offsetWidth,
-                            height: el.offsetHeight,
-                          },
+                          size: new Size(el.offsetWidth, el.offsetHeight),
                         }),
                       );
                     })

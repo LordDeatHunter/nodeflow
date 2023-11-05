@@ -1,4 +1,3 @@
-import { Position } from "../drawflow-types";
 import {
   addConnection,
   DefaultNodeConnectorEvents,
@@ -7,6 +6,7 @@ import {
   nodes,
   setMouseData,
 } from "./drawflow-storage";
+import { Position } from "./position";
 
 DefaultNodeConnectorEvents.onMouseDown = (nodeId, outputId) => (event) =>
   onOutputMouseDown(event, nodeId, outputId);
@@ -17,13 +17,13 @@ DefaultNodeConnectorEvents.onPointerUp = (nodeId, outputId) => (_) =>
 
 export const onNodeMouseDown = (event: MouseEvent, nodeId: string) => {
   event.stopPropagation();
-  selectNode(nodeId, { x: event.clientX, y: event.clientY });
+  selectNode(nodeId, new Position(event.clientX, event.clientY));
 };
 
 export const onNodeTouchStart = (event: TouchEvent, nodeId: string) => {
   event.stopPropagation();
   const { clientX: x, clientY: y } = event.touches[0];
-  selectNode(nodeId, { x, y });
+  selectNode(nodeId, new Position(x, y));
 };
 
 export const connectHeldNodes = (nodeId: string, connectorId: string) => {
@@ -74,7 +74,7 @@ export const onOutputMouseDown = (
 ) => {
   event.stopPropagation();
   const { clientX: x, clientY: y } = event;
-  startCreatingConnection(nodeId, { x, y }, outputId);
+  startCreatingConnection(nodeId, new Position(x, y), outputId);
 };
 
 export const onOutputTouchStart = (
@@ -84,7 +84,7 @@ export const onOutputTouchStart = (
 ) => {
   event.stopPropagation();
   const { clientX: x, clientY: y } = event.touches[0];
-  startCreatingConnection(nodeId, { x, y }, outputId);
+  startCreatingConnection(nodeId, new Position(x, y), outputId);
 };
 
 export const selectNode = (nodeId: string, position: Position) => {
@@ -94,10 +94,10 @@ export const selectNode = (nodeId: string, position: Position) => {
     heldOutputId: undefined,
     heldNodeId: nodeId,
     mousePosition: position,
-    startPosition: {
-      x: position.x / drawflow.zoomLevel - x,
-      y: position.y / drawflow.zoomLevel - y,
-    },
+    startPosition: new Position(
+      position.x / drawflow.zoomLevel - x,
+      position.y / drawflow.zoomLevel - y,
+    ),
   });
 };
 
@@ -112,10 +112,10 @@ export const startCreatingConnection = (
     heldNodeId: nodeId,
     heldOutputId: outputId,
     mousePosition: position,
-    startPosition: {
-      x: position.x / drawflow.zoomLevel - x,
-      y: position.y / drawflow.zoomLevel - y,
-    },
+    startPosition: new Position(
+      position.x / drawflow.zoomLevel - x,
+      position.y / drawflow.zoomLevel - y,
+    ),
   });
 };
 

@@ -1,9 +1,6 @@
 import { Component, createEffect, createMemo } from "solid-js";
 import {
-  addPositions,
-  convertSizeToPosition,
   CurveFunctions,
-  dividePosition,
   getConnector,
   getSectionFromConnector,
   nodes,
@@ -15,6 +12,7 @@ import {
   Optional,
   PathData,
 } from "../drawflow-types";
+import { Position } from "../utils/position";
 
 interface NodeCurveProps {
   nodeId: string;
@@ -60,18 +58,15 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
     const input = inputSection.connectors[props.destinationConnectorId]!;
     const output = outputSection.connectors[props.outputId]!;
 
-    const start = addPositions(
-      startPosition,
+    const start = startPosition.add(
       startNodeOffset,
       output.position,
-      dividePosition(convertSizeToPosition(output.size), 2),
+      Position.fromSize(output.size).divideBy(2),
     );
-
-    const end = addPositions(
-      endPosition,
+    const end = endPosition.add(
       endNodeOffset,
       input.position,
-      dividePosition(convertSizeToPosition(input.size), 2),
+      Position.fromSize(input.size).divideBy(2),
     );
 
     const path: PathData = {
@@ -80,6 +75,7 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       path: CurveFunctions.createNodePathCurve(start, end),
     };
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore: Solid doesn't like this
     setNodes(
       props.nodeId,
