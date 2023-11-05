@@ -1,4 +1,4 @@
-import { Position } from "../types/types";
+import { Position } from "../drawflow-types";
 import {
   addConnection,
   DefaultNodeConnectorEvents,

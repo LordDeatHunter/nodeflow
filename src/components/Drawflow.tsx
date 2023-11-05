@@ -1,9 +1,15 @@
 import { Component, For, Show } from "solid-js";
-import { drawflow, DrawflowFunctions, getAllConnectors, nodes } from "../utils";
+import {
+  drawflow,
+  DrawflowFunctions,
+  getAllConnectors,
+  nodes,
+  windowSize,
+} from "../utils";
 import Node from "./Node";
 import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
-import { DrawflowCss } from "../types/types";
+import { DrawflowCss } from "../drawflow-types";
 
 interface DrawflowProps {
   css?: DrawflowCss;
@@ -13,10 +19,10 @@ const Drawflow: Component<DrawflowProps> = (props) => (
   <div
     tabIndex="0"
     style={{
-      height: `${window.innerHeight}px`,
+      height: `${windowSize().height}px`,
       overflow: "hidden",
       position: "absolute",
-      width: `${window.innerWidth}px`,
+      width: `${windowSize().width}px`,
     }}
     {...DrawflowFunctions}
   >

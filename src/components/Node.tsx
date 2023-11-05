@@ -7,6 +7,7 @@ import {
   nodes,
   setNodes,
 } from "../utils";
+import { NodeData } from "../drawflow-types";
 
 interface NodeProps {
   nodeId: string;
@@ -27,7 +28,7 @@ const Node: Component<NodeProps> = (props) => {
     setNodes(props.nodeId, "position", pos);
   });
 
-  const node = createMemo(() => nodes[props.nodeId]);
+  const node = createMemo<NodeData>(() => nodes[props.nodeId]);
 
   return (
     <div

@@ -9,6 +9,12 @@ import {
   nodes,
   setNodes,
 } from "../utils";
+import {
+  ConnectorDestination,
+  NodeData,
+  Optional,
+  PathData,
+} from "../drawflow-types";
 
 interface NodeCurveProps {
   nodeId: string;
@@ -19,13 +25,13 @@ interface NodeCurveProps {
 }
 
 const NodeCurve: Component<NodeCurveProps> = (props) => {
-  const startNode = createMemo(() => nodes[props.nodeId]);
-  const endNode = createMemo(() => nodes[props.destinationNodeId]);
+  const startNode = createMemo<NodeData>(() => nodes[props.nodeId]);
+  const endNode = createMemo<NodeData>(() => nodes[props.destinationNodeId]);
 
-  const destinations = createMemo(
+  const destinations = createMemo<Optional<ConnectorDestination[]>>(
     () => getConnector(props.nodeId, props.outputId)?.destinations,
   );
-  const destinationIndex = createMemo(() =>
+  const destinationIndex = createMemo<number>(() =>
     !startNode() || !endNode()
       ? -1
       : destinations()?.findIndex(
@@ -68,12 +74,13 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       dividePosition(convertSizeToPosition(input.size), 2),
     );
 
-    const path = {
+    const path: PathData = {
       start,
       end,
       path: CurveFunctions.createNodePathCurve(start, end),
     };
 
+    // @ts-ignore: Solid doesn't like this
     setNodes(
       props.nodeId,
       "connectorSections",

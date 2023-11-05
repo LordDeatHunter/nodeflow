@@ -26,6 +26,7 @@ export type ConnectorSection = {
   id: string;
 };
 
+// TODO: see if this is necessary
 export enum ConnectorTypes {
   Input = "input",
   Output = "output",
@@ -35,7 +36,7 @@ export type NodeData = {
   connectorSections: Record<string, ConnectorSection>;
   css: NodeCss;
   customData?: CustomDataType;
-  readonly display: (nodeId: string) => JSX.Element | undefined;
+  readonly display: (nodeId: string) => Optional<JSX.Element>;
   nodeId: string;
   offset: Position;
   position: Position;
@@ -93,9 +94,4 @@ export interface PathData {
   end: Position;
   path: string;
   start: Position;
-}
-
-export interface SignalObject<T> {
-  get: () => T;
-  set: (value: T | ((prev: T) => void)) => void;
 }

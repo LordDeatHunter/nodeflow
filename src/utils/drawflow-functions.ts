@@ -12,7 +12,12 @@ import {
   updateBackgroundPosition,
   updateZoom,
 } from "./drawflow-storage";
-import { dividePosition, subtractPositions } from "./math-utils";
+import {
+  convertSizeToPosition,
+  dividePosition,
+  subtractPositions,
+} from "./math-utils";
+import { windowSize } from "./screen-utils";
 
 export const onMouseMove = (e: MouseEvent) => {
   setMouseData("mousePosition", { x: e.clientX, y: e.clientY });
@@ -67,10 +72,7 @@ export const onKeyDown = (e: KeyboardEvent) => {
         e.preventDefault();
         updateZoom(
           Constants.KEYBOARD_ZOOM_AMOUNT * (e.code === "Equal" ? 1 : -1),
-          {
-            x: window.innerWidth / 2,
-            y: window.innerHeight / 2,
-          },
+          { ...dividePosition(convertSizeToPosition(windowSize()), 2) },
         );
       }
       break;

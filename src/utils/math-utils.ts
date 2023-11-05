@@ -1,4 +1,4 @@
-import { Position, Size } from "../types/types";
+import { Position, Size } from "../drawflow-types";
 
 export const convertSizeToPosition = (size: Size): Position => ({
   x: size.width,
@@ -8,20 +8,20 @@ export const convertSizeToPosition = (size: Size): Position => ({
 export const addPositions = (...positions: Position[]): Position =>
   positions.reduce(
     (acc, curr) => ({ x: acc.x + curr.x, y: acc.y + curr.y }),
-    defaultPosition()
+    defaultPosition(),
   );
 
 export const subtractPositions = (...positions: Position[]): Position =>
   positions.reduce(
     (acc, curr, i) =>
       i === 0 ? curr : { x: acc.x - curr.x, y: acc.y - curr.y },
-    defaultPosition()
+    defaultPosition(),
   );
 
 export const multiplyPositions = (...positions: Position[]): Position =>
   positions.reduce(
     (acc, curr) => ({ x: acc.x * curr.x, y: acc.y * curr.y }),
-    defaultPosition()
+    defaultPosition(),
   );
 
 export const negatePosition = (position: Position): Position => ({
@@ -36,7 +36,7 @@ export const shiftPosition = (position: Position, shift: number): Position => ({
 
 export const multiplyPosition = (
   position: Position,
-  amount: number
+  amount: number,
 ): Position => ({
   x: position.x * amount,
   y: position.y * amount,
@@ -44,7 +44,7 @@ export const multiplyPosition = (
 
 export const dividePosition = (
   position: Position,
-  amount: number
+  amount: number,
 ): Position => ({
   x: position.x / amount,
   y: position.y / amount,

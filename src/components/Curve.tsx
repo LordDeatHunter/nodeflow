@@ -9,14 +9,14 @@ import {
   mouseData,
   nodes,
 } from "../utils";
-import { PathData } from "../types/types";
+import { Optional, PathData } from "../drawflow-types";
 
 interface CurveProps {
   css?: string;
 }
 
 const Curve: Component<CurveProps> = (props) => {
-  const curveData = createMemo<PathData | undefined>(() => {
+  const curveData = createMemo<Optional<PathData>>(() => {
     if (!mouseData.heldNodeId || !mouseData.heldOutputId) {
       return undefined;
     }

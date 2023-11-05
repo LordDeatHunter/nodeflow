@@ -6,8 +6,9 @@ import {
   NodeConnector,
   NodeConnectorEvents,
   NodeData,
+  Optional,
   Position,
-} from "../types/types";
+} from "../drawflow-types";
 import {
   clamp,
   convertSizeToPosition,
@@ -16,7 +17,7 @@ import {
   multiplyPosition,
   subtractPositions,
 } from "./math-utils";
-import { getScreenSize } from "./screen-utils";
+import { windowSize } from "./screen-utils";
 import { createMemo } from "solid-js";
 import { intersectionOfSets, isSetEmpty } from "./misc-utils";
 
@@ -47,16 +48,13 @@ export const Constants = {
   ZOOM_MULTIPLIER: 0.005,
 } as const;
 
-export const globalMousePosition = createMemo((): Position => {
+export const globalMousePosition = createMemo<Position>(() => {
   const { x, y } = mouseData.mousePosition; // screen coords
   const { x: offsetX, y: offsetY } = drawflow.position; // chart coords (offset amount)
   const zoom = drawflow.zoomLevel; // zoom multiplier
 
   // TODO: change to drawflow div size instead of screen size
-  const screenCenter = dividePosition(
-    convertSizeToPosition(getScreenSize()),
-    2,
-  );
+  const screenCenter = dividePosition(convertSizeToPosition(windowSize()), 2);
 
   return {
     x: (x - screenCenter.x) / zoom - offsetX + screenCenter.x,
@@ -73,7 +71,7 @@ export const updateZoom = (distance: number, zoomLocation: Position): void => {
   );
   if (newZoom < Constants.MIN_ZOOM || newZoom > Constants.MAX_ZOOM) return;
   setMouseData("draggingNode", false);
-  const windowDimensions = convertSizeToPosition(getScreenSize());
+  const windowDimensions = convertSizeToPosition(windowSize());
   const centeredZoomLocation = subtractPositions(
     zoomLocation,
     dividePosition(windowDimensions, 2),
@@ -203,7 +201,7 @@ setInterval(() => {
 }, 10);
 
 export const addNode = (x = 0, y = 0, data: Partial<NodeData>): NodeData => {
-  let newNode: NodeData | undefined;
+  let newNode: Optional<NodeData>;
   setNodes((prev) => {
     const newId = (Object.keys(prev).length + 1).toString();
 
@@ -312,7 +310,7 @@ export const addConnection = (
 export const addConnector = (
   nodeId: string,
   sectionId: string,
-  connectorId: string | undefined,
+  connectorId: Optional<string>,
   data: Partial<NodeConnector>,
 ) => {
   const node = nodes[nodeId];
@@ -360,7 +358,7 @@ export const getConnectorCount = (nodeId: string) => {
 export const getConnector = (
   nodeId: string,
   connectorId: string,
-): undefined | NodeConnector => {
+): Optional<NodeConnector> => {
   const node = nodes[nodeId];
   if (!node) {
     return undefined;
@@ -374,7 +372,7 @@ export const getConnector = (
 export const getSectionFromConnector = (
   nodeId: string,
   connectorId: string,
-): undefined | ConnectorSection => {
+): Optional<ConnectorSection> => {
   const node = nodes[nodeId];
   if (!node) {
     return undefined;

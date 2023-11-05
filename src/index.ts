@@ -1,4 +1,4 @@
 export * from "./components";
 export * from "./utils";
-export * from "./types/types";
-export * from "./types";
+export * from "./drawflow-types";
+export * from "./types.d";
