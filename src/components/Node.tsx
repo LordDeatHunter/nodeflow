@@ -1,6 +1,5 @@
 import { type Component, createEffect, createMemo, For } from "solid-js";
 import {
-  ConnectorFunctions,
   defaultPosition,
   drawflow,
   mouseData,
@@ -91,22 +90,18 @@ const Node: Component<NodeProps> = (props) => {
                     })
                   }
                   class={connector?.css}
-                  onPointerUp={(e) =>
-                    // TODO: old input
-                    ConnectorFunctions.onPointerUp(e, props.nodeId, connectorID)
-                  }
-                  onMouseDown={(e) =>
-                    // TODO: old output
-                    ConnectorFunctions.onMouseDown(e, props.nodeId, connectorID)
-                  }
-                  onTouchStart={(e) =>
-                    // TODO: old output
-                    ConnectorFunctions.onTouchStart(
-                      e,
-                      props.nodeId,
-                      connectorID,
-                    )
-                  }
+                  onPointerUp={connector.events?.onPointerUp?.(
+                    props.nodeId,
+                    connectorID,
+                  )}
+                  onMouseDown={connector.events?.onMouseDown?.(
+                    props.nodeId,
+                    connectorID,
+                  )}
+                  onTouchStart={connector.events?.onTouchStart?.(
+                    props.nodeId,
+                    connectorID,
+                  )}
                 />
               )}
             </For>

@@ -58,10 +58,22 @@ export interface DrawflowCss {
   newCurve?: string;
 }
 
+type NodeConnectorEvent<T> = (
+  nodeId: string,
+  outputId: string,
+) => (event: T) => void;
+
+export interface NodeConnectorEvents {
+  onMouseDown?: NodeConnectorEvent<MouseEvent>;
+  onTouchStart?: NodeConnectorEvent<TouchEvent>;
+  onPointerUp?: NodeConnectorEvent<PointerEvent>;
+}
+
 export interface NodeConnector {
   connectorId: string;
   css?: string;
   destinations: ConnectorDestination[];
+  events: NodeConnectorEvents;
   hovered: boolean;
   position: Position;
   ref: HTMLDivElement;

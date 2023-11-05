@@ -4,6 +4,7 @@ import {
   DrawflowData,
   MouseData,
   NodeConnector,
+  NodeConnectorEvents,
   NodeData,
   Position,
 } from "../types/types";
@@ -167,7 +168,6 @@ export const updateNodePosition = (moveSpeed: Position) => {
 };
 
 setInterval(() => {
-  // TODO: change with const strings instead of array access
   const movingLeft = !isSetEmpty(intersectionOfSets(heldKeys, KEYS.MOVE_LEFT));
   const movingRight = !isSetEmpty(
     intersectionOfSets(heldKeys, KEYS.MOVE_RIGHT),
@@ -335,8 +335,15 @@ export const addConnector = (
     ref: undefined,
     size: { width: 0, height: 0 },
     type: data?.type,
+    events: {
+      ...DefaultNodeConnectorEvents,
+      ...data?.events,
+    },
   });
 };
+
+// TODO: change this so it's not split in 2 files, and doesn't cause circular imports
+export const DefaultNodeConnectorEvents: NodeConnectorEvents = {};
 
 export const getConnectorCount = (nodeId: string) => {
   const node = nodes[nodeId];

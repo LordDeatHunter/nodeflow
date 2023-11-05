@@ -15,14 +15,13 @@ import { NODE_CONNECTION_SUBSCRIPTIONS } from "solid-drawflow/src/utils/node-fun
 import { ConnectorTypes } from "solid-drawflow/src";
 
 for (let i = 0; i < 50; i++) {
+  const gender = Math.floor(Math.random() * 2) === 1 ? "M" : "F";
   const newNode = addNode(Math.random() * 2000, Math.random() * 2000, {
     css: {
       normal: nodeCss.node,
       selected: nodeCss["selected-node"],
     },
-    customData: {
-      gender: Math.floor(Math.random() * 2) === 1 ? "M" : "F",
-    },
+    customData: { gender },
     display: (nodeId: string) => <h1>Node {nodeId}</h1>,
   });
   addConnectorSection(newNode.nodeId, "inputs", nodeCss["inputs-section"]);
@@ -31,14 +30,17 @@ for (let i = 0; i < 50; i++) {
   addConnector(newNode.nodeId, "outputs", undefined, {
     type: ConnectorTypes.Output,
     css: nodeCss["output-connector"],
+    events: { onPointerUp: undefined },
   });
   addConnector(newNode.nodeId, "inputs", "F", {
     type: ConnectorTypes.Input,
     css: nodeCss["mother-input-connector"],
+    events: { onTouchStart: undefined, onMouseDown: undefined },
   });
   addConnector(newNode.nodeId, "inputs", "M", {
     type: ConnectorTypes.Input,
     css: nodeCss["father-input-connector"],
+    events: { onTouchStart: undefined, onMouseDown: undefined },
   });
 }
 NODE_CONNECTION_SUBSCRIPTIONS["create-connection"] = (
