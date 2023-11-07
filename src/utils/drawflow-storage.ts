@@ -12,20 +12,19 @@ import { clamp } from "./math-utils";
 import { windowSize } from "./screen-utils";
 import { createMemo } from "solid-js";
 import { intersectionOfSets, isSetEmpty } from "./misc-utils";
-import { Size } from "./size";
-import { Position } from "./position";
+import { Vec2 } from "./vec2";
 
 export const [nodes, setNodes] = createStore<Record<string, NodeData>>({});
 export const [mouseData, setMouseData] = createStore<MouseData>({
   draggingNode: false,
   heldNodeId: undefined,
   heldOutputId: undefined,
-  mousePosition: Position.default(),
+  mousePosition: Vec2.default(),
   startPosition: undefined,
 });
 export const [drawflow, setDrawflow] = createStore<DrawflowData>({
-  currentMoveSpeed: Position.default(),
-  position: Position.default(),
+  currentMoveSpeed: Vec2.default(),
+  position: Vec2.default(),
   zoomLevel: 1,
   pinchDistance: 0,
 });
@@ -42,21 +41,21 @@ export const Constants = {
   ZOOM_MULTIPLIER: 0.005,
 } as const;
 
-export const globalMousePosition = createMemo<Position>(() => {
+export const globalMousePosition = createMemo<Vec2>(() => {
   const { x, y } = mouseData.mousePosition; // screen coords
   const { x: offsetX, y: offsetY } = drawflow.position; // chart coords (offset amount)
   const zoom = drawflow.zoomLevel; // zoom multiplier
 
   // TODO: change to drawflow div size instead of screen size
-  const screenCenter = Position.fromSize(windowSize()).divideBy(2);
+  const screenCenter = windowSize().divideBy(2);
 
-  return new Position(
+  return new Vec2(
     (x - screenCenter.x) / zoom - offsetX + screenCenter.x,
     (y - screenCenter.y) / zoom - offsetY + screenCenter.y,
   );
 });
 
-export const updateZoom = (distance: number, zoomLocation: Position): void => {
+export const updateZoom = (distance: number, zoomLocation: Vec2): void => {
   const oldZoom = drawflow.zoomLevel;
   const newZoom = clamp(
     oldZoom + oldZoom * distance * Constants.ZOOM_MULTIPLIER,
@@ -65,7 +64,7 @@ export const updateZoom = (distance: number, zoomLocation: Position): void => {
   );
   if (newZoom < Constants.MIN_ZOOM || newZoom > Constants.MAX_ZOOM) return;
   setMouseData("draggingNode", false);
-  const windowDimensions = Position.fromSize(windowSize());
+  const windowDimensions = windowSize();
   const centeredZoomLocation = zoomLocation.subtract(
     windowDimensions.divideBy(2),
   );
@@ -80,7 +79,7 @@ export const updateZoom = (distance: number, zoomLocation: Position): void => {
     .divideBy(newZoom);
 
   setDrawflow((prev) => ({
-    position: new Position(
+    position: new Vec2(
       prev.position.x - oldOffset.x + newOffset.x,
       prev.position.y - oldOffset.y + newOffset.y,
     ),
@@ -89,14 +88,14 @@ export const updateZoom = (distance: number, zoomLocation: Position): void => {
 };
 
 export const updateBackgroundPosition = (
-  moveDistance: Position,
+  moveDistance: Vec2,
   keyboard = false,
 ) => {
   if (mouseData.heldNodeId || keyboard === mouseData.draggingNode) return;
   setDrawflow(
     "position",
     (prev) =>
-      new Position(
+      new Vec2(
         prev.x + moveDistance.x / drawflow.zoomLevel,
         prev.y + moveDistance.y / drawflow.zoomLevel,
       ),
@@ -139,7 +138,7 @@ const calculateMovement = (
 };
 
 export const resetMovement = () => {
-  setDrawflow("currentMoveSpeed", Position.default());
+  setDrawflow("currentMoveSpeed", Vec2.default());
   KEYS.MOVE_LEFT.forEach((key) => heldKeys.delete(key));
   KEYS.MOVE_RIGHT.forEach((key) => heldKeys.delete(key));
   KEYS.MOVE_UP.forEach((key) => heldKeys.delete(key));
@@ -151,7 +150,7 @@ export const deselectNode = () => {
   resetMovement();
 };
 
-export const updateNodePosition = (moveSpeed: Position) => {
+export const updateNodePosition = (moveSpeed: Vec2) => {
   if (!mouseData.heldNodeId) return;
   const node = nodes[mouseData.heldNodeId];
   if (!node) return;
@@ -159,7 +158,7 @@ export const updateNodePosition = (moveSpeed: Position) => {
   setNodes(
     mouseData.heldNodeId,
     "position",
-    new Position(x + moveSpeed.x, y + moveSpeed.y),
+    new Vec2(x + moveSpeed.x, y + moveSpeed.y),
   );
 };
 
@@ -173,7 +172,7 @@ setInterval(() => {
 
   const isDraggingNode = mouseData.heldNodeId !== undefined;
 
-  const moveSpeed = new Position(
+  const moveSpeed = new Vec2(
     calculateMovement(
       movingLeft || movingRight,
       drawflow.currentMoveSpeed.x,
@@ -209,8 +208,8 @@ export const addNode = (x = 0, y = 0, data: Partial<NodeData>): NodeData => {
       customData: data.customData,
       display: data.display ?? (() => undefined),
       nodeId: newId,
-      offset: Position.default(),
-      position: new Position(x, y),
+      offset: Vec2.default(),
+      position: new Vec2(x, y),
       ref: undefined,
     };
 
@@ -327,9 +326,9 @@ export const addConnector = (
     css: data?.css,
     destinations: data?.destinations ?? [],
     hovered: data?.hovered,
-    position: data?.position ?? Position.default(),
+    position: data?.position ?? Vec2.default(),
     ref: undefined,
-    size: Size.default(),
+    size: Vec2.default(),
     type: data?.type,
     events: {
       ...DefaultNodeConnectorEvents,

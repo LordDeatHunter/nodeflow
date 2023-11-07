@@ -1,18 +1,18 @@
-import { Position } from "./position";
+import { Vec2 } from "./vec2";
 
 // TODO: unify into a single function that works based on angle
-export const getHorizontalCurve = (start: Position, end: Position): Position =>
-  new Position((end.x - start.x) / 1.5, 0);
+export const getHorizontalCurve = (start: Vec2, end: Vec2): Vec2 =>
+  new Vec2((end.x - start.x) / 1.5, 0);
 
-export const getVerticalCurve = (start: Position, end: Position): Position =>
-  new Position(0, (end.y - start.y) / 1.5);
+export const getVerticalCurve = (start: Vec2, end: Vec2): Vec2 =>
+  new Vec2(0, (end.y - start.y) / 1.5);
 
-export const getDefaultCurve = (start: Position, end: Position): Position =>
+export const getDefaultCurve = (start: Vec2, end: Vec2): Vec2 =>
   CurveFunctions.getVerticalCurve(start, end);
 
 export const createDefaultPathString = (
-  start: Position,
-  end: Position,
+  start: Vec2,
+  end: Vec2,
   xCurve: number,
   yCurve: number,
 ): string =>
@@ -20,10 +20,7 @@ export const createDefaultPathString = (
     end.x - xCurve
   } ${end.y - yCurve}, ${end.x} ${end.y}`;
 
-export const createDraggingPathCurve = (
-  start: Position,
-  end: Position,
-): string => {
+export const createDraggingPathCurve = (start: Vec2, end: Vec2): string => {
   const { x: xCurve, y: yCurve } = CurveFunctions.getDefaultCurve(start, end);
   return CurveFunctions.createDefaultPathString(start, end, xCurve, yCurve);
 };

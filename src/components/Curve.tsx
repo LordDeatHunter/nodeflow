@@ -7,7 +7,6 @@ import {
   nodes,
 } from "../utils";
 import { Optional, PathData } from "../drawflow-types";
-import { Position } from "../utils/position";
 
 interface CurveProps {
   css?: string;
@@ -25,7 +24,7 @@ const Curve: Component<CurveProps> = (props) => {
     const start = startPosition.add(
       startNodeOffset,
       output.position,
-      Position.fromSize(output.size).divideBy(2),
+      output.size.divideBy(2),
     );
     const end = globalMousePosition();
 

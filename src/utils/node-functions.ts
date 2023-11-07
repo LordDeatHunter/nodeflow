@@ -6,7 +6,7 @@ import {
   nodes,
   setMouseData,
 } from "./drawflow-storage";
-import { Position } from "./position";
+import { Vec2 } from "./vec2";
 
 DefaultNodeConnectorEvents.onMouseDown = (nodeId, outputId) => (event) =>
   onOutputMouseDown(event, nodeId, outputId);
@@ -17,13 +17,13 @@ DefaultNodeConnectorEvents.onPointerUp = (nodeId, outputId) => (_) =>
 
 export const onNodeMouseDown = (event: MouseEvent, nodeId: string) => {
   event.stopPropagation();
-  selectNode(nodeId, new Position(event.clientX, event.clientY));
+  selectNode(nodeId, new Vec2(event.clientX, event.clientY));
 };
 
 export const onNodeTouchStart = (event: TouchEvent, nodeId: string) => {
   event.stopPropagation();
   const { clientX: x, clientY: y } = event.touches[0];
-  selectNode(nodeId, new Position(x, y));
+  selectNode(nodeId, new Vec2(x, y));
 };
 
 export const connectHeldNodes = (nodeId: string, connectorId: string) => {
@@ -74,7 +74,7 @@ export const onOutputMouseDown = (
 ) => {
   event.stopPropagation();
   const { clientX: x, clientY: y } = event;
-  startCreatingConnection(nodeId, new Position(x, y), outputId);
+  startCreatingConnection(nodeId, new Vec2(x, y), outputId);
 };
 
 export const onOutputTouchStart = (
@@ -84,17 +84,17 @@ export const onOutputTouchStart = (
 ) => {
   event.stopPropagation();
   const { clientX: x, clientY: y } = event.touches[0];
-  startCreatingConnection(nodeId, new Position(x, y), outputId);
+  startCreatingConnection(nodeId, new Vec2(x, y), outputId);
 };
 
-export const selectNode = (nodeId: string, position: Position) => {
+export const selectNode = (nodeId: string, position: Vec2) => {
   const { x, y } = nodes[nodeId]!.position;
   setMouseData({
     draggingNode: true,
     heldOutputId: undefined,
     heldNodeId: nodeId,
     mousePosition: position,
-    startPosition: new Position(
+    startPosition: new Vec2(
       position.x / drawflow.zoomLevel - x,
       position.y / drawflow.zoomLevel - y,
     ),
@@ -103,7 +103,7 @@ export const selectNode = (nodeId: string, position: Position) => {
 
 export const startCreatingConnection = (
   nodeId: string,
-  position: Position,
+  position: Vec2,
   outputId: string,
 ) => {
   const { x, y } = nodes[nodeId]!.position;
@@ -112,7 +112,7 @@ export const startCreatingConnection = (
     heldNodeId: nodeId,
     heldOutputId: outputId,
     mousePosition: position,
-    startPosition: new Position(
+    startPosition: new Vec2(
       position.x / drawflow.zoomLevel - x,
       position.y / drawflow.zoomLevel - y,
     ),

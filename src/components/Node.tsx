@@ -1,8 +1,7 @@
 import { type Component, createEffect, createMemo, For } from "solid-js";
 import { drawflow, mouseData, NodeFunctions, nodes, setNodes } from "../utils";
 import { NodeData } from "../drawflow-types";
-import { Position } from "../utils/position";
-import { Size } from "../utils/size";
+import { Vec2 } from "../utils/vec2";
 
 interface NodeProps {
   nodeId: string;
@@ -13,9 +12,8 @@ const Node: Component<NodeProps> = (props) => {
     if (mouseData.heldNodeId !== props.nodeId || !mouseData.draggingNode)
       return;
     const { x: mouseX, y: mouseY } = mouseData.mousePosition;
-    const { x: startX, y: startY } =
-      mouseData.startPosition ?? Position.default();
-    const pos = new Position(
+    const { x: startX, y: startY } = mouseData.startPosition ?? Vec2.default();
+    const pos = new Vec2(
       mouseX / drawflow.zoomLevel - startX,
       mouseY / drawflow.zoomLevel - startY,
     );
@@ -31,7 +29,7 @@ const Node: Component<NodeProps> = (props) => {
         setTimeout(() => {
           if (!el) return;
           setNodes(props.nodeId, {
-            offset: new Position(el.clientLeft, el.clientTop),
+            offset: new Vec2(el.clientLeft, el.clientTop),
             ref: el,
           });
         })
@@ -65,13 +63,13 @@ const Node: Component<NodeProps> = (props) => {
                         connectorID,
                         (prev) => ({
                           ...prev,
-                          position: new Position(
+                          position: new Vec2(
                             (el?.parentElement?.offsetLeft ?? 0) +
                               el.offsetLeft,
                             (el?.parentElement?.offsetTop ?? 0) + el.offsetTop,
                           ),
                           ref: el,
-                          size: new Size(el.offsetWidth, el.offsetHeight),
+                          size: new Vec2(el.offsetWidth, el.offsetHeight),
                         }),
                       );
                     })

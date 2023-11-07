@@ -13,11 +13,11 @@ import {
   updateZoom,
 } from "./drawflow-storage";
 import { windowSize } from "./screen-utils";
-import { Position } from "./position";
+import { Vec2 } from "./vec2";
 
 export const onMouseMove = (e: MouseEvent) => {
-  setMouseData("mousePosition", new Position(e.clientX, e.clientY));
-  updateBackgroundPosition(new Position(e.movementX, e.movementY));
+  setMouseData("mousePosition", new Vec2(e.clientX, e.clientY));
+  updateBackgroundPosition(new Vec2(e.movementX, e.movementY));
 };
 
 export const onPointerUp = () => {
@@ -30,7 +30,7 @@ export const onPointerUp = () => {
 
 export const onWheel = (e: WheelEvent) => {
   e.preventDefault();
-  updateZoom(-e.deltaY, new Position(e.clientX, e.clientY));
+  updateZoom(-e.deltaY, new Vec2(e.clientX, e.clientY));
 };
 
 export const onMouseDown = (e: MouseEvent) => {
@@ -39,8 +39,8 @@ export const onMouseDown = (e: MouseEvent) => {
   setMouseData({
     draggingNode: true,
     heldNodeId: undefined,
-    mousePosition: new Position(e.clientX, e.clientY),
-    startPosition: new Position(
+    mousePosition: new Vec2(e.clientX, e.clientY),
+    startPosition: new Vec2(
       e.clientX / drawflow.zoomLevel - drawflow.position.x,
       e.clientY / drawflow.zoomLevel - drawflow.position.y,
     ),
@@ -68,7 +68,7 @@ export const onKeyDown = (e: KeyboardEvent) => {
         e.preventDefault();
         updateZoom(
           Constants.KEYBOARD_ZOOM_AMOUNT * (e.code === "Equal" ? 1 : -1),
-          Position.fromSize(windowSize()).divideBy(2),
+          windowSize().divideBy(2),
         );
       }
       break;
@@ -83,7 +83,7 @@ export const onKeyUp = (e: KeyboardEvent) => {
 export const onTouchStart = (e: TouchEvent) => {
   e.stopPropagation();
   const touch = e.touches[0];
-  const mousePosition = new Position(touch.clientX, touch.clientY);
+  const mousePosition = new Vec2(touch.clientX, touch.clientY);
   if (e.touches.length === 2) {
     setMouseData({
       draggingNode: false,
@@ -116,7 +116,7 @@ export const onTouchMove = (e: TouchEvent) => {
     const { pageX: touch1X, pageY: touch1Y } = e.touches[0];
     const { pageX: touch2X, pageY: touch2Y } = e.touches[1];
     const currDist = Math.hypot(touch1X - touch2X, touch1Y - touch2Y);
-    const centerPosition = new Position(
+    const centerPosition = new Vec2(
       (touch1X + touch2X) / 2,
       (touch1Y + touch2Y) / 2,
     );
@@ -125,10 +125,7 @@ export const onTouchMove = (e: TouchEvent) => {
     return;
   }
   setMouseData("mousePosition", (mousePosition) => {
-    const newMousePos = new Position(
-      e.touches[0].clientX,
-      e.touches[0].clientY,
-    );
+    const newMousePos = new Vec2(e.touches[0].clientX, e.touches[0].clientY);
     updateBackgroundPosition(newMousePos.subtract(mousePosition));
     return newMousePos;
   });

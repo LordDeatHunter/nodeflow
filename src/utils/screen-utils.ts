@@ -1,13 +1,13 @@
 import { createEffect, createSignal } from "solid-js";
-import { Size } from "./size";
+import { Vec2 } from "./vec2";
 
-export const [windowSize, setWindowSize] = createSignal<Size>(
-  new Size(window.innerWidth, window.innerHeight),
+export const [windowSize, setWindowSize] = createSignal<Vec2>(
+  new Vec2(window.innerWidth, window.innerHeight),
 );
 
 createEffect(() => {
   const onResize = () =>
-    setWindowSize(new Size(window.innerWidth, window.innerHeight));
+    setWindowSize(new Vec2(window.innerWidth, window.innerHeight));
   window.addEventListener("resize", onResize);
   return () => window.removeEventListener("resize", onResize);
 });

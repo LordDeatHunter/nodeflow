@@ -1,6 +1,5 @@
 import { JSX } from "solid-js";
-import { Position } from "../utils/position";
-import { Size } from "../utils/size";
+import { Vec2 } from "../utils/vec2";
 
 export type Optional<T> = T | undefined;
 
@@ -8,8 +7,8 @@ export interface MouseData {
   draggingNode: boolean;
   heldNodeId?: string;
   heldOutputId?: string;
-  mousePosition: Position;
-  startPosition?: Position;
+  mousePosition: Vec2;
+  startPosition?: Vec2;
 }
 
 export type ConnectorSection = {
@@ -30,15 +29,15 @@ export type NodeData = {
   customData?: CustomDataType;
   readonly display: (nodeId: string) => Optional<JSX.Element>;
   nodeId: string;
-  offset: Position;
-  position: Position;
+  offset: Vec2;
+  position: Vec2;
   ref?: HTMLDivElement;
 };
 
 export interface DrawflowData {
-  currentMoveSpeed: Position;
+  currentMoveSpeed: Vec2;
   pinchDistance: number;
-  position: Position;
+  position: Vec2;
   zoomLevel: number;
 }
 
@@ -69,9 +68,9 @@ export interface NodeConnector {
   destinations: ConnectorDestination[];
   events: NodeConnectorEvents;
   hovered: boolean;
-  position: Position;
+  position: Vec2;
   ref: HTMLDivElement;
-  size: Size;
+  size: Vec2;
   type: ConnectorTypes;
 }
 
@@ -83,7 +82,7 @@ export interface ConnectorDestination {
 }
 
 export interface PathData {
-  end: Position;
+  end: Vec2;
   path: string;
-  start: Position;
+  start: Vec2;
 }

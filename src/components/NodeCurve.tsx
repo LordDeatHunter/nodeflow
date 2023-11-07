@@ -12,7 +12,6 @@ import {
   Optional,
   PathData,
 } from "../drawflow-types";
-import { Position } from "../utils/position";
 
 interface NodeCurveProps {
   nodeId: string;
@@ -61,12 +60,12 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
     const start = startPosition.add(
       startNodeOffset,
       output.position,
-      Position.fromSize(output.size).divideBy(2),
+      output.size.divideBy(2),
     );
     const end = endPosition.add(
       endNodeOffset,
       input.position,
-      Position.fromSize(input.size).divideBy(2),
+      input.size.divideBy(2),
     );
 
     const path: PathData = {

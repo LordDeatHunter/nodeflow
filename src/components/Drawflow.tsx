@@ -19,10 +19,10 @@ const Drawflow: Component<DrawflowProps> = (props) => (
   <div
     tabIndex="0"
     style={{
-      height: `${windowSize().height}px`,
+      height: `${windowSize().y}px`,
       overflow: "hidden",
       position: "absolute",
-      width: `${windowSize().width}px`,
+      width: `${windowSize().x}px`,
     }}
     {...DrawflowFunctions}
   >
