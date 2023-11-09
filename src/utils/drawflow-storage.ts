@@ -2,10 +2,10 @@ import { createStore, produce } from "solid-js/store";
 import {
   ConnectorSection,
   DrawflowData,
+  DrawflowNode,
   MouseData,
   NodeConnector,
   NodeConnectorEvents,
-  NodeData,
   Optional,
 } from "../drawflow-types";
 import { clamp } from "./math-utils";
@@ -14,7 +14,7 @@ import { createMemo } from "solid-js";
 import { intersectionOfSets, isSetEmpty } from "./misc-utils";
 import { Vec2 } from "./vec2";
 
-export const [nodes, setNodes] = createStore<Record<string, NodeData>>({});
+export const [nodes, setNodes] = createStore<Record<string, DrawflowNode>>({});
 export const [mouseData, setMouseData] = createStore<MouseData>({
   draggingNode: false,
   heldNodeId: undefined,
@@ -197,8 +197,12 @@ setInterval(() => {
   }
 }, 10);
 
-export const addNode = (x = 0, y = 0, data: Partial<NodeData>): NodeData => {
-  let newNode: Optional<NodeData>;
+export const addNode = (
+  x = 0,
+  y = 0,
+  data: Partial<DrawflowNode>,
+): DrawflowNode => {
+  let newNode: Optional<DrawflowNode>;
   setNodes((prev) => {
     const newId = (Object.keys(prev).length + 1).toString();
 
@@ -207,7 +211,7 @@ export const addNode = (x = 0, y = 0, data: Partial<NodeData>): NodeData => {
       css: data.css ?? {},
       customData: data.customData,
       display: data.display ?? (() => undefined),
-      nodeId: newId,
+      id: newId,
       offset: Vec2.default(),
       position: new Vec2(x, y),
       ref: undefined,
@@ -220,6 +224,10 @@ export const addNode = (x = 0, y = 0, data: Partial<NodeData>): NodeData => {
   return newNode!;
 };
 
+/**
+ * Removes a node and all connections to and from it
+ * @param nodeId - the id of the node to remove
+ */
 export const removeNode = (nodeId: string) => {
   setNodes(
     produce((newNodes) => {
@@ -227,10 +235,12 @@ export const removeNode = (nodeId: string) => {
       Object.values(newNodes).forEach((node) =>
         Object.values(node.connectorSections).forEach((section) => {
           Object.values(section.connectors).forEach((connector) => {
-            newNodes[node.nodeId].connectorSections[section.id].connectors[
-              connector.connectorId
+            newNodes[node.id].connectorSections[section.id].connectors[
+              connector.id
             ].destinations = connector.destinations.filter(
-              (destination) => destination.destinationNodeId !== nodeId,
+              (destination) =>
+                destination.destinationConnector?.parentSection.parentNode
+                  .id !== nodeId,
             );
           });
         }),
@@ -278,11 +288,11 @@ export const addConnection = (
     return;
   }
 
+  // Check if connection already exists
   if (
     sourceConnector.destinations.some(
       (destination) =>
-        destination.destinationNodeId === destinationNodeId &&
-        destination.destinationConnectorId === destinationConnectorId,
+        destination.destinationConnector === destinationConnector,
     )
   ) {
     return;
@@ -297,8 +307,7 @@ export const addConnection = (
     "destinations",
     sourceConnector.destinations.length,
     {
-      destinationNodeId,
-      destinationConnectorId,
+      destinationConnector,
       css,
     },
   );
@@ -315,25 +324,32 @@ export const addConnector = (
     return;
   }
 
-  connectorId ??= getConnectorCount(node.nodeId).toString();
+  const section = node.connectorSections[sectionId];
+  if (!section) {
+    return;
+  }
+
+  connectorId ??= getConnectorCount(node.id).toString();
 
   if (getConnector(nodeId, connectorId)) {
     return;
   }
 
   setNodes(nodeId, "connectorSections", sectionId, "connectors", connectorId, {
-    connectorId,
     css: data?.css,
     destinations: data?.destinations ?? [],
-    hovered: data?.hovered,
-    position: data?.position ?? Vec2.default(),
-    ref: undefined,
-    size: Vec2.default(),
-    type: data?.type,
     events: {
       ...DefaultNodeConnectorEvents,
       ...data?.events,
     },
+    hovered: data?.hovered,
+    id: connectorId,
+    parentSection: section,
+    position: data?.position ?? Vec2.default(),
+    ref: undefined,
+    size: Vec2.default(),
+    sources: data?.sources ?? [],
+    type: data?.type,
   });
 };
 
@@ -400,6 +416,7 @@ export const addConnectorSection = (
     connectors: {},
     css,
     id: sectionId,
+    parentNode: node,
   });
 };
 
@@ -410,34 +427,8 @@ export const addConnectorSection = (
  */
 export const getTotalConnectedInputs = (
   nodeId: string,
-  connectorId?: string,
-): number => {
-  if (!nodes[nodeId]) {
-    return 0;
-  }
-
-  return Object.values(nodes).reduce(
-    (total, node) =>
-      total +
-      Object.values(node.connectorSections).reduce(
-        (totalConnections, section) =>
-          totalConnections +
-          Object.values(section.connectors).reduce(
-            (totalInputs, connector) =>
-              totalInputs +
-              connector.destinations.filter(
-                (destination) =>
-                  destination.destinationNodeId === nodeId &&
-                  (!connectorId ||
-                    destination.destinationConnectorId === connectorId),
-              ).length,
-            0,
-          ),
-        0,
-      ),
-    0,
-  );
-};
+  connectorId: string,
+): number => getConnector(nodeId, connectorId)?.sources.length ?? 0;
 
 export const getAllConnectors = (nodeId: string): NodeConnector[] => {
   const node = nodes[nodeId];

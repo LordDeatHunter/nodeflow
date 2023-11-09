@@ -25,20 +25,20 @@ for (let i = 0; i < 50; i++) {
     customData: { gender },
     display: (nodeId: string) => <h1>Node {nodeId}</h1>,
   });
-  addConnectorSection(newNode.nodeId, "inputs", nodeCss["inputs-section"]);
-  addConnectorSection(newNode.nodeId, "outputs", nodeCss["outputs-section"]);
+  addConnectorSection(newNode.id, "inputs", nodeCss["inputs-section"]);
+  addConnectorSection(newNode.id, "outputs", nodeCss["outputs-section"]);
 
-  addConnector(newNode.nodeId, "outputs", undefined, {
+  addConnector(newNode.id, "outputs", undefined, {
     type: ConnectorTypes.Output,
     css: nodeCss["output-connector"],
     events: { onPointerUp: undefined },
   });
-  addConnector(newNode.nodeId, "inputs", "F", {
+  addConnector(newNode.id, "inputs", "F", {
     type: ConnectorTypes.Input,
     css: nodeCss["mother-input-connector"],
     events: { onTouchStart: undefined, onMouseDown: undefined },
   });
-  addConnector(newNode.nodeId, "inputs", "M", {
+  addConnector(newNode.id, "inputs", "M", {
     type: ConnectorTypes.Input,
     css: nodeCss["father-input-connector"],
     events: { onTouchStart: undefined, onMouseDown: undefined },

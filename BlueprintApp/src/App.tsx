@@ -25,19 +25,19 @@ for (let i = 0; i < 50; i++) {
       selected: nodeCss["selected-node"],
     },
   });
-  addConnectorSection(newNode.nodeId, "inputs", nodeCss["inputs-section"]);
-  addConnectorSection(newNode.nodeId, "outputs", nodeCss["outputs-section"]);
+  addConnectorSection(newNode.id, "inputs", nodeCss["inputs-section"]);
+  addConnectorSection(newNode.id, "outputs", nodeCss["outputs-section"]);
 
   const outputs = 1 + Math.random() * 3;
   for (let j = 0; j < outputs; j++) {
-    addConnector(newNode.nodeId, "outputs", undefined, {
+    addConnector(newNode.id, "outputs", undefined, {
       type: ConnectorTypes.Output,
       css: nodeCss["output-connector"],
     });
   }
   const inputs = 1 + Math.random() * 3;
   for (let j = 0; j < inputs; j++) {
-    addConnector(newNode.nodeId, "inputs", undefined, {
+    addConnector(newNode.id, "inputs", undefined, {
       type: ConnectorTypes.Input,
       css: nodeCss["input-connector"],
     });

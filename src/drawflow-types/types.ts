@@ -11,27 +11,28 @@ export interface MouseData {
   startPosition?: Vec2;
 }
 
-export type ConnectorSection = {
-  connectors: Record<string, NodeConnector>;
-  css?: string;
-  id: string;
-};
-
 // TODO: see if this is necessary
 export enum ConnectorTypes {
   Input = "input",
   Output = "output",
 }
 
-export type NodeData = {
+export type DrawflowNode = {
   connectorSections: Record<string, ConnectorSection>;
   css: NodeCss;
   customData?: CustomDataType;
   readonly display: (nodeId: string) => Optional<JSX.Element>;
-  nodeId: string;
+  id: string;
   offset: Vec2;
   position: Vec2;
   ref?: HTMLDivElement;
+};
+
+export type ConnectorSection = {
+  connectors: Record<string, NodeConnector>;
+  css?: string;
+  id: string;
+  parentNode: DrawflowNode;
 };
 
 export interface DrawflowData {
@@ -62,22 +63,22 @@ export interface NodeConnectorEvents {
 }
 
 export interface NodeConnector {
-  connectorId: string;
   css?: string;
-  // TODO: consider making relations go both ways
   destinations: ConnectorDestination[];
   events: NodeConnectorEvents;
   hovered: boolean;
+  id: string;
+  parentSection: ConnectorSection;
   position: Vec2;
   ref: HTMLDivElement;
   size: Vec2;
+  sources: ConnectorDestination[];
   type: ConnectorTypes;
 }
 
 export interface ConnectorDestination {
   css: string;
-  destinationConnectorId?: string;
-  destinationNodeId?: string;
+  destinationConnector?: NodeConnector;
   path?: PathData;
 }
 

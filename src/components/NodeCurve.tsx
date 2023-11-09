@@ -7,8 +7,8 @@ import {
   setNodes,
 } from "../utils";
 import {
-  ConnectorDestination,
-  NodeData,
+  DrawflowNode,
+  NodeConnector,
   Optional,
   PathData,
 } from "../drawflow-types";
@@ -22,19 +22,24 @@ interface NodeCurveProps {
 }
 
 const NodeCurve: Component<NodeCurveProps> = (props) => {
-  const startNode = createMemo<NodeData>(() => nodes[props.nodeId]);
-  const endNode = createMemo<NodeData>(() => nodes[props.destinationNodeId]);
-
-  const destinations = createMemo<Optional<ConnectorDestination[]>>(
-    () => getConnector(props.nodeId, props.outputId)?.destinations,
+  const startNode = createMemo<DrawflowNode>(() => nodes[props.nodeId]);
+  const endNode = createMemo<DrawflowNode>(
+    () => nodes[props.destinationNodeId],
   );
+
+  const sourceConnector = createMemo<Optional<NodeConnector>>(() =>
+    getConnector(props.nodeId, props.outputId),
+  );
+  const destinationConnector = createMemo<Optional<NodeConnector>>(() =>
+    getConnector(props.destinationNodeId, props.destinationConnectorId),
+  );
+
   const destinationIndex = createMemo<number>(() =>
     !startNode() || !endNode()
       ? -1
-      : destinations()?.findIndex(
+      : sourceConnector()?.destinations?.findIndex(
           (destination) =>
-            destination.destinationNodeId === props.destinationNodeId &&
-            destination.destinationConnectorId === props.destinationConnectorId,
+            destination.destinationConnector === destinationConnector(),
         ) ?? -1,
   );
 
@@ -120,7 +125,7 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
         </marker>
       </defs>
       <path
-        d={destinations()?.[destinationIndex()].path?.path}
+        d={sourceConnector()!.destinations[destinationIndex()].path?.path}
         stroke="black"
         stroke-width={1}
         fill="transparent"

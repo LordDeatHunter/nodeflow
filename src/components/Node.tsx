@@ -1,6 +1,6 @@
 import { type Component, createEffect, createMemo, For } from "solid-js";
 import { drawflow, mouseData, NodeFunctions, nodes, setNodes } from "../utils";
-import { NodeData } from "../drawflow-types";
+import { DrawflowNode } from "../drawflow-types";
 import { Vec2 } from "../utils/vec2";
 
 interface NodeProps {
@@ -21,7 +21,7 @@ const Node: Component<NodeProps> = (props) => {
     setNodes(props.nodeId, "position", pos);
   });
 
-  const node = createMemo<NodeData>(() => nodes[props.nodeId]);
+  const node = createMemo<DrawflowNode>(() => nodes[props.nodeId]);
 
   return (
     <div

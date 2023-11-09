@@ -1,4 +1,4 @@
-import { Component, For, Show } from "solid-js";
+import { Component, For } from "solid-js";
 import {
   drawflow,
   DrawflowFunctions,
@@ -9,7 +9,11 @@ import {
 import Node from "./Node";
 import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
-import { DrawflowCss } from "../drawflow-types";
+import {
+  ConnectorDestination,
+  DrawflowCss,
+  NodeConnector,
+} from "../drawflow-types";
 
 interface DrawflowProps {
   css?: DrawflowCss;
@@ -40,28 +44,21 @@ const Drawflow: Component<DrawflowProps> = (props) => (
           <>
             <Node nodeId={nodeId} />
             <For each={getAllConnectors(nodeId)}>
-              {(connector) => (
+              {(connector: NodeConnector) => (
                 <For each={connector.destinations}>
-                  {(outputConnection) => (
-                    <Show
-                      when={
-                        !!outputConnection?.destinationNodeId &&
-                        !!outputConnection?.destinationConnectorId &&
-                        Object.keys(nodes).includes(
-                          outputConnection.destinationNodeId!,
-                        )
+                  {(outputConnection: ConnectorDestination) => (
+                    <NodeCurve
+                      nodeId={nodeId}
+                      outputId={connector.id}
+                      destinationNodeId={
+                        outputConnection.destinationConnector!.parentSection
+                          .parentNode.id
                       }
-                    >
-                      <NodeCurve
-                        nodeId={nodeId}
-                        outputId={connector.connectorId}
-                        destinationNodeId={outputConnection.destinationNodeId!}
-                        destinationConnectorId={
-                          outputConnection.destinationConnectorId!
-                        }
-                        css={outputConnection.css}
-                      />
-                    </Show>
+                      destinationConnectorId={
+                        outputConnection.destinationConnector!.id
+                      }
+                      css={outputConnection.css}
+                    />
                   )}
                 </For>
               )}
