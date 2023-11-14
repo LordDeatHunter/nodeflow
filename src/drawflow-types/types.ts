@@ -11,12 +11,6 @@ export interface MouseData {
   startPosition?: Vec2;
 }
 
-// TODO: see if this is necessary
-export enum ConnectorTypes {
-  Input = "input",
-  Output = "output",
-}
-
 export type DrawflowNode = {
   connectorSections: Record<string, ConnectorSection>;
   css: NodeCss;
@@ -73,7 +67,6 @@ export interface NodeConnector {
   ref: HTMLDivElement;
   size: Vec2;
   sources: ConnectorDestination[];
-  type: ConnectorTypes;
 }
 
 export interface ConnectorDestination {

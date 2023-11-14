@@ -16,7 +16,6 @@ import {
   CurveFunctions,
   SetCurveFunction,
 } from "solid-drawflow/src/utils/curve-functions";
-import { ConnectorTypes } from "solid-drawflow/src";
 
 for (let i = 0; i < 50; i++) {
   const newNode = addNode(Math.random() * 2000, Math.random() * 2000, {
@@ -31,14 +30,12 @@ for (let i = 0; i < 50; i++) {
   const outputs = 1 + Math.random() * 3;
   for (let j = 0; j < outputs; j++) {
     addConnector(newNode.id, "outputs", undefined, {
-      type: ConnectorTypes.Output,
       css: nodeCss["output-connector"],
     });
   }
   const inputs = 1 + Math.random() * 3;
   for (let j = 0; j < inputs; j++) {
     addConnector(newNode.id, "inputs", undefined, {
-      type: ConnectorTypes.Input,
       css: nodeCss["input-connector"],
     });
   }

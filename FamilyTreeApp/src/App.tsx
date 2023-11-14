@@ -12,7 +12,6 @@ import {
   nodes,
 } from "solid-drawflow/src/utils/drawflow-storage";
 import { NODE_CONNECTION_SUBSCRIPTIONS } from "solid-drawflow/src/utils/node-functions";
-import { ConnectorTypes } from "solid-drawflow/src";
 
 for (let i = 0; i < 50; i++) {
   const gender = Math.floor(Math.random() * 2) === 1 ? "M" : "F";
@@ -28,18 +27,15 @@ for (let i = 0; i < 50; i++) {
   addConnectorSection(newNode.id, "inputs", nodeCss["inputs-section"]);
   addConnectorSection(newNode.id, "outputs", nodeCss["outputs-section"]);
 
-  addConnector(newNode.id, "outputs", undefined, {
-    type: ConnectorTypes.Output,
+  addConnector(newNode.id, "outputs", "C", {
     css: nodeCss["output-connector"],
     events: { onPointerUp: undefined },
   });
   addConnector(newNode.id, "inputs", "F", {
-    type: ConnectorTypes.Input,
     css: nodeCss["mother-input-connector"],
     events: { onTouchStart: undefined, onMouseDown: undefined },
   });
   addConnector(newNode.id, "inputs", "M", {
-    type: ConnectorTypes.Input,
     css: nodeCss["father-input-connector"],
     events: { onTouchStart: undefined, onMouseDown: undefined },
   });
@@ -86,7 +82,7 @@ for (let i = 0; i < totalNodes; i++) {
 
   addConnection(
     from.toString(),
-    "0",
+    "C",
     to.toString(),
     toInput.toString(),
     toInput == "M" ? curveCss.father : curveCss.mother,
