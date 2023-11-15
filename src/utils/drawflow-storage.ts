@@ -349,7 +349,6 @@ export const addConnector = (
     ref: undefined,
     size: Vec2.default(),
     sources: data?.sources ?? [],
-    type: data?.type,
   });
 };
 
