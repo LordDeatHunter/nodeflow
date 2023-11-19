@@ -11,7 +11,7 @@ import {
   getTotalConnectedInputs,
   nodes,
 } from "solid-drawflow/src/utils/drawflow-storage";
-import { NODE_CONNECTION_SUBSCRIPTIONS } from "solid-drawflow/src/utils/node-functions";
+import { drawflowEventStore } from "solid-drawflow/src/utils/node-functions";
 
 for (let i = 0; i < 50; i++) {
   const gender = Math.floor(Math.random() * 2) === 1 ? "M" : "F";
@@ -40,29 +40,30 @@ for (let i = 0; i < 50; i++) {
     events: { onTouchStart: undefined, onMouseDown: undefined },
   });
 }
-NODE_CONNECTION_SUBSCRIPTIONS["create-connection"] = (
-  outputNodeId,
-  outputId,
-  inputNodeId,
-  inputId,
-) => {
-  const outputNode = nodes[outputNodeId];
 
-  if (
-    outputNode.customData!.gender !== inputId ||
-    getTotalConnectedInputs(inputNodeId, inputId) > 0
-  ) {
-    return;
-  }
+// Override the default create-connection subscription to only allow one connection per input, and set custom css
+drawflowEventStore.onNodeConnected.subscribe(
+  "create-connection",
+  (outputNodeId, outputId, inputNodeId, inputId) => {
+    const outputNode = nodes[outputNodeId];
 
-  addConnection(
-    outputNodeId,
-    outputId,
-    inputNodeId,
-    inputId,
-    inputId == "M" ? curveCss.father : curveCss.mother,
-  );
-};
+    // If the source node's gender does not match the destination connector, or if that connector already has a connection, return.
+    if (
+      outputNode.customData!.gender !== inputId ||
+      getTotalConnectedInputs(inputNodeId, inputId) > 0
+    ) {
+      return;
+    }
+
+    addConnection(
+      outputNodeId,
+      outputId,
+      inputNodeId,
+      inputId,
+      inputId == "M" ? curveCss.father : curveCss.mother,
+    );
+  },
+);
 
 const totalNodes = Object.keys(nodes).length;
 

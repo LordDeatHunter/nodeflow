@@ -11,7 +11,7 @@ import {
   getTotalConnectedInputs,
   nodes,
 } from "solid-drawflow/src/utils/drawflow-storage";
-import { NODE_CONNECTION_SUBSCRIPTIONS } from "solid-drawflow/src/utils/node-functions";
+import { drawflowEventStore } from "solid-drawflow/src/utils/node-functions";
 import {
   CurveFunctions,
   SetCurveFunction,
@@ -40,20 +40,19 @@ for (let i = 0; i < 50; i++) {
     });
   }
 }
-NODE_CONNECTION_SUBSCRIPTIONS["create-connection"] = (
-  outputNodeId,
-  outputId,
-  inputNodeId,
-  inputId,
-) => {
-  addConnection(
-    outputNodeId,
-    outputId,
-    inputNodeId,
-    inputId,
-    curveCss.connection,
-  );
-};
+
+// Override the default create-connection subscription to set custom css when creating a connection
+drawflowEventStore.onNodeConnected.subscribe(
+  "create-connection",
+  (outputNodeId, outputId, inputNodeId, inputId) =>
+    addConnection(
+      outputNodeId,
+      outputId,
+      inputNodeId,
+      inputId,
+      curveCss.connection,
+    ),
+);
 SetCurveFunction("getDefaultCurve", CurveFunctions.getHorizontalCurve);
 
 const totalNodes = Object.keys(nodes).length;

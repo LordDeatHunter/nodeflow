@@ -15,58 +15,6 @@ DefaultNodeConnectorEvents.onTouchStart = (nodeId, outputId) => (event) =>
 DefaultNodeConnectorEvents.onPointerUp = (nodeId, outputId) => (_) =>
   connectHeldNodes(nodeId, outputId);
 
-export const onNodeMouseDown = (event: MouseEvent, nodeId: string) => {
-  event.stopPropagation();
-  selectNode(nodeId, new Vec2(event.clientX, event.clientY));
-};
-
-export const onNodeTouchStart = (event: TouchEvent, nodeId: string) => {
-  event.stopPropagation();
-  const { clientX: x, clientY: y } = event.touches[0];
-  selectNode(nodeId, new Vec2(x, y));
-};
-
-export const connectHeldNodes = (nodeId: string, connectorId: string) => {
-  if (!mouseData.heldOutputId) return;
-  onNodesConnected(
-    mouseData.heldNodeId!,
-    mouseData.heldOutputId!,
-    nodeId,
-    connectorId,
-  );
-};
-
-// TODO: implement this in another way, without direct access to the object, and move to separate file.
-export const NODE_CONNECTION_SUBSCRIPTIONS: Record<
-  string,
-  (
-    outputNodeId: string,
-    outputId: string,
-    inputNodeId: string,
-    inputId: string,
-  ) => void
-> = {
-  "create-connection": addConnection,
-  "reset-mouse-data": () => {
-    setMouseData({
-      draggingNode: false,
-      heldNodeId: undefined,
-      heldOutputId: undefined,
-    });
-  },
-};
-
-export const onNodesConnected = (
-  outputNodeId: string,
-  outputId: string,
-  inputNodeId: string,
-  connectorId: string,
-) => {
-  Object.values(NODE_CONNECTION_SUBSCRIPTIONS).forEach((callback) =>
-    callback(outputNodeId, outputId, inputNodeId, connectorId),
-  );
-};
-
 export const onOutputMouseDown = (
   event: MouseEvent,
   nodeId: string,
@@ -87,6 +35,16 @@ export const onOutputTouchStart = (
   startCreatingConnection(nodeId, new Vec2(x, y), outputId);
 };
 
+export const connectHeldNodes = (nodeId: string, connectorId: string) => {
+  if (!mouseData.heldOutputId) return;
+  drawflowEventStore.onNodeConnected.publish(
+    mouseData.heldNodeId!,
+    mouseData.heldOutputId!,
+    nodeId,
+    connectorId,
+  );
+};
+
 export const selectNode = (nodeId: string, position: Vec2) => {
   const { x, y } = nodes[nodeId]!.position;
   setMouseData({
@@ -99,6 +57,83 @@ export const selectNode = (nodeId: string, position: Vec2) => {
       position.y / drawflow.zoomLevel - y,
     ),
   });
+};
+
+export interface DrawflowEvents {
+  onNodeConnected: (
+    outputNodeId: string,
+    outputId: string,
+    inputNodeId: string,
+    inputId: string,
+  ) => void;
+}
+
+type DrawflowEventNames = keyof DrawflowEvents;
+type DrawflowEventCallbacks = DrawflowEvents[DrawflowEventNames];
+
+export class EventPublisher<T extends DrawflowEventCallbacks> {
+  private subscriptions = new Map<string, T>();
+
+  subscribe(key: string, callback: T) {
+    console.log(this.subscriptions);
+    console.log(key);
+    this.subscriptions.set(key, callback);
+  }
+
+  unsubscribe(key: string) {
+    this.subscriptions.delete(key);
+  }
+
+  publish(...args: Parameters<T>) {
+    this.subscriptions.forEach((callback) => callback.call(null, ...args));
+  }
+
+  clear() {
+    this.subscriptions.clear();
+  }
+
+  get size() {
+    return this.subscriptions.size;
+  }
+
+  get isEmpty() {
+    return this.size === 0;
+  }
+}
+
+export type DrawflowEventParams<T> = T extends (...args: infer P) => void
+  ? P
+  : never;
+
+type DrawflowEventRecord = {
+  [K in keyof DrawflowEvents]: EventPublisher<DrawflowEvents[K]>;
+};
+
+export const drawflowEventStore: DrawflowEventRecord = {
+  onNodeConnected: new EventPublisher<DrawflowEvents["onNodeConnected"]>(),
+};
+
+drawflowEventStore.onNodeConnected.subscribe(
+  "create-connection",
+  addConnection,
+);
+drawflowEventStore.onNodeConnected.subscribe("reset-mouse-data", () => {
+  setMouseData({
+    draggingNode: false,
+    heldNodeId: undefined,
+    heldOutputId: undefined,
+  });
+});
+
+export const onNodeMouseDown = (event: MouseEvent, nodeId: string) => {
+  event.stopPropagation();
+  selectNode(nodeId, new Vec2(event.clientX, event.clientY));
+};
+
+export const onNodeTouchStart = (event: TouchEvent, nodeId: string) => {
+  event.stopPropagation();
+  const { clientX: x, clientY: y } = event.touches[0];
+  selectNode(nodeId, new Vec2(x, y));
 };
 
 export const startCreatingConnection = (
