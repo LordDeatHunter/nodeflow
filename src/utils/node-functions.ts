@@ -1,6 +1,7 @@
 import {
   addConnection,
   DefaultNodeConnectorEvents,
+  DefaultNodeEvents,
   drawflow,
   mouseData,
   nodes,
@@ -14,6 +15,11 @@ DefaultNodeConnectorEvents.onTouchStart = (nodeId, outputId) => (event) =>
   onOutputTouchStart(event, nodeId, outputId);
 DefaultNodeConnectorEvents.onPointerUp = (nodeId, outputId) => (_) =>
   connectHeldNodes(nodeId, outputId);
+
+DefaultNodeEvents.onMouseDown = (nodeId) => (event) =>
+  onNodeMouseDown(event, nodeId);
+DefaultNodeEvents.onTouchStart = (nodeId) => (event) =>
+  onNodeTouchStart(event, nodeId);
 
 export const onOutputMouseDown = (
   event: MouseEvent,
@@ -152,18 +158,4 @@ export const startCreatingConnection = (
       position.y / drawflow.zoomLevel - y,
     ),
   });
-};
-
-// TODO: change these to be similar to ConnectorFunctions
-export const NodeFunctions = {
-  onMouseDown: onNodeMouseDown,
-  onTouchStart: onNodeTouchStart,
-};
-export type NodeFunctions = typeof NodeFunctions;
-
-export const SetNodeFunction = <T extends keyof NodeFunctions>(
-  name: T,
-  value: NodeFunctions[T],
-) => {
-  NodeFunctions[name] = value;
 };

@@ -6,6 +6,7 @@ import {
   MouseData,
   NodeConnector,
   NodeConnectorEvents,
+  NodeEvents,
   Optional,
 } from "../drawflow-types";
 import { clamp } from "./math-utils";
@@ -207,6 +208,7 @@ export const addNode = (
     const newId = (Object.keys(prev).length + 1).toString();
 
     newNode = {
+      events: { ...DefaultNodeEvents },
       connectorSections: {},
       css: data.css ?? {},
       customData: data.customData,
@@ -354,6 +356,7 @@ export const addConnector = (
 
 // TODO: change this so it's not split in 2 files, and doesn't cause circular imports
 export const DefaultNodeConnectorEvents: NodeConnectorEvents = {};
+export const DefaultNodeEvents: NodeEvents = {};
 
 export const getConnectorCount = (nodeId: string) => {
   const node = nodes[nodeId];

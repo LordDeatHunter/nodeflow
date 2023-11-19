@@ -1,5 +1,5 @@
 import { type Component, createEffect, createMemo, For } from "solid-js";
-import { drawflow, mouseData, NodeFunctions, nodes, setNodes } from "../utils";
+import { drawflow, mouseData, nodes, setNodes } from "../utils";
 import { DrawflowNode } from "../drawflow-types";
 import { Vec2 } from "../utils/vec2";
 
@@ -42,8 +42,10 @@ const Node: Component<NodeProps> = (props) => {
         [node()?.css?.normal ?? ""]: true,
         [node()?.css?.selected ?? ""]: mouseData.heldNodeId === props.nodeId,
       }}
-      onMouseDown={(e) => NodeFunctions.onMouseDown(e, props.nodeId)}
-      onTouchStart={(e) => NodeFunctions.onTouchStart(e, props.nodeId)}
+      onMouseDown={(event) => node().events?.onMouseDown?.(props.nodeId)(event)}
+      onTouchStart={(event) =>
+        node().events?.onTouchStart?.(props.nodeId)(event)
+      }
     >
       {node().display(props.nodeId)}
       <For each={Object.entries(node().connectorSections)}>

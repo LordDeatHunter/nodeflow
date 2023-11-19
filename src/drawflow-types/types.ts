@@ -12,6 +12,7 @@ export interface MouseData {
 }
 
 export type DrawflowNode = {
+  events: NodeEvents;
   connectorSections: Record<string, ConnectorSection>;
   css: NodeCss;
   customData?: CustomDataType;
@@ -54,6 +55,13 @@ export interface NodeConnectorEvents {
   onMouseDown?: NodeConnectorEvent<MouseEvent>;
   onTouchStart?: NodeConnectorEvent<TouchEvent>;
   onPointerUp?: NodeConnectorEvent<PointerEvent>;
+}
+
+type NodeEvent<T> = (nodeId: string) => (event: T) => void;
+
+export interface NodeEvents {
+  onMouseDown?: NodeEvent<MouseEvent>;
+  onTouchStart?: NodeEvent<TouchEvent>;
 }
 
 export interface NodeConnector {

@@ -131,6 +131,7 @@ export const onTouchMove = (e: TouchEvent) => {
   });
 };
 
+// TODO: Refactor this to follow the same pattern as node-functions.ts
 export const DrawflowFunctions = {
   onMouseMove,
   onPointerUp,
