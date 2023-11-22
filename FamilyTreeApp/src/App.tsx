@@ -11,7 +11,7 @@ import {
   getTotalConnectedInputs,
   nodes,
 } from "solid-drawflow/src/utils/drawflow-storage";
-import { drawflowEventStore } from "solid-drawflow/src/utils/node-functions";
+import { drawflowEventStore } from "solid-drawflow/src/utils/events";
 
 for (let i = 0; i < 50; i++) {
   const gender = Math.floor(Math.random() * 2) === 1 ? "M" : "F";
@@ -44,7 +44,7 @@ for (let i = 0; i < 50; i++) {
 // Override the default create-connection subscription to only allow one connection per input, and set custom css
 drawflowEventStore.onNodeConnected.subscribe(
   "create-connection",
-  (outputNodeId, outputId, inputNodeId, inputId) => {
+  ({ outputNodeId, outputId, inputNodeId, inputId }) => {
     const outputNode = nodes[outputNodeId];
 
     // If the source node's gender does not match the destination connector, or if that connector already has a connection, return.
