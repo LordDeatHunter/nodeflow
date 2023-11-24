@@ -1,11 +1,5 @@
 import { Component, For } from "solid-js";
-import {
-  drawflow,
-  DrawflowFunctions,
-  getAllConnectors,
-  nodes,
-  windowSize,
-} from "../utils";
+import { drawflow, getAllConnectors, nodes, windowSize } from "../utils";
 import Node from "./Node";
 import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
@@ -14,6 +8,7 @@ import {
   DrawflowCss,
   NodeConnector,
 } from "../drawflow-types";
+import { drawflowEventStore } from "../utils/events";
 
 interface DrawflowProps {
   css?: DrawflowCss;
@@ -28,7 +23,26 @@ const Drawflow: Component<DrawflowProps> = (props) => (
       position: "absolute",
       width: `${windowSize().x}px`,
     }}
-    {...DrawflowFunctions}
+    onMouseMove={(event) =>
+      drawflowEventStore.onMouseMoveInDrawflow.publish({ event })
+    }
+    onPointerUp={(event) =>
+      drawflowEventStore.onPointerUpInDrawflow.publish({ event })
+    }
+    onWheel={(event) => drawflowEventStore.onWheelInDrawflow.publish({ event })}
+    onMouseDown={(event) =>
+      drawflowEventStore.onMouseDownInDrawflow.publish({ event })
+    }
+    onKeyDown={(event) =>
+      drawflowEventStore.onKeyDownInDrawflow.publish({ event })
+    }
+    onKeyUp={(event) => drawflowEventStore.onKeyUpInDrawflow.publish({ event })}
+    onTouchStart={(event) =>
+      drawflowEventStore.onTouchStartInDrawflow.publish({ event })
+    }
+    onTouchMove={(event) =>
+      drawflowEventStore.onTouchMoveInDrawflow.publish({ event })
+    }
   >
     <div
       style={{

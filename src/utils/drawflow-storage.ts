@@ -5,8 +5,6 @@ import {
   DrawflowNode,
   MouseData,
   NodeConnector,
-  NodeConnectorEvents,
-  NodeEvents,
   Optional,
 } from "../drawflow-types";
 import { clamp } from "./math-utils";
@@ -208,7 +206,6 @@ export const addNode = (
     const newId = (Object.keys(prev).length + 1).toString();
 
     newNode = {
-      events: { ...DefaultNodeEvents },
       connectorSections: {},
       css: data.css ?? {},
       customData: data.customData,
@@ -341,10 +338,6 @@ export const addConnector = (
   setNodes(nodeId, "connectorSections", sectionId, "connectors", connectorId, {
     css: data?.css,
     destinations: data?.destinations ?? [],
-    events: {
-      ...DefaultNodeConnectorEvents,
-      ...data?.events,
-    },
     hovered: data?.hovered,
     id: connectorId,
     parentSection: section,
@@ -354,10 +347,6 @@ export const addConnector = (
     sources: data?.sources ?? [],
   });
 };
-
-// TODO: change this so it's not split in 2 files, and doesn't cause circular imports
-export const DefaultNodeConnectorEvents: NodeConnectorEvents = {};
-export const DefaultNodeEvents: NodeEvents = {};
 
 export const getConnectorCount = (nodeId: string) => {
   const node = nodes[nodeId];
@@ -444,4 +433,36 @@ export const getAllConnectors = (nodeId: string): NodeConnector[] => {
       connectors.concat(Object.values(section.connectors)),
     [] as NodeConnector[],
   );
+};
+
+export const startCreatingConnection = (
+  nodeId: string,
+  position: Vec2,
+  outputId: string,
+) => {
+  const { x, y } = nodes[nodeId]!.position;
+  setMouseData({
+    draggingNode: false,
+    heldNodeId: nodeId,
+    heldOutputId: outputId,
+    mousePosition: position,
+    startPosition: new Vec2(
+      position.x / drawflow.zoomLevel - x,
+      position.y / drawflow.zoomLevel - y,
+    ),
+  });
+};
+
+export const selectNode = (nodeId: string, position: Vec2) => {
+  const { x, y } = nodes[nodeId]!.position;
+  setMouseData({
+    draggingNode: true,
+    heldOutputId: undefined,
+    heldNodeId: nodeId,
+    mousePosition: position,
+    startPosition: new Vec2(
+      position.x / drawflow.zoomLevel - x,
+      position.y / drawflow.zoomLevel - y,
+    ),
+  });
 };

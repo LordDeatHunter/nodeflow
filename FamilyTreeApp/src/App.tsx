@@ -29,17 +29,27 @@ for (let i = 0; i < 50; i++) {
 
   addConnector(newNode.id, "outputs", "C", {
     css: nodeCss["output-connector"],
-    events: { onPointerUp: undefined },
   });
   addConnector(newNode.id, "inputs", "F", {
     css: nodeCss["mother-input-connector"],
-    events: { onTouchStart: undefined, onMouseDown: undefined },
   });
   addConnector(newNode.id, "inputs", "M", {
     css: nodeCss["father-input-connector"],
-    events: { onTouchStart: undefined, onMouseDown: undefined },
   });
 }
+
+drawflowEventStore.onPointerUpInConnector.blacklist(
+  "prevent-connections-to-parent-connectors",
+  ({ connectorId }) => connectorId === "C",
+);
+drawflowEventStore.onTouchStartInConnector.blacklist(
+  "prevent-connections-from-parent-connectors",
+  ({ connectorId }) => connectorId === "F" || connectorId === "M",
+);
+drawflowEventStore.onMouseDownInConnector.blacklist(
+  "prevent-connections-from-parent-connectors",
+  ({ connectorId }) => connectorId === "F" || connectorId === "M",
+);
 
 // Override the default create-connection subscription to only allow one connection per input, and set custom css
 drawflowEventStore.onNodeConnected.subscribe(

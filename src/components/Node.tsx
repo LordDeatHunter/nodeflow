@@ -2,6 +2,7 @@ import { type Component, createEffect, createMemo, For } from "solid-js";
 import { drawflow, mouseData, nodes, setNodes } from "../utils";
 import { DrawflowNode } from "../drawflow-types";
 import { Vec2 } from "../utils/vec2";
+import { drawflowEventStore } from "../utils/events";
 
 interface NodeProps {
   nodeId: string;
@@ -42,9 +43,17 @@ const Node: Component<NodeProps> = (props) => {
         [node()?.css?.normal ?? ""]: true,
         [node()?.css?.selected ?? ""]: mouseData.heldNodeId === props.nodeId,
       }}
-      onMouseDown={(event) => node().events?.onMouseDown?.(props.nodeId)(event)}
+      onMouseDown={(event) =>
+        drawflowEventStore.onMouseDownInNode.publish({
+          event,
+          nodeId: props.nodeId,
+        })
+      }
       onTouchStart={(event) =>
-        node().events?.onTouchStart?.(props.nodeId)(event)
+        drawflowEventStore.onTouchStartInNode.publish({
+          event,
+          nodeId: props.nodeId,
+        })
       }
     >
       {node().display(props.nodeId)}
@@ -52,7 +61,7 @@ const Node: Component<NodeProps> = (props) => {
         {([sectionId, section]) => (
           <div class={section?.css}>
             <For each={Object.entries(section.connectors)}>
-              {([connectorID, connector]) => (
+              {([connectorId, connector]) => (
                 <div
                   ref={(el) =>
                     setTimeout(() => {
@@ -62,7 +71,7 @@ const Node: Component<NodeProps> = (props) => {
                         "connectorSections",
                         sectionId,
                         "connectors",
-                        connectorID,
+                        connectorId,
                         (prev) => ({
                           ...prev,
                           position: new Vec2(
@@ -77,18 +86,27 @@ const Node: Component<NodeProps> = (props) => {
                     })
                   }
                   class={connector?.css}
-                  onPointerUp={connector.events?.onPointerUp?.(
-                    props.nodeId,
-                    connectorID,
-                  )}
-                  onMouseDown={connector.events?.onMouseDown?.(
-                    props.nodeId,
-                    connectorID,
-                  )}
-                  onTouchStart={connector.events?.onTouchStart?.(
-                    props.nodeId,
-                    connectorID,
-                  )}
+                  onPointerUp={(event) =>
+                    drawflowEventStore.onPointerUpInConnector.publish({
+                      event,
+                      nodeId: props.nodeId,
+                      connectorId,
+                    })
+                  }
+                  onTouchStart={(event) =>
+                    drawflowEventStore.onTouchStartInConnector.publish({
+                      event,
+                      nodeId: props.nodeId,
+                      connectorId,
+                    })
+                  }
+                  onMouseDown={(event) =>
+                    drawflowEventStore.onMouseDownInConnector.publish({
+                      event,
+                      nodeId: props.nodeId,
+                      connectorId,
+                    })
+                  }
                 />
               )}
             </For>
