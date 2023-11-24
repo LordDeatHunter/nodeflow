@@ -301,17 +301,18 @@ export const addConnection = (
   }
 
   setNodes(
-    sourceNodeId,
-    "connectorSections",
-    sourceSection.id,
-    "connectors",
-    sourceConnectorId,
-    "destinations",
-    sourceConnector.destinations.length,
-    {
-      destinationConnector,
-      css,
-    },
+    produce((prev) => {
+      prev[sourceNodeId].connectorSections[sourceSection.id].connectors[
+        sourceConnectorId
+      ].destinations.push({ destinationConnector, css });
+
+      prev[destinationNodeId].connectorSections[
+        destinationSection.id
+      ].connectors[destinationConnectorId].sources.push({
+        destinationConnector: sourceConnector,
+        css,
+      });
+    }),
   );
 };
 
