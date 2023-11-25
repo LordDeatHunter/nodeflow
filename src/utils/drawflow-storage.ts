@@ -206,6 +206,7 @@ export const addNode = (
     const newId = (Object.keys(prev).length + 1).toString();
 
     newNode = {
+      centered: data.centered ?? false,
       connectorSections: {},
       css: data.css ?? {},
       customData: data.customData,

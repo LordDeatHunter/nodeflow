@@ -53,8 +53,8 @@ const Drawflow: Component<DrawflowProps> = (props) => (
         width: "100%",
       }}
     >
-      <For each={Object.entries(nodes)}>
-        {([nodeId]) => (
+      <For each={Object.keys(nodes)}>
+        {(nodeId) => (
           <>
             <Node nodeId={nodeId} />
             <For each={getAllConnectors(nodeId)}>

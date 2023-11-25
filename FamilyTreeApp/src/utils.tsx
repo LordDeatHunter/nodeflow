@@ -5,6 +5,8 @@ import {
   addNode,
   DrawflowNode,
   getTotalConnectedInputs,
+  globalMousePosition,
+  mouseData,
   nodes,
 } from "solid-drawflow/src";
 import nodeCss from "./styles/node.module.scss";
@@ -29,6 +31,7 @@ export const createFamilyMemberNode = (
     },
     customData: { gender },
     display: NodeBody,
+    centered: true,
   });
   addConnectorSection(newNode.id, "inputs", nodeCss["inputs-section"]);
   addConnectorSection(newNode.id, "outputs", nodeCss["outputs-section"]);
@@ -67,6 +70,28 @@ export const setupEvents = () => {
   drawflowEventStore.onMouseDownInConnector.blacklist(
     "prevent-connections-from-parent-connectors",
     ({ connectorId }) => connectorId === "F" || connectorId === "M",
+  );
+
+  drawflowEventStore.onPointerUpInDrawflow.subscribe(
+    "spawn-new-node",
+    () => {
+      if (!mouseData.heldOutputId) return;
+
+      const newNode = createFamilyMemberNode(
+        getRandomGender(),
+        globalMousePosition(),
+      );
+
+      const parent = nodes[mouseData.heldNodeId!];
+      addConnection(
+        mouseData.heldNodeId!,
+        mouseData.heldOutputId,
+        newNode.id,
+        parent.customData!.gender,
+        parent.customData!.gender == "M" ? curveCss.father : curveCss.mother,
+      );
+    },
+    1,
   );
 
   // Override the default create-connection subscription to only allow one connection per input, and set custom css

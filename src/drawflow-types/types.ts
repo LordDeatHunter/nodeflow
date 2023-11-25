@@ -12,6 +12,7 @@ export interface MouseData {
 }
 
 export type DrawflowNode = {
+  centered: boolean;
   connectorSections: Record<string, ConnectorSection>;
   css: NodeCss;
   customData?: CustomDataType;

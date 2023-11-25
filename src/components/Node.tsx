@@ -9,29 +9,36 @@ interface NodeProps {
 }
 
 const Node: Component<NodeProps> = (props) => {
+  const node = createMemo<DrawflowNode>(() => nodes[props.nodeId]);
+
   createEffect(() => {
     if (mouseData.heldNodeId !== props.nodeId || !mouseData.draggingNode)
       return;
     const { x: mouseX, y: mouseY } = mouseData.mousePosition;
     const { x: startX, y: startY } = mouseData.startPosition ?? Vec2.default();
-    const pos = new Vec2(
+
+    const position = new Vec2(
       mouseX / drawflow.zoomLevel - startX,
       mouseY / drawflow.zoomLevel - startY,
     );
 
-    setNodes(props.nodeId, "position", pos);
+    setNodes(props.nodeId, "position", position);
   });
-
-  const node = createMemo<DrawflowNode>(() => nodes[props.nodeId]);
 
   return (
     <div
       ref={(el) =>
         setTimeout(() => {
           if (!el) return;
+
+          const positionOffset = node().centered
+            ? new Vec2(el.clientWidth, el.clientHeight).divideBy(2)
+            : Vec2.default();
+
           setNodes(props.nodeId, {
             offset: new Vec2(el.clientLeft, el.clientTop),
             ref: el,
+            position: node().position.subtract(positionOffset),
           });
         })
       }
