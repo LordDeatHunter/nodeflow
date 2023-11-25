@@ -15,7 +15,7 @@ export type DrawflowNode = {
   connectorSections: Record<string, ConnectorSection>;
   css: NodeCss;
   customData?: CustomDataType;
-  readonly display: (nodeId: string) => Optional<JSX.Element>;
+  readonly display: (props: { nodeId: string }) => Optional<JSX.Element>;
   id: string;
   offset: Vec2;
   position: Vec2;
