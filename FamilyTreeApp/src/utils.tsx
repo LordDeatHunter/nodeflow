@@ -78,7 +78,8 @@ export const setupEvents = () => {
       // If the source node's gender does not match the destination connector, or if that connector already has a connection, return.
       if (
         outputNode.customData!.gender !== inputId ||
-        getTotalConnectedInputs(inputNodeId, inputId) > 0
+        getTotalConnectedInputs(inputNodeId, inputId) > 0 ||
+        outputNodeId === inputNodeId
       ) {
         return;
       }

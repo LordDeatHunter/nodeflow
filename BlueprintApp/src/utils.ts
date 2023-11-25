@@ -41,16 +41,19 @@ export const createDummyNode = (position: Vec2): DrawflowNode => {
 };
 
 export const setupEvents = () => {
-  // Override the default create-connection subscription to set custom css when creating a connection
-  drawflowEventStore.onNodeConnected.subscribe("create-connection", (data) =>
+  // Override the default create-connection subscription to prevent connecting to the same node, and set custom css when creating a connection
+  drawflowEventStore.onNodeConnected.subscribe("create-connection", (data) => {
+    if (data.outputNodeId === data.inputNodeId) {
+      return;
+    }
     addConnection(
       data.outputNodeId,
       data.outputId,
       data.inputNodeId,
       data.inputId,
       curveCss.connection,
-    ),
-  );
+    );
+  });
   SetCurveFunction("getDefaultCurve", CurveFunctions.getHorizontalCurve);
 };
 
