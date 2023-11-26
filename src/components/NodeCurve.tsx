@@ -128,9 +128,13 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
         d={sourceConnector()!.destinations[destinationIndex()].path?.path}
         stroke="black"
         stroke-width={1}
-        fill="transparent"
+        fill="none"
         marker-end="url(#pointer)"
         class={props.css}
+        style={{
+          cursor: "pointer",
+          "pointer-events": "visibleStroke",
+        }}
       />
     </svg>
   );

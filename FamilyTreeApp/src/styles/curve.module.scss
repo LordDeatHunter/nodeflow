@@ -4,16 +4,27 @@
   height: 100%;
   overflow: hidden;
   stroke-width: 5px;
+  transition: stroke 100ms ease-in-out, filter 100ms ease-in-out;
 }
 
 .father {
   @include base-curve;
   stroke: #84c3ff;
+
+  &:hover {
+    stroke: darken(saturate(#84c3ff, 25%), 25%);
+    filter: drop-shadow(0 0 2px darken(saturate(#84c3ff, 25%), 25%));
+  }
 }
 
 .mother {
   @include base-curve;
   stroke: #ff84c3;
+
+  &:hover {
+    stroke: darken(saturate(#ff84c3, 25%), 25%);
+    filter: drop-shadow(0 0 2px darken(saturate(#ff84c3, 25%), 25%));
+  }
 }
 
 .new-father {
