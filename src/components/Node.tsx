@@ -1,4 +1,10 @@
-import { type Component, createEffect, createMemo, For } from "solid-js";
+import {
+  type Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+} from "solid-js";
 import { drawflow, mouseData, nodes, setNodes } from "../utils";
 import { DrawflowNode } from "../drawflow-types";
 import { Vec2 } from "../utils/vec2";
@@ -10,6 +16,7 @@ interface NodeProps {
 
 const Node: Component<NodeProps> = (props) => {
   const node = createMemo<DrawflowNode>(() => nodes[props.nodeId]);
+  const [isVisible, setIsVisible] = createSignal<boolean>(false);
 
   createEffect(() => {
     if (mouseData.heldNodeId !== props.nodeId || !mouseData.draggingNode)
@@ -40,11 +47,14 @@ const Node: Component<NodeProps> = (props) => {
             ref: el,
             position: node().position.subtract(positionOffset),
           });
+
+          setIsVisible(true);
         })
       }
       style={{
         left: `${node().position.x}px`,
         top: `${node().position.y}px`,
+        opacity: isVisible() ? 1 : 0,
       }}
       classList={{
         [node()?.css?.normal ?? ""]: true,
