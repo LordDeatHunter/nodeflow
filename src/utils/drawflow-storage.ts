@@ -6,6 +6,7 @@ import {
   MouseData,
   NodeConnector,
   Optional,
+  SelectableElementCSS,
 } from "../drawflow-types";
 import { clamp } from "./math-utils";
 import { windowSize } from "./screen-utils";
@@ -15,11 +16,12 @@ import { Vec2 } from "./vec2";
 
 export const [nodes, setNodes] = createStore<Record<string, DrawflowNode>>({});
 export const [mouseData, setMouseData] = createStore<MouseData>({
+  clickStartPosition: undefined,
   draggingNode: false,
+  heldConnectorId: undefined,
   heldNodeId: undefined,
-  heldOutputId: undefined,
   mousePosition: Vec2.default(),
-  startPosition: undefined,
+  heldConnection: undefined,
 });
 export const [drawflow, setDrawflow] = createStore<DrawflowData>({
   currentMoveSpeed: Vec2.default(),
@@ -255,7 +257,7 @@ export const addConnection = (
   sourceConnectorId: string,
   destinationNodeId: string,
   destinationConnectorId: string,
-  css = "",
+  css?: SelectableElementCSS,
 ) => {
   const sourceNode = nodes[sourceNodeId];
   const destinationNode = nodes[destinationNodeId];
@@ -302,14 +304,73 @@ export const addConnection = (
     produce((prev) => {
       prev[sourceNodeId].connectorSections[sourceSection.id].connectors[
         sourceConnectorId
-      ].destinations.push({ destinationConnector, css });
+      ].destinations.push({
+        destinationConnector,
+        css: css ?? {},
+      });
 
       prev[destinationNodeId].connectorSections[
         destinationSection.id
-      ].connectors[destinationConnectorId].sources.push({
-        destinationConnector: sourceConnector,
-        css,
-      });
+      ].connectors[destinationConnectorId].sources.push({ sourceConnector });
+    }),
+  );
+};
+
+export const removeConnection = (
+  sourceNodeId: string,
+  sourceConnectorId: string,
+  destinationNodeId: string,
+  destinationConnectorId: string,
+) => {
+  const sourceNode = nodes[sourceNodeId];
+  const destinationNode = nodes[destinationNodeId];
+
+  // Check if nodes exist
+  if (!sourceNode || !destinationNode) {
+    return;
+  }
+
+  const sourceSection = getSectionFromConnector(
+    sourceNodeId,
+    sourceConnectorId,
+  );
+  const destinationSection = getSectionFromConnector(
+    destinationNodeId,
+    destinationConnectorId,
+  );
+
+  // Check if sections exist
+  if (!sourceSection || !destinationSection) {
+    return;
+  }
+
+  const sourceConnector = sourceSection.connectors[sourceConnectorId];
+  const destinationConnector =
+    destinationSection.connectors[destinationConnectorId];
+
+  // Check if connectors exist
+  if (!sourceConnector || !destinationConnector) {
+    return;
+  }
+
+  setNodes(
+    produce((prev) => {
+      prev[sourceNodeId].connectorSections[sourceSection.id].connectors[
+        sourceConnectorId
+      ].destinations = sourceConnector.destinations.filter(
+        (destination) =>
+          destination.destinationConnector?.parentSection.parentNode.id !==
+          destinationNodeId,
+      );
+
+      prev[destinationNodeId].connectorSections[
+        destinationSection.id
+      ].connectors[destinationConnectorId].sources =
+        destinationConnector.sources.filter(
+          (source) =>
+            source.sourceConnector?.parentSection.parentNode.id !==
+            sourceNodeId,
+        );
     }),
   );
 };
@@ -445,9 +506,9 @@ export const startCreatingConnection = (
   setMouseData({
     draggingNode: false,
     heldNodeId: nodeId,
-    heldOutputId: outputId,
+    heldConnectorId: outputId,
     mousePosition: position,
-    startPosition: new Vec2(
+    clickStartPosition: new Vec2(
       position.x / drawflow.zoomLevel - x,
       position.y / drawflow.zoomLevel - y,
     ),
@@ -458,10 +519,11 @@ export const selectNode = (nodeId: string, position: Vec2) => {
   const { x, y } = nodes[nodeId]!.position;
   setMouseData({
     draggingNode: true,
-    heldOutputId: undefined,
+    heldConnectorId: undefined,
+    heldConnection: undefined,
     heldNodeId: nodeId,
     mousePosition: position,
-    startPosition: new Vec2(
+    clickStartPosition: new Vec2(
       position.x / drawflow.zoomLevel - x,
       position.y / drawflow.zoomLevel - y,
     ),

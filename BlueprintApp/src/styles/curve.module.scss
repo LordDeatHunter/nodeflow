@@ -9,4 +9,16 @@
 .connection {
   @include base-curve;
   stroke: #84c3ff;
+
+  &:hover {
+    stroke: darken(saturate(#84c3ff, 25%), 25%);
+    filter: drop-shadow(0 0 2px darken(saturate(#84c3ff, 25%), 25%));
+  }
+}
+
+.selected-connection {
+  @include base-curve;
+
+  stroke: lighten(saturate(#84c3ff, 25%), 25%);
+  filter: drop-shadow(0 0 2px lighten(saturate(#84c3ff, 25%), 25%));
 }

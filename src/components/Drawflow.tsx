@@ -62,8 +62,8 @@ const Drawflow: Component<DrawflowProps> = (props) => (
                 <For each={connector.destinations}>
                   {(outputConnection: ConnectorDestination) => (
                     <NodeCurve
-                      nodeId={nodeId}
-                      outputId={connector.id}
+                      sourceNodeId={nodeId}
+                      sourceConnectorId={connector.id}
                       destinationNodeId={
                         outputConnection.destinationConnector!.parentSection
                           .parentNode.id

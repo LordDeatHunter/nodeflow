@@ -4,17 +4,21 @@ import { Vec2 } from "../utils/vec2";
 export type Optional<T> = T | undefined;
 
 export interface MouseData {
+  clickStartPosition?: Vec2;
   draggingNode: boolean;
   heldNodeId?: string;
-  heldOutputId?: string;
+  heldConnectorId?: string;
+  heldConnection?: {
+    sourceConnector: NodeConnector;
+    destinationConnector: NodeConnector;
+  };
   mousePosition: Vec2;
-  startPosition?: Vec2;
 }
 
 export type DrawflowNode = {
   centered: boolean;
   connectorSections: Record<string, ConnectorSection>;
-  css: NodeCss;
+  css: SelectableElementCSS;
   customData?: CustomDataType;
   readonly display: (props: { nodeId: string }) => Optional<JSX.Element>;
   id: string;
@@ -37,7 +41,7 @@ export interface DrawflowData {
   zoomLevel: number;
 }
 
-export interface NodeCss {
+export interface SelectableElementCSS {
   normal?: string;
   selected?: string;
 }
@@ -55,11 +59,15 @@ export interface NodeConnector {
   position: Vec2;
   ref: HTMLDivElement;
   size: Vec2;
-  sources: ConnectorDestination[];
+  sources: ConnectorSource[];
+}
+
+export interface ConnectorSource {
+  sourceConnector?: NodeConnector;
 }
 
 export interface ConnectorDestination {
-  css: string;
+  css: SelectableElementCSS;
   destinationConnector?: NodeConnector;
   path?: PathData;
 }

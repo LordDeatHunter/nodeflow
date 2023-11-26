@@ -8,6 +8,7 @@ import {
   globalMousePosition,
   mouseData,
   nodes,
+  SelectableElementCSS,
 } from "solid-drawflow/src";
 import nodeCss from "./styles/node.module.scss";
 import { CustomDataType } from "./types";
@@ -18,6 +19,14 @@ import NodeBody from "./NodeBody";
 
 export const getRandomGender = () =>
   Math.floor(Math.random() * 2) === 1 ? "M" : "F";
+
+const getConnectionCSS = (parentGender: "M" | "F"): SelectableElementCSS => ({
+  normal: parentGender == "M" ? curveCss.father : curveCss.mother,
+  selected:
+    parentGender == "M"
+      ? curveCss["selected-father"]
+      : curveCss["selected-mother"],
+});
 
 export const createFamilyMemberNode = (
   gender: CustomDataType["gender"],
@@ -75,7 +84,7 @@ export const setupEvents = () => {
   drawflowEventStore.onPointerUpInDrawflow.subscribe(
     "spawn-new-node",
     () => {
-      if (!mouseData.heldOutputId) return;
+      if (!mouseData.heldConnectorId) return;
 
       const newNode = createFamilyMemberNode(
         getRandomGender(),
@@ -85,10 +94,10 @@ export const setupEvents = () => {
       const parent = nodes[mouseData.heldNodeId!];
       addConnection(
         mouseData.heldNodeId!,
-        mouseData.heldOutputId,
+        mouseData.heldConnectorId,
         newNode.id,
         parent.customData!.gender,
-        parent.customData!.gender == "M" ? curveCss.father : curveCss.mother,
+        getConnectionCSS(parent.customData!.gender),
       );
     },
     1,
@@ -114,7 +123,7 @@ export const setupEvents = () => {
         outputId,
         inputNodeId,
         inputId,
-        inputId == "M" ? curveCss.father : curveCss.mother,
+        getConnectionCSS(outputNode.customData!.gender),
       );
     },
   );
@@ -142,7 +151,7 @@ export const setupDummyConnections = () => {
       "C",
       to.toString(),
       toInput.toString(),
-      toInput == "M" ? curveCss.father : curveCss.mother,
+      getConnectionCSS(fromNode.customData!.gender),
     );
   }
 };

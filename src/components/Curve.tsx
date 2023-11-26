@@ -14,12 +14,15 @@ interface CurveProps {
 
 const Curve: Component<CurveProps> = (props) => {
   const curveData = createMemo<Optional<PathData>>(() => {
-    if (!mouseData.heldNodeId || !mouseData.heldOutputId) {
+    if (!mouseData.heldNodeId || !mouseData.heldConnectorId) {
       return undefined;
     }
     const { position: startPosition, offset: startNodeOffset } =
       nodes[mouseData.heldNodeId];
-    const output = getConnector(mouseData.heldNodeId, mouseData.heldOutputId)!;
+    const output = getConnector(
+      mouseData.heldNodeId,
+      mouseData.heldConnectorId,
+    )!;
 
     const start = startPosition.add(
       startNodeOffset,

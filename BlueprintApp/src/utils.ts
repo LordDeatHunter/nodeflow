@@ -51,7 +51,10 @@ export const setupEvents = () => {
       data.outputId,
       data.inputNodeId,
       data.inputId,
-      curveCss.connection,
+      {
+        normal: curveCss.connection,
+        selected: curveCss["selected-connection"],
+      },
     );
   });
   SetCurveFunction("getDefaultCurve", CurveFunctions.getHorizontalCurve);
@@ -86,12 +89,9 @@ export const setupDummyConnections = () => {
       continue;
     }
 
-    addConnection(
-      from.toString(),
-      "0",
-      to.toString(),
-      toInput.toString(),
-      curveCss.connection,
-    );
+    addConnection(from.toString(), "0", to.toString(), toInput.toString(), {
+      normal: curveCss.connection,
+      selected: curveCss["selected-connection"],
+    });
   }
 };

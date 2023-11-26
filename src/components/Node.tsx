@@ -22,7 +22,8 @@ const Node: Component<NodeProps> = (props) => {
     if (mouseData.heldNodeId !== props.nodeId || !mouseData.draggingNode)
       return;
     const { x: mouseX, y: mouseY } = mouseData.mousePosition;
-    const { x: startX, y: startY } = mouseData.startPosition ?? Vec2.default();
+    const { x: startX, y: startY } =
+      mouseData.clickStartPosition ?? Vec2.default();
 
     const position = new Vec2(
       mouseX / drawflow.zoomLevel - startX,
