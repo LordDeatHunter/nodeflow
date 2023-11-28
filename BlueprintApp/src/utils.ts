@@ -78,20 +78,35 @@ export const setupDummyConnections = () => {
       continue;
     }
 
-    const toInput = Math.floor(
-      Math.random() *
-        Object.keys(toNode.connectorSections["inputs"].connectors).length,
-    );
+    const fromConnectors = fromNode.connectorSections["outputs"].connectors;
+    const toConnectors = toNode.connectorSections["inputs"].connectors;
+
+    const fromConnectorValues = Object.values(fromConnectors);
+    const toConnectorValues = Object.values(toConnectors);
+
+    const fromConnector =
+      fromConnectorValues[
+        Math.floor(Math.random() * fromConnectorValues.length)
+      ];
+    const toConnector =
+      toConnectorValues[Math.floor(Math.random() * toConnectorValues.length)];
+
     if (
       from === to ||
-      getTotalConnectedInputs(to.toString(), toInput.toString()) > 0
+      getTotalConnectedInputs(to.toString(), toConnector.toString()) > 0
     ) {
       continue;
     }
 
-    addConnection(from.toString(), "0", to.toString(), toInput.toString(), {
-      normal: curveCss.connection,
-      selected: curveCss["selected-connection"],
-    });
+    addConnection(
+      from.toString(),
+      fromConnector.id,
+      to.toString(),
+      toConnector.id,
+      {
+        normal: curveCss.connection,
+        selected: curveCss["selected-connection"],
+      },
+    );
   }
 };
