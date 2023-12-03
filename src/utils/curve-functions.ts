@@ -1,14 +1,51 @@
 import { Vec2 } from "./vec2";
+import { Constants } from "./drawflow-storage";
 
-// TODO: unify into a single function that works based on angle
 export const getHorizontalCurve = (start: Vec2, end: Vec2): Vec2 =>
   new Vec2((end.x - start.x) / 1.5, 0);
 
 export const getVerticalCurve = (start: Vec2, end: Vec2): Vec2 =>
   new Vec2(0, (end.y - start.y) / 1.5);
 
-export const getDefaultCurve = (start: Vec2, end: Vec2): Vec2 =>
-  CurveFunctions.getVerticalCurve(start, end);
+export const getCalculatedCurve = (
+  start: Vec2,
+  end: Vec2,
+  startCenterOfMass: Vec2,
+  endCenterOfMass: Vec2,
+): { startCurve: Vec2; endCurve: Vec2 } => {
+  const startPositionDifference = start.subtract(startCenterOfMass);
+  const endPositionDifference = end.subtract(endCenterOfMass);
+
+  const startCurve = startCenterOfMass.add(
+    startPositionDifference.multiplyBy(Constants.CURVE_MULTIPLIER),
+  );
+
+  const endCurve = endCenterOfMass.add(
+    endPositionDifference.multiplyBy(Constants.CURVE_MULTIPLIER),
+  );
+
+  return {
+    startCurve,
+    endCurve,
+  };
+};
+
+// TODO: Improve this so it doesn't always use the angle from the center, but instead use the general direction of the node
+export const getCurve = (
+  start: Vec2,
+  end: Vec2,
+  startCenterOfMass: Vec2,
+  endCenterOfMass: Vec2,
+): string => {
+  const { startCurve, endCurve } = getCalculatedCurve(
+    start,
+    end,
+    startCenterOfMass,
+    endCenterOfMass,
+  );
+
+  return `M ${start.x} ${start.y} C ${startCurve.x} ${startCurve.y}, ${endCurve.x} ${endCurve.y}, ${end.x} ${end.y}`;
+};
 
 export const createDefaultPathString = (
   start: Vec2,
@@ -20,15 +57,20 @@ export const createDefaultPathString = (
     end.x - xCurve
   } ${end.y - yCurve}, ${end.x} ${end.y}`;
 
-export const createDraggingPathCurve = (start: Vec2, end: Vec2): string => {
+export const createDraggingPathCurve = (
+  start: Vec2,
+  end: Vec2,
+  _startCenterOfMass: Vec2,
+  _endCenterOfMass: Vec2,
+): string => {
   const { x: xCurve, y: yCurve } = CurveFunctions.getDefaultCurve(start, end);
   return CurveFunctions.createDefaultPathString(start, end, xCurve, yCurve);
 };
 
 export const CurveFunctions = {
-  createNodePathCurve: createDraggingPathCurve,
+  createNodePathCurve: getCurve,
   createDraggingPathCurve,
-  getDefaultCurve,
+  getDefaultCurve: (_start: Vec2, _end: Vec2) => Vec2.default(),
   getHorizontalCurve,
   getVerticalCurve,
   createDefaultPathString,

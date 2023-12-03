@@ -40,6 +40,7 @@ export const Constants = {
   MOVE_SPEED_INCREASE: 1.5,
   SQRT_2_OVER_2: 0.7071067811865476,
   ZOOM_MULTIPLIER: 0.005,
+  CURVE_MULTIPLIER: 3,
 } as const;
 
 export const globalMousePosition = createMemo<Vec2>(() => {
@@ -217,6 +218,7 @@ export const addNode = (
       offset: Vec2.default(),
       position: new Vec2(x, y),
       ref: undefined,
+      size: Vec2.default(),
     };
 
     return {

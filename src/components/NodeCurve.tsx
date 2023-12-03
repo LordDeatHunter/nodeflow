@@ -51,8 +51,16 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       return;
     }
 
-    const { position: startPosition, offset: startNodeOffset } = startNode();
-    const { position: endPosition, offset: endNodeOffset } = endNode();
+    const {
+      position: startPosition,
+      offset: startNodeOffset,
+      size: startNodeSize,
+    } = startNode();
+    const {
+      position: endPosition,
+      offset: endNodeOffset,
+      size: endNodeSize,
+    } = endNode();
 
     const outputSection = getSectionFromConnector(
       props.sourceNodeId,
@@ -79,7 +87,12 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
     const path: PathData = {
       start,
       end,
-      path: CurveFunctions.createNodePathCurve(start, end),
+      path: CurveFunctions.createNodePathCurve(
+        start,
+        end,
+        startPosition.add(startNodeOffset).add(startNodeSize.divideBy(2)),
+        endPosition.add(endNodeOffset).add(endNodeSize.divideBy(2)),
+      ),
     };
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment

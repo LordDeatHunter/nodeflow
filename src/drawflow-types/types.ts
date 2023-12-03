@@ -25,6 +25,7 @@ export type DrawflowNode = {
   offset: Vec2;
   position: Vec2;
   ref?: HTMLDivElement;
+  size: Vec2;
 };
 
 export type ConnectorSection = {

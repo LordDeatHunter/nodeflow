@@ -3,12 +3,14 @@ import {
   addConnector,
   addConnectorSection,
   addNode,
+  CurveFunctions,
   DrawflowNode,
   getTotalConnectedInputs,
   globalMousePosition,
   mouseData,
   nodes,
   SelectableElementCSS,
+  SetCurveFunction,
 } from "solid-drawflow/src";
 import nodeCss from "./styles/node.module.scss";
 import { CustomDataType } from "./types";
@@ -126,6 +128,12 @@ export const setupEvents = () => {
         getConnectionCSS(outputNode.customData!.gender),
       );
     },
+  );
+
+  SetCurveFunction("getDefaultCurve", CurveFunctions.getVerticalCurve);
+  SetCurveFunction(
+    "createNodePathCurve",
+    CurveFunctions.createDraggingPathCurve,
   );
 };
 

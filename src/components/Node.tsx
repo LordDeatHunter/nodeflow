@@ -47,6 +47,7 @@ const Node: Component<NodeProps> = (props) => {
             offset: new Vec2(el.clientLeft, el.clientTop),
             ref: el,
             position: node().position.subtract(positionOffset),
+            size: new Vec2(el.clientWidth, el.clientHeight),
           });
 
           setIsVisible(true);

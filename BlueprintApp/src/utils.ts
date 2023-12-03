@@ -58,6 +58,10 @@ export const setupEvents = () => {
     );
   });
   SetCurveFunction("getDefaultCurve", CurveFunctions.getHorizontalCurve);
+  SetCurveFunction(
+    "createNodePathCurve",
+    CurveFunctions.createDraggingPathCurve,
+  );
 };
 
 export const setupDummyNodes = (count: number = 50) => {
