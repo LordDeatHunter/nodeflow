@@ -17,8 +17,11 @@ const Curve: Component<CurveProps> = (props) => {
     if (!mouseData.heldNodeId || !mouseData.heldConnectorId) {
       return undefined;
     }
-    const { position: startPosition, offset: startNodeOffset } =
-      nodes[mouseData.heldNodeId];
+    const {
+      position: startPosition,
+      offset: startNodeOffset,
+      size: startNodeSize,
+    } = nodes[mouseData.heldNodeId];
     const output = getConnector(
       mouseData.heldNodeId,
       mouseData.heldConnectorId,
@@ -34,7 +37,12 @@ const Curve: Component<CurveProps> = (props) => {
     return {
       start,
       end,
-      path: CurveFunctions.createDraggingPathCurve(start, end),
+      path: CurveFunctions.createDraggingPathCurve(
+        start,
+        end,
+        startPosition.add(startNodeOffset).add(startNodeSize.divideBy(2)),
+        end,
+      ),
     };
   });
 
