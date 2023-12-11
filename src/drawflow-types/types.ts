@@ -64,12 +64,12 @@ export interface NodeConnector {
 }
 
 export interface ConnectorSource {
-  sourceConnector?: NodeConnector;
+  sourceConnector: NodeConnector;
 }
 
 export interface ConnectorDestination {
   css: SelectableElementCSS;
-  destinationConnector?: NodeConnector;
+  destinationConnector: NodeConnector;
   path?: PathData;
 }
 

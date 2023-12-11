@@ -13,7 +13,9 @@ import { windowSize } from "./screen-utils";
 import { createMemo } from "solid-js";
 import { intersectionOfSets, isSetEmpty } from "./misc-utils";
 import { Vec2 } from "./vec2";
+import { Changes } from "./Changes";
 
+export const changes = new Changes();
 export const [nodes, setNodes] = createStore<Record<string, DrawflowNode>>({});
 export const [mouseData, setMouseData] = createStore<MouseData>({
   clickStartPosition: undefined,
@@ -44,17 +46,16 @@ export const Constants = {
 } as const;
 
 export const globalMousePosition = createMemo<Vec2>(() => {
-  const { x, y } = mouseData.mousePosition; // screen coords
-  const { x: offsetX, y: offsetY } = drawflow.position; // chart coords (offset amount)
   const zoom = drawflow.zoomLevel; // zoom multiplier
 
   // TODO: change to drawflow div size instead of screen size
   const screenCenter = windowSize().divideBy(2);
 
-  return new Vec2(
-    (x - screenCenter.x) / zoom - offsetX + screenCenter.x,
-    (y - screenCenter.y) / zoom - offsetY + screenCenter.y,
-  );
+  return mouseData.mousePosition
+    .subtract(screenCenter)
+    .divideBy(zoom)
+    .subtract(drawflow.position)
+    .add(screenCenter);
 });
 
 export const updateZoom = (distance: number, zoomLocation: Vec2): void => {
@@ -81,10 +82,7 @@ export const updateZoom = (distance: number, zoomLocation: Vec2): void => {
     .divideBy(newZoom);
 
   setDrawflow((prev) => ({
-    position: new Vec2(
-      prev.position.x - oldOffset.x + newOffset.x,
-      prev.position.y - oldOffset.y + newOffset.y,
-    ),
+    position: prev.position.subtract(oldOffset).add(newOffset),
     zoomLevel: newZoom,
   }));
 };
@@ -94,13 +92,8 @@ export const updateBackgroundPosition = (
   keyboard = false,
 ) => {
   if (mouseData.heldNodeId || keyboard === mouseData.draggingNode) return;
-  setDrawflow(
-    "position",
-    (prev) =>
-      new Vec2(
-        prev.x + moveDistance.x / drawflow.zoomLevel,
-        prev.y + moveDistance.y / drawflow.zoomLevel,
-      ),
+  setDrawflow("position", (prev) =>
+    prev.add(moveDistance.divideBy(drawflow.zoomLevel)),
   );
 };
 
@@ -156,12 +149,7 @@ export const updateNodePosition = (moveSpeed: Vec2) => {
   if (!mouseData.heldNodeId) return;
   const node = nodes[mouseData.heldNodeId];
   if (!node) return;
-  const { x, y } = node.position;
-  setNodes(
-    mouseData.heldNodeId,
-    "position",
-    new Vec2(x + moveSpeed.x, y + moveSpeed.y),
-  );
+  setNodes(mouseData.heldNodeId, "position", node.position.add(moveSpeed));
 };
 
 setInterval(() => {
@@ -174,7 +162,7 @@ setInterval(() => {
 
   const isDraggingNode = mouseData.heldNodeId !== undefined;
 
-  const moveSpeed = new Vec2(
+  const moveSpeed = Vec2.of(
     calculateMovement(
       movingLeft || movingRight,
       drawflow.currentMoveSpeed.x,
@@ -200,23 +188,22 @@ setInterval(() => {
 }, 10);
 
 export const addNode = (
-  x = 0,
-  y = 0,
   data: Partial<DrawflowNode>,
+  addToHistory = true,
 ): DrawflowNode => {
   let newNode: Optional<DrawflowNode>;
-  setNodes((prev) => {
-    const newId = (Object.keys(prev).length + 1).toString();
+  setNodes(() => {
+    const newId = data.id ?? getNextFreeNodeId();
 
     newNode = {
       centered: data.centered ?? false,
-      connectorSections: {},
+      connectorSections: data.connectorSections ?? {},
       css: data.css ?? {},
       customData: data.customData,
       display: data.display ?? (() => undefined),
       id: newId,
       offset: Vec2.default(),
-      position: new Vec2(x, y),
+      position: data.position ?? Vec2.default(),
       ref: undefined,
       size: Vec2.default(),
     };
@@ -225,34 +212,178 @@ export const addNode = (
       [newId]: newNode,
     };
   });
+
+  if (addToHistory) {
+    const oldConnections = getAllSourceConnections(newNode!.id);
+
+    changes.addChange({
+      type: "add",
+      source: "node",
+      applyChange: () => {
+        addNode(newNode!, false);
+        oldConnections.forEach((connection) => {
+          addConnection(
+            connection.sourceNodeId,
+            connection.sourceConnectorId,
+            connection.destinationNodeId,
+            connection.destinationConnectorId,
+            connection.css,
+            false,
+          );
+        });
+      },
+      undoChange: () => {
+        removeNode(newNode!.id, false);
+      },
+    });
+  }
+
   return newNode!;
+};
+
+export const getNextFreeNodeId = (): string => {
+  let newId = "0";
+  for (let i = 1; Object.keys(nodes).includes(newId); ++i) {
+    newId = i.toString();
+  }
+  return newId;
+};
+
+export const getNextFreeConnectorId = (nodeId: string): string => {
+  let newId = "0";
+  const node = nodes[nodeId];
+  if (node) {
+    for (
+      let i = 1;
+      Object.keys(node.connectorSections).some((section) =>
+        section.includes(newId),
+      );
+      ++i
+    ) {
+      newId = i.toString();
+    }
+  }
+
+  return newId;
+};
+
+export const getNextFreeConnectorSectionId = (nodeId: string): string => {
+  let newId = "0";
+  const node = nodes[nodeId];
+  if (node) {
+    for (let i = 1; Object.keys(node.connectorSections).includes(newId); ++i) {
+      newId = i.toString();
+    }
+  }
+
+  return newId;
 };
 
 /**
  * Removes a node and all connections to and from it
  * @param nodeId - the id of the node to remove
+ * @param addToHistory - whether to add this change to the history
  */
-export const removeNode = (nodeId: string) => {
+export const removeNode = (nodeId: string, addToHistory = true) => {
   setNodes(
     produce((newNodes) => {
-      delete newNodes[nodeId];
-      Object.values(newNodes).forEach((node) =>
-        Object.values(node.connectorSections).forEach((section) => {
-          Object.values(section.connectors).forEach((connector) => {
-            newNodes[node.id].connectorSections[section.id].connectors[
-              connector.id
-            ].destinations = connector.destinations.filter(
-              (destination) =>
-                destination.destinationConnector?.parentSection.parentNode
-                  .id !== nodeId,
-            );
-          });
-        }),
+      const node = newNodes[nodeId];
+
+      if (addToHistory) {
+        const oldConnections = getAllSourceConnections(nodeId);
+        const oldNode = nodes[nodeId];
+
+        changes.addChange({
+          type: "remove",
+          source: "node",
+          applyChange: () => {
+            removeNode(nodeId, false);
+          },
+          undoChange: () => {
+            addNode(oldNode, false);
+            oldConnections.forEach((connection) => {
+              addConnection(
+                connection.sourceNodeId,
+                connection.sourceConnectorId,
+                connection.destinationNodeId,
+                connection.destinationConnectorId,
+                connection.css,
+                false,
+              );
+            });
+          },
+        });
+      }
+
+      // Delete all connections coming into this node
+      Object.values(node.connectorSections).forEach((section) =>
+        Object.values(section.connectors).forEach((connector) =>
+          Object.values(connector.sources).forEach(
+            ({ sourceConnector }) =>
+              (sourceConnector.destinations =
+                sourceConnector.destinations.filter(
+                  ({ destinationConnector }) =>
+                    destinationConnector.parentSection.parentNode.id !== nodeId,
+                )),
+          ),
+        ),
       );
+
+      // Delete all connections coming out of this node
+      Object.values(node.connectorSections).forEach((section) =>
+        Object.values(section.connectors).forEach((connector) =>
+          Object.values(connector.destinations).forEach(
+            ({ destinationConnector }) =>
+              (destinationConnector.sources =
+                destinationConnector.sources.filter(
+                  ({ sourceConnector }) =>
+                    sourceConnector.parentSection.parentNode.id !== nodeId,
+                )),
+          ),
+        ),
+      );
+
+      delete newNodes[nodeId];
     }),
   );
   deselectNode();
 };
+
+export const getAllSourceConnectors = (nodeId: string): NodeConnector[] => {
+  const node = nodes[nodeId];
+  if (!node) {
+    return [];
+  }
+
+  return Object.values(node.connectorSections).reduce(
+    (connectors, section) =>
+      connectors.concat(
+        Object.values(section.connectors).flatMap((connector) =>
+          connector.sources.flatMap((source) => source.sourceConnector),
+        ),
+      ),
+    [] as NodeConnector[],
+  );
+};
+
+export const getAllSourceConnections = (nodeId: string) =>
+  getAllSourceConnectors(nodeId)
+    .map((source) => {
+      const filteredDestinations = source.destinations.filter(
+        (destination) =>
+          destination.destinationConnector.parentSection.parentNode.id ===
+          nodeId,
+      );
+      return filteredDestinations.map((destination) => ({
+        sourceNodeId: source.parentSection.parentNode.id,
+        sourceConnectorId: source.id,
+        destinationNodeId:
+          destination.destinationConnector.parentSection.parentNode.id,
+        destinationConnectorId: destination.destinationConnector.id,
+        css: destination.css,
+      }));
+    })
+    .flat();
 
 export const addConnection = (
   sourceNodeId: string,
@@ -260,6 +391,7 @@ export const addConnection = (
   destinationNodeId: string,
   destinationConnectorId: string,
   css?: SelectableElementCSS,
+  addToHistory = true,
 ) => {
   const sourceNode = nodes[sourceNodeId];
   const destinationNode = nodes[destinationNodeId];
@@ -302,6 +434,30 @@ export const addConnection = (
     return;
   }
 
+  if (addToHistory) {
+    changes.addChange({
+      type: "add",
+      source: "connection",
+      applyChange: () =>
+        addConnection(
+          sourceNodeId,
+          sourceConnectorId,
+          destinationNodeId,
+          destinationConnectorId,
+          css,
+          false,
+        ),
+      undoChange: () =>
+        removeConnection(
+          sourceNodeId,
+          sourceConnectorId,
+          destinationNodeId,
+          destinationConnectorId,
+          false,
+        ),
+    });
+  }
+
   setNodes(
     produce((prev) => {
       prev[sourceNodeId].connectorSections[sourceSection.id].connectors[
@@ -323,6 +479,7 @@ export const removeConnection = (
   sourceConnectorId: string,
   destinationNodeId: string,
   destinationConnectorId: string,
+  addToHistory = true,
 ) => {
   const sourceNode = nodes[sourceNodeId];
   const destinationNode = nodes[destinationNodeId];
@@ -355,13 +512,45 @@ export const removeConnection = (
     return;
   }
 
+  if (addToHistory) {
+    const css = sourceConnector.destinations.find(
+      (destination) =>
+        destination.destinationConnector.parentSection.parentNode.id ===
+        destinationNodeId,
+    )?.css;
+    const undoChange = () => {
+      addConnection(
+        sourceNodeId,
+        sourceConnectorId,
+        destinationNodeId,
+        destinationConnectorId,
+        css,
+      );
+    };
+    const applyChange = () => {
+      removeConnection(
+        sourceNodeId,
+        sourceConnectorId,
+        destinationNodeId,
+        destinationConnectorId,
+        false,
+      );
+    };
+    changes.addChange({
+      type: "remove",
+      source: "connection",
+      applyChange,
+      undoChange,
+    });
+  }
+
   setNodes(
     produce((prev) => {
       prev[sourceNodeId].connectorSections[sourceSection.id].connectors[
         sourceConnectorId
       ].destinations = sourceConnector.destinations.filter(
         (destination) =>
-          destination.destinationConnector?.parentSection.parentNode.id !==
+          destination.destinationConnector.parentSection.parentNode.id !==
           destinationNodeId,
       );
 
@@ -370,8 +559,7 @@ export const removeConnection = (
       ].connectors[destinationConnectorId].sources =
         destinationConnector.sources.filter(
           (source) =>
-            source.sourceConnector?.parentSection.parentNode.id !==
-            sourceNodeId,
+            source.sourceConnector.parentSection.parentNode.id !== sourceNodeId,
         );
     }),
   );
@@ -382,6 +570,7 @@ export const addConnector = (
   sectionId: string,
   connectorId: Optional<string>,
   data: Partial<NodeConnector>,
+  addToHistory = true,
 ) => {
   const node = nodes[nodeId];
   if (!node) {
@@ -393,10 +582,25 @@ export const addConnector = (
     return;
   }
 
-  connectorId ??= getConnectorCount(node.id).toString();
+  if (!connectorId || Object.keys(section.connectors).includes(connectorId)) {
+    connectorId = getNextFreeConnectorId(node.id);
+  }
 
   if (getConnector(nodeId, connectorId)) {
     return;
+  }
+
+  if (addToHistory) {
+    changes.addChange({
+      type: "add",
+      source: "connector",
+      applyChange: () => {
+        addConnector(nodeId, sectionId, connectorId, data, false);
+      },
+      undoChange: () => {
+        removeConnector(nodeId, sectionId, connectorId!, false);
+      },
+    });
   }
 
   setNodes(nodeId, "connectorSections", sectionId, "connectors", connectorId, {
@@ -410,6 +614,51 @@ export const addConnector = (
     size: Vec2.default(),
     sources: data?.sources ?? [],
   });
+};
+
+export const removeConnector = (
+  nodeId: string,
+  sectionId: string,
+  connectorId: string,
+  addToHistory = true,
+) => {
+  const node = nodes[nodeId];
+  if (!node) {
+    return;
+  }
+
+  const section = node.connectorSections[sectionId];
+  if (!section) {
+    return;
+  }
+
+  const connector = section.connectors[connectorId];
+  if (!connector) {
+    return;
+  }
+
+  if (addToHistory) {
+    changes.addChange({
+      type: "remove",
+      source: "connector",
+      applyChange: () => {
+        removeConnector(nodeId, sectionId, connectorId, false);
+      },
+      undoChange: () => {
+        addConnector(nodeId, sectionId, connectorId, connector, false);
+      },
+    });
+  }
+
+  setNodes(
+    nodeId,
+    "connectorSections",
+    sectionId,
+    "connectors",
+    produce((prev) => {
+      delete prev[connectorId];
+    }),
+  );
 };
 
 export const getConnectorCount = (nodeId: string) => {
@@ -456,16 +705,28 @@ export const addConnectorSection = (
   nodeId: string,
   sectionId?: string,
   css?: string,
+  addToHistory = true,
 ) => {
   const node = nodes[nodeId];
   if (!node) {
     return;
   }
 
-  sectionId ??= Object.keys(node.connectorSections).length.toString();
+  if (!sectionId || Object.keys(node.connectorSections).includes(sectionId)) {
+    sectionId = getNextFreeConnectorSectionId(node.id);
+  }
 
-  if (node.connectorSections[sectionId]) {
-    return;
+  if (addToHistory) {
+    changes.addChange({
+      type: "remove",
+      source: "connector-section",
+      applyChange: () => {
+        addConnectorSection(nodeId, sectionId, css, false);
+      },
+      undoChange: () => {
+        removeConnectorSection(nodeId, sectionId!, false);
+      },
+    });
   }
 
   setNodes(nodeId, "connectorSections", sectionId, {
@@ -474,6 +735,43 @@ export const addConnectorSection = (
     id: sectionId,
     parentNode: node,
   });
+};
+
+export const removeConnectorSection = (
+  nodeId: string,
+  sectionId: string,
+  addToHistory = true,
+) => {
+  const node = nodes[nodeId];
+  if (!node) {
+    return;
+  }
+
+  const section = node.connectorSections[sectionId];
+  if (!section) {
+    return;
+  }
+
+  if (addToHistory) {
+    changes.addChange({
+      type: "remove",
+      source: "connector-section",
+      applyChange: () => {
+        removeConnectorSection(nodeId, sectionId, false);
+      },
+      undoChange: () => {
+        addConnectorSection(nodeId, sectionId, section.css, false);
+      },
+    });
+  }
+
+  setNodes(
+    nodeId,
+    "connectorSections",
+    produce((prev) => {
+      delete prev[sectionId];
+    }),
+  );
 };
 
 /**
@@ -504,30 +802,26 @@ export const startCreatingConnection = (
   position: Vec2,
   outputId: string,
 ) => {
-  const { x, y } = nodes[nodeId]!.position;
   setMouseData({
     draggingNode: false,
     heldNodeId: nodeId,
     heldConnectorId: outputId,
     mousePosition: position,
-    clickStartPosition: new Vec2(
-      position.x / drawflow.zoomLevel - x,
-      position.y / drawflow.zoomLevel - y,
-    ),
+    clickStartPosition: position
+      .divideBy(drawflow.zoomLevel)
+      .subtract(nodes[nodeId]!.position),
   });
 };
 
 export const selectNode = (nodeId: string, position: Vec2) => {
-  const { x, y } = nodes[nodeId]!.position;
   setMouseData({
     draggingNode: true,
     heldConnectorId: undefined,
     heldConnection: undefined,
     heldNodeId: nodeId,
     mousePosition: position,
-    clickStartPosition: new Vec2(
-      position.x / drawflow.zoomLevel - x,
-      position.y / drawflow.zoomLevel - y,
-    ),
+    clickStartPosition: position
+      .divideBy(drawflow.zoomLevel)
+      .subtract(nodes[nodeId]!.position),
   });
 };

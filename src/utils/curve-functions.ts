@@ -2,10 +2,10 @@ import { Vec2 } from "./vec2";
 import { Constants } from "./drawflow-storage";
 
 export const getHorizontalCurve = (start: Vec2, end: Vec2): Vec2 =>
-  new Vec2((end.x - start.x) / 1.5, 0);
+  Vec2.of((end.x - start.x) / 1.5, 0);
 
 export const getVerticalCurve = (start: Vec2, end: Vec2): Vec2 =>
-  new Vec2(0, (end.y - start.y) / 1.5);
+  Vec2.of(0, (end.y - start.y) / 1.5);
 
 export const getCalculatedCurve = (
   start: Vec2,

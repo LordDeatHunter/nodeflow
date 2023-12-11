@@ -2,9 +2,13 @@ export class Vec2 {
   public x: number;
   public y: number;
 
-  constructor(x: number, y: number) {
+  private constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
+  }
+
+  public static of(x: number, y: number): Vec2 {
+    return new Vec2(x, y);
   }
 
   public static copy(position: Vec2): Vec2 {

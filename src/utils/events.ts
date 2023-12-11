@@ -1,5 +1,6 @@
 import {
   addConnection,
+  changes,
   Constants,
   deselectNode,
   drawflow,
@@ -145,13 +146,13 @@ drawflowEventStore.onMouseMoveInDrawflow.subscribeMultiple([
   {
     name: "update-mouse-position",
     event: ({ event }) => {
-      setMouseData("mousePosition", new Vec2(event.clientX, event.clientY));
+      setMouseData("mousePosition", Vec2.of(event.clientX, event.clientY));
     },
   },
   {
     name: "update-background-position",
     event: ({ event }) => {
-      updateBackgroundPosition(new Vec2(event.movementX, event.movementY));
+      updateBackgroundPosition(Vec2.of(event.movementX, event.movementY));
     },
   },
 ]);
@@ -206,13 +207,13 @@ drawflowEventStore.onTouchStartInDrawflow.subscribeMultiple([
       if (touches.length !== 1) return;
 
       const touch = touches[0];
-      const mousePosition = new Vec2(touch.clientX, touch.clientY);
+      const mousePosition = Vec2.of(touch.clientX, touch.clientY);
 
       setMouseData({
         draggingNode: true,
         heldNodeId: undefined,
         mousePosition,
-        clickStartPosition: new Vec2(
+        clickStartPosition: Vec2.of(
           touch.clientX / drawflow.zoomLevel - drawflow.position.x,
           touch.clientY / drawflow.zoomLevel - drawflow.position.y,
         ),
@@ -231,7 +232,7 @@ drawflowEventStore.onTouchMoveInDrawflow.subscribeMultiple([
       const { pageX: touch1X, pageY: touch1Y } = touches[0];
       const { pageX: touch2X, pageY: touch2Y } = touches[1];
       const currDist = Math.hypot(touch1X - touch2X, touch1Y - touch2Y);
-      const centerPosition = new Vec2(
+      const centerPosition = Vec2.of(
         (touch1X + touch2X) / 2,
         (touch1Y + touch2Y) / 2,
       );
@@ -247,7 +248,7 @@ drawflowEventStore.onTouchMoveInDrawflow.subscribeMultiple([
       if (touches.length !== 1) return;
 
       setMouseData("mousePosition", (mousePosition) => {
-        const newMousePos = new Vec2(touches[0].clientX, touches[0].clientY);
+        const newMousePos = Vec2.of(touches[0].clientX, touches[0].clientY);
         updateBackgroundPosition(newMousePos.subtract(mousePosition));
         return newMousePos;
       });
@@ -302,6 +303,17 @@ drawflowEventStore.onKeyDownInDrawflow.subscribeMultiple([
             );
           }
           break;
+        case "KeyZ":
+          if (!event.ctrlKey) {
+            break;
+          }
+          event.preventDefault();
+          if (event.shiftKey) {
+            changes.redo();
+          } else {
+            changes.undo();
+          }
+          break;
       }
     },
   },
@@ -311,7 +323,7 @@ drawflowEventStore.onWheelInDrawflow.subscribeMultiple([
   {
     name: "update-zoom",
     event: ({ event }) => {
-      updateZoom(-event.deltaY, new Vec2(event.clientX, event.clientY));
+      updateZoom(-event.deltaY, Vec2.of(event.clientX, event.clientY));
     },
   },
   {
@@ -331,7 +343,7 @@ drawflowEventStore.onMouseDownInDrawflow.subscribeMultiple([
     name: "reset-mouse-data",
     event: ({ event }) =>
       setMouseData({
-        clickStartPosition: new Vec2(
+        clickStartPosition: Vec2.of(
           event.clientX / drawflow.zoomLevel - drawflow.position.x,
           event.clientY / drawflow.zoomLevel - drawflow.position.y,
         ),
@@ -339,7 +351,7 @@ drawflowEventStore.onMouseDownInDrawflow.subscribeMultiple([
         heldConnection: undefined,
         heldConnectorId: undefined,
         heldNodeId: undefined,
-        mousePosition: new Vec2(event.clientX, event.clientY),
+        mousePosition: Vec2.of(event.clientX, event.clientY),
       }),
   },
   {
@@ -358,12 +370,13 @@ drawflowEventStore.onMouseDownInConnector.subscribeMultiple([
     event: ({ event, nodeId, connectorId }) => {
       startCreatingConnection(
         nodeId,
-        new Vec2(event.clientX, event.clientY),
+        Vec2.of(event.clientX, event.clientY),
         connectorId,
       );
     },
   },
 ]);
+
 drawflowEventStore.onTouchStartInConnector.subscribeMultiple([
   {
     name: "stop-propagation",
@@ -373,7 +386,7 @@ drawflowEventStore.onTouchStartInConnector.subscribeMultiple([
     name: "start-creating-connection",
     event: ({ event, nodeId, connectorId }) => {
       const { clientX: x, clientY: y } = event.touches[0];
-      startCreatingConnection(nodeId, new Vec2(x, y), connectorId);
+      startCreatingConnection(nodeId, Vec2.of(x, y), connectorId);
     },
   },
 ]);
@@ -396,7 +409,7 @@ drawflowEventStore.onMouseDownInNode.subscribeMultiple([
   {
     name: "select-node",
     event: ({ event, nodeId }) => {
-      selectNode(nodeId, new Vec2(event.clientX, event.clientY));
+      selectNode(nodeId, Vec2.of(event.clientX, event.clientY));
     },
   },
   {
@@ -410,7 +423,7 @@ drawflowEventStore.onTouchStartInNode.subscribeMultiple([
     name: "select-node",
     event: ({ event, nodeId }) => {
       const { clientX: x, clientY: y } = event.touches[0];
-      selectNode(nodeId, new Vec2(x, y));
+      selectNode(nodeId, Vec2.of(x, y));
     },
   },
   {
@@ -439,7 +452,7 @@ drawflowEventStore.onPointerDownInNodeCurve.subscribeMultiple([
         },
         heldConnectorId: undefined,
         heldNodeId: undefined,
-        mousePosition: new Vec2(event.clientX, event.clientY),
+        mousePosition: Vec2.of(event.clientX, event.clientY),
       }),
   },
 ]);

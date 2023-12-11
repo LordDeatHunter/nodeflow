@@ -34,28 +34,47 @@ export const createFamilyMemberNode = (
   gender: CustomDataType["gender"],
   position: Vec2,
 ): DrawflowNode => {
-  const newNode = addNode(position.x, position.y, {
+  const newNode = addNode({
     css: {
       normal: nodeCss[gender === "M" ? "male-node" : "female-node"],
       selected:
         nodeCss[gender === "M" ? "selected-male-node" : "selected-female-node"],
     },
+    position,
     customData: { gender },
     display: NodeBody,
     centered: true,
   });
-  addConnectorSection(newNode.id, "inputs", nodeCss["inputs-section"]);
-  addConnectorSection(newNode.id, "outputs", nodeCss["outputs-section"]);
+  addConnectorSection(newNode.id, "inputs", nodeCss["inputs-section"], false);
+  addConnectorSection(newNode.id, "outputs", nodeCss["outputs-section"], false);
 
-  addConnector(newNode.id, "outputs", "C", {
-    css: nodeCss["output-connector"],
-  });
-  addConnector(newNode.id, "inputs", "F", {
-    css: nodeCss["mother-input-connector"],
-  });
-  addConnector(newNode.id, "inputs", "M", {
-    css: nodeCss["father-input-connector"],
-  });
+  addConnector(
+    newNode.id,
+    "outputs",
+    "C",
+    {
+      css: nodeCss["output-connector"],
+    },
+    false,
+  );
+  addConnector(
+    newNode.id,
+    "inputs",
+    "F",
+    {
+      css: nodeCss["mother-input-connector"],
+    },
+    false,
+  );
+  addConnector(
+    newNode.id,
+    "inputs",
+    "M",
+    {
+      css: nodeCss["father-input-connector"],
+    },
+    false,
+  );
 
   return newNode;
 };
@@ -64,7 +83,7 @@ export const setupDummyNodes = (count: number = 50) => {
   for (let i = 0; i < count; i++) {
     createFamilyMemberNode(
       getRandomGender(),
-      new Vec2(Math.random() * 2000, Math.random() * 2000),
+      Vec2.of(Math.random() * 2000, Math.random() * 2000),
     );
   }
 };

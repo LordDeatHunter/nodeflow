@@ -65,11 +65,11 @@ const Drawflow: Component<DrawflowProps> = (props) => (
                       sourceNodeId={nodeId}
                       sourceConnectorId={connector.id}
                       destinationNodeId={
-                        outputConnection.destinationConnector!.parentSection
+                        outputConnection.destinationConnector.parentSection
                           .parentNode.id
                       }
                       destinationConnectorId={
-                        outputConnection.destinationConnector!.id
+                        outputConnection.destinationConnector.id
                       }
                       css={outputConnection.css}
                     />

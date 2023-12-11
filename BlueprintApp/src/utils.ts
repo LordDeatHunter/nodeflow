@@ -15,26 +15,39 @@ import { drawflowEventStore } from "../../src/utils/events";
 import curveCss from "./styles/curve.module.scss";
 
 export const createDummyNode = (position: Vec2): DrawflowNode => {
-  const newNode = addNode(position.x, position.y, {
+  const newNode = addNode({
     css: {
       normal: nodeCss.node,
       selected: nodeCss["selected-node"],
     },
+    position,
   });
-  addConnectorSection(newNode.id, "inputs", nodeCss["inputs-section"]);
-  addConnectorSection(newNode.id, "outputs", nodeCss["outputs-section"]);
+  addConnectorSection(newNode.id, "inputs", nodeCss["inputs-section"], false);
+  addConnectorSection(newNode.id, "outputs", nodeCss["outputs-section"], false);
 
   const outputs = 1 + Math.random() * 3;
   for (let j = 0; j < outputs; j++) {
-    addConnector(newNode.id, "outputs", undefined, {
-      css: nodeCss["output-connector"],
-    });
+    addConnector(
+      newNode.id,
+      "outputs",
+      undefined,
+      {
+        css: nodeCss["output-connector"],
+      },
+      false,
+    );
   }
   const inputs = 1 + Math.random() * 3;
   for (let j = 0; j < inputs; j++) {
-    addConnector(newNode.id, "inputs", undefined, {
-      css: nodeCss["input-connector"],
-    });
+    addConnector(
+      newNode.id,
+      "inputs",
+      undefined,
+      {
+        css: nodeCss["input-connector"],
+      },
+      false,
+    );
   }
 
   return newNode;
@@ -66,7 +79,7 @@ export const setupEvents = () => {
 
 export const setupDummyNodes = (count: number = 50) => {
   for (let i = 0; i < count; i++) {
-    createDummyNode(new Vec2(Math.random() * 2000, Math.random() * 2000));
+    createDummyNode(Vec2.of(Math.random() * 2000, Math.random() * 2000));
   }
 };
 

@@ -19,16 +19,13 @@ const Node: Component<NodeProps> = (props) => {
   const [isVisible, setIsVisible] = createSignal<boolean>(false);
 
   createEffect(() => {
-    if (mouseData.heldNodeId !== props.nodeId || !mouseData.draggingNode)
+    if (mouseData.heldNodeId !== props.nodeId || !mouseData.draggingNode) {
       return;
-    const { x: mouseX, y: mouseY } = mouseData.mousePosition;
-    const { x: startX, y: startY } =
-      mouseData.clickStartPosition ?? Vec2.default();
+    }
 
-    const position = new Vec2(
-      mouseX / drawflow.zoomLevel - startX,
-      mouseY / drawflow.zoomLevel - startY,
-    );
+    const position = mouseData.mousePosition
+      .divideBy(drawflow.zoomLevel)
+      .subtract(mouseData.clickStartPosition ?? Vec2.default());
 
     setNodes(props.nodeId, "position", position);
   });
@@ -40,14 +37,14 @@ const Node: Component<NodeProps> = (props) => {
           if (!el) return;
 
           const positionOffset = node().centered
-            ? new Vec2(el.clientWidth, el.clientHeight).divideBy(2)
+            ? Vec2.of(el.clientWidth, el.clientHeight).divideBy(2)
             : Vec2.default();
 
           setNodes(props.nodeId, {
-            offset: new Vec2(el.clientLeft, el.clientTop),
+            offset: Vec2.of(el.clientLeft, el.clientTop),
             ref: el,
             position: node().position.subtract(positionOffset),
-            size: new Vec2(el.clientWidth, el.clientHeight),
+            size: Vec2.of(el.clientWidth, el.clientHeight),
           });
 
           setIsVisible(true);
@@ -93,13 +90,13 @@ const Node: Component<NodeProps> = (props) => {
                         connectorId,
                         (prev) => ({
                           ...prev,
-                          position: new Vec2(
+                          position: Vec2.of(
                             (el?.parentElement?.offsetLeft ?? 0) +
                               el.offsetLeft,
                             (el?.parentElement?.offsetTop ?? 0) + el.offsetTop,
                           ),
                           ref: el,
-                          size: new Vec2(el.offsetWidth, el.offsetHeight),
+                          size: Vec2.of(el.offsetWidth, el.offsetHeight),
                         }),
                       );
                     })
