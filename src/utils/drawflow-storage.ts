@@ -255,8 +255,8 @@ export const getNextFreeConnectorId = (nodeId: string): string => {
   if (node) {
     for (
       let i = 1;
-      Object.keys(node.connectorSections).some((section) =>
-        section.includes(newId),
+      Object.values(node.connectorSections).some((section) =>
+        Object.keys(section.connectors).includes(newId),
       );
       ++i
     ) {
