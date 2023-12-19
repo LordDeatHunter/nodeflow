@@ -72,7 +72,7 @@ const Node: Component<NodeProps> = (props) => {
         })
       }
     >
-      {node().display({ nodeId: props.nodeId })}
+      {node().display({ node: node() })}
       <For each={Object.entries(node().connectorSections)}>
         {([sectionId, section]) => (
           <div class={section?.css}>

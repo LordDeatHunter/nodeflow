@@ -41,7 +41,7 @@ export const createFamilyMemberNode = (
         nodeCss[gender === "M" ? "selected-male-node" : "selected-female-node"],
     },
     position,
-    customData: { gender },
+    customData: { gender, name: "John Smith" },
     display: NodeBody,
     centered: true,
   });
