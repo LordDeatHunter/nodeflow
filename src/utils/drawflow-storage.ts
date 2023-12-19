@@ -141,7 +141,11 @@ export const resetMovement = () => {
 };
 
 export const deselectNode = () => {
-  setMouseData("heldNodeId", undefined);
+  setMouseData({
+    heldNodeId: undefined,
+    heldConnectorId: undefined,
+    heldConnection: undefined,
+  });
   resetMovement();
 };
 
@@ -285,6 +289,7 @@ export const getNextFreeConnectorSectionId = (nodeId: string): string => {
  * @param addToHistory - whether to add this change to the history
  */
 export const removeNode = (nodeId: string, addToHistory = true) => {
+  deselectNode();
   setNodes(
     produce((newNodes) => {
       const node = newNodes[nodeId];
@@ -346,7 +351,6 @@ export const removeNode = (nodeId: string, addToHistory = true) => {
       delete newNodes[nodeId];
     }),
   );
-  deselectNode();
 };
 
 export const getAllSourceConnectors = (nodeId: string): NodeConnector[] => {
