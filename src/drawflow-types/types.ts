@@ -3,6 +3,12 @@ import { Vec2 } from "../utils/vec2";
 
 export type Optional<T> = T | undefined;
 
+export type DeepPartial<T> = T extends object
+  ? {
+      [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
+    }
+  : T;
+
 export interface MouseData {
   clickStartPosition?: Vec2;
   draggingNode: boolean;
@@ -19,7 +25,7 @@ export type DrawflowNode = {
   centered: boolean;
   connectorSections: Record<string, ConnectorSection>;
   css: SelectableElementCSS;
-  customData?: CustomDataType;
+  customData: CustomDataType;
   readonly display: (props: { node: DrawflowNode }) => Optional<JSX.Element>;
   id: string;
   offset: Vec2;

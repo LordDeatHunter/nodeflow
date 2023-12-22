@@ -1,5 +1,5 @@
 type Change = {
-  type: "add" | "remove" | "modify";
+  type: "add" | "remove" | "update";
   source: string;
   applyChange: () => void;
   undoChange: () => void;

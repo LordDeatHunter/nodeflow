@@ -9,8 +9,10 @@ import {
   globalMousePosition,
   mouseData,
   nodes,
+  removeOutgoingConnections,
   SelectableElementCSS,
   SetCurveFunction,
+  updateNode,
 } from "solid-drawflow/src";
 import nodeCss from "./styles/node.module.scss";
 import { CustomDataType } from "./types";
@@ -117,11 +119,36 @@ export const setupEvents = () => {
         mouseData.heldNodeId!,
         mouseData.heldConnectorId,
         newNode.id,
-        parent.customData!.gender,
-        getConnectionCSS(parent.customData!.gender),
+        parent.customData.gender,
+        getConnectionCSS(parent.customData.gender),
       );
     },
     1,
+  );
+
+  drawflowEventStore.onNodeDataChanged.subscribe(
+    "update-node-css",
+    ({ nodeId, data }) => {
+      const node = nodes[nodeId];
+      if (!node) return;
+      if (!("customData" in data)) return;
+      const customData = data.customData as CustomDataType;
+      if (!("gender" in customData)) return;
+      const gender = customData.gender;
+
+      updateNode(nodeId, {
+        css: {
+          normal: nodeCss[gender === "M" ? "male-node" : "female-node"],
+          selected:
+            nodeCss[
+              gender === "M" ? "selected-male-node" : "selected-female-node"
+            ],
+        },
+      });
+
+      // TODO: maybe create new connections to the respective connectors of the new gender? Eg. mother->father, father->mother
+      removeOutgoingConnections(nodeId);
+    },
   );
 
   // Override the default create-connection subscription to only allow one connection per input, and set custom css
@@ -132,7 +159,7 @@ export const setupEvents = () => {
 
       // If the source node's gender does not match the destination connector, or if that connector already has a connection, return.
       if (
-        outputNode.customData!.gender !== inputId ||
+        outputNode.customData.gender !== inputId ||
         getTotalConnectedInputs(inputNodeId, inputId) > 0 ||
         outputNodeId === inputNodeId
       ) {
@@ -144,7 +171,7 @@ export const setupEvents = () => {
         outputId,
         inputNodeId,
         inputId,
-        getConnectionCSS(outputNode.customData!.gender),
+        getConnectionCSS(outputNode.customData.gender),
       );
     },
   );
@@ -168,7 +195,7 @@ export const setupDummyConnections = () => {
       continue;
     }
 
-    const toInput = fromNode.customData!.gender;
+    const toInput = fromNode.customData.gender;
     if (from === to || getTotalConnectedInputs(to.toString(), toInput) > 0) {
       continue;
     }
@@ -178,7 +205,7 @@ export const setupDummyConnections = () => {
       "C",
       to.toString(),
       toInput.toString(),
-      getConnectionCSS(fromNode.customData!.gender),
+      getConnectionCSS(fromNode.customData.gender),
     );
   }
 };

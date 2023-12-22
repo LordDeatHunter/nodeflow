@@ -9,6 +9,7 @@ import { drawflow, mouseData, nodes, setNodes } from "../utils";
 import { DrawflowNode } from "../drawflow-types";
 import { Vec2 } from "../utils/vec2";
 import { drawflowEventStore } from "../utils/events";
+import { produce } from "solid-js/store";
 
 interface NodeProps {
   nodeId: string;
@@ -35,6 +36,36 @@ const Node: Component<NodeProps> = (props) => {
       ref={(el) =>
         setTimeout(() => {
           if (!el) return;
+
+          const resizeObserver = new ResizeObserver(() => {
+            setNodes(
+              props.nodeId,
+              produce((prev) => {
+                // update the size of the node
+                prev.size = Vec2.of(el.clientWidth, el.clientHeight);
+                // update the position of the connectors
+                Object.entries(prev.connectorSections).forEach(
+                  ([sectionId, section]) => {
+                    Object.entries(section.connectors).forEach(
+                      ([connectorId, connector]) => {
+                        const connectorEl = connector.ref;
+                        if (!connectorEl) return;
+                        prev.connectorSections[sectionId].connectors[
+                          connectorId
+                        ].position = Vec2.of(
+                          (connectorEl?.parentElement?.offsetLeft ?? 0) +
+                            connectorEl.offsetLeft,
+                          (connectorEl?.parentElement?.offsetTop ?? 0) +
+                            connectorEl.offsetTop,
+                        );
+                      },
+                    );
+                  },
+                );
+              }),
+            );
+          });
+          resizeObserver.observe(el);
 
           const positionOffset = node().centered
             ? Vec2.of(el.clientWidth, el.clientHeight).divideBy(2)
@@ -82,6 +113,20 @@ const Node: Component<NodeProps> = (props) => {
                   ref={(el) =>
                     setTimeout(() => {
                       if (!el) return;
+
+                      const resizeObserver = new ResizeObserver(() => {
+                        setNodes(
+                          props.nodeId,
+                          "connectorSections",
+                          sectionId,
+                          "connectors",
+                          connectorId,
+                          "size",
+                          Vec2.of(el.offsetWidth, el.offsetHeight),
+                        );
+                      });
+                      resizeObserver.observe(el);
+
                       setNodes(
                         props.nodeId,
                         "connectorSections",
