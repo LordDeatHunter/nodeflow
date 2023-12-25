@@ -4,6 +4,7 @@ import {
   createMemo,
   createSignal,
   For,
+  onCleanup,
 } from "solid-js";
 import { drawflow, mouseData, nodes, setNodes } from "../utils";
 import { DrawflowNode } from "../drawflow-types";
@@ -29,6 +30,19 @@ const Node: Component<NodeProps> = (props) => {
       .subtract(mouseData.clickStartPosition ?? Vec2.default());
 
     setNodes(props.nodeId, "position", position);
+  });
+
+  onCleanup(() => {
+    if (!node().resizeObserver) return;
+
+    node().resizeObserver!.disconnect();
+
+    Object.values(node().connectorSections).forEach((section) => {
+      Object.values(section.connectors).forEach((connector) => {
+        if (!connector.resizeObserver) return;
+        connector.resizeObserver.disconnect();
+      });
+    });
   });
 
   return (
@@ -74,6 +88,7 @@ const Node: Component<NodeProps> = (props) => {
           setNodes(props.nodeId, {
             offset: Vec2.of(el.clientLeft, el.clientTop),
             ref: el,
+            resizeObserver,
             position: node().position.subtract(positionOffset),
             size: Vec2.of(el.clientWidth, el.clientHeight),
           });
@@ -141,6 +156,7 @@ const Node: Component<NodeProps> = (props) => {
                             (el?.parentElement?.offsetTop ?? 0) + el.offsetTop,
                           ),
                           ref: el,
+                          resizeObserver,
                           size: Vec2.of(el.offsetWidth, el.offsetHeight),
                         }),
                       );

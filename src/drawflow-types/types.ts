@@ -31,6 +31,7 @@ export type DrawflowNode = {
   offset: Vec2;
   position: Vec2;
   ref?: HTMLDivElement;
+  resizeObserver?: ResizeObserver;
   size: Vec2;
 };
 
@@ -65,6 +66,7 @@ export interface NodeConnector {
   parentSection: ConnectorSection;
   position: Vec2;
   ref: HTMLDivElement;
+  resizeObserver: ResizeObserver;
   size: Vec2;
   sources: ConnectorSource[];
 }
