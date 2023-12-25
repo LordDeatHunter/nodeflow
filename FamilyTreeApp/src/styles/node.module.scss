@@ -1,7 +1,7 @@
 @mixin baseNode {
   z-index: 2;
-  min-width: fit-content;
-  min-height: fit-content;
+  min-width: 300px;
+  min-height: 100px;
   padding: 10px;
   position: absolute;
   user-select: none;
@@ -11,6 +11,13 @@
   cursor: grab;
   box-shadow: 0 0 5px 0 black;
   transition: background-color 0.2s ease-in-out 0s, opacity 0.8s ease-in-out, border-color 0.2s ease-in-out 0s, box-shadow 0.2s ease-in-out 0s;
+
+  background-color: white;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .male-node {

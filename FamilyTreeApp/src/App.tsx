@@ -8,8 +8,7 @@ import SidebarContent from "./SelectedNodePreview";
 const App: Component = () => {
   onMount(() => {
     setupEvents();
-    setupDummyNodes();
-    setupDummyConnections();
+    setupDummyNodes().then(() => setupDummyConnections());
   });
 
   return (

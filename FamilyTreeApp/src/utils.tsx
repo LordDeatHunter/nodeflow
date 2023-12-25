@@ -21,6 +21,35 @@ import { drawflowEventStore } from "solid-drawflow/src/utils/events";
 import curveCss from "./styles/curve.module.scss";
 import NodeBody from "./NodeBody";
 
+export const fetchRandomData = async (
+  amount: number,
+): Promise<
+  Array<{
+    name: string;
+    gender: "F" | "M";
+  }>
+> => {
+  const response = await fetch(
+    `https://randomuser.me/api/?inc=gender,name&noinfo&results=${amount}`,
+  );
+  return await response
+    .json()
+    .then(
+      (data: {
+        results: Array<{
+          gender: "female" | "male";
+          name: { title: string; first: string; last: string };
+        }>;
+      }) => data.results,
+    )
+    .then((data) =>
+      data.map((person) => ({
+        gender: person.gender === "female" ? "F" : "M",
+        name: person.name.first + " " + person.name.last,
+      })),
+    );
+};
+
 export const getRandomGender = () =>
   Math.floor(Math.random() * 2) === 1 ? "M" : "F";
 
@@ -33,6 +62,7 @@ const getConnectionCSS = (parentGender: "M" | "F"): SelectableElementCSS => ({
 });
 
 export const createFamilyMemberNode = (
+  name: string,
   gender: CustomDataType["gender"],
   position: Vec2,
 ): DrawflowNode => {
@@ -43,7 +73,7 @@ export const createFamilyMemberNode = (
         nodeCss[gender === "M" ? "selected-male-node" : "selected-female-node"],
     },
     position,
-    customData: { gender, name: "John Smith" },
+    customData: { gender, name },
     display: NodeBody,
     centered: true,
   });
@@ -81,11 +111,13 @@ export const createFamilyMemberNode = (
   return newNode;
 };
 
-export const setupDummyNodes = (count: number = 50) => {
-  for (let i = 0; i < count; i++) {
+export const setupDummyNodes = async (count: number = 50) => {
+  const data = await fetchRandomData(count);
+  for (const person of data) {
     createFamilyMemberNode(
-      getRandomGender(),
-      Vec2.of(Math.random() * 2000, Math.random() * 2000),
+      person.name,
+      person.gender,
+      Vec2.of((Math.random() * 2 - 1) * 2000, (Math.random() * 2 - 1) * 2000),
     );
   }
 };
@@ -107,21 +139,27 @@ export const setupEvents = () => {
   drawflowEventStore.onPointerUpInDrawflow.subscribe(
     "spawn-new-node",
     () => {
-      if (!mouseData.heldConnectorId) return;
+      const heldNodeId = mouseData.heldNodeId;
+      const heldConnectorId = mouseData.heldConnectorId;
 
-      const newNode = createFamilyMemberNode(
-        getRandomGender(),
-        globalMousePosition(),
-      );
+      if (!heldNodeId || !heldConnectorId) return;
 
-      const parent = nodes[mouseData.heldNodeId!];
-      addConnection(
-        mouseData.heldNodeId!,
-        mouseData.heldConnectorId,
-        newNode.id,
-        parent.customData.gender,
-        getConnectionCSS(parent.customData.gender),
-      );
+      fetchRandomData(1).then((data) => {
+        const newNode = createFamilyMemberNode(
+          data[0].name,
+          data[0].gender,
+          globalMousePosition(),
+        );
+
+        const parent = nodes[heldNodeId!];
+        addConnection(
+          heldNodeId!,
+          heldConnectorId,
+          newNode.id,
+          parent.customData.gender,
+          getConnectionCSS(parent.customData.gender),
+        );
+      });
     },
     1,
   );
