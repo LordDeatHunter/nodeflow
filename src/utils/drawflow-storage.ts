@@ -205,7 +205,7 @@ export const addNode = (
       centered: data.centered ?? false,
       connectorSections: data.connectorSections ?? {},
       css: data.css ?? {},
-      customData: data.customData ?? ({} as CustomDataType),
+      customData: data.customData ?? ({} as SolidDrawflow.CustomDataType),
       display: data.display ?? (() => undefined),
       id: newId,
       offset: Vec2.default(),

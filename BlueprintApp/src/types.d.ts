@@ -1,4 +1,7 @@
+export {};
+
 declare global {
-  export interface CustomDataType {}
+  namespace SolidDrawflow {
+    export interface CustomDataType {}
+  }
 }
-export { CustomDataType };

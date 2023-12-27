@@ -15,7 +15,6 @@ import {
   updateNode,
 } from "solid-drawflow/src";
 import nodeCss from "./styles/node.module.scss";
-import { CustomDataType } from "./types";
 import { Vec2 } from "solid-drawflow/src/utils/vec2";
 import { drawflowEventStore } from "solid-drawflow/src/utils/events";
 import curveCss from "./styles/curve.module.scss";
@@ -63,7 +62,7 @@ const getConnectionCSS = (parentGender: "M" | "F"): SelectableElementCSS => ({
 
 export const createFamilyMemberNode = (
   name: string,
-  gender: CustomDataType["gender"],
+  gender: SolidDrawflow.CustomDataType["gender"],
   position: Vec2,
 ): DrawflowNode => {
   const newNode = addNode({
@@ -170,7 +169,7 @@ export const setupEvents = () => {
       const node = nodes[nodeId];
       if (!node) return;
       if (!("customData" in data)) return;
-      const customData = data.customData as CustomDataType;
+      const customData = data.customData as SolidDrawflow.CustomDataType;
       if (!("gender" in customData)) return;
       const gender = customData.gender;
 
