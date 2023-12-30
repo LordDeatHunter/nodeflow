@@ -60,6 +60,13 @@ export const globalMousePosition = createMemo<Vec2>(() => {
     .add(screenCenter);
 });
 
+export const getDrawflowCenter = createMemo<Vec2>(() => {
+  const windowDimensions = windowSize();
+  const windowCenter = windowDimensions.divideBy(2);
+
+  return drawflow.position.negate().add(windowCenter);
+});
+
 export const updateZoom = (distance: number, zoomLocation: Vec2): void => {
   const oldZoom = drawflow.zoomLevel;
   const newZoom = clamp(

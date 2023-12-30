@@ -1,4 +1,4 @@
-import drawflowCss from "./styles/sidebar.module.scss";
+import drawflowCss from "../styles/sidebar.module.scss";
 import { Component, createSignal, JSX } from "solid-js";
 
 const Sidebar: Component<{ children: JSX.Element }> = (props) => {

@@ -11,7 +11,7 @@ import {
   SetCurveFunction,
 } from "solid-drawflow/src";
 import nodeCss from "./styles/node.module.scss";
-import { drawflowEventStore } from "../../src/utils/events";
+import { drawflowEventStore } from "solid-drawflow/src/utils/events";
 import curveCss from "./styles/curve.module.scss";
 
 export const createDummyNode = (position: Vec2): DrawflowNode => {
