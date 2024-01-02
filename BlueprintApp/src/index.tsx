@@ -3,7 +3,6 @@ import { render } from "solid-js/web";
 
 import "./index.css";
 import App from "./App";
-import "./types.d";
 import "solid-drawflow/src/types.d";
 
 const root = document.getElementById("root");

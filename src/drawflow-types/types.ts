@@ -3,6 +3,12 @@ import { Vec2 } from "../utils/vec2";
 
 export type Optional<T> = T | undefined;
 
+export type DeepPartial<T> = T extends object
+  ? {
+      [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
+    }
+  : T;
+
 export interface MouseData {
   clickStartPosition?: Vec2;
   draggingNode: boolean;
@@ -19,12 +25,13 @@ export type DrawflowNode = {
   centered: boolean;
   connectorSections: Record<string, ConnectorSection>;
   css: SelectableElementCSS;
-  customData?: CustomDataType;
-  readonly display: (props: { nodeId: string }) => Optional<JSX.Element>;
+  customData: SolidDrawflow.CustomDataType;
+  readonly display: (props: { node: DrawflowNode }) => Optional<JSX.Element>;
   id: string;
   offset: Vec2;
   position: Vec2;
   ref?: HTMLDivElement;
+  resizeObserver?: ResizeObserver;
   size: Vec2;
 };
 
@@ -59,6 +66,7 @@ export interface NodeConnector {
   parentSection: ConnectorSection;
   position: Vec2;
   ref: HTMLDivElement;
+  resizeObserver: ResizeObserver;
   size: Vec2;
   sources: ConnectorSource[];
 }

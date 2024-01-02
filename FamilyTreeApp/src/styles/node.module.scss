@@ -1,15 +1,23 @@
 @mixin baseNode {
   z-index: 2;
-  width: 150px;
-  height: 100px;
+  min-width: 300px;
+  min-height: 100px;
+  padding: 10px;
   position: absolute;
   user-select: none;
   border-radius: 12px;
   border: 2px solid black;
 
   cursor: grab;
-  box-shadow: 0px 0px 5px 0px black;
+  box-shadow: 0 0 5px 0 black;
   transition: background-color 0.2s ease-in-out 0s, opacity 0.8s ease-in-out, border-color 0.2s ease-in-out 0s, box-shadow 0.2s ease-in-out 0s;
+
+  background-color: white;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .male-node {
@@ -32,7 +40,7 @@
 
 @mixin base-elected-node {
   @include baseNode;
-  box-shadow: 0px 0px 10px 5px gray;
+  box-shadow: 0 0 10px 5px gray;
   cursor: grabbing;
   z-index: 3;
 }

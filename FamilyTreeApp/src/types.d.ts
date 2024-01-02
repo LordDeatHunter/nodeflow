@@ -1,6 +1,10 @@
+export {};
+
 declare global {
-  export interface CustomDataType {
-    gender: "M" | "F";
+  namespace SolidDrawflow {
+    export interface CustomDataType {
+      gender: "M" | "F";
+      name: string;
+    }
   }
 }
-export { CustomDataType };

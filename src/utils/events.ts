@@ -20,7 +20,7 @@ import {
 import { DrawflowEventPublisher } from "./EventPublishers";
 import { Vec2 } from "./vec2";
 import { windowSize } from "./screen-utils";
-import { NodeConnector } from "../drawflow-types";
+import { DeepPartial, DrawflowData, NodeConnector } from "../drawflow-types";
 
 export interface NodeConnectedEventData {
   outputNodeId: string;
@@ -78,9 +78,10 @@ export interface DrawflowEventsDataMap {
   onMouseDownInNode: NodeMouseDownEventData;
   onMouseMoveInDrawflow: { event: MouseEvent };
   onNodeConnected: NodeConnectedEventData;
+  onNodeDataChanged: { nodeId: string; data: DeepPartial<DrawflowData> };
+  onPointerDownInNodeCurve: NodeCurvePointerDownEventData;
   onPointerUpInConnector: NodeConnectorPointerUpEventData;
   onPointerUpInDrawflow: { event: PointerEvent };
-  onPointerDownInNodeCurve: NodeCurvePointerDownEventData;
   onTouchMoveInDrawflow: { event: TouchEvent };
   onTouchStartInConnector: NodeConnectorTouchStartEventData;
   onTouchStartInDrawflow: { event: TouchEvent };
@@ -105,11 +106,12 @@ export const drawflowEventStore: DrawflowEventRecord = {
   onMouseDownInNode: new DrawflowEventPublisher<"onMouseDownInNode">(),
   onMouseMoveInDrawflow: new DrawflowEventPublisher<"onMouseMoveInDrawflow">(),
   onNodeConnected: new DrawflowEventPublisher<"onNodeConnected">(),
+  onNodeDataChanged: new DrawflowEventPublisher<"onNodeDataChanged">(),
+  onPointerDownInNodeCurve:
+    new DrawflowEventPublisher<"onPointerDownInNodeCurve">(),
   onPointerUpInConnector:
     new DrawflowEventPublisher<"onPointerUpInConnector">(),
   onPointerUpInDrawflow: new DrawflowEventPublisher<"onPointerUpInDrawflow">(),
-  onPointerDownInNodeCurve:
-    new DrawflowEventPublisher<"onPointerDownInNodeCurve">(),
   onTouchMoveInDrawflow: new DrawflowEventPublisher<"onTouchMoveInDrawflow">(),
   onTouchStartInConnector:
     new DrawflowEventPublisher<"onTouchStartInConnector">(),

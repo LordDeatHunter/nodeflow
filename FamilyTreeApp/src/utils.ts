@@ -9,20 +9,49 @@ import {
   globalMousePosition,
   mouseData,
   nodes,
+  removeOutgoingConnections,
   SelectableElementCSS,
   SetCurveFunction,
+  updateNode,
 } from "solid-drawflow/src";
 import nodeCss from "./styles/node.module.scss";
-import { CustomDataType } from "./types";
 import { Vec2 } from "solid-drawflow/src/utils/vec2";
 import { drawflowEventStore } from "solid-drawflow/src/utils/events";
 import curveCss from "./styles/curve.module.scss";
-import NodeBody from "./NodeBody";
+import NodeBody from "./components/NodeBody";
 
-export const getRandomGender = () =>
-  Math.floor(Math.random() * 2) === 1 ? "M" : "F";
+export const fetchRandomData = async (
+  amount: number,
+): Promise<
+  Array<{
+    name: string;
+    gender: SolidDrawflow.CustomDataType["gender"];
+  }>
+> => {
+  const response = await fetch(
+    `https://randomuser.me/api/?inc=gender,name&noinfo&results=${amount}`,
+  );
+  return await response
+    .json()
+    .then(
+      (data: {
+        results: Array<{
+          gender: "female" | "male";
+          name: { title: string; first: string; last: string };
+        }>;
+      }) => data.results,
+    )
+    .then((data) =>
+      data.map((person) => ({
+        gender: person.gender === "female" ? "F" : "M",
+        name: person.name.first + " " + person.name.last,
+      })),
+    );
+};
 
-const getConnectionCSS = (parentGender: "M" | "F"): SelectableElementCSS => ({
+const getConnectionCSS = (
+  parentGender: SolidDrawflow.CustomDataType["gender"],
+): SelectableElementCSS => ({
   normal: parentGender == "M" ? curveCss.father : curveCss.mother,
   selected:
     parentGender == "M"
@@ -31,8 +60,9 @@ const getConnectionCSS = (parentGender: "M" | "F"): SelectableElementCSS => ({
 });
 
 export const createFamilyMemberNode = (
-  gender: CustomDataType["gender"],
-  position: Vec2,
+  name: string,
+  gender: SolidDrawflow.CustomDataType["gender"],
+  position?: Vec2,
 ): DrawflowNode => {
   const newNode = addNode({
     css: {
@@ -41,7 +71,7 @@ export const createFamilyMemberNode = (
         nodeCss[gender === "M" ? "selected-male-node" : "selected-female-node"],
     },
     position,
-    customData: { gender },
+    customData: { gender, name },
     display: NodeBody,
     centered: true,
   });
@@ -79,11 +109,13 @@ export const createFamilyMemberNode = (
   return newNode;
 };
 
-export const setupDummyNodes = (count: number = 50) => {
-  for (let i = 0; i < count; i++) {
+export const setupDummyNodes = async (count: number = 50) => {
+  const data = await fetchRandomData(count);
+  for (const person of data) {
     createFamilyMemberNode(
-      getRandomGender(),
-      Vec2.of(Math.random() * 2000, Math.random() * 2000),
+      person.name,
+      person.gender,
+      Vec2.of((Math.random() * 2 - 1) * 2000, (Math.random() * 2 - 1) * 2000),
     );
   }
 };
@@ -105,23 +137,56 @@ export const setupEvents = () => {
   drawflowEventStore.onPointerUpInDrawflow.subscribe(
     "spawn-new-node",
     () => {
-      if (!mouseData.heldConnectorId) return;
+      const heldNodeId = mouseData.heldNodeId;
+      const heldConnectorId = mouseData.heldConnectorId;
 
-      const newNode = createFamilyMemberNode(
-        getRandomGender(),
-        globalMousePosition(),
-      );
+      if (!heldNodeId || !heldConnectorId) return;
 
-      const parent = nodes[mouseData.heldNodeId!];
-      addConnection(
-        mouseData.heldNodeId!,
-        mouseData.heldConnectorId,
-        newNode.id,
-        parent.customData!.gender,
-        getConnectionCSS(parent.customData!.gender),
-      );
+      fetchRandomData(1).then((data) => {
+        const newNode = createFamilyMemberNode(
+          data[0].name,
+          data[0].gender,
+          globalMousePosition(),
+        );
+
+        const parent = nodes[heldNodeId!];
+        addConnection(
+          heldNodeId!,
+          heldConnectorId,
+          newNode.id,
+          parent.customData.gender,
+          getConnectionCSS(parent.customData.gender),
+        );
+      });
     },
     1,
+  );
+
+  drawflowEventStore.onNodeDataChanged.subscribe(
+    "update-node-css",
+    ({ nodeId, data }) => {
+      const node = nodes[nodeId];
+      if (!node || !("customData" in data)) return;
+      const customData = data.customData as SolidDrawflow.CustomDataType;
+
+      if (!("gender" in customData)) return;
+      const gender = customData.gender;
+
+      if (gender === node.customData.gender) return;
+
+      updateNode(nodeId, {
+        css: {
+          normal: nodeCss[gender === "M" ? "male-node" : "female-node"],
+          selected:
+            nodeCss[
+              gender === "M" ? "selected-male-node" : "selected-female-node"
+            ],
+        },
+      });
+
+      // TODO: maybe create new connections to the respective connectors of the new gender? Eg. mother->father, father->mother
+      removeOutgoingConnections(nodeId);
+    },
   );
 
   // Override the default create-connection subscription to only allow one connection per input, and set custom css
@@ -132,7 +197,7 @@ export const setupEvents = () => {
 
       // If the source node's gender does not match the destination connector, or if that connector already has a connection, return.
       if (
-        outputNode.customData!.gender !== inputId ||
+        outputNode.customData.gender !== inputId ||
         getTotalConnectedInputs(inputNodeId, inputId) > 0 ||
         outputNodeId === inputNodeId
       ) {
@@ -144,7 +209,7 @@ export const setupEvents = () => {
         outputId,
         inputNodeId,
         inputId,
-        getConnectionCSS(outputNode.customData!.gender),
+        getConnectionCSS(outputNode.customData.gender),
       );
     },
   );
@@ -168,7 +233,7 @@ export const setupDummyConnections = () => {
       continue;
     }
 
-    const toInput = fromNode.customData!.gender;
+    const toInput = fromNode.customData.gender;
     if (from === to || getTotalConnectedInputs(to.toString(), toInput) > 0) {
       continue;
     }
@@ -178,7 +243,7 @@ export const setupDummyConnections = () => {
       "C",
       to.toString(),
       toInput.toString(),
-      getConnectionCSS(fromNode.customData!.gender),
+      getConnectionCSS(fromNode.customData.gender),
     );
   }
 };
