@@ -1,21 +1,30 @@
 import drawflowCss from "../styles/sidebar.module.scss";
 import { Component, createSignal, JSX } from "solid-js";
+import Chevron from "../../assets/right-arrow.svg";
 
 const Sidebar: Component<{ children: JSX.Element }> = (props) => {
   const [showSidebar, setShowSidebar] = createSignal<boolean>(false);
 
   return (
     <div
-      class={drawflowCss["sidebar-container"]}
-      style={{ left: showSidebar() ? "0" : "-20%" }}
+      class={
+        drawflowCss[
+          showSidebar() ? "sidebar-container" : "sidebar-container-closed"
+        ]
+      }
     >
       <div class={drawflowCss["sidebar"]}>{props.children}</div>
-      <div
-        class={drawflowCss["sidebar-toggle"]}
+      <img
+        src={Chevron}
+        class={
+          drawflowCss[
+            showSidebar() ? "sidebar-toggle" : "sidebar-toggle-closed"
+          ]
+        }
         onClick={() => setShowSidebar(!showSidebar())}
-      >
-        {showSidebar() ? "X" : ">"}
-      </div>
+        draggable={false}
+        alt="Toggle sidebar"
+      />
     </div>
   );
 };

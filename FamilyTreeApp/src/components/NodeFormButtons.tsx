@@ -16,6 +16,10 @@ interface NodeFormButtonsProps {
   setFormData: (data: Optional<FormDataType>) => void;
 }
 
+const AddButton: Component<{ onClick: () => void }> = (props) => (
+  <button onClick={() => props.onClick()}>Add</button>
+);
+
 const NodeFormButtons: Component<NodeFormButtonsProps> = (props) => {
   const onAdd = () => props.setFormData({ name: "" } as FormDataType);
   const onCancel = () => props.setFormData(undefined);
@@ -27,13 +31,10 @@ const NodeFormButtons: Component<NodeFormButtonsProps> = (props) => {
   return (
     <div class={formStyle.formButtonContainer}>
       <Show when={props.mode === "empty"}>
-        <button class={formStyle.formButton} onClick={onAdd}>
-          Add
-        </button>
+        <AddButton onClick={onAdd} />
       </Show>
       <Show when={props.mode === "add"}>
         <button
-          class={formStyle.formButton}
           onClick={() => {
             if (!props.formData?.name || !props.formData?.gender) return;
             createFamilyMemberNode(
@@ -46,30 +47,17 @@ const NodeFormButtons: Component<NodeFormButtonsProps> = (props) => {
         >
           Save
         </button>
-        <button class={formStyle.formButton} onClick={onCancel}>
-          Cancel
-        </button>
+        <button onClick={onCancel}>Cancel</button>
       </Show>
       <Show when={props.mode === "view"}>
-        <button class={formStyle.formButton} onClick={onAdd}>
-          Add
-        </button>
-        <button
-          class={formStyle.formButton}
-          onClick={() => props.setFormData({ ...props.nodeData! })}
-        >
+        <AddButton onClick={onAdd} />
+        <button onClick={() => props.setFormData({ ...props.nodeData! })}>
           Edit
         </button>
-        <button
-          class={formStyle.formButton}
-          onClick={() => removeNode(props.nodeData!.id)}
-        >
-          Delete
-        </button>
+        <button onClick={() => removeNode(props.nodeData!.id)}>Delete</button>
       </Show>
       <Show when={props.mode === "edit"}>
         <button
-          class={formStyle.formButton}
           onClick={() => {
             updateNode(props.formData!.id, {
               customData: {
@@ -81,12 +69,8 @@ const NodeFormButtons: Component<NodeFormButtonsProps> = (props) => {
         >
           Save
         </button>
-        <button class={formStyle.formButton} onClick={onCancel}>
-          Cancel
-        </button>
-        <button class={formStyle.formButton} onClick={onRemove}>
-          Delete
-        </button>
+        <button onClick={onCancel}>Cancel</button>
+        <button onClick={onRemove}>Delete</button>
       </Show>
     </div>
   );

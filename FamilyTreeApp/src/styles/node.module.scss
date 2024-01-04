@@ -1,18 +1,21 @@
+@use "colors";
+
 @mixin baseNode {
   z-index: 2;
+  width: max-content;
   min-width: 300px;
   min-height: 100px;
   padding: 10px;
   position: absolute;
   user-select: none;
-  border-radius: 12px;
-  border: 2px solid black;
+  border-radius: 8px;
+  outline: 6px solid colors.$node-border-color;
+  outline-offset: -3px;
 
   cursor: grab;
-  box-shadow: 0 0 5px 0 black;
-  transition: background-color 0.2s ease-in-out 0s, opacity 0.8s ease-in-out, border-color 0.2s ease-in-out 0s, box-shadow 0.2s ease-in-out 0s;
+  transition: background-color 0.2s ease-in-out 0s, opacity 0.8s ease-in-out, border-color 0.2s ease-in-out 0s;
 
-  background-color: white;
+  background-color: colors.$node-background-color;
 
   display: flex;
   flex-direction: column;
@@ -40,7 +43,6 @@
 
 @mixin base-elected-node {
   @include baseNode;
-  box-shadow: 0 0 10px 5px gray;
   cursor: grabbing;
   z-index: 3;
 }
@@ -63,7 +65,7 @@ $connector-border: 2px;
   width: $connector-size;
   height: $connector-size;
   border-radius: 100%;
-  border: $connector-border solid black;
+  border: $connector-border solid colors.$node-border-color;
   z-index: 1;
   cursor: crosshair;
 }
@@ -111,4 +113,11 @@ $connector-border: 2px;
 .outputs-section {
   @include connector-section;
   bottom: calc(($connector-size + $connector-border) / 2);
+}
+
+.nodeFont {
+  margin: 2rem;
+  font-size: 4rem;
+  font-weight: bold;
+  user-select: none;
 }

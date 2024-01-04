@@ -1,47 +1,57 @@
 import { Component, Show } from "solid-js";
 import { FormDataType } from "./SidebarContent";
 import formStyle from "../styles/form.module.scss";
+import Male from "../icons/Male";
+import Female from "../icons/Female";
 
 const NodeForm: Component<{
   formData: FormDataType;
   updateFormData: (data: Partial<FormDataType>) => void;
 }> = (props) => (
-  <>
+  <div class={formStyle.displayContainer}>
     <Show when={props.formData.id} fallback={<h2>Create Node</h2>}>
       <h2>Update Node</h2>
-      <p class={formStyle.displayText}>Id: {props.formData.id}</p>
     </Show>
-    <input
-      type="text"
-      name="lname"
-      placeholder="Name"
-      value={props.formData.name}
-      onInput={(e) => props.updateFormData({ name: e.target.value })}
-    />
-    <div class={formStyle.horizontalRadioContainer}>
+    <div class={formStyle.fieldDisplayContainer}>
+      <p>Name</p>
       <input
-        type="radio"
-        id="male"
-        name="gender"
-        value="M"
-        checked={props.formData.gender === "M"}
-        onChange={() => props.updateFormData({ gender: "M" })}
+        type="text"
+        name="lname"
+        placeholder="Name"
+        value={props.formData.name}
+        onInput={(e) => props.updateFormData({ name: e.target.value })}
       />
-      <p class={formStyle.inputText}>Male</p>
     </div>
-    <div class={formStyle.horizontalRadioContainer}>
-      <input
-        type="radio"
-        id="female"
-        name="gender"
-        value="F"
-        checked={props.formData.gender === "F"}
-        style={{ margin: 0 }}
-        onChange={() => props.updateFormData({ gender: "F" })}
-      />
-      <p class={formStyle.inputText}>Female</p>
+    <div class={formStyle.fieldDisplayContainer}>
+      <p>Gender</p>
+      <div class={formStyle.horizontalRadioContainer}>
+        <input
+          type="radio"
+          id="male"
+          name="gender"
+          value="M"
+          checked={props.formData.gender === "M"}
+          onChange={() => props.updateFormData({ gender: "M" })}
+          class={formStyle.radioInputMale}
+        />
+        <Male />
+        <label for="male">Male</label>
+      </div>
+      <div class={formStyle.horizontalRadioContainer}>
+        <input
+          type="radio"
+          id="female"
+          name="gender"
+          value="M"
+          checked={props.formData.gender === "F"}
+          onChange={() => props.updateFormData({ gender: "F" })}
+          class={formStyle.radioInputFemale}
+        />
+        <Female />
+        <label for="female">Female</label>
+      </div>
     </div>
-  </>
+  </div>
 );
 
 export default NodeForm;

@@ -1,8 +1,9 @@
 import { Component } from "solid-js";
 import { DrawflowNode } from "solid-drawflow/src";
+import nodeCss from "../styles/node.module.scss";
 
 const NodeBody: Component<{ node: DrawflowNode }> = (props) => (
-  <h1>{props.node.customData?.name}</h1>
+  <p class={nodeCss.nodeFont}>{props.node.customData?.name}</p>
 );
 
 export default NodeBody;
