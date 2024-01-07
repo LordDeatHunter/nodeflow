@@ -1,15 +1,26 @@
-$dark-3: #807B7A;
+$dark-1: #FAF9F5;
+$dark-2: #ECEBE7;
+$dark-3: #CBC6C1;
+$dark-4: #A69E9A;
+$dark-5: #807B7A;
+$dark-6: #595757;
+$dark-7: #323232;
 
-$highlight-color: #FAF9F5;
-$background-color: #ECEBE7;
-$element-background-color: #CBC6C1;
-$border-color: #595757;
-// Node specific styles
+$highlight-color: $dark-1;
+$background-color: $dark-2;
+$element-background-color: $dark-3;
+$border-color: $dark-6;
+
 $node-background-color: $element-background-color;
 $node-border-color: $border-color;
-$node-text-color: #000000;
-$font-color: #323232;
+$node-text-color: black;
+$font-color: $dark-7;
 $font-stroke-color: $border-color;
+
+$female-color: #FF84C3;
+$male-color: #84C3FF;
 
 $female-dark-color: #EA0078;
 $male-dark-color: #0078EA;
+
+$input-connector-color: $dark-4;

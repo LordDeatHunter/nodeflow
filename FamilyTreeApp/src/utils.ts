@@ -5,7 +5,7 @@ import {
   addNode,
   CurveFunctions,
   DrawflowNode,
-  getTotalConnectedInputs,
+  getConnector,
   globalMousePosition,
   mouseData,
   nodes,
@@ -75,33 +75,27 @@ export const createFamilyMemberNode = (
     display: NodeBody,
     centered: true,
   });
-  addConnectorSection(newNode.id, "inputs", nodeCss["inputs-section"], false);
-  addConnectorSection(newNode.id, "outputs", nodeCss["outputs-section"], false);
+  addConnectorSection(newNode.id, "inputs", nodeCss.inputsSection, false);
+  addConnectorSection(newNode.id, "outputs", nodeCss.outputsSection, false);
 
   addConnector(
     newNode.id,
     "outputs",
-    "C",
+    "O",
     {
-      css: nodeCss["output-connector"],
+      css:
+        gender === "M"
+          ? nodeCss.maleOutputConnector
+          : nodeCss.femaleOutputConnector,
     },
     false,
   );
   addConnector(
     newNode.id,
     "inputs",
-    "F",
+    "I",
     {
-      css: nodeCss["mother-input-connector"],
-    },
-    false,
-  );
-  addConnector(
-    newNode.id,
-    "inputs",
-    "M",
-    {
-      css: nodeCss["father-input-connector"],
+      css: nodeCss.inputConnector,
     },
     false,
   );
@@ -123,15 +117,15 @@ export const setupDummyNodes = async (count: number = 50) => {
 export const setupEvents = () => {
   drawflowEventStore.onPointerUpInConnector.blacklist(
     "prevent-connections-to-parent-connectors",
-    ({ connectorId }) => connectorId === "C",
+    ({ connectorId }) => connectorId === "O",
   );
   drawflowEventStore.onTouchStartInConnector.blacklist(
     "prevent-connections-from-parent-connectors",
-    ({ connectorId }) => connectorId === "F" || connectorId === "M",
+    ({ connectorId }) => connectorId === "I",
   );
   drawflowEventStore.onMouseDownInConnector.blacklist(
     "prevent-connections-from-parent-connectors",
-    ({ connectorId }) => connectorId === "F" || connectorId === "M",
+    ({ connectorId }) => connectorId === "I",
   );
 
   drawflowEventStore.onPointerUpInDrawflow.subscribe(
@@ -152,9 +146,9 @@ export const setupEvents = () => {
         const parent = nodes[heldNodeId!];
         addConnection(
           heldNodeId!,
-          heldConnectorId,
+          "O",
           newNode.id,
-          parent.customData.gender,
+          "I",
           getConnectionCSS(parent.customData.gender),
         );
       });
@@ -192,13 +186,22 @@ export const setupEvents = () => {
   // Override the default create-connection subscription to only allow one connection per input, and set custom css
   drawflowEventStore.onNodeConnected.subscribe(
     "create-connection",
-    ({ outputNodeId, outputId, inputNodeId, inputId }) => {
+    ({ outputNodeId, inputNodeId }) => {
       const outputNode = nodes[outputNodeId];
 
-      // If the source node's gender does not match the destination connector, or if that connector already has a connection, return.
+      const connector = getConnector(inputNodeId, "I")?.sources;
+
+      // Return if:
+      // The connector already has 2 parents
+      // The connector already has parent of the same gender as the source node
+      // The source node is the same as the destination node (same person)
       if (
-        outputNode.customData.gender !== inputId ||
-        getTotalConnectedInputs(inputNodeId, inputId) > 0 ||
+        connector?.length === 2 ||
+        connector?.some(
+          (source) =>
+            source.sourceConnector.parentSection.parentNode.customData
+              .gender === outputNode.customData.gender,
+        ) ||
         outputNodeId === inputNodeId
       ) {
         return;
@@ -206,9 +209,9 @@ export const setupEvents = () => {
 
       addConnection(
         outputNodeId,
-        outputId,
+        "O",
         inputNodeId,
-        inputId,
+        "I",
         getConnectionCSS(outputNode.customData.gender),
       );
     },
@@ -233,16 +236,29 @@ export const setupDummyConnections = () => {
       continue;
     }
 
-    const toInput = fromNode.customData.gender;
-    if (from === to || getTotalConnectedInputs(to.toString(), toInput) > 0) {
+    const sourceGender = fromNode.customData.gender;
+
+    const connector = getConnector(to.toString(), "I")?.sources;
+    // Continue if:
+    // The source node is the same as the destination node
+    // The destination node already has a connection
+    if (
+      from === to ||
+      connector?.length === 2 ||
+      connector?.some(
+        (source) =>
+          source.sourceConnector.parentSection.parentNode.customData.gender ===
+          sourceGender,
+      )
+    ) {
       continue;
     }
 
     addConnection(
       from.toString(),
-      "C",
+      "O",
       to.toString(),
-      toInput.toString(),
+      "I",
       getConnectionCSS(fromNode.customData.gender),
     );
   }

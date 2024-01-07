@@ -1,3 +1,5 @@
+@use "colors";
+
 @mixin base-curve {
   position: relative;
   width: 100%;
@@ -9,34 +11,34 @@
 
 .father {
   @include base-curve;
-  stroke: #84c3ff;
+  stroke: colors.$male-color;
 
   &:hover {
-    stroke: darken(saturate(#84c3ff, 25%), 30%);
-    filter: drop-shadow(0 0 2px darken(saturate(#84c3ff, 25%), 30%));
+    stroke: darken(saturate(colors.$male-color, 25%), 30%);
+    filter: drop-shadow(0 0 2px darken(saturate(colors.$male-color, 25%), 30%));
   }
 }
 
 .mother {
   @include base-curve;
-  stroke: #ff84c3;
+  stroke: colors.$female-color;
 
   &:hover {
-    stroke: darken(saturate(#ff84c3, 25%), 30%);
-    filter: drop-shadow(0 0 2px darken(saturate(#ff84c3, 25%), 30%));
+    stroke: darken(saturate(colors.$female-color, 25%), 30%);
+    filter: drop-shadow(0 0 2px darken(saturate(colors.$female-color, 25%), 30%));
   }
 }
 
 .selected-father {
   @include base-curve;
-  stroke: darken(saturate(#84c3ff, 25%), 15%);
-  filter: drop-shadow(0 0 2px darken(saturate(#84c3ff, 25%), 10%));
+  stroke: darken(saturate(colors.$male-color, 25%), 15%);
+  filter: drop-shadow(0 0 2px darken(saturate(colors.$male-color, 25%), 10%));
 }
 
 .selected-mother {
   @include base-curve;
-  stroke: darken(saturate(#ff84c3, 25%), 15%);
-  filter: drop-shadow(0 0 2px darken(saturate(#ff84c3, 25%), 10%));
+  stroke: darken(saturate(colors.$female-color, 25%), 15%);
+  filter: drop-shadow(0 0 2px darken(saturate(colors.$female-color, 25%), 10%));
 }
 
 .new-father {

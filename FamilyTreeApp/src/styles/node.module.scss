@@ -57,47 +57,49 @@
   background-color: lightpink;
 }
 
-$connector-size: 10px;
-$connector-border: 2px;
+$connector-height: 1rem;
+$connector-border: 6px;
 
-@mixin connector {
+@mixin baseConnector($bg-color) {
   position: relative;
-  width: $connector-size;
-  height: $connector-size;
-  border-radius: 100%;
-  border: $connector-border solid colors.$node-border-color;
+  height: $connector-height;
+  border-radius: 0.75rem 0.75rem 0 0;
   z-index: 1;
   cursor: crosshair;
-}
 
-.father-input-connector {
-  @include connector;
-  background-color: #c8e3ff;
+  background-color: $bg-color;
 
   &:hover {
-    background-color: lightblue;
+    background-color: lighten($bg-color, 10%);
   }
+
+  outline: $connector-border solid colors.$node-border-color;
+  outline-offset: -3px;
+  border: none;
 }
 
-.mother-input-connector {
-  @include connector;
-  background-color: #ffc8e3;
+@mixin outputConnector($bg-color) {
+  @include baseConnector($bg-color);
 
-  &:hover {
-    background-color: lightblue;
-  }
+  width: 25%;
+  bottom: 5px;
 }
 
-.output-connector {
-  @include connector;
-  background-color: white;
+.inputConnector {
+  @include baseConnector(colors.$dark-4);
 
-  &:hover {
-    background-color: lightblue;
-  }
+  width: 100%;
 }
 
-@mixin connector-section {
+.maleOutputConnector {
+  @include outputConnector(colors.$male-color);
+}
+
+.femaleOutputConnector {
+  @include outputConnector(colors.$female-color);
+}
+
+@mixin connectorSection {
   position: absolute;
   display: flex;
   justify-content: space-evenly;
@@ -105,14 +107,14 @@ $connector-border: 2px;
   height: 0;
 }
 
-.inputs-section {
-  @include connector-section;
-  top: calc(($connector-size + $connector-border) / -2)
+.inputsSection {
+  @include connectorSection;
+  top: calc(($connector-height + $connector-border) / -2)
 }
 
-.outputs-section {
-  @include connector-section;
-  bottom: calc(($connector-size + $connector-border) / 2);
+.outputsSection {
+  @include connectorSection;
+  bottom: calc(($connector-height + $connector-border) / 2);
 }
 
 .nodeFont {
