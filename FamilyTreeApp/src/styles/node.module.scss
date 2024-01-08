@@ -28,7 +28,7 @@ $connector-border: 6px;
 
 @mixin baseSelectedNode($bg-color) {
   @include baseNode;
-  background-color: mix(colors.$node-background-color, $bg-color, 75%);
+  background-color: mix(colors.$node-background-color, $bg-color, 40%);
   cursor: grabbing;
   z-index: 3;
 }
@@ -70,7 +70,7 @@ $connector-border: 6px;
   @include baseNode;
 
   &:hover {
-    background-color: mix(colors.$node-background-color, colors.$female-color, 75%);
+    background-color: mix(colors.$node-background-color, colors.$female-color, 80%);
     z-index: 3;
   }
 }
@@ -79,17 +79,17 @@ $connector-border: 6px;
   @include baseNode;
 
   &:hover {
-    background-color: mix(colors.$node-background-color, colors.$male-color, 75%);
+    background-color: mix(colors.$node-background-color, colors.$male-color, 80%);
     z-index: 3;
   }
 }
 
 .selectedMaleNode {
-  @include baseSelectedNode(lighten(colors.$male-color, 10%));
+  @include baseSelectedNode(colors.$male-color);
 }
 
 .selectedFemaleNode {
-  @include baseSelectedNode(lighten(colors.$female-color, 10%));
+  @include baseSelectedNode(colors.$female-color);
 }
 
 .inputConnector {

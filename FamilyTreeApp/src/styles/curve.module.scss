@@ -39,12 +39,12 @@
 }
 
 .selectedFatherCurve {
-  @include baseCurve(colors.$male-color);
+  @include baseCurve(darkenAndSaturate(colors.$male-color));
   filter: drop-shadow(0 0 2px darkenAndSaturate(colors.$male-color));
 }
 
 .selectedMotherCurve {
-  @include baseCurve(colors.$female-color);
+  @include baseCurve(darkenAndSaturate(colors.$female-color));
   filter: drop-shadow(0 0 2px darkenAndSaturate(colors.$female-color));
 }
 
