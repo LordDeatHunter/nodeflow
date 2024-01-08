@@ -53,16 +53,28 @@ const Drawflow: Component<DrawflowProps> = (props) => (
     <div
       style={{
         height: "100%",
+        width: "100%",
         position: "absolute",
         transform: `scale(${drawflow.zoomLevel}) translate(${drawflow.position.x}px, ${drawflow.position.y}px)`,
         "transform-origin": "center",
-        width: "100%",
+        transition: "scale 0.1s ease-out",
       }}
     >
       <For each={Object.keys(nodes)}>
-        {(nodeId) => (
-          <>
-            <Node nodeId={nodeId} />
+        {(nodeId) => <Node nodeId={nodeId} />}
+      </For>
+      <svg
+        style={{
+          "z-index": 2,
+          position: "absolute",
+          width: "1px",
+          height: "1px",
+          "pointer-events": "none",
+          overflow: "visible",
+        }}
+      >
+        <For each={Object.keys(nodes)}>
+          {(nodeId) => (
             <For each={getAllConnectors(nodeId)}>
               {(connector: NodeConnector) => (
                 <For each={connector.destinations}>
@@ -83,9 +95,9 @@ const Drawflow: Component<DrawflowProps> = (props) => (
                 </For>
               )}
             </For>
-          </>
-        )}
-      </For>
+          )}
+        </For>
+      </svg>
       <Show when={mouseData.heldNodeId && mouseData.heldConnectorId}>
         <Curve css={props?.css?.newCurve} />
       </Show>

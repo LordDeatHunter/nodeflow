@@ -111,66 +111,35 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
   });
 
   return (
-    <svg
-      style={{
-        "z-index": 3,
-        position: "absolute",
-        width: "1px",
-        height: "1px",
-        "pointer-events": "none",
-        overflow: "visible",
+    <path
+      onPointerDown={(event) => {
+        drawflowEventStore.onPointerDownInNodeCurve.publish({
+          event,
+          sourceConnector: sourceConnector()!,
+          destinationConnector: destinationConnector()!,
+        });
       }}
-    >
-      <defs>
-        <marker
-          markerWidth="8"
-          markerHeight="8"
-          refX="4"
-          refY="4"
-          viewBox="0 0 8 8"
-          orient="auto"
-          id="pointer"
-        >
-          <polyline
-            points="0,0 4,2 0,4"
-            fill="none"
-            stroke-width="1"
-            stroke="black"
-            transform="matrix(1,0,0,1,1,2)"
-          />
-        </marker>
-      </defs>
-      <path
-        onPointerDown={(event) => {
-          drawflowEventStore.onPointerDownInNodeCurve.publish({
-            event,
-            sourceConnector: sourceConnector()!,
-            destinationConnector: destinationConnector()!,
-          });
-        }}
-        d={sourceConnector()!.destinations[destinationIndex()].path?.path}
-        stroke="black"
-        stroke-width={1}
-        fill="none"
-        marker-end="url(#pointer)"
-        classList={{
-          [props.css?.normal ?? ""]: true,
-          [props.css?.selected ?? ""]:
-            mouseData.heldConnection?.sourceConnector.parentSection.parentNode
-              .id === props.sourceNodeId &&
-            mouseData.heldConnection?.sourceConnector.id ===
-              props.sourceConnectorId &&
-            mouseData.heldConnection?.destinationConnector.parentSection
-              .parentNode.id === props.destinationNodeId &&
-            mouseData.heldConnection?.destinationConnector.id ===
-              props.destinationConnectorId,
-        }}
-        style={{
-          cursor: "pointer",
-          "pointer-events": "visibleStroke",
-        }}
-      />
-    </svg>
+      d={sourceConnector()!.destinations[destinationIndex()].path?.path}
+      stroke="black"
+      stroke-width={1}
+      fill="none"
+      classList={{
+        [props.css?.normal ?? ""]: true,
+        [props.css?.selected ?? ""]:
+          mouseData.heldConnection?.sourceConnector.parentSection.parentNode
+            .id === props.sourceNodeId &&
+          mouseData.heldConnection?.sourceConnector.id ===
+            props.sourceConnectorId &&
+          mouseData.heldConnection?.destinationConnector.parentSection
+            .parentNode.id === props.destinationNodeId &&
+          mouseData.heldConnection?.destinationConnector.id ===
+            props.destinationConnectorId,
+      }}
+      style={{
+        cursor: "pointer",
+        "pointer-events": "visibleStroke",
+      }}
+    />
   );
 };
 export default NodeCurve;

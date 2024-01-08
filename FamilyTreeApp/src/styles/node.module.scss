@@ -4,7 +4,7 @@ $connector-height: 1rem;
 $connector-border: 6px;
 
 @mixin baseNode {
-  z-index: 2;
+  z-index: 1;
   width: max-content;
   min-width: 300px;
   min-height: 100px;
