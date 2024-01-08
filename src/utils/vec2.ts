@@ -11,6 +11,12 @@ export class Vec2 {
     return new Vec2(x, y);
   }
 
+  public static fromEvent<T extends { clientX: number; clientY: number }>(
+    event: T,
+  ): Vec2 {
+    return new Vec2(event.clientX, event.clientY);
+  }
+
   public static copy(position: Vec2): Vec2 {
     return new Vec2(position.x, position.y);
   }

@@ -36,7 +36,7 @@ export interface NodeConnectorMouseDownEventData {
   event: MouseEvent;
 }
 
-export interface NodeMouseDownEventData {
+export interface NodeMouseEventData {
   nodeId: string;
   event: MouseEvent;
 }
@@ -75,7 +75,7 @@ export interface DrawflowEventsDataMap {
   onKeyUpInDrawflow: { event: KeyboardEvent };
   onMouseDownInConnector: NodeConnectorMouseDownEventData;
   onMouseDownInDrawflow: { event: MouseEvent };
-  onMouseDownInNode: NodeMouseDownEventData;
+  onMouseDownInNode: NodeMouseEventData;
   onMouseMoveInDrawflow: { event: MouseEvent };
   onNodeConnected: NodeConnectedEventData;
   onNodeDataChanged: { nodeId: string; data: DeepPartial<DrawflowData> };
@@ -148,7 +148,7 @@ drawflowEventStore.onMouseMoveInDrawflow.subscribeMultiple([
   {
     name: "update-mouse-position",
     event: ({ event }) => {
-      setMouseData("mousePosition", Vec2.of(event.clientX, event.clientY));
+      setMouseData("mousePosition", Vec2.fromEvent(event));
     },
   },
   {
@@ -209,15 +209,15 @@ drawflowEventStore.onTouchStartInDrawflow.subscribeMultiple([
       if (touches.length !== 1) return;
 
       const touch = touches[0];
-      const mousePosition = Vec2.of(touch.clientX, touch.clientY);
+      const mousePosition = Vec2.fromEvent(touch);
 
       setMouseData({
         draggingNode: true,
         heldNodeId: undefined,
         mousePosition,
         clickStartPosition: Vec2.of(
-          touch.clientX / drawflow.zoomLevel - drawflow.position.x,
-          touch.clientY / drawflow.zoomLevel - drawflow.position.y,
+          mousePosition.x / drawflow.zoomLevel - drawflow.position.x,
+          mousePosition.y / drawflow.zoomLevel - drawflow.position.y,
         ),
       });
     },
@@ -250,7 +250,7 @@ drawflowEventStore.onTouchMoveInDrawflow.subscribeMultiple([
       if (touches.length !== 1) return;
 
       setMouseData("mousePosition", (mousePosition) => {
-        const newMousePos = Vec2.of(touches[0].clientX, touches[0].clientY);
+        const newMousePos = Vec2.fromEvent(touches[0]);
         updateBackgroundPosition(newMousePos.subtract(mousePosition));
         return newMousePos;
       });
@@ -325,7 +325,7 @@ drawflowEventStore.onWheelInDrawflow.subscribeMultiple([
   {
     name: "update-zoom",
     event: ({ event }) => {
-      updateZoom(-event.deltaY, Vec2.of(event.clientX, event.clientY));
+      updateZoom(-event.deltaY, Vec2.fromEvent(event));
     },
   },
   {
@@ -353,7 +353,7 @@ drawflowEventStore.onMouseDownInDrawflow.subscribeMultiple([
         heldConnection: undefined,
         heldConnectorId: undefined,
         heldNodeId: undefined,
-        mousePosition: Vec2.of(event.clientX, event.clientY),
+        mousePosition: Vec2.fromEvent(event),
       }),
   },
   {
@@ -370,11 +370,7 @@ drawflowEventStore.onMouseDownInConnector.subscribeMultiple([
   {
     name: "start-creating-connection",
     event: ({ event, nodeId, connectorId }) => {
-      startCreatingConnection(
-        nodeId,
-        Vec2.of(event.clientX, event.clientY),
-        connectorId,
-      );
+      startCreatingConnection(nodeId, Vec2.fromEvent(event), connectorId);
     },
   },
 ]);
@@ -411,7 +407,7 @@ drawflowEventStore.onMouseDownInNode.subscribeMultiple([
   {
     name: "select-node",
     event: ({ event, nodeId }) => {
-      selectNode(nodeId, Vec2.of(event.clientX, event.clientY));
+      selectNode(nodeId, Vec2.fromEvent(event));
     },
   },
   {
@@ -454,7 +450,7 @@ drawflowEventStore.onPointerDownInNodeCurve.subscribeMultiple([
         },
         heldConnectorId: undefined,
         heldNodeId: undefined,
-        mousePosition: Vec2.of(event.clientX, event.clientY),
+        mousePosition: Vec2.fromEvent(event),
       }),
   },
 ]);
