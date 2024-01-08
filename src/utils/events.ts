@@ -82,6 +82,7 @@ export interface DrawflowEventsDataMap {
   onPointerDownInNodeCurve: NodeCurvePointerDownEventData;
   onPointerUpInConnector: NodeConnectorPointerUpEventData;
   onPointerUpInDrawflow: { event: PointerEvent };
+  onPointerUpInNode: { nodeId: string; event: PointerEvent };
   onTouchMoveInDrawflow: { event: TouchEvent };
   onTouchStartInConnector: NodeConnectorTouchStartEventData;
   onTouchStartInDrawflow: { event: TouchEvent };
@@ -112,6 +113,7 @@ export const drawflowEventStore: DrawflowEventRecord = {
   onPointerUpInConnector:
     new DrawflowEventPublisher<"onPointerUpInConnector">(),
   onPointerUpInDrawflow: new DrawflowEventPublisher<"onPointerUpInDrawflow">(),
+  onPointerUpInNode: new DrawflowEventPublisher<"onPointerUpInNode">(),
   onTouchMoveInDrawflow: new DrawflowEventPublisher<"onTouchMoveInDrawflow">(),
   onTouchStartInConnector:
     new DrawflowEventPublisher<"onTouchStartInConnector">(),
@@ -389,19 +391,40 @@ drawflowEventStore.onTouchStartInConnector.subscribeMultiple([
   },
 ]);
 
-drawflowEventStore.onPointerUpInConnector.subscribe(
-  "connect-held-nodes",
-  ({ event, nodeId, connectorId }) => {
-    if (!mouseData.heldConnectorId) return;
-    drawflowEventStore.onNodeConnected.publish({
-      outputNodeId: mouseData.heldNodeId!,
-      outputId: mouseData.heldConnectorId!,
-      inputNodeId: nodeId,
-      inputId: connectorId,
-      event,
-    });
+drawflowEventStore.onPointerUpInConnector.subscribeMultiple([
+  {
+    name: "stop-propagation",
+    event: ({ event }) => {
+      event.preventDefault();
+      event.stopPropagation();
+    },
+    priority: 2,
   },
-);
+  {
+    name: "connect-held-nodes",
+    event: ({ event, nodeId, connectorId }) => {
+      if (!mouseData.heldConnectorId) return;
+      drawflowEventStore.onNodeConnected.publish({
+        outputNodeId: mouseData.heldNodeId!,
+        outputId: mouseData.heldConnectorId!,
+        inputNodeId: nodeId,
+        inputId: connectorId,
+        event,
+      });
+    },
+    priority: 2,
+  },
+  {
+    name: "reset-mouse-data",
+    event: () =>
+      setMouseData({
+        draggingNode: false,
+        heldConnectorId: undefined,
+        heldNodeId: undefined,
+      }),
+    priority: 1,
+  },
+]);
 
 drawflowEventStore.onMouseDownInNode.subscribeMultiple([
   {
@@ -451,6 +474,18 @@ drawflowEventStore.onPointerDownInNodeCurve.subscribeMultiple([
         heldConnectorId: undefined,
         heldNodeId: undefined,
         mousePosition: Vec2.fromEvent(event),
+      }),
+  },
+]);
+
+drawflowEventStore.onPointerUpInNode.subscribeMultiple([
+  {
+    name: "reset-mouse-data",
+    event: () =>
+      setMouseData({
+        draggingNode: false,
+        heldConnection: undefined,
+        heldConnectorId: undefined,
       }),
   },
 ]);

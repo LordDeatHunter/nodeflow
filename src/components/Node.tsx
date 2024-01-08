@@ -11,6 +11,7 @@ import { DrawflowNode } from "../drawflow-types";
 import { Vec2 } from "../utils/vec2";
 import { drawflowEventStore } from "../utils/events";
 import { produce } from "solid-js/store";
+import Connector from "./Connector";
 
 interface NodeProps {
   nodeId: string;
@@ -117,6 +118,12 @@ const Node: Component<NodeProps> = (props) => {
           nodeId: props.nodeId,
         })
       }
+      onPointerUp={(event) =>
+        drawflowEventStore.onPointerUpInNode.publish({
+          event,
+          nodeId: props.nodeId,
+        })
+      }
     >
       {node().display({ node: node() })}
       <For each={Object.entries(node().connectorSections)}>
@@ -124,66 +131,11 @@ const Node: Component<NodeProps> = (props) => {
           <div class={section?.css}>
             <For each={Object.entries(section.connectors)}>
               {([connectorId, connector]) => (
-                <div
-                  ref={(el) =>
-                    setTimeout(() => {
-                      if (!el) return;
-
-                      const resizeObserver = new ResizeObserver(() => {
-                        setNodes(
-                          props.nodeId,
-                          "connectorSections",
-                          sectionId,
-                          "connectors",
-                          connectorId,
-                          "size",
-                          Vec2.of(el.offsetWidth, el.offsetHeight),
-                        );
-                      });
-                      resizeObserver.observe(el);
-
-                      setNodes(
-                        props.nodeId,
-                        "connectorSections",
-                        sectionId,
-                        "connectors",
-                        connectorId,
-                        (prev) => ({
-                          ...prev,
-                          position: Vec2.of(
-                            (el?.parentElement?.offsetLeft ?? 0) +
-                              el.offsetLeft,
-                            (el?.parentElement?.offsetTop ?? 0) + el.offsetTop,
-                          ),
-                          ref: el,
-                          resizeObserver,
-                          size: Vec2.of(el.offsetWidth, el.offsetHeight),
-                        }),
-                      );
-                    })
-                  }
-                  class={connector?.css}
-                  onPointerUp={(event) =>
-                    drawflowEventStore.onPointerUpInConnector.publish({
-                      event,
-                      nodeId: props.nodeId,
-                      connectorId,
-                    })
-                  }
-                  onTouchStart={(event) =>
-                    drawflowEventStore.onTouchStartInConnector.publish({
-                      event,
-                      nodeId: props.nodeId,
-                      connectorId,
-                    })
-                  }
-                  onMouseDown={(event) =>
-                    drawflowEventStore.onMouseDownInConnector.publish({
-                      event,
-                      nodeId: props.nodeId,
-                      connectorId,
-                    })
-                  }
+                <Connector
+                  connector={connector}
+                  connectorId={connectorId}
+                  nodeId={props.nodeId}
+                  sectionId={sectionId}
                 />
               )}
             </For>

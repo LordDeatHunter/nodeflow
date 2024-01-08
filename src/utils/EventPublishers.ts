@@ -4,6 +4,12 @@ export class BaseEventPublisher<
   EventData,
   EventCallback extends (data: EventData) => void,
 > {
+  /**
+   * Priority is a number that determines the order in which events are called.
+   * The higher the number, the earlier the event is called.
+   * If two events have the same priority, the order is not guaranteed.
+   * The default priority is 0.
+   */
   private subscriptions = new Map<
     string,
     { event: EventCallback; name: string; priority: number }

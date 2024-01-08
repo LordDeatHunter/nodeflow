@@ -117,7 +117,8 @@ export const setupDummyNodes = async (count: number = 50) => {
 export const setupEvents = () => {
   drawflowEventStore.onPointerUpInConnector.blacklist(
     "prevent-connections-to-parent-connectors",
-    ({ connectorId }) => connectorId === "O",
+    ({ connectorId }, name) =>
+      connectorId === "O" && name === "connect-held-nodes",
   );
   drawflowEventStore.onTouchStartInConnector.blacklist(
     "prevent-connections-from-parent-connectors",
@@ -189,20 +190,20 @@ export const setupEvents = () => {
     ({ outputNodeId, inputNodeId }) => {
       const outputNode = nodes[outputNodeId];
 
+      if (outputNodeId === inputNodeId) return;
+
       const connector = getConnector(inputNodeId, "I")?.sources;
 
       // Return if:
       // The connector already has 2 parents
       // The connector already has parent of the same gender as the source node
-      // The source node is the same as the destination node (same person)
       if (
         connector?.length === 2 ||
         connector?.some(
           (source) =>
             source.sourceConnector.parentSection.parentNode.customData
               .gender === outputNode.customData.gender,
-        ) ||
-        outputNodeId === inputNodeId
+        )
       ) {
         return;
       }
@@ -213,6 +214,45 @@ export const setupEvents = () => {
         inputNodeId,
         "I",
         getConnectionCSS(outputNode.customData.gender),
+      );
+    },
+  );
+
+  drawflowEventStore.onPointerUpInNode.subscribe(
+    "create-connection",
+    ({ nodeId }) => {
+      const destinationNode = nodes[nodeId];
+      if (
+        !destinationNode ||
+        !mouseData.heldNodeId ||
+        nodeId === mouseData.heldNodeId
+      ) {
+        return;
+      }
+
+      const sourceNode = nodes[mouseData.heldNodeId];
+      if (!sourceNode) return;
+
+      const connector = getConnector(nodeId, "I")?.sources;
+      // Return if:
+      // The connector already has 2 parents
+      // One of the parents is the same gender as the source node
+      if (
+        connector?.length === 2 ||
+        connector?.some(
+          (source) =>
+            source.sourceConnector.parentSection.parentNode.customData
+              .gender === sourceNode.customData.gender,
+        )
+      )
+        return;
+
+      addConnection(
+        mouseData.heldNodeId,
+        "O",
+        nodeId,
+        "I",
+        getConnectionCSS(sourceNode.customData.gender),
       );
     },
   );
