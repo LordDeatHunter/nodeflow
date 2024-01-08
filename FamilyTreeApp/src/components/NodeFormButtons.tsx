@@ -1,8 +1,10 @@
 import { Component, Show } from "solid-js";
 import {
   getDrawflowCenter,
+  mouseData,
   Optional,
   removeNode,
+  selectNode,
   updateNode,
 } from "solid-drawflow/src";
 import { FormDataType } from "./SidebarContent";
@@ -23,8 +25,28 @@ const AddButton: Component<{ onClick: () => void }> = (props) => (
 const NodeFormButtons: Component<NodeFormButtonsProps> = (props) => {
   const onAdd = () => props.setFormData({ name: "" } as FormDataType);
   const onCancel = () => props.setFormData(undefined);
-  const onRemove = () => {
+  const onEdit = () => props.setFormData({ ...props.nodeData! });
+  const onRemoveEditingNode = () => {
     removeNode(props.formData!.id);
+    props.setFormData(undefined);
+  };
+  const onRemovePreviewNode = () => removeNode(props.nodeData!.id);
+  const onSaveNewNode = () => {
+    if (!props.formData?.name || !props.formData?.gender) return;
+    const node = createFamilyMemberNode(
+      props.formData!.name,
+      props.formData!.gender,
+      getDrawflowCenter(),
+    );
+    selectNode(node!.id, mouseData.mousePosition!, false);
+    props.setFormData(undefined);
+  };
+  const onUpdateNode = () => {
+    updateNode(props.formData!.id, {
+      customData: {
+        ...props.formData,
+      },
+    });
     props.setFormData(undefined);
   };
 
@@ -34,43 +56,18 @@ const NodeFormButtons: Component<NodeFormButtonsProps> = (props) => {
         <AddButton onClick={onAdd} />
       </Show>
       <Show when={props.mode === "add"}>
-        <button
-          onClick={() => {
-            if (!props.formData?.name || !props.formData?.gender) return;
-            createFamilyMemberNode(
-              props.formData!.name,
-              props.formData!.gender,
-              getDrawflowCenter(),
-            );
-            props.setFormData(undefined);
-          }}
-        >
-          Save
-        </button>
+        <button onClick={onSaveNewNode}>Save</button>
         <button onClick={onCancel}>Cancel</button>
       </Show>
       <Show when={props.mode === "view"}>
         <AddButton onClick={onAdd} />
-        <button onClick={() => props.setFormData({ ...props.nodeData! })}>
-          Edit
-        </button>
-        <button onClick={() => removeNode(props.nodeData!.id)}>Delete</button>
+        <button onClick={onEdit}>Edit</button>
+        <button onClick={onRemovePreviewNode}>Delete</button>
       </Show>
       <Show when={props.mode === "edit"}>
-        <button
-          onClick={() => {
-            updateNode(props.formData!.id, {
-              customData: {
-                ...props.formData,
-              },
-            });
-            props.setFormData(undefined);
-          }}
-        >
-          Save
-        </button>
+        <button onClick={onUpdateNode}>Save</button>
         <button onClick={onCancel}>Cancel</button>
-        <button onClick={onRemove}>Delete</button>
+        <button onClick={onRemoveEditingNode}>Delete</button>
       </Show>
     </div>
   );

@@ -932,9 +932,9 @@ export const startCreatingConnection = (
   });
 };
 
-export const selectNode = (nodeId: string, position: Vec2) => {
+export const selectNode = (nodeId: string, position: Vec2, dragging = true) => {
   setMouseData({
-    draggingNode: true,
+    draggingNode: dragging,
     heldConnectorId: undefined,
     heldConnection: undefined,
     heldNodeId: nodeId,
