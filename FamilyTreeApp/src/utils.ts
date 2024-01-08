@@ -52,11 +52,11 @@ export const fetchRandomData = async (
 const getConnectionCSS = (
   parentGender: SolidDrawflow.CustomDataType["gender"],
 ): SelectableElementCSS => ({
-  normal: parentGender == "M" ? curveCss.father : curveCss.mother,
+  normal: parentGender == "M" ? curveCss.fatherCurve : curveCss.motherCurve,
   selected:
     parentGender == "M"
-      ? curveCss["selected-father"]
-      : curveCss["selected-mother"],
+      ? curveCss.selectedFatherCurve
+      : curveCss.selectedMotherCurve,
 });
 
 export const createFamilyMemberNode = (
@@ -66,9 +66,9 @@ export const createFamilyMemberNode = (
 ): DrawflowNode => {
   const newNode = addNode({
     css: {
-      normal: nodeCss[gender === "M" ? "male-node" : "female-node"],
+      normal: gender === "M" ? nodeCss.maleNode : nodeCss.femaleNode,
       selected:
-        nodeCss[gender === "M" ? "selected-male-node" : "selected-female-node"],
+        gender === "M" ? nodeCss.selectedMaleNode : nodeCss.selectedFemaleNode,
     },
     position,
     customData: { gender, name },
@@ -170,11 +170,11 @@ export const setupEvents = () => {
 
       updateNode(nodeId, {
         css: {
-          normal: nodeCss[gender === "M" ? "male-node" : "female-node"],
+          normal: gender === "M" ? nodeCss.maleNode : nodeCss.femaleNode,
           selected:
-            nodeCss[
-              gender === "M" ? "selected-male-node" : "selected-female-node"
-            ],
+            gender === "M"
+              ? nodeCss.selectedMaleNode
+              : nodeCss.selectedFemaleNode,
         },
       });
 

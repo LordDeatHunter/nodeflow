@@ -18,12 +18,12 @@ export const createDummyNode = (position: Vec2): DrawflowNode => {
   const newNode = addNode({
     css: {
       normal: nodeCss.node,
-      selected: nodeCss["selected-node"],
+      selected: nodeCss.selectedNode,
     },
     position,
   });
-  addConnectorSection(newNode.id, "inputs", nodeCss["inputs-section"], false);
-  addConnectorSection(newNode.id, "outputs", nodeCss["outputs-section"], false);
+  addConnectorSection(newNode.id, "inputs", nodeCss.inputsSection, false);
+  addConnectorSection(newNode.id, "outputs", nodeCss.outputsSection, false);
 
   const outputs = 1 + Math.random() * 3;
   for (let j = 0; j < outputs; j++) {
@@ -32,7 +32,7 @@ export const createDummyNode = (position: Vec2): DrawflowNode => {
       "outputs",
       undefined,
       {
-        css: nodeCss["output-connector"],
+        css: nodeCss.outputConnector,
       },
       false,
     );
@@ -44,7 +44,7 @@ export const createDummyNode = (position: Vec2): DrawflowNode => {
       "inputs",
       undefined,
       {
-        css: nodeCss["input-connector"],
+        css: nodeCss.inputConnector,
       },
       false,
     );
@@ -122,7 +122,7 @@ export const setupDummyConnections = () => {
       toConnector.id,
       {
         normal: curveCss.connection,
-        selected: curveCss["selected-connection"],
+        selected: curveCss.selectedConnection,
       },
     );
   }

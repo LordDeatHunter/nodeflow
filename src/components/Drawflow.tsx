@@ -1,5 +1,11 @@
-import { Component, For } from "solid-js";
-import { drawflow, getAllConnectors, nodes, windowSize } from "../utils";
+import { Component, For, Show } from "solid-js";
+import {
+  drawflow,
+  getAllConnectors,
+  mouseData,
+  nodes,
+  windowSize,
+} from "../utils";
 import Node from "./Node";
 import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
@@ -80,7 +86,9 @@ const Drawflow: Component<DrawflowProps> = (props) => (
           </>
         )}
       </For>
-      <Curve css={props?.css?.newCurve} />
+      <Show when={mouseData.heldNodeId && mouseData.heldConnectorId}>
+        <Curve css={props?.css?.newCurve} />
+      </Show>
     </div>
   </div>
 );

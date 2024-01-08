@@ -1,0 +1,26 @@
+$dark-1: #10141F;
+$dark-2: #151D28;
+$dark-3: #202E37;
+$dark-4: #394A50;
+$dark-5: #577277;
+$dark-6: #819796;
+$dark-7: #A4B5B2;
+$dark-8: #C7CFCC;
+$dark-9: #ECEBE7;
+
+$background-color: $dark-3;
+$element-background-color: $dark-5;
+$border-color: $dark-1;
+
+$node-background-color: $element-background-color;
+$node-border-color: $border-color;
+$node-text-color: $dark-9;
+$node-highlighted-background-color: $dark-6;
+
+$font-color: $dark-8;
+
+$connection-color: #84C3FF;
+$new-connection-color: #C3FF84;
+
+$input-connector-color: #A4DDDB;
+$output-connector-color: #D0DA91;

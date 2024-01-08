@@ -1,70 +1,45 @@
+@use "colors";
+
+$connector-size: 12px;
+$connector-border: 4px;
+
 @mixin baseNode {
   z-index: 2;
-  width: 150px;
-  height: 100px;
+  width: 300px;
+  height: 180px;
   position: absolute;
   user-select: none;
   border-radius: 12px;
-  border: 2px solid #202e37;
-  background-color: #577277;
+  border: 2px solid colors.$node-border-color;
+  background-color: colors.$node-background-color;
 
   &:hover {
-    background-color: #819796;
+    background-color: colors.$node-highlighted-background-color;
     z-index: 3;
   }
 
   cursor: grab;
-  box-shadow: 0px 0px 5px 0px #202e37;
-  transition:
-    background-color 0.2s ease-in-out 0s,
-    border-color 0.2s ease-in-out 0s,
-    box-shadow 0.2s ease-in-out 0s;
+  box-shadow: 0 0 5px 0 colors.$node-border-color;
+  transition: background-color 0.2s ease-in-out 0s, border-color 0.2s ease-in-out 0s, box-shadow 0.2s ease-in-out 0s;
 }
 
-.node {
-  @include baseNode;
-}
-
-.selected-node {
-  @include baseNode;
-  box-shadow: 0px 0px 10px 5px #202e37;
-  cursor: grabbing;
-  z-index: 3;
-  background-color: #819796;
-}
-
-$connector-size: 10px;
-$connector-border: 2px;
-
-@mixin connector {
+@mixin baseConnector($bg-color) {
   position: relative;
   width: $connector-size;
   height: $connector-size;
   border-radius: 100%;
-  border: $connector-border solid #202e37;
+  border: $connector-border solid colors.$node-border-color;
   z-index: 1;
   cursor: crosshair;
-}
 
-.input-connector {
-  @include connector;
-  background-color: #a4dddb;
+  background-color: $bg-color;
 
   &:hover {
-    background-color: #73bed3;
+    background-color: lighten($bg-color, 10%);
   }
 }
 
-.output-connector {
-  @include connector;
-  background-color: #d0da91;
-
-  &:hover {
-    background-color: #a8ca58;
-  }
-}
-
-@mixin connector-section {
+@mixin connectorSection {
   position: absolute;
   display: flex;
   justify-content: space-evenly;
@@ -74,12 +49,32 @@ $connector-border: 2px;
   flex-direction: column;
 }
 
-.inputs-section {
-  @include connector-section;
+.node {
+  @include baseNode;
+}
+
+.selectedNode {
+  @include baseNode;
+  box-shadow: 0 0 10px 5px colors.$node-border-color;
+  cursor: grabbing;
+  z-index: 3;
+  background-color: colors.$node-highlighted-background-color;
+}
+
+.inputConnector {
+  @include baseConnector(colors.$input-connector-color);
+}
+
+.outputConnector {
+  @include baseConnector(colors.$output-connector-color);
+}
+
+.inputsSection {
+  @include connectorSection;
   left: calc(($connector-size + $connector-border) / -2);
 }
 
-.outputs-section {
-  @include connector-section;
+.outputsSection {
+  @include connectorSection;
   right: calc(($connector-size + $connector-border) / 2);
 }

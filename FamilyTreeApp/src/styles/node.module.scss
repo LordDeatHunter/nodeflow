@@ -1,5 +1,8 @@
 @use "colors";
 
+$connector-height: 1rem;
+$connector-border: 6px;
+
 @mixin baseNode {
   z-index: 2;
   width: max-content;
@@ -23,42 +26,20 @@
   align-items: center;
 }
 
-.male-node {
+@mixin baseSelectedNode($bg-color) {
   @include baseNode;
-
-  &:hover {
-    background-color: lightblue;
-    z-index: 3;
-  }
-}
-
-.female-node {
-  @include baseNode;
-
-  &:hover {
-    background-color: lightpink;
-    z-index: 3;
-  }
-}
-
-@mixin base-elected-node {
-  @include baseNode;
+  background-color: mix(colors.$node-background-color, $bg-color, 75%);
   cursor: grabbing;
   z-index: 3;
 }
 
-.selected-male-node {
-  @include base-elected-node;
-  background-color: lightblue;
+@mixin connectorSection {
+  position: absolute;
+  display: flex;
+  justify-content: space-evenly;
+  width: 100%;
+  height: 0;
 }
-
-.selected-female-node {
-  @include base-elected-node;
-  background-color: lightpink;
-}
-
-$connector-height: 1rem;
-$connector-border: 6px;
 
 @mixin baseConnector($bg-color) {
   position: relative;
@@ -85,6 +66,32 @@ $connector-border: 6px;
   bottom: 5px;
 }
 
+.femaleNode {
+  @include baseNode;
+
+  &:hover {
+    background-color: mix(colors.$node-background-color, colors.$female-color, 75%);
+    z-index: 3;
+  }
+}
+
+.maleNode {
+  @include baseNode;
+
+  &:hover {
+    background-color: mix(colors.$node-background-color, colors.$male-color, 75%);
+    z-index: 3;
+  }
+}
+
+.selectedMaleNode {
+  @include baseSelectedNode(lighten(colors.$male-color, 10%));
+}
+
+.selectedFemaleNode {
+  @include baseSelectedNode(lighten(colors.$female-color, 10%));
+}
+
 .inputConnector {
   @include baseConnector(colors.$dark-4);
 
@@ -97,14 +104,6 @@ $connector-border: 6px;
 
 .femaleOutputConnector {
   @include outputConnector(colors.$female-color);
-}
-
-@mixin connectorSection {
-  position: absolute;
-  display: flex;
-  justify-content: space-evenly;
-  width: 100%;
-  height: 0;
 }
 
 .inputsSection {

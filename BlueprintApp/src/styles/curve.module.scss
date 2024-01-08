@@ -1,24 +1,46 @@
-@mixin base-curve {
+@use "colors";
+
+@function darkenAndSaturate($strokeColor, $saturation: 15%, $darkness: 15%) {
+  @return darken(saturate($strokeColor, $saturation), $darkness);
+}
+
+@function lightenAndDesaturate($strokeColor, $saturation: 25%, $lightness: 25%) {
+  @return lighten(desaturate($strokeColor, $saturation), $lightness);
+}
+
+@mixin baseCurve($strokeColor) {
   position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  stroke-width: 5px;
+  stroke-width: 6px;
+  transition: stroke 100ms ease-in-out, filter 100ms ease-in-out;
+  stroke: $strokeColor;
 }
 
-.connection {
-  @include base-curve;
-  stroke: #84c3ff;
-
+@mixin hoverHighlight($strokeColor) {
   &:hover {
-    stroke: darken(saturate(#84c3ff, 25%), 25%);
-    filter: drop-shadow(0 0 2px darken(saturate(#84c3ff, 25%), 25%));
+    stroke: darkenAndSaturate($strokeColor);
+    filter: drop-shadow(0 0 2px darkenAndSaturate($strokeColor));
   }
 }
 
-.selected-connection {
-  @include base-curve;
+@mixin curveWithHover($strokeColor) {
+  @include baseCurve($strokeColor);
+  @include hoverHighlight($strokeColor);
+}
 
-  stroke: lighten(saturate(#84c3ff, 25%), 25%);
-  filter: drop-shadow(0 0 2px lighten(saturate(#84c3ff, 25%), 25%));
+.connection {
+  @include curveWithHover(lightenAndDesaturate(colors.$connection-color, 15%, 15%));
+  filter: drop-shadow(0 0 2px darkenAndSaturate(colors.$connection-color));
+}
+
+.selectedConnection {
+  @include baseCurve(colors.$connection-color);
+  filter: drop-shadow(0 0 2px darkenAndSaturate(colors.$connection-color));
+}
+
+.newConnection {
+  @include baseCurve(lightenAndDesaturate(colors.$new-connection-color, 20%, 20%));
+  filter: drop-shadow(0 0 2px darkenAndSaturate(colors.$new-connection-color));
 }
