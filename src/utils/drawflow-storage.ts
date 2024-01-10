@@ -69,14 +69,19 @@ export const getDrawflowCenter = createMemo<Vec2>(() => {
 
 export const updateZoom = (distance: number, zoomLocation: Vec2): void => {
   const oldZoom = drawflow.zoomLevel;
+
+  if (distance === 0) return;
+
   const newZoom = Number(
     clamp(
-      oldZoom + distance * Constants.ZOOM_MULTIPLIER,
+      distance > 0
+        ? oldZoom + oldZoom * distance * Constants.ZOOM_MULTIPLIER
+        : oldZoom / (1 - distance * Constants.ZOOM_MULTIPLIER),
       Constants.MIN_ZOOM,
       Constants.MAX_ZOOM,
     ).toFixed(4),
   );
-  if (newZoom < Constants.MIN_ZOOM || newZoom > Constants.MAX_ZOOM) return;
+
   setMouseData("draggingNode", false);
   const windowDimensions = windowSize();
   const centeredZoomLocation = zoomLocation.subtract(
