@@ -30,6 +30,8 @@ export const [mouseData, setMouseData] = createStore<MouseData>({
 export const [drawflow, setDrawflow] = createStore<DrawflowData>({
   currentMoveSpeed: Vec2.default(),
   position: Vec2.default(),
+  startPosition: Vec2.default(),
+  size: Vec2.default(),
   zoomLevel: 1,
   pinchDistance: 0,
 });
@@ -50,14 +52,15 @@ export const Constants = {
 export const globalMousePosition = createMemo<Vec2>(() => {
   const zoom = drawflow.zoomLevel; // zoom multiplier
 
-  // TODO: change to drawflow div size instead of screen size
-  const screenCenter = windowSize().divideBy(2);
-
+  /**
+   * 1. Subtract the starting position of the drawflow from the mouse position, this makes the cursor relative to the start of the drawflow
+   * 2. Divide by the zoom level, this zooms the working area to the relevant size
+   * 3. Subtract the drawflow offset to get the final position
+   */
   return mouseData.mousePosition
-    .subtract(screenCenter)
+    .subtract(drawflow.startPosition)
     .divideBy(zoom)
-    .subtract(drawflow.position)
-    .add(screenCenter);
+    .subtract(drawflow.position);
 });
 
 export const getDrawflowCenter = createMemo<Vec2>(() => {
@@ -83,10 +86,10 @@ export const updateZoom = (distance: number, zoomLocation: Vec2): void => {
   );
 
   setMouseData("draggingNode", false);
-  const windowDimensions = windowSize();
-  const centeredZoomLocation = zoomLocation.subtract(
-    windowDimensions.divideBy(2),
-  );
+
+  const windowDimensions = drawflow.size;
+  const centeredZoomLocation = zoomLocation.subtract(drawflow.startPosition);
+
   const oldScreenSize = windowDimensions.multiplyBy(oldZoom);
   const newScreenSize = windowDimensions.multiplyBy(newZoom);
   const oldOffset = centeredZoomLocation
@@ -206,6 +209,15 @@ setInterval(() => {
     updateNodePosition(drawflow.currentMoveSpeed);
   }
 }, 10);
+
+export const resetMouseData = () => {
+  setMouseData({
+    draggingNode: false,
+    heldConnection: undefined,
+    heldConnectorId: undefined,
+    heldNodeId: undefined,
+  });
+};
 
 export const addNode = (
   data: Partial<DrawflowNode>,

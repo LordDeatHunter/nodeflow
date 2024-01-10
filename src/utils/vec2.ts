@@ -72,4 +72,13 @@ export class Vec2 {
   public divideBy(amount: number): Vec2 {
     return new Vec2(this.x / amount, this.y / amount);
   }
+
+  public isWithinRect(start: Vec2, size: Vec2): boolean {
+    return (
+      this.x >= start.x &&
+      this.x <= start.x + size.x &&
+      this.y >= start.y &&
+      this.y <= start.y + size.y
+    );
+  }
 }

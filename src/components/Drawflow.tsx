@@ -4,7 +4,7 @@ import {
   getAllConnectors,
   mouseData,
   nodes,
-  windowSize,
+  setDrawflow,
 } from "../utils";
 import Node from "./Node";
 import NodeCurve from "./NodeCurve";
@@ -15,19 +15,33 @@ import {
   NodeConnector,
 } from "../drawflow-types";
 import { drawflowEventStore } from "../utils/events";
+import setup from "../utils/setup";
+import { Vec2 } from "../utils/vec2";
 
 interface DrawflowProps {
   css?: DrawflowCss;
+  height: string;
+  width: string;
 }
+
+setup();
 
 const Drawflow: Component<DrawflowProps> = (props) => (
   <div
+    ref={(el) => {
+      const resizeObserver = new ResizeObserver(() => {
+        setDrawflow({
+          size: Vec2.of(el.clientWidth, el.clientHeight),
+          startPosition: Vec2.of(el.offsetLeft, el.offsetTop),
+        });
+      });
+      resizeObserver.observe(el);
+    }}
     tabIndex="0"
+    class={props?.css?.drawflow}
     style={{
-      height: `${windowSize().y}px`,
-      overflow: "hidden",
-      position: "absolute",
-      width: `${windowSize().x}px`,
+      height: props.height,
+      width: props.width,
     }}
     onMouseMove={(event) =>
       drawflowEventStore.onMouseMoveInDrawflow.publish({ event })
@@ -52,8 +66,6 @@ const Drawflow: Component<DrawflowProps> = (props) => (
   >
     <div
       style={{
-        height: "100%",
-        width: "100%",
         position: "absolute",
         transform: `scale(${drawflow.zoomLevel}) translate(${drawflow.position.x}px, ${drawflow.position.y}px)`,
         "transform-origin": "center",

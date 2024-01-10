@@ -1,10 +1,11 @@
 import { type Component, createMemo, onMount } from "solid-js";
 import Drawflow from "solid-drawflow/src/components/Drawflow";
 import curveCss from "./styles/curve.module.scss";
+import drawflowCss from "./styles/drawflow.module.scss";
 import { setupDummyConnections, setupDummyNodes, setupEvents } from "./utils";
 import Sidebar from "./components/Sidebar";
 import SidebarContent from "./components/SidebarContent";
-import { mouseData, nodes } from "solid-drawflow/src";
+import { mouseData, nodes, windowSize } from "solid-drawflow/src";
 
 const App: Component = () => {
   onMount(() => {
@@ -25,7 +26,11 @@ const App: Component = () => {
 
   return (
     <>
-      <Drawflow css={{ newCurve: newCurveCss() }} />
+      <Drawflow
+        css={{ newCurve: newCurveCss(), drawflow: drawflowCss.drawflow }}
+        width={`${windowSize().x}px`}
+        height={`${windowSize().y}px`}
+      />
       <Sidebar>
         <SidebarContent />
       </Sidebar>

@@ -9,6 +9,7 @@ import {
   nodes,
   removeConnection,
   removeNode,
+  resetMouseData,
   resetMovement,
   selectNode,
   setDrawflow,
@@ -76,11 +77,14 @@ export interface DrawflowEventsDataMap {
   onMouseDownInConnector: NodeConnectorMouseDownEventData;
   onMouseDownInDrawflow: { event: MouseEvent };
   onMouseDownInNode: NodeMouseEventData;
+  onMouseMoveInDocument: { event: MouseEvent };
   onMouseMoveInDrawflow: { event: MouseEvent };
   onNodeConnected: NodeConnectedEventData;
   onNodeDataChanged: { nodeId: string; data: DeepPartial<DrawflowData> };
   onPointerDownInNodeCurve: NodeCurvePointerDownEventData;
+  onPointerLeaveFromDocument: { event: PointerEvent };
   onPointerUpInConnector: NodeConnectorPointerUpEventData;
+  onPointerUpInDocument: { event: PointerEvent };
   onPointerUpInDrawflow: { event: PointerEvent };
   onPointerUpInNode: { nodeId: string; event: PointerEvent };
   onTouchMoveInDrawflow: { event: TouchEvent };
@@ -105,13 +109,17 @@ export const drawflowEventStore: DrawflowEventRecord = {
     new DrawflowEventPublisher<"onMouseDownInConnector">(),
   onMouseDownInDrawflow: new DrawflowEventPublisher<"onMouseDownInDrawflow">(),
   onMouseDownInNode: new DrawflowEventPublisher<"onMouseDownInNode">(),
+  onMouseMoveInDocument: new DrawflowEventPublisher<"onMouseMoveInDocument">(),
   onMouseMoveInDrawflow: new DrawflowEventPublisher<"onMouseMoveInDrawflow">(),
   onNodeConnected: new DrawflowEventPublisher<"onNodeConnected">(),
   onNodeDataChanged: new DrawflowEventPublisher<"onNodeDataChanged">(),
   onPointerDownInNodeCurve:
     new DrawflowEventPublisher<"onPointerDownInNodeCurve">(),
+  onPointerLeaveFromDocument:
+    new DrawflowEventPublisher<"onPointerLeaveFromDocument">(),
   onPointerUpInConnector:
     new DrawflowEventPublisher<"onPointerUpInConnector">(),
+  onPointerUpInDocument: new DrawflowEventPublisher<"onPointerUpInDocument">(),
   onPointerUpInDrawflow: new DrawflowEventPublisher<"onPointerUpInDrawflow">(),
   onPointerUpInNode: new DrawflowEventPublisher<"onPointerUpInNode">(),
   onTouchMoveInDrawflow: new DrawflowEventPublisher<"onTouchMoveInDrawflow">(),
@@ -136,23 +144,11 @@ drawflowEventStore.onNodeConnected.subscribeMultiple([
   },
   {
     name: "reset-mouse-data",
-    event: () =>
-      setMouseData({
-        draggingNode: false,
-        heldConnection: undefined,
-        heldConnectorId: undefined,
-        heldNodeId: undefined,
-      }),
+    event: () => resetMouseData(),
   },
 ]);
 
 drawflowEventStore.onMouseMoveInDrawflow.subscribeMultiple([
-  {
-    name: "update-mouse-position",
-    event: ({ event }) => {
-      setMouseData("mousePosition", Vec2.fromEvent(event));
-    },
-  },
   {
     name: "update-background-position",
     event: ({ event }) => {
@@ -416,12 +412,7 @@ drawflowEventStore.onPointerUpInConnector.subscribeMultiple([
   },
   {
     name: "reset-mouse-data",
-    event: () =>
-      setMouseData({
-        draggingNode: false,
-        heldConnectorId: undefined,
-        heldNodeId: undefined,
-      }),
+    event: () => resetMouseData(),
     priority: 1,
   },
 ]);
@@ -481,11 +472,29 @@ drawflowEventStore.onPointerDownInNodeCurve.subscribeMultiple([
 drawflowEventStore.onPointerUpInNode.subscribeMultiple([
   {
     name: "reset-mouse-data",
-    event: () =>
-      setMouseData({
-        draggingNode: false,
-        heldConnection: undefined,
-        heldConnectorId: undefined,
-      }),
+    event: () => resetMouseData(),
+  },
+]);
+
+drawflowEventStore.onMouseMoveInDocument.subscribeMultiple([
+  {
+    name: "update-mouse-position",
+    event: ({ event }) => {
+      setMouseData("mousePosition", Vec2.fromEvent(event));
+    },
+  },
+]);
+
+drawflowEventStore.onPointerLeaveFromDocument.subscribeMultiple([
+  {
+    name: "reset-mouse-data",
+    event: () => resetMouseData(),
+  },
+]);
+
+drawflowEventStore.onPointerUpInDocument.subscribeMultiple([
+  {
+    name: "reset-mouse-data",
+    event: () => resetMouseData(),
   },
 ]);

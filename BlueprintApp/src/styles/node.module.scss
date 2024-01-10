@@ -29,7 +29,6 @@ $connector-border: 4px;
   height: $connector-size;
   border-radius: 100%;
   border: $connector-border solid colors.$node-border-color;
-  z-index: 1;
   cursor: crosshair;
 
   background-color: $bg-color;

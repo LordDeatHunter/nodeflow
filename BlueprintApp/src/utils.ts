@@ -13,19 +13,25 @@ import {
 import nodeCss from "./styles/node.module.scss";
 import { drawflowEventStore } from "solid-drawflow/src/utils/events";
 import curveCss from "./styles/curve.module.scss";
+import NodeDisplay from "./NodeDisplay";
 
-export const createDummyNode = (position: Vec2): DrawflowNode => {
+export const createDummyNode = (
+  position: Vec2,
+  center = false,
+): DrawflowNode => {
   const newNode = addNode({
     css: {
       normal: nodeCss.node,
       selected: nodeCss.selectedNode,
     },
     position,
+    display: NodeDisplay,
+    centered: center,
   });
   addConnectorSection(newNode.id, "inputs", nodeCss.inputsSection, false);
   addConnectorSection(newNode.id, "outputs", nodeCss.outputsSection, false);
 
-  const outputs = 1 + Math.random() * 3;
+  const outputs = Math.random() * 6;
   for (let j = 0; j < outputs; j++) {
     addConnector(
       newNode.id,
@@ -37,7 +43,7 @@ export const createDummyNode = (position: Vec2): DrawflowNode => {
       false,
     );
   }
-  const inputs = 1 + Math.random() * 3;
+  const inputs = Math.random() * 6;
   for (let j = 0; j < inputs; j++) {
     addConnector(
       newNode.id,
@@ -100,6 +106,10 @@ export const setupDummyConnections = () => {
 
     const fromConnectorValues = Object.values(fromConnectors);
     const toConnectorValues = Object.values(toConnectors);
+
+    if (fromConnectorValues.length === 0 || toConnectorValues.length === 0) {
+      continue;
+    }
 
     const fromConnector =
       fromConnectorValues[

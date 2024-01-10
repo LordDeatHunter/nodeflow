@@ -46,6 +46,8 @@ export interface DrawflowData {
   currentMoveSpeed: Vec2;
   pinchDistance: number;
   position: Vec2;
+  startPosition: Vec2;
+  size: Vec2;
   zoomLevel: number;
 }
 
@@ -56,6 +58,7 @@ export interface SelectableElementCSS {
 
 export interface DrawflowCss {
   newCurve?: string;
+  drawflow?: string;
 }
 
 export interface NodeConnector {
