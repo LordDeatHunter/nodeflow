@@ -159,6 +159,13 @@ drawflowEventStore.onMouseMoveInDrawflow.subscribeMultiple([
 
 drawflowEventStore.onPointerUpInDrawflow.subscribeMultiple([
   {
+    name: "stop-propagation",
+    event: ({ event }) => {
+      event.stopPropagation();
+      event.preventDefault();
+    },
+  },
+  {
     name: "reset-mouse-data",
     event: () =>
       setMouseData((prev) => ({
@@ -412,7 +419,12 @@ drawflowEventStore.onPointerUpInConnector.subscribeMultiple([
   },
   {
     name: "reset-mouse-data",
-    event: () => resetMouseData(),
+    event: () =>
+      setMouseData({
+        draggingNode: false,
+        heldConnectorId: undefined,
+        heldNodeId: undefined,
+      }),
     priority: 1,
   },
 ]);
@@ -472,7 +484,12 @@ drawflowEventStore.onPointerDownInNodeCurve.subscribeMultiple([
 drawflowEventStore.onPointerUpInNode.subscribeMultiple([
   {
     name: "reset-mouse-data",
-    event: () => resetMouseData(),
+    event: () =>
+      setMouseData({
+        draggingNode: false,
+        heldConnection: undefined,
+        heldConnectorId: undefined,
+      }),
   },
 ]);
 
@@ -493,8 +510,9 @@ drawflowEventStore.onPointerLeaveFromDocument.subscribeMultiple([
 ]);
 
 drawflowEventStore.onPointerUpInDocument.subscribeMultiple([
-  {
-    name: "reset-mouse-data",
-    event: () => resetMouseData(),
-  },
+  // TODO: figure out why this is always called, even when elements lower in the DOM have cancelled the event
+  // {
+  //   name: "reset-mouse-data",
+  //   event: () => resetMouseData(),
+  // },
 ]);
