@@ -9,7 +9,7 @@ import {
 } from "solid-drawflow/src";
 import { FormDataType } from "./SidebarContent";
 import formStyle from "../styles/form.module.scss";
-import { createFamilyMemberNode } from "../utils";
+import { cleanInput, createFamilyMemberNode } from "../utils";
 
 interface NodeFormButtonsProps {
   mode: "add" | "empty" | "view" | "edit";
@@ -34,7 +34,7 @@ const NodeFormButtons: Component<NodeFormButtonsProps> = (props) => {
   const onSaveNewNode = () => {
     if (!props.formData?.name || !props.formData?.gender) return;
     const node = createFamilyMemberNode(
-      props.formData!.name,
+      cleanInput(props.formData!.name),
       props.formData!.gender,
       getDrawflowCenter(),
     );
@@ -45,6 +45,7 @@ const NodeFormButtons: Component<NodeFormButtonsProps> = (props) => {
     updateNode(props.formData!.id, {
       customData: {
         ...props.formData,
+        name: cleanInput(props.formData!.name),
       },
     });
     props.setFormData(undefined);

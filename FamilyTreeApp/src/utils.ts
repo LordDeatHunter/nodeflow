@@ -303,3 +303,6 @@ export const setupDummyConnections = () => {
     );
   }
 };
+
+export const cleanInput = (input?: string): string =>
+  !input ? "" : input.trim().replace(/\s+/g, " ");
