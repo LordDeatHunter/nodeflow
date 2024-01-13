@@ -70,7 +70,7 @@ export const createDraggingPathCurve = (
 export const CurveFunctions = {
   createNodePathCurve: getCurve,
   createDraggingPathCurve,
-  getDefaultCurve: (_start: Vec2, _end: Vec2) => Vec2.default(),
+  getDefaultCurve: (_start: Vec2, _end: Vec2) => Vec2.zero(),
   getHorizontalCurve,
   getVerticalCurve,
   createDefaultPathString,

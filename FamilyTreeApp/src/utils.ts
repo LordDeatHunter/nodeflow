@@ -6,7 +6,6 @@ import {
   CurveFunctions,
   DrawflowNode,
   getConnector,
-  globalMousePosition,
   mouseData,
   nodes,
   removeOutgoingConnections,
@@ -141,7 +140,7 @@ export const setupEvents = () => {
         const newNode = createFamilyMemberNode(
           data[0].name,
           data[0].gender,
-          globalMousePosition(),
+          mouseData.globalMousePosition(),
         );
 
         const parent = nodes[heldNodeId!];

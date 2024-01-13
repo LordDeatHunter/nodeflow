@@ -22,13 +22,13 @@ const Node: Component<NodeProps> = (props) => {
   const [isVisible, setIsVisible] = createSignal<boolean>(false);
 
   createEffect(() => {
-    if (mouseData.heldNodeId !== props.nodeId || !mouseData.draggingNode) {
+    if (mouseData.heldNodeId !== props.nodeId || !mouseData.isDraggingNode) {
       return;
     }
 
     const position = mouseData.mousePosition
       .divideBy(drawflow.zoomLevel)
-      .subtract(mouseData.clickStartPosition ?? Vec2.default());
+      .subtract(mouseData.clickStartPosition ?? Vec2.zero());
 
     setNodes(props.nodeId, "position", position);
   });
@@ -84,7 +84,7 @@ const Node: Component<NodeProps> = (props) => {
 
           const positionOffset = node().centered
             ? Vec2.of(el.clientWidth, el.clientHeight).divideBy(2)
-            : Vec2.default();
+            : Vec2.zero();
 
           setNodes(props.nodeId, {
             offset: Vec2.of(el.clientLeft, el.clientTop),

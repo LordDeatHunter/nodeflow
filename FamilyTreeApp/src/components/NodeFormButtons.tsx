@@ -1,10 +1,9 @@
 import { Component, Show } from "solid-js";
 import {
-  getDrawflowCenter,
+  drawflow,
   mouseData,
   Optional,
   removeNode,
-  selectNode,
   updateNode,
 } from "solid-drawflow/src";
 import { FormDataType } from "./SidebarContent";
@@ -36,9 +35,9 @@ const NodeFormButtons: Component<NodeFormButtonsProps> = (props) => {
     const node = createFamilyMemberNode(
       cleanInput(props.formData!.name),
       props.formData!.gender,
-      getDrawflowCenter(),
+      drawflow.center(),
     );
-    selectNode(node!.id, mouseData.mousePosition!, false);
+    mouseData.selectNode(node!.id, mouseData.mousePosition!, false);
     props.setFormData(undefined);
   };
   const onUpdateNode = () => {

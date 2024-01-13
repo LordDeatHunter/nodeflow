@@ -1,11 +1,5 @@
 import { Component, createMemo } from "solid-js";
-import {
-  CurveFunctions,
-  getConnector,
-  globalMousePosition,
-  mouseData,
-  nodes,
-} from "../utils";
+import { CurveFunctions, getConnector, mouseData, nodes } from "../utils";
 import { Optional, PathData } from "../drawflow-types";
 
 interface CurveProps {
@@ -32,7 +26,7 @@ const Curve: Component<CurveProps> = (props) => {
       output.position,
       output.size.divideBy(2),
     );
-    const end = globalMousePosition();
+    const end = mouseData.globalMousePosition();
 
     return {
       start,

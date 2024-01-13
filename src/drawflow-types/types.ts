@@ -11,7 +11,7 @@ export type DeepPartial<T> = T extends object
 
 export interface MouseData {
   clickStartPosition?: Vec2;
-  draggingNode: boolean;
+  isDraggingNode: boolean;
   heldNodeId?: string;
   heldConnectorId?: string;
   heldConnection?: {

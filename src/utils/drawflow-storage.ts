@@ -2,40 +2,24 @@ import { createStore, produce } from "solid-js/store";
 import {
   ConnectorSection,
   DeepPartial,
-  DrawflowData,
   DrawflowNode,
-  MouseData,
   NodeConnector,
   Optional,
   SelectableElementCSS,
 } from "../drawflow-types";
 import { clamp } from "./math-utils";
-import { windowSize } from "./screen-utils";
 import { createMemo } from "solid-js";
 import { intersectionOfSets, isSetEmpty } from "./misc-utils";
 import { Vec2 } from "./vec2";
 import { Changes } from "./Changes";
 import { drawflowEventStore } from "./events";
+import Drawflow from "./Drawflow";
+import MouseData from "./MouseData";
 
 export const changes = new Changes();
+export const drawflow = new Drawflow();
+export const mouseData = new MouseData();
 export const [nodes, setNodes] = createStore<Record<string, DrawflowNode>>({});
-export const [mouseData, setMouseData] = createStore<MouseData>({
-  clickStartPosition: undefined,
-  draggingNode: false,
-  heldConnectorId: undefined,
-  heldNodeId: undefined,
-  mousePosition: Vec2.default(),
-  heldConnection: undefined,
-});
-export const [drawflow, setDrawflow] = createStore<DrawflowData>({
-  currentMoveSpeed: Vec2.default(),
-  position: Vec2.default(),
-  startPosition: Vec2.default(),
-  size: Vec2.default(),
-  zoomLevel: 1,
-  pinchDistance: 0,
-});
-
 export const Constants = {
   KEYBOARD_ZOOM_AMOUNT: 15,
   MAX_SPEED: 15,
@@ -48,73 +32,6 @@ export const Constants = {
   ZOOM_MULTIPLIER: 0.005,
   CURVE_MULTIPLIER: 3,
 } as const;
-
-export const globalMousePosition = createMemo<Vec2>(() => {
-  const zoom = drawflow.zoomLevel; // zoom multiplier
-
-  /**
-   * 1. Subtract the starting position of the drawflow from the mouse position, this makes the cursor relative to the start of the drawflow
-   * 2. Divide by the zoom level, this zooms the working area to the relevant size
-   * 3. Subtract the drawflow offset to get the final position
-   */
-  return mouseData.mousePosition
-    .subtract(drawflow.startPosition)
-    .divideBy(zoom)
-    .subtract(drawflow.position);
-});
-
-export const getDrawflowCenter = createMemo<Vec2>(() => {
-  const windowDimensions = windowSize();
-  const windowCenter = windowDimensions.divideBy(2);
-
-  return drawflow.position.negate().add(windowCenter);
-});
-
-export const updateZoom = (distance: number, zoomLocation: Vec2): void => {
-  const oldZoom = drawflow.zoomLevel;
-
-  if (distance === 0) return;
-
-  const newZoom = Number(
-    clamp(
-      distance > 0
-        ? oldZoom + oldZoom * distance * Constants.ZOOM_MULTIPLIER
-        : oldZoom / (1 - distance * Constants.ZOOM_MULTIPLIER),
-      Constants.MIN_ZOOM,
-      Constants.MAX_ZOOM,
-    ).toFixed(4),
-  );
-
-  setMouseData("draggingNode", false);
-
-  const windowDimensions = drawflow.size;
-  const centeredZoomLocation = zoomLocation.subtract(drawflow.startPosition);
-
-  const oldScreenSize = windowDimensions.multiplyBy(oldZoom);
-  const newScreenSize = windowDimensions.multiplyBy(newZoom);
-  const oldOffset = centeredZoomLocation
-    .subtract(oldScreenSize.divideBy(2))
-    .divideBy(oldZoom);
-
-  const newOffset = centeredZoomLocation
-    .subtract(newScreenSize.divideBy(2))
-    .divideBy(newZoom);
-
-  setDrawflow((prev) => ({
-    position: prev.position.subtract(oldOffset).add(newOffset),
-    zoomLevel: newZoom,
-  }));
-};
-
-export const updateBackgroundPosition = (
-  moveDistance: Vec2,
-  keyboard = false,
-) => {
-  if (mouseData.heldNodeId || keyboard === mouseData.draggingNode) return;
-  setDrawflow("position", (prev) =>
-    prev.add(moveDistance.divideBy(drawflow.zoomLevel)),
-  );
-};
 
 export const heldKeys = new Set<string>();
 
@@ -152,20 +69,11 @@ const calculateMovement = (
 };
 
 export const resetMovement = () => {
-  setDrawflow("currentMoveSpeed", Vec2.default());
+  drawflow.currentMoveSpeed = Vec2.zero();
   KEYS.MOVE_LEFT.forEach((key) => heldKeys.delete(key));
   KEYS.MOVE_RIGHT.forEach((key) => heldKeys.delete(key));
   KEYS.MOVE_UP.forEach((key) => heldKeys.delete(key));
   KEYS.MOVE_DOWN.forEach((key) => heldKeys.delete(key));
-};
-
-export const deselectNode = () => {
-  setMouseData({
-    heldNodeId: undefined,
-    heldConnectorId: undefined,
-    heldConnection: undefined,
-  });
-  resetMovement();
 };
 
 export const updateNodePosition = (moveSpeed: Vec2) => {
@@ -185,7 +93,7 @@ setInterval(() => {
 
   const isDraggingNode = mouseData.heldNodeId !== undefined;
 
-  const moveSpeed = Vec2.of(
+  drawflow.currentMoveSpeed = Vec2.of(
     calculateMovement(
       movingLeft || movingRight,
       drawflow.currentMoveSpeed.x,
@@ -201,23 +109,12 @@ setInterval(() => {
       !isDraggingNode,
     ),
   );
-
-  setDrawflow("currentMoveSpeed", moveSpeed);
   if (!mouseData.heldNodeId) {
-    updateBackgroundPosition(drawflow.currentMoveSpeed, true);
+    drawflow.updateBackgroundPosition(drawflow.currentMoveSpeed, true);
   } else {
     updateNodePosition(drawflow.currentMoveSpeed);
   }
 }, 10);
-
-export const resetMouseData = () => {
-  setMouseData({
-    draggingNode: false,
-    heldConnection: undefined,
-    heldConnectorId: undefined,
-    heldNodeId: undefined,
-  });
-};
 
 export const addNode = (
   data: Partial<DrawflowNode>,
@@ -234,10 +131,10 @@ export const addNode = (
       customData: data.customData ?? ({} as SolidDrawflow.CustomDataType),
       display: data.display ?? (() => undefined),
       id: newId,
-      offset: Vec2.default(),
-      position: data.position ?? Vec2.default(),
+      offset: Vec2.zero(),
+      position: data.position ?? Vec2.zero(),
       ref: undefined,
-      size: Vec2.default(),
+      size: Vec2.zero(),
     };
 
     return {
@@ -362,7 +259,7 @@ export const getNextFreeConnectorSectionId = (nodeId: string): string => {
  * @param addToHistory - whether to add this change to the history
  */
 export const removeNode = (nodeId: string, addToHistory = true) => {
-  deselectNode();
+  mouseData.deselectNode();
   setNodes(
     produce((newNodes) => {
       if (addToHistory) {
@@ -747,9 +644,9 @@ export const addConnector = (
     hovered: data?.hovered,
     id: connectorId,
     parentSection: section,
-    position: data?.position ?? Vec2.default(),
+    position: data?.position ?? Vec2.zero(),
     ref: undefined,
-    size: Vec2.default(),
+    size: Vec2.zero(),
     sources: data?.sources ?? [],
   });
 };
@@ -933,33 +830,4 @@ export const getAllConnectors = (nodeId: string): NodeConnector[] => {
       connectors.concat(Object.values(section.connectors)),
     [] as NodeConnector[],
   );
-};
-
-export const startCreatingConnection = (
-  nodeId: string,
-  position: Vec2,
-  outputId: string,
-) => {
-  setMouseData({
-    draggingNode: false,
-    heldNodeId: nodeId,
-    heldConnectorId: outputId,
-    mousePosition: position,
-    clickStartPosition: position
-      .divideBy(drawflow.zoomLevel)
-      .subtract(nodes[nodeId]!.position),
-  });
-};
-
-export const selectNode = (nodeId: string, position: Vec2, dragging = true) => {
-  setMouseData({
-    draggingNode: dragging,
-    heldConnectorId: undefined,
-    heldConnection: undefined,
-    heldNodeId: nodeId,
-    mousePosition: position,
-    clickStartPosition: position
-      .divideBy(drawflow.zoomLevel)
-      .subtract(nodes[nodeId]!.position),
-  });
 };
