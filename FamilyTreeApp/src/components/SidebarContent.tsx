@@ -12,10 +12,12 @@ const SidebarContent = () => {
     createSignal<Optional<FormDataType>>(undefined);
 
   const nodeData = createMemo<Optional<FormDataType>>(() => {
-    if (!mouseData.heldNodeId) return undefined;
+    const nodeId = mouseData.heldNodeId;
+    if (!nodeId || !nodes.has(nodeId)) return undefined;
+
     return {
-      ...nodes[mouseData.heldNodeId!].customData,
-      id: mouseData.heldNodeId!,
+      ...nodes.get(nodeId)!.customData,
+      id: nodeId,
     };
   });
 

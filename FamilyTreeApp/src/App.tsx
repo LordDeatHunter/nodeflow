@@ -14,10 +14,12 @@ const App: Component = () => {
   });
 
   const newCurveCss = createMemo(() => {
-    if (!mouseData.heldNodeId || !mouseData.heldConnectorId) return undefined;
+    const nodeId = mouseData.heldNodeId;
 
-    const heldNode = nodes[mouseData.heldNodeId];
-    if (!heldNode) return undefined;
+    if (!nodeId || !mouseData.heldConnectorId || !nodes.has(nodeId)) {
+      return undefined;
+    }
+    const heldNode = nodes.get(nodeId)!;
 
     return heldNode.customData.gender === "M"
       ? curveCss.newFatherCurve

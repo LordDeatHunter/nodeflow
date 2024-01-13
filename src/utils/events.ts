@@ -13,7 +13,8 @@ import {
 import { DrawflowEventPublisher } from "./EventPublishers";
 import { Vec2 } from "./vec2";
 import { windowSize } from "./screen-utils";
-import { DeepPartial, DrawflowData, NodeConnector } from "../drawflow-types";
+import { DeepPartial, DrawflowData } from "../drawflow-types";
+import NodeConnector from "./NodeConnector";
 
 export interface NodeConnectedEventData {
   outputNodeId: string;
@@ -289,7 +290,9 @@ drawflowEventStore.onKeyDownInDrawflow.subscribeMultiple([
           break;
         case "Space":
           if (mouseData.heldNodeId) {
-            console.log(nodes[mouseData.heldNodeId]);
+            console.log(nodes.get(mouseData.heldNodeId));
+          } else {
+            console.log(nodes);
           }
           break;
         case "Equal":

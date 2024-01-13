@@ -1,25 +1,29 @@
-import { createStore, produce } from "solid-js/store";
+import { produce } from "solid-js/store";
 import {
-  ConnectorSection,
   DeepPartial,
-  DrawflowNode,
-  NodeConnector,
+  DrawflowNode as DrawflowNodeData,
   Optional,
   SelectableElementCSS,
 } from "../drawflow-types";
 import { clamp } from "./math-utils";
-import { createMemo } from "solid-js";
 import { intersectionOfSets, isSetEmpty } from "./misc-utils";
 import { Vec2 } from "./vec2";
 import { Changes } from "./Changes";
 import { drawflowEventStore } from "./events";
 import Drawflow from "./Drawflow";
 import MouseData from "./MouseData";
+import DrawflowNode from "./DrawflowNode";
+import NodeConnector from "./NodeConnector";
+import ConnectorSection from "./ConnectorSection";
+import ConnectorDestination from "./ConnectorDestination";
+import { ReactiveMap } from "@solid-primitives/map";
+import ArrayWrapper from "./ArrayWrapper";
+import ConnectorSource from "./ConnectorSource";
 
 export const changes = new Changes();
 export const drawflow = new Drawflow();
 export const mouseData = new MouseData();
-export const [nodes, setNodes] = createStore<Record<string, DrawflowNode>>({});
+export const nodes = new ReactiveMap<string, DrawflowNode>();
 export const Constants = {
   KEYBOARD_ZOOM_AMOUNT: 15,
   MAX_SPEED: 15,
@@ -77,10 +81,22 @@ export const resetMovement = () => {
 };
 
 export const updateNodePosition = (moveSpeed: Vec2) => {
-  if (!mouseData.heldNodeId) return;
-  const node = nodes[mouseData.heldNodeId];
-  if (!node) return;
-  setNodes(mouseData.heldNodeId, "position", node.position.add(moveSpeed));
+  const id = mouseData.heldNodeId;
+
+  if (!id || !nodes.has(id)) return;
+
+  const node = nodes.get(id)!;
+
+  node.updateWithPrevious((prev) =>
+    // TODO: check if this makes sense:
+    // const newPosition = prev.position.add(
+    //   moveSpeed.divideBy(drawflow.zoomLevel),
+    // );
+
+    ({
+      position: prev.position.add(moveSpeed),
+    }),
+  );
 };
 
 setInterval(() => {
@@ -117,39 +133,33 @@ setInterval(() => {
 }, 10);
 
 export const addNode = (
-  data: Partial<DrawflowNode>,
+  data: Partial<DrawflowNodeData>,
   addToHistory = true,
 ): DrawflowNode => {
-  let newNode: Optional<DrawflowNode>;
-  setNodes(() => {
-    const newId = data.id ?? getNextFreeNodeId();
-
-    newNode = {
-      centered: data.centered ?? false,
-      connectorSections: data.connectorSections ?? {},
-      css: data.css ?? {},
-      customData: data.customData ?? ({} as SolidDrawflow.CustomDataType),
-      display: data.display ?? (() => undefined),
-      id: newId,
-      offset: Vec2.zero(),
-      position: data.position ?? Vec2.zero(),
-      ref: undefined,
-      size: Vec2.zero(),
-    };
-
-    return {
-      [newId]: newNode,
-    };
+  const id = data.id ?? getNextFreeNodeId();
+  const newNode: Optional<DrawflowNode> = new DrawflowNode({
+    centered: data.centered ?? false,
+    connectorSections:
+      data.connectorSections ?? new ReactiveMap<string, ConnectorSection>(),
+    css: data.css ?? {},
+    customData: data.customData ?? ({} as SolidDrawflow.CustomDataType),
+    display: data.display ?? (() => undefined),
+    id,
+    offset: Vec2.zero(),
+    position: data.position ?? Vec2.zero(),
+    ref: undefined,
+    size: Vec2.zero(),
   });
+  nodes.set(id, newNode);
 
   if (addToHistory) {
-    const oldConnections = getAllSourceConnections(newNode!.id);
+    const oldConnections = getAllSourceConnections(id);
 
     changes.addChange({
       type: "add",
       source: "node",
       applyChange: () => {
-        addNode(newNode!, false);
+        addNode(newNode.asObject(), false);
         oldConnections.forEach((connection) => {
           addConnection(
             connection.sourceNodeId,
@@ -162,32 +172,31 @@ export const addNode = (
         });
       },
       undoChange: () => {
-        removeNode(newNode!.id, false);
+        removeNode(id, false);
       },
     });
   }
 
-  return newNode!;
+  return newNode;
 };
 
 export const updateNode = (
   nodeId: string,
-  data: DeepPartial<DrawflowNode>,
+  data: DeepPartial<DrawflowNodeData>,
   addToHistory = true,
 ) => {
-  const node = nodes[nodeId];
-  if (!node) {
-    return;
-  }
+  if (!nodes.has(nodeId)) return;
+
+  const node = nodes.get(nodeId)!;
 
   if (addToHistory) {
-    const oldNode = nodes[nodeId];
+    const oldNode = nodes.get(nodeId)!;
     const oldConnections = getAllSourceConnections(nodeId);
     const applyChange = () => {
       updateNode(nodeId, data, false);
     };
     const undoChange = () => {
-      updateNode(nodeId, oldNode, false);
+      updateNode(nodeId, oldNode.asObject(), false);
       oldConnections.forEach((connection) => {
         addConnection(
           connection.sourceNodeId,
@@ -209,15 +218,12 @@ export const updateNode = (
 
   drawflowEventStore.onNodeDataChanged.publish({ nodeId, data });
 
-  setNodes(
-    nodeId,
-    produce((prev) => Object.assign(prev, data)),
-  );
+  node.updateWithPrevious(produce((prev) => Object.assign(prev, data)));
 };
 
 export const getNextFreeNodeId = (): string => {
   let newId = "0";
-  for (let i = 1; Object.keys(nodes).includes(newId); ++i) {
+  for (let i = 1; nodes.has(newId); ++i) {
     newId = i.toString();
   }
   return newId;
@@ -225,17 +231,17 @@ export const getNextFreeNodeId = (): string => {
 
 export const getNextFreeConnectorId = (nodeId: string): string => {
   let newId = "0";
-  const node = nodes[nodeId];
-  if (node) {
-    for (
-      let i = 1;
-      Object.values(node.connectorSections).some((section) =>
-        Object.keys(section.connectors).includes(newId),
-      );
-      ++i
-    ) {
-      newId = i.toString();
-    }
+  if (!nodes.has(nodeId)) return newId;
+
+  const node = nodes.get(nodeId)!;
+  for (
+    let i = 1;
+    Array.from(node.connectorSections.values()).some((section) =>
+      section.connectors.has(newId),
+    );
+    ++i
+  ) {
+    newId = i.toString();
   }
 
   return newId;
@@ -243,11 +249,13 @@ export const getNextFreeConnectorId = (nodeId: string): string => {
 
 export const getNextFreeConnectorSectionId = (nodeId: string): string => {
   let newId = "0";
-  const node = nodes[nodeId];
-  if (node) {
-    for (let i = 1; Object.keys(node.connectorSections).includes(newId); ++i) {
-      newId = i.toString();
-    }
+  if (!nodes.has(nodeId)) {
+    return newId;
+  }
+
+  const node = nodes.get(nodeId)!;
+  for (let i = 1; node.connectorSections.has(newId); ++i) {
+    newId = i.toString();
   }
 
   return newId;
@@ -259,103 +267,88 @@ export const getNextFreeConnectorSectionId = (nodeId: string): string => {
  * @param addToHistory - whether to add this change to the history
  */
 export const removeNode = (nodeId: string, addToHistory = true) => {
+  if (!nodes.has(nodeId)) return;
+
   mouseData.deselectNode();
-  setNodes(
-    produce((newNodes) => {
-      if (addToHistory) {
-        const oldConnections = getAllSourceConnections(nodeId);
-        const oldNode = nodes[nodeId];
 
-        changes.addChange({
-          type: "remove",
-          source: "node",
-          applyChange: () => {
-            removeNode(nodeId, false);
-          },
-          undoChange: () => {
-            addNode(oldNode, false);
-            oldConnections.forEach((connection) => {
-              addConnection(
-                connection.sourceNodeId,
-                connection.sourceConnectorId,
-                connection.destinationNodeId,
-                connection.destinationConnectorId,
-                connection.css,
-                false,
-              );
-            });
-          },
+  if (addToHistory) {
+    const oldConnections = getAllSourceConnections(nodeId);
+    const oldNode = nodes.get(nodeId)!;
+
+    changes.addChange({
+      type: "remove",
+      source: "node",
+      applyChange: () => {
+        removeNode(nodeId, false);
+      },
+      undoChange: () => {
+        addNode(oldNode, false);
+        oldConnections.forEach((connection) => {
+          addConnection(
+            connection.sourceNodeId,
+            connection.sourceConnectorId,
+            connection.destinationNodeId,
+            connection.destinationConnectorId,
+            connection.css,
+            false,
+          );
         });
-      }
+      },
+    });
+  }
 
-      removeIncomingConnections(nodeId);
-      removeOutgoingConnections(nodeId);
+  removeIncomingConnections(nodeId);
+  removeOutgoingConnections(nodeId);
 
-      delete newNodes[nodeId];
-    }),
-  );
+  nodes.delete(nodeId);
 };
 
 export const removeIncomingConnections = (nodeId: string) => {
-  if (!(nodeId in nodes)) {
+  if (!nodes.has(nodeId)) {
     return;
   }
 
-  setNodes(
-    nodeId,
-    produce((node) => {
-      Object.values(node.connectorSections).forEach((section) =>
-        Object.values(section.connectors).forEach((connector) => {
-          Object.values(connector.sources).forEach(
-            ({ sourceConnector }) =>
-              (sourceConnector.destinations =
-                sourceConnector.destinations.filter(
-                  ({ destinationConnector }) =>
-                    destinationConnector.parentSection.parentNode.id !== nodeId,
-                )),
-          );
-          connector.sources = [];
-        }),
-      );
-    }),
-  );
+  nodes.get(nodeId)!.connectorSections.forEach((section) => {
+    section.connectors.forEach((connector) => {
+      connector.sources.forEach(({ sourceConnector }) => {
+        sourceConnector.destinations.filterInPlace(
+          ({ destinationConnector }) =>
+            destinationConnector.parentSection.parentNode.id !== nodeId,
+        );
+      });
+      connector.sources = new ArrayWrapper<ConnectorSource>([]);
+    });
+  });
 };
 
 export const removeOutgoingConnections = (nodeId: string) => {
-  if (!(nodeId in nodes)) {
+  if (!nodes.has(nodeId)) {
     return;
   }
 
-  setNodes(
-    nodeId,
-    produce((node) => {
-      Object.values(node.connectorSections).forEach((section) =>
-        Object.values(section.connectors).forEach((connector) => {
-          Object.values(connector.destinations).forEach(
-            ({ destinationConnector }) =>
-              (destinationConnector.sources =
-                destinationConnector.sources.filter(
-                  ({ sourceConnector }) =>
-                    sourceConnector.parentSection.parentNode.id !== nodeId,
-                )),
-          );
-          connector.destinations = [];
-        }),
-      );
-    }),
-  );
+  nodes.get(nodeId)!.connectorSections.forEach((section) => {
+    section.connectors.forEach((connector) => {
+      connector.destinations.forEach(({ destinationConnector }) => {
+        destinationConnector.sources.filterInPlace(
+          ({ sourceConnector }) =>
+            sourceConnector.parentSection.parentNode.id !== nodeId,
+        );
+      });
+      connector.destinations = new ArrayWrapper<ConnectorDestination>([]);
+    });
+  });
 };
 
 export const getAllSourceConnectors = (nodeId: string): NodeConnector[] => {
-  const node = nodes[nodeId];
-  if (!node) {
+  if (!nodes.has(nodeId)) {
     return [];
   }
+  const node = nodes.get(nodeId)!;
 
-  return Object.values(node.connectorSections).reduce(
+  return Array.from(node.connectorSections.values()).reduce(
     (connectors, section) =>
       connectors.concat(
-        Object.values(section.connectors).flatMap((connector) =>
+        Array.from(section.connectors.values()).flatMap((connector) =>
           connector.sources.flatMap((source) => source.sourceConnector),
         ),
       ),
@@ -366,15 +359,15 @@ export const getAllSourceConnectors = (nodeId: string): NodeConnector[] => {
 export const getAllDestinationConnectors = (
   nodeId: string,
 ): NodeConnector[] => {
-  const node = nodes[nodeId];
-  if (!node) {
+  if (!nodes.has(nodeId)) {
     return [];
   }
+  const node = nodes.get(nodeId)!;
 
-  return Object.values(node.connectorSections).reduce(
+  return Array.from(node.connectorSections.values()).reduce(
     (connectors, section) =>
       connectors.concat(
-        Object.values(section.connectors).flatMap((connector) =>
+        Array.from(section.connectors.values()).flatMap((connector) =>
           connector.destinations.flatMap(
             (destination) => destination.destinationConnector,
           ),
@@ -428,11 +421,8 @@ export const addConnection = (
   css?: SelectableElementCSS,
   addToHistory = true,
 ) => {
-  const sourceNode = nodes[sourceNodeId];
-  const destinationNode = nodes[destinationNodeId];
-
   // Check if nodes exist
-  if (!sourceNode || !destinationNode) {
+  if (!nodes.has(sourceNodeId) || !nodes.has(destinationNodeId)) {
     return;
   }
 
@@ -450,14 +440,17 @@ export const addConnection = (
     return;
   }
 
-  const sourceConnector = sourceSection.connectors[sourceConnectorId];
-  const destinationConnector =
-    destinationSection.connectors[destinationConnectorId];
-
   // Check if connectors exist
-  if (!sourceConnector || !destinationConnector) {
+  if (
+    !sourceSection.connectors.has(sourceConnectorId) ||
+    !destinationSection.connectors.has(destinationConnectorId)
+  ) {
     return;
   }
+  const sourceConnector = sourceSection.connectors.get(sourceConnectorId)!;
+  const destinationConnector = destinationSection.connectors.get(
+    destinationConnectorId,
+  )!;
 
   // Check if connection already exists
   if (
@@ -493,18 +486,16 @@ export const addConnection = (
     });
   }
 
-  setNodes(
-    produce((prev) => {
-      prev[sourceNodeId].connectorSections[sourceSection.id].connectors[
-        sourceConnectorId
-      ].destinations.push({
-        destinationConnector,
-        css: css ?? {},
-      });
+  sourceConnector.destinations.push(
+    new ConnectorDestination({
+      destinationConnector,
+      css: css ?? {},
+    }),
+  );
 
-      prev[destinationNodeId].connectorSections[
-        destinationSection.id
-      ].connectors[destinationConnectorId].sources.push({ sourceConnector });
+  destinationConnector.sources.push(
+    new ConnectorSource({
+      sourceConnector,
     }),
   );
 };
@@ -516,11 +507,8 @@ export const removeConnection = (
   destinationConnectorId: string,
   addToHistory = true,
 ) => {
-  const sourceNode = nodes[sourceNodeId];
-  const destinationNode = nodes[destinationNodeId];
-
   // Check if nodes exist
-  if (!sourceNode || !destinationNode) {
+  if (!nodes.has(sourceNodeId) || !nodes.has(destinationNodeId)) {
     return;
   }
 
@@ -538,14 +526,17 @@ export const removeConnection = (
     return;
   }
 
-  const sourceConnector = sourceSection.connectors[sourceConnectorId];
-  const destinationConnector =
-    destinationSection.connectors[destinationConnectorId];
-
   // Check if connectors exist
-  if (!sourceConnector || !destinationConnector) {
+  if (
+    !sourceSection.connectors.has(sourceConnectorId) ||
+    !destinationSection.connectors.has(destinationConnectorId)
+  ) {
     return;
   }
+  const sourceConnector = sourceSection.connectors.get(sourceConnectorId)!;
+  const destinationConnector = destinationSection.connectors.get(
+    destinationConnectorId,
+  )!;
 
   if (addToHistory) {
     const css = sourceConnector.destinations.find(
@@ -579,24 +570,15 @@ export const removeConnection = (
     });
   }
 
-  setNodes(
-    produce((prev) => {
-      prev[sourceNodeId].connectorSections[sourceSection.id].connectors[
-        sourceConnectorId
-      ].destinations = sourceConnector.destinations.filter(
-        (destination) =>
-          destination.destinationConnector.parentSection.parentNode.id !==
-          destinationNodeId,
-      );
+  sourceConnector.destinations.filterInPlace(
+    (destination) =>
+      destination.destinationConnector.parentSection.parentNode.id !==
+      destinationNodeId,
+  );
 
-      prev[destinationNodeId].connectorSections[
-        destinationSection.id
-      ].connectors[destinationConnectorId].sources =
-        destinationConnector.sources.filter(
-          (source) =>
-            source.sourceConnector.parentSection.parentNode.id !== sourceNodeId,
-        );
-    }),
+  destinationConnector.sources.filterInPlace(
+    (source) =>
+      source.sourceConnector.parentSection.parentNode.id !== sourceNodeId,
   );
 };
 
@@ -607,17 +589,17 @@ export const addConnector = (
   data: Partial<NodeConnector>,
   addToHistory = true,
 ) => {
-  const node = nodes[nodeId];
-  if (!node) {
+  if (!nodes.has(nodeId)) {
     return;
   }
+  const node = nodes.get(nodeId)!;
 
-  const section = node.connectorSections[sectionId];
-  if (!section) {
+  if (!node.connectorSections.has(sectionId)) {
     return;
   }
+  const section = node.connectorSections.get(sectionId)!;
 
-  if (!connectorId || Object.keys(section.connectors).includes(connectorId)) {
+  if (!connectorId || section.connectors.has(connectorId)) {
     connectorId = getNextFreeConnectorId(node.id);
   }
 
@@ -638,17 +620,22 @@ export const addConnector = (
     });
   }
 
-  setNodes(nodeId, "connectorSections", sectionId, "connectors", connectorId, {
-    css: data?.css,
-    destinations: data?.destinations ?? [],
-    hovered: data?.hovered,
-    id: connectorId,
-    parentSection: section,
-    position: data?.position ?? Vec2.zero(),
-    ref: undefined,
-    size: Vec2.zero(),
-    sources: data?.sources ?? [],
-  });
+  section.connectors.set(
+    connectorId,
+    new NodeConnector({
+      resizeObserver: undefined,
+      css: data?.css,
+      destinations:
+        data?.destinations ?? new ArrayWrapper<ConnectorDestination>([]),
+      hovered: data?.hovered ?? false,
+      id: connectorId,
+      parentSection: section,
+      position: data?.position ?? Vec2.zero(),
+      ref: undefined,
+      size: Vec2.zero(),
+      sources: data?.sources ?? new ArrayWrapper<ConnectorSource>([]),
+    }),
+  );
 };
 
 export const removeConnector = (
@@ -657,20 +644,20 @@ export const removeConnector = (
   connectorId: string,
   addToHistory = true,
 ) => {
-  const node = nodes[nodeId];
-  if (!node) {
+  if (!nodes.has(nodeId)) {
     return;
   }
+  const node = nodes.get(nodeId)!;
 
-  const section = node.connectorSections[sectionId];
-  if (!section) {
+  if (!node.connectorSections.has(sectionId)) {
     return;
   }
+  const section = node.connectorSections.get(sectionId)!;
 
-  const connector = section.connectors[connectorId];
-  if (!connector) {
+  if (!section.connectors.has(connectorId)) {
     return;
   }
+  const connector = section.connectors.get(connectorId)!;
 
   if (addToHistory) {
     changes.addChange({
@@ -685,25 +672,17 @@ export const removeConnector = (
     });
   }
 
-  setNodes(
-    nodeId,
-    "connectorSections",
-    sectionId,
-    "connectors",
-    produce((prev) => {
-      delete prev[connectorId];
-    }),
-  );
+  section.connectors.delete(connectorId);
 };
 
 export const getConnectorCount = (nodeId: string) => {
-  const node = nodes[nodeId];
-  if (!node) {
+  if (!nodes.has(nodeId)) {
     return 0;
   }
+  const node = nodes.get(nodeId)!;
 
-  return Object.values(node.connectorSections).reduce(
-    (total, section) => total + Object.keys(section.connectors).length,
+  return Array.from(node.connectorSections.values()).reduce(
+    (total, section) => total + section.connectors.size,
     0,
   );
 };
@@ -712,27 +691,26 @@ export const getConnector = (
   nodeId: string,
   connectorId: string,
 ): Optional<NodeConnector> => {
-  const node = nodes[nodeId];
-  if (!node) {
+  if (!nodes.has(nodeId)) {
     return undefined;
   }
 
-  return getSectionFromConnector(nodeId, connectorId)?.connectors?.[
-    connectorId
-  ];
+  return getSectionFromConnector(nodeId, connectorId)?.connectors.get(
+    connectorId,
+  );
 };
 
 export const getSectionFromConnector = (
   nodeId: string,
   connectorId: string,
 ): Optional<ConnectorSection> => {
-  const node = nodes[nodeId];
-  if (!node) {
+  if (!nodes.has(nodeId)) {
     return undefined;
   }
+  const node = nodes.get(nodeId)!;
 
-  return Object.values(node.connectorSections).find(
-    (section) => section.connectors[connectorId],
+  return Array.from(node.connectorSections.values()).find((section) =>
+    section.connectors.get(connectorId),
   );
 };
 
@@ -742,12 +720,12 @@ export const addConnectorSection = (
   css?: string,
   addToHistory = true,
 ) => {
-  const node = nodes[nodeId];
-  if (!node) {
+  if (!nodes.has(nodeId)) {
     return;
   }
+  const node = nodes.get(nodeId)!;
 
-  if (!sectionId || Object.keys(node.connectorSections).includes(sectionId)) {
+  if (!sectionId || node.connectorSections.has(sectionId)) {
     sectionId = getNextFreeConnectorSectionId(node.id);
   }
 
@@ -764,12 +742,15 @@ export const addConnectorSection = (
     });
   }
 
-  setNodes(nodeId, "connectorSections", sectionId, {
-    connectors: {},
-    css,
-    id: sectionId,
-    parentNode: node,
-  });
+  node.connectorSections.set(
+    sectionId,
+    new ConnectorSection({
+      connectors: new ReactiveMap<string, NodeConnector>(),
+      css,
+      id: sectionId,
+      parentNode: node,
+    }),
+  );
 };
 
 export const removeConnectorSection = (
@@ -777,15 +758,15 @@ export const removeConnectorSection = (
   sectionId: string,
   addToHistory = true,
 ) => {
-  const node = nodes[nodeId];
-  if (!node) {
+  if (!nodes.has(nodeId)) {
     return;
   }
+  const node = nodes.get(nodeId)!;
 
-  const section = node.connectorSections[sectionId];
-  if (!section) {
+  if (!node.connectorSections.has(sectionId)) {
     return;
   }
+  const section = node.connectorSections.get(sectionId)!;
 
   if (addToHistory) {
     changes.addChange({
@@ -800,13 +781,7 @@ export const removeConnectorSection = (
     });
   }
 
-  setNodes(
-    nodeId,
-    "connectorSections",
-    produce((prev) => {
-      delete prev[sectionId];
-    }),
-  );
+  node.connectorSections.delete(sectionId);
 };
 
 /**
@@ -820,14 +795,14 @@ export const getTotalConnectedInputs = (
 ): number => getConnector(nodeId, connectorId)?.sources.length ?? 0;
 
 export const getAllConnectors = (nodeId: string): NodeConnector[] => {
-  const node = nodes[nodeId];
-  if (!node) {
+  if (!nodes.has(nodeId)) {
     return [];
   }
+  const node = nodes.get(nodeId)!;
 
-  return Object.values(node.connectorSections).reduce(
+  return Array.from(node.connectorSections.values()).reduce(
     (connectors, section) =>
-      connectors.concat(Object.values(section.connectors)),
+      connectors.concat(Array.from(section.connectors.values())),
     [] as NodeConnector[],
   );
 };

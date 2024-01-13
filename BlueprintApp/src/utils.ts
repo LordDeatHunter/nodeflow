@@ -90,22 +90,24 @@ export const setupDummyNodes = (count: number = 50) => {
 };
 
 export const setupDummyConnections = () => {
-  const totalNodes = Object.keys(nodes).length;
+  const totalNodes = nodes.size;
 
   for (let i = 0; i < totalNodes; i++) {
     const from = Math.floor(Math.random() * totalNodes);
     const to = Math.floor(Math.random() * totalNodes);
-    const fromNode = nodes[from.toString()];
-    const toNode = nodes[to.toString()];
-    if (!fromNode || !toNode) {
+
+    if (!nodes.has(from.toString()) || !nodes.has(to.toString())) {
       continue;
     }
+    const fromNode = nodes.get(from.toString())!;
+    const toNode = nodes.get(to.toString())!;
 
-    const fromConnectors = fromNode.connectorSections["outputs"].connectors;
-    const toConnectors = toNode.connectorSections["inputs"].connectors;
+    const fromConnectors =
+      fromNode.connectorSections.get("outputs")!.connectors;
+    const toConnectors = toNode.connectorSections.get("inputs")!.connectors;
 
-    const fromConnectorValues = Object.values(fromConnectors);
-    const toConnectorValues = Object.values(toConnectors);
+    const fromConnectorValues = Array.from(fromConnectors.values());
+    const toConnectorValues = Array.from(toConnectors.values());
 
     if (fromConnectorValues.length === 0 || toConnectorValues.length === 0) {
       continue;

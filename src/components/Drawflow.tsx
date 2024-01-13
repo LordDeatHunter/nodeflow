@@ -3,11 +3,7 @@ import { drawflow, getAllConnectors, mouseData, nodes } from "../utils";
 import Node from "./Node";
 import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
-import {
-  ConnectorDestination,
-  DrawflowCss,
-  NodeConnector,
-} from "../drawflow-types";
+import { DrawflowCss } from "../drawflow-types";
 import { drawflowEventStore } from "../utils/events";
 import { Vec2 } from "../utils/vec2";
 
@@ -63,7 +59,7 @@ const Drawflow: Component<DrawflowProps> = (props) => (
         transition: "scale 0.1s ease-out",
       }}
     >
-      <For each={Object.keys(nodes)}>
+      <For each={Array.from(nodes.keys())}>
         {(nodeId) => <Node nodeId={nodeId} />}
       </For>
       <svg
@@ -76,12 +72,12 @@ const Drawflow: Component<DrawflowProps> = (props) => (
           overflow: "visible",
         }}
       >
-        <For each={Object.keys(nodes)}>
+        <For each={Array.from(nodes.keys())}>
           {(nodeId) => (
             <For each={getAllConnectors(nodeId)}>
-              {(connector: NodeConnector) => (
-                <For each={connector.destinations}>
-                  {(outputConnection: ConnectorDestination) => (
+              {(connector) => (
+                <For each={connector.destinations.array}>
+                  {(outputConnection) => (
                     <NodeCurve
                       sourceNodeId={nodeId}
                       sourceConnectorId={connector.id}

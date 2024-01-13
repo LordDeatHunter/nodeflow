@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@solid-primitives/map':
+    specifier: ^0.4.8
+    version: 0.4.8(solid-js@1.7.6)
   solid-js:
     specifier: ^1.7.6
     version: 1.7.6
@@ -835,6 +838,15 @@ packages:
       solid-js: 1.7.6
     dev: true
 
+  /@solid-primitives/map@0.4.8(solid-js@1.7.6):
+    resolution: {integrity: sha512-p9zhIaIWOQVxLaUEjg6nzrBLZUOzozJFHatdKqISSIq7iJhVXX1M1MPzDHHqKyJw/nSENoKgvZehnG3HErnamw==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      '@solid-primitives/trigger': 1.0.8(solid-js@1.7.6)
+      solid-js: 1.7.6
+    dev: false
+
   /@solid-primitives/media@2.2.4(solid-js@1.7.6):
     resolution: {integrity: sha512-BvOJrF6K7IBOuVBOmCCRK0cV1yO8Kg2fTnQJDBfktNIrRYa6ynSrTILoe/ugvcesQx4BzgGfK2tqed0HdD1UsQ==}
     peerDependencies:
@@ -921,13 +933,21 @@ packages:
       solid-js: 1.7.6
     dev: true
 
+  /@solid-primitives/trigger@1.0.8(solid-js@1.7.6):
+    resolution: {integrity: sha512-p9e3FGhCk8sRPxDiCT8vnTE+DOEtrAnJZP4zV0NAV6YGnpV50JATVXNiLjKgyiI/mTIRkWB0+9c5SUbRlqFx6A==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      '@solid-primitives/utils': 6.2.1(solid-js@1.7.6)
+      solid-js: 1.7.6
+    dev: false
+
   /@solid-primitives/utils@6.2.1(solid-js@1.7.6):
     resolution: {integrity: sha512-TsecNzxiO5bLfzqb4OOuzfUmdOROcssuGqgh5rXMMaasoFZ3GoveUgdY1wcf17frMJM7kCNGNuK34EjErneZkg==}
     peerDependencies:
       solid-js: ^1.6.12
     dependencies:
       solid-js: 1.7.6
-    dev: true
 
   /@types/babel__core@7.20.1:
     resolution: {integrity: sha512-aACu/U/omhdk15O4Nfb+fHgH/z3QsfQzpnvRZhYhThms83ZnAOZz7zZAWO7mn2yyNQaA4xTO8GLK3uqFU4bYYw==}

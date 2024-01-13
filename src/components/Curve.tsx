@@ -15,7 +15,7 @@ const Curve: Component<CurveProps> = (props) => {
       position: startPosition,
       offset: startNodeOffset,
       size: startNodeSize,
-    } = nodes[mouseData.heldNodeId];
+    } = nodes.get(mouseData.heldNodeId)!;
     const output = getConnector(
       mouseData.heldNodeId,
       mouseData.heldConnectorId,

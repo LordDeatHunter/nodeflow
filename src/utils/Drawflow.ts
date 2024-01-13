@@ -2,24 +2,25 @@ import setup from "./setup";
 import { Vec2 } from "./vec2";
 import { createStore } from "solid-js/store";
 import { DrawflowData } from "../drawflow-types";
-import { createMemo } from "solid-js";
 import { windowSize } from "./screen-utils";
 import { clamp } from "./math-utils";
 import { Constants, drawflow, mouseData } from "./drawflow-storage";
 
 export default class Drawflow {
+  private readonly store;
+
   constructor() {
+    this.store = createStore<DrawflowData>({
+      currentMoveSpeed: Vec2.zero(),
+      position: Vec2.zero(),
+      startPosition: Vec2.zero(),
+      size: Vec2.zero(),
+      zoomLevel: 1,
+      pinchDistance: 0,
+    });
+
     setup();
   }
-
-  private store = createStore<DrawflowData>({
-    currentMoveSpeed: Vec2.zero(),
-    position: Vec2.zero(),
-    startPosition: Vec2.zero(),
-    size: Vec2.zero(),
-    zoomLevel: 1,
-    pinchDistance: 0,
-  });
 
   get currentMoveSpeed() {
     return this.store[0].currentMoveSpeed;
@@ -76,15 +77,15 @@ export default class Drawflow {
   public updateWithPrevious(
     updater: (data: DrawflowData) => Partial<DrawflowData>,
   ) {
-    this.store[1]((previous) => updater(previous));
+    this.store[1](updater);
   }
 
-  public center = createMemo(() => {
+  public center = () => {
     const windowDimensions = windowSize();
     const windowCenter = windowDimensions.divideBy(2);
 
     return this.position.negate().add(windowCenter);
-  });
+  };
 
   public updateZoom = (distance: number, location: Vec2) => {
     const oldZoom = this.zoomLevel;

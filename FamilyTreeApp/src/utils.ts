@@ -143,7 +143,7 @@ export const setupEvents = () => {
           mouseData.globalMousePosition(),
         );
 
-        const parent = nodes[heldNodeId!];
+        const parent = nodes.get(heldNodeId!)!;
         addConnection(
           heldNodeId!,
           "O",
@@ -159,8 +159,9 @@ export const setupEvents = () => {
   drawflowEventStore.onNodeDataChanged.subscribe(
     "update-node-css",
     ({ nodeId, data }) => {
-      const node = nodes[nodeId];
-      if (!node || !("customData" in data)) return;
+      if (!nodes.has(nodeId) || !("customData" in data)) return;
+
+      const node = nodes.get(nodeId)!;
       const customData = data.customData as SolidDrawflow.CustomDataType;
 
       if (!("gender" in customData)) return;
@@ -187,7 +188,7 @@ export const setupEvents = () => {
   drawflowEventStore.onNodeConnected.subscribe(
     "create-connection",
     ({ outputNodeId, inputNodeId }) => {
-      const outputNode = nodes[outputNodeId];
+      const outputNode = nodes.get(outputNodeId)!;
 
       if (outputNodeId === inputNodeId) return;
 
@@ -220,17 +221,14 @@ export const setupEvents = () => {
   drawflowEventStore.onPointerUpInNode.subscribe(
     "create-connection",
     ({ nodeId }) => {
-      const destinationNode = nodes[nodeId];
-      if (
-        !destinationNode ||
-        !mouseData.heldNodeId ||
-        nodeId === mouseData.heldNodeId
-      ) {
+      const destinationNode = nodes.get(nodeId);
+      const sourceId = mouseData.heldNodeId;
+      if (!destinationNode || !sourceId || nodeId === sourceId) {
         return;
       }
 
-      const sourceNode = nodes[mouseData.heldNodeId];
-      if (!sourceNode) return;
+      if (!nodes.has(sourceId)) return;
+      const sourceNode = nodes.get(sourceId)!;
 
       const connector = getConnector(nodeId, "I")?.sources;
       // Return if:
@@ -247,7 +245,7 @@ export const setupEvents = () => {
         return;
 
       addConnection(
-        mouseData.heldNodeId,
+        sourceId,
         "O",
         nodeId,
         "I",
@@ -264,16 +262,16 @@ export const setupEvents = () => {
 };
 
 export const setupDummyConnections = () => {
-  const totalNodes = Object.keys(nodes).length;
+  const totalNodes = nodes.size;
 
   for (let i = 0; i < totalNodes; i++) {
     const from = Math.floor(Math.random() * totalNodes);
     const to = Math.floor(Math.random() * totalNodes);
-    const fromNode = nodes[from.toString()];
-    const toNode = nodes[to.toString()];
-    if (!fromNode || !toNode) {
+
+    if (!nodes.has(from.toString()) || !nodes.has(to.toString())) {
       continue;
     }
+    const fromNode = nodes.get(from.toString())!;
 
     const sourceGender = fromNode.customData.gender;
 
