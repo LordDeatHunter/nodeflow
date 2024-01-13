@@ -1,5 +1,5 @@
 import { Component, For, Show } from "solid-js";
-import { drawflow, getAllConnectors, mouseData, nodes } from "../utils";
+import { drawflow, getAllConnectors } from "../utils";
 import Node from "./Node";
 import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
@@ -59,7 +59,7 @@ const Drawflow: Component<DrawflowProps> = (props) => (
         transition: "scale 0.1s ease-out",
       }}
     >
-      <For each={Array.from(nodes.keys())}>
+      <For each={Array.from(drawflow.nodes.keys())}>
         {(nodeId) => <Node nodeId={nodeId} />}
       </For>
       <svg
@@ -72,7 +72,7 @@ const Drawflow: Component<DrawflowProps> = (props) => (
           overflow: "visible",
         }}
       >
-        <For each={Array.from(nodes.keys())}>
+        <For each={Array.from(drawflow.nodes.keys())}>
           {(nodeId) => (
             <For each={getAllConnectors(nodeId)}>
               {(connector) => (
@@ -97,7 +97,11 @@ const Drawflow: Component<DrawflowProps> = (props) => (
           )}
         </For>
       </svg>
-      <Show when={mouseData.heldNodeId && mouseData.heldConnectorId}>
+      <Show
+        when={
+          drawflow.mouseData.heldNodeId && drawflow.mouseData.heldConnectorId
+        }
+      >
         <Curve css={props?.css?.newCurve} />
       </Show>
     </div>

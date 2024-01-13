@@ -1,11 +1,5 @@
 import { Component, Show } from "solid-js";
-import {
-  drawflow,
-  mouseData,
-  Optional,
-  removeNode,
-  updateNode,
-} from "solid-drawflow/src";
+import { drawflow, Optional, removeNode, updateNode } from "solid-drawflow/src";
 import { FormDataType } from "./SidebarContent";
 import formStyle from "../styles/form.module.scss";
 import { cleanInput, createFamilyMemberNode } from "../utils";
@@ -37,7 +31,11 @@ const NodeFormButtons: Component<NodeFormButtonsProps> = (props) => {
       props.formData!.gender,
       drawflow.center(),
     );
-    mouseData.selectNode(node!.id, mouseData.mousePosition!, false);
+    drawflow.mouseData.selectNode(
+      node!.id,
+      drawflow.mouseData.mousePosition!,
+      false,
+    );
     props.setFormData(undefined);
   };
   const onUpdateNode = () => {

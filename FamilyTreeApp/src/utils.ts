@@ -4,10 +4,9 @@ import {
   addConnectorSection,
   addNode,
   CurveFunctions,
+  drawflow,
   DrawflowNode,
   getConnector,
-  mouseData,
-  nodes,
   removeOutgoingConnections,
   SelectableElementCSS,
   SetCurveFunction,
@@ -131,8 +130,8 @@ export const setupEvents = () => {
   drawflowEventStore.onPointerUpInDrawflow.subscribe(
     "spawn-new-node",
     () => {
-      const heldNodeId = mouseData.heldNodeId;
-      const heldConnectorId = mouseData.heldConnectorId;
+      const heldNodeId = drawflow.mouseData.heldNodeId;
+      const heldConnectorId = drawflow.mouseData.heldConnectorId;
 
       if (!heldNodeId || !heldConnectorId) return;
 
@@ -140,10 +139,10 @@ export const setupEvents = () => {
         const newNode = createFamilyMemberNode(
           data[0].name,
           data[0].gender,
-          mouseData.globalMousePosition(),
+          drawflow.mouseData.globalMousePosition(),
         );
 
-        const parent = nodes.get(heldNodeId!)!;
+        const parent = drawflow.nodes.get(heldNodeId!)!;
         addConnection(
           heldNodeId!,
           "O",
@@ -159,9 +158,9 @@ export const setupEvents = () => {
   drawflowEventStore.onNodeDataChanged.subscribe(
     "update-node-css",
     ({ nodeId, data }) => {
-      if (!nodes.has(nodeId) || !("customData" in data)) return;
+      if (!drawflow.nodes.has(nodeId) || !("customData" in data)) return;
 
-      const node = nodes.get(nodeId)!;
+      const node = drawflow.nodes.get(nodeId)!;
       const customData = data.customData as SolidDrawflow.CustomDataType;
 
       if (!("gender" in customData)) return;
@@ -188,7 +187,7 @@ export const setupEvents = () => {
   drawflowEventStore.onNodeConnected.subscribe(
     "create-connection",
     ({ outputNodeId, inputNodeId }) => {
-      const outputNode = nodes.get(outputNodeId)!;
+      const outputNode = drawflow.nodes.get(outputNodeId)!;
 
       if (outputNodeId === inputNodeId) return;
 
@@ -221,14 +220,14 @@ export const setupEvents = () => {
   drawflowEventStore.onPointerUpInNode.subscribe(
     "create-connection",
     ({ nodeId }) => {
-      const destinationNode = nodes.get(nodeId);
-      const sourceId = mouseData.heldNodeId;
+      const destinationNode = drawflow.nodes.get(nodeId);
+      const sourceId = drawflow.mouseData.heldNodeId;
       if (!destinationNode || !sourceId || nodeId === sourceId) {
         return;
       }
 
-      if (!nodes.has(sourceId)) return;
-      const sourceNode = nodes.get(sourceId)!;
+      if (!drawflow.nodes.has(sourceId)) return;
+      const sourceNode = drawflow.nodes.get(sourceId)!;
 
       const connector = getConnector(nodeId, "I")?.sources;
       // Return if:
@@ -262,16 +261,19 @@ export const setupEvents = () => {
 };
 
 export const setupDummyConnections = () => {
-  const totalNodes = nodes.size;
+  const totalNodes = drawflow.nodes.size;
 
   for (let i = 0; i < totalNodes; i++) {
     const from = Math.floor(Math.random() * totalNodes);
     const to = Math.floor(Math.random() * totalNodes);
 
-    if (!nodes.has(from.toString()) || !nodes.has(to.toString())) {
+    if (
+      !drawflow.nodes.has(from.toString()) ||
+      !drawflow.nodes.has(to.toString())
+    ) {
       continue;
     }
-    const fromNode = nodes.get(from.toString())!;
+    const fromNode = drawflow.nodes.get(from.toString())!;
 
     const sourceGender = fromNode.customData.gender;
 

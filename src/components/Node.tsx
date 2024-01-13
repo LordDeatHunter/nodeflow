@@ -6,7 +6,7 @@ import {
   For,
   onCleanup,
 } from "solid-js";
-import { drawflow, mouseData, nodes } from "../utils";
+import { drawflow } from "../utils";
 import { Vec2 } from "../utils/vec2";
 import { drawflowEventStore } from "../utils/events";
 import Connector from "./Connector";
@@ -17,17 +17,22 @@ interface NodeProps {
 }
 
 const Node: Component<NodeProps> = (props) => {
-  const node = createMemo<DrawflowNode>(() => nodes.get(props.nodeId)!);
+  const node = createMemo<DrawflowNode>(
+    () => drawflow.nodes.get(props.nodeId)!,
+  );
   const [isVisible, setIsVisible] = createSignal<boolean>(false);
 
   createEffect(() => {
-    if (mouseData.heldNodeId !== props.nodeId || !mouseData.isDraggingNode) {
+    if (
+      drawflow.mouseData.heldNodeId !== props.nodeId ||
+      !drawflow.mouseData.isDraggingNode
+    ) {
       return;
     }
 
-    node().position = mouseData.mousePosition
+    node().position = drawflow.mouseData.mousePosition
       .divideBy(drawflow.zoomLevel)
-      .subtract(mouseData.clickStartPosition ?? Vec2.zero());
+      .subtract(drawflow.mouseData.clickStartPosition ?? Vec2.zero());
   });
 
   onCleanup(() => {
@@ -94,7 +99,8 @@ const Node: Component<NodeProps> = (props) => {
       }}
       classList={{
         [node()?.css?.normal ?? ""]: true,
-        [node()?.css?.selected ?? ""]: mouseData.heldNodeId === props.nodeId,
+        [node()?.css?.selected ?? ""]:
+          drawflow.mouseData.heldNodeId === props.nodeId,
       }}
       onMouseDown={(event) =>
         drawflowEventStore.onMouseDownInNode.publish({

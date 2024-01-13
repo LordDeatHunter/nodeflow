@@ -1,11 +1,8 @@
 import {
   addConnection,
-  changes,
   Constants,
   drawflow,
   heldKeys,
-  mouseData,
-  nodes,
   removeConnection,
   removeNode,
   resetMovement,
@@ -137,7 +134,7 @@ drawflowEventStore.onNodeConnected.subscribeMultiple([
   },
   {
     name: "reset-mouse-data",
-    event: () => mouseData.reset(),
+    event: () => drawflow.mouseData.reset(),
   },
 ]);
 
@@ -163,7 +160,7 @@ drawflowEventStore.onPointerUpInDrawflow.subscribeMultiple([
   {
     name: "reset-mouse-data",
     event: () =>
-      mouseData.updateWithPrevious((prev) => ({
+      drawflow.mouseData.updateWithPrevious((prev) => ({
         isDraggingNode: false,
         heldConnectorId: undefined,
         heldNodeId: prev.heldConnectorId ? undefined : prev.heldNodeId,
@@ -208,7 +205,7 @@ drawflowEventStore.onTouchStartInDrawflow.subscribeMultiple([
       const touch = touches[0];
       const mousePosition = Vec2.fromEvent(touch);
 
-      mouseData.update({
+      drawflow.mouseData.update({
         isDraggingNode: true,
         heldNodeId: undefined,
         mousePosition,
@@ -246,7 +243,7 @@ drawflowEventStore.onTouchMoveInDrawflow.subscribeMultiple([
 
       if (touches.length !== 1) return;
 
-      mouseData.updateWithPrevious((previous) => {
+      drawflow.mouseData.updateWithPrevious((previous) => {
         const newMousePos = Vec2.fromEvent(touches[0]);
         drawflow.updateBackgroundPosition(
           newMousePos.subtract(previous.mousePosition),
@@ -272,27 +269,27 @@ drawflowEventStore.onKeyDownInDrawflow.subscribeMultiple([
       // TODO: change to map
       switch (event.code) {
         case "Delete":
-          if (mouseData.heldNodeId) {
-            removeNode(mouseData.heldNodeId);
-          } else if (mouseData.heldConnection) {
+          if (drawflow.mouseData.heldNodeId) {
+            removeNode(drawflow.mouseData.heldNodeId);
+          } else if (drawflow.mouseData.heldConnection) {
             removeConnection(
-              mouseData.heldConnection.sourceConnector.parentSection.parentNode
-                .id,
-              mouseData.heldConnection.sourceConnector.id,
-              mouseData.heldConnection.destinationConnector.parentSection
+              drawflow.mouseData.heldConnection.sourceConnector.parentSection
                 .parentNode.id,
-              mouseData.heldConnection.destinationConnector.id,
+              drawflow.mouseData.heldConnection.sourceConnector.id,
+              drawflow.mouseData.heldConnection.destinationConnector
+                .parentSection.parentNode.id,
+              drawflow.mouseData.heldConnection.destinationConnector.id,
             );
           }
           break;
         case "Escape":
-          mouseData.deselectNode();
+          drawflow.mouseData.deselectNode();
           break;
         case "Space":
-          if (mouseData.heldNodeId) {
-            console.log(nodes.get(mouseData.heldNodeId));
+          if (drawflow.mouseData.heldNodeId) {
+            console.log(drawflow.nodes.get(drawflow.mouseData.heldNodeId));
           } else {
-            console.log(nodes);
+            console.log(drawflow.nodes);
           }
           break;
         case "Equal":
@@ -312,9 +309,9 @@ drawflowEventStore.onKeyDownInDrawflow.subscribeMultiple([
           }
           event.preventDefault();
           if (event.shiftKey) {
-            changes.redo();
+            drawflow.changes.redo();
           } else {
-            changes.undo();
+            drawflow.changes.undo();
           }
           break;
       }
@@ -345,7 +342,7 @@ drawflowEventStore.onMouseDownInDrawflow.subscribeMultiple([
   {
     name: "reset-mouse-data",
     event: ({ event }) =>
-      mouseData.update({
+      drawflow.mouseData.update({
         clickStartPosition: Vec2.of(
           event.clientX / drawflow.zoomLevel - drawflow.position.x,
           event.clientY / drawflow.zoomLevel - drawflow.position.y,
@@ -371,7 +368,7 @@ drawflowEventStore.onMouseDownInConnector.subscribeMultiple([
   {
     name: "start-creating-connection",
     event: ({ event, nodeId, connectorId }) => {
-      mouseData.startCreatingConnection(
+      drawflow.mouseData.startCreatingConnection(
         nodeId,
         Vec2.fromEvent(event),
         connectorId,
@@ -389,7 +386,11 @@ drawflowEventStore.onTouchStartInConnector.subscribeMultiple([
     name: "start-creating-connection",
     event: ({ event, nodeId, connectorId }) => {
       const { clientX: x, clientY: y } = event.touches[0];
-      mouseData.startCreatingConnection(nodeId, Vec2.of(x, y), connectorId);
+      drawflow.mouseData.startCreatingConnection(
+        nodeId,
+        Vec2.of(x, y),
+        connectorId,
+      );
     },
   },
 ]);
@@ -406,10 +407,10 @@ drawflowEventStore.onPointerUpInConnector.subscribeMultiple([
   {
     name: "connect-held-nodes",
     event: ({ event, nodeId, connectorId }) => {
-      if (!mouseData.heldConnectorId) return;
+      if (!drawflow.mouseData.heldConnectorId) return;
       drawflowEventStore.onNodeConnected.publish({
-        outputNodeId: mouseData.heldNodeId!,
-        outputId: mouseData.heldConnectorId!,
+        outputNodeId: drawflow.mouseData.heldNodeId!,
+        outputId: drawflow.mouseData.heldConnectorId!,
         inputNodeId: nodeId,
         inputId: connectorId,
         event,
@@ -420,7 +421,7 @@ drawflowEventStore.onPointerUpInConnector.subscribeMultiple([
   {
     name: "reset-mouse-data",
     event: () =>
-      mouseData.update({
+      drawflow.mouseData.update({
         isDraggingNode: false,
         heldConnectorId: undefined,
         heldNodeId: undefined,
@@ -433,7 +434,7 @@ drawflowEventStore.onMouseDownInNode.subscribeMultiple([
   {
     name: "select-node",
     event: ({ event, nodeId }) => {
-      mouseData.selectNode(nodeId, Vec2.fromEvent(event));
+      drawflow.mouseData.selectNode(nodeId, Vec2.fromEvent(event));
     },
   },
   {
@@ -447,7 +448,7 @@ drawflowEventStore.onTouchStartInNode.subscribeMultiple([
     name: "select-node",
     event: ({ event, nodeId }) => {
       const { clientX: x, clientY: y } = event.touches[0];
-      mouseData.selectNode(nodeId, Vec2.of(x, y));
+      drawflow.mouseData.selectNode(nodeId, Vec2.of(x, y));
     },
   },
   {
@@ -468,7 +469,7 @@ drawflowEventStore.onPointerDownInNodeCurve.subscribeMultiple([
   {
     name: "update-mouse-data",
     event: ({ event, sourceConnector, destinationConnector }) =>
-      mouseData.update({
+      drawflow.mouseData.update({
         isDraggingNode: false,
         heldConnection: {
           sourceConnector,
@@ -485,7 +486,7 @@ drawflowEventStore.onPointerUpInNode.subscribeMultiple([
   {
     name: "reset-mouse-data",
     event: () =>
-      mouseData.update({
+      drawflow.mouseData.update({
         isDraggingNode: false,
         heldConnection: undefined,
         heldConnectorId: undefined,
@@ -497,7 +498,7 @@ drawflowEventStore.onMouseMoveInDocument.subscribeMultiple([
   {
     name: "update-mouse-position",
     event: ({ event }) => {
-      mouseData.mousePosition = Vec2.fromEvent(event);
+      drawflow.mouseData.mousePosition = Vec2.fromEvent(event);
     },
   },
 ]);
@@ -505,7 +506,7 @@ drawflowEventStore.onMouseMoveInDocument.subscribeMultiple([
 drawflowEventStore.onPointerLeaveFromDocument.subscribeMultiple([
   {
     name: "reset-mouse-data",
-    event: () => mouseData.reset(),
+    event: () => drawflow.mouseData.reset(),
   },
 ]);
 

@@ -1,10 +1,9 @@
 import { Component, createEffect, createMemo } from "solid-js";
 import {
   CurveFunctions,
+  drawflow,
   getConnector,
   getSectionFromConnector,
-  mouseData,
-  nodes,
 } from "../utils";
 import {
   DrawflowNode,
@@ -24,10 +23,10 @@ interface NodeCurveProps {
 
 const NodeCurve: Component<NodeCurveProps> = (props) => {
   const startNode = createMemo<DrawflowNode>(
-    () => nodes.get(props.sourceNodeId)!,
+    () => drawflow.nodes.get(props.sourceNodeId)!,
   );
   const endNode = createMemo<DrawflowNode>(
-    () => nodes.get(props.destinationNodeId)!,
+    () => drawflow.nodes.get(props.destinationNodeId)!,
   );
 
   const sourceConnector = createMemo<Optional<NodeConnector>>(() =>
@@ -112,13 +111,13 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       classList={{
         [props.css?.normal ?? ""]: true,
         [props.css?.selected ?? ""]:
-          mouseData.heldConnection?.sourceConnector.parentSection.parentNode
-            .id === props.sourceNodeId &&
-          mouseData.heldConnection?.sourceConnector.id ===
+          drawflow.mouseData.heldConnection?.sourceConnector.parentSection
+            .parentNode.id === props.sourceNodeId &&
+          drawflow.mouseData.heldConnection?.sourceConnector.id ===
             props.sourceConnectorId &&
-          mouseData.heldConnection?.destinationConnector.parentSection
+          drawflow.mouseData.heldConnection?.destinationConnector.parentSection
             .parentNode.id === props.destinationNodeId &&
-          mouseData.heldConnection?.destinationConnector.id ===
+          drawflow.mouseData.heldConnection?.destinationConnector.id ===
             props.destinationConnectorId,
       }}
       style={{

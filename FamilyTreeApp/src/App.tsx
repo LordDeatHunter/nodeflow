@@ -5,7 +5,7 @@ import drawflowCss from "./styles/drawflow.module.scss";
 import { setupDummyConnections, setupDummyNodes, setupEvents } from "./utils";
 import Sidebar from "./components/Sidebar";
 import SidebarContent from "./components/SidebarContent";
-import { mouseData, nodes, windowSize } from "solid-drawflow/src";
+import { drawflow, windowSize } from "solid-drawflow/src";
 
 const App: Component = () => {
   onMount(() => {
@@ -14,12 +14,16 @@ const App: Component = () => {
   });
 
   const newCurveCss = createMemo(() => {
-    const nodeId = mouseData.heldNodeId;
+    const nodeId = drawflow.mouseData.heldNodeId;
 
-    if (!nodeId || !mouseData.heldConnectorId || !nodes.has(nodeId)) {
+    if (
+      !nodeId ||
+      !drawflow.mouseData.heldConnectorId ||
+      !drawflow.nodes.has(nodeId)
+    ) {
       return undefined;
     }
-    const heldNode = nodes.get(nodeId)!;
+    const heldNode = drawflow.nodes.get(nodeId)!;
 
     return heldNode.customData.gender === "M"
       ? curveCss.newFatherCurve

@@ -1,7 +1,7 @@
 import { createStore } from "solid-js/store";
 import { Vec2 } from "./vec2";
 import { MouseData as MouseDataType } from "../drawflow-types";
-import { drawflow, nodes, resetMovement } from "./drawflow-storage";
+import { drawflow, resetMovement } from "./drawflow-storage";
 
 export default class MouseData {
   private readonly store;
@@ -93,7 +93,7 @@ export default class MouseData {
       mousePosition: position,
       clickStartPosition: position
         .divideBy(drawflow.zoomLevel)
-        .subtract(nodes.get(nodeId)!.position),
+        .subtract(drawflow.nodes.get(nodeId)!.position),
     });
   };
 
@@ -118,7 +118,7 @@ export default class MouseData {
       mousePosition: position,
       clickStartPosition: position
         .divideBy(drawflow.zoomLevel)
-        .subtract(nodes.get(nodeId)!.position),
+        .subtract(drawflow.nodes.get(nodeId)!.position),
     });
   };
 

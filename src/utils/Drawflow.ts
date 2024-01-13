@@ -4,10 +4,17 @@ import { createStore } from "solid-js/store";
 import { DrawflowData } from "../drawflow-types";
 import { windowSize } from "./screen-utils";
 import { clamp } from "./math-utils";
-import { Constants, drawflow, mouseData } from "./drawflow-storage";
+import { Constants, drawflow } from "./drawflow-storage";
+import { Changes } from "./Changes";
+import MouseData from "./MouseData";
+import { ReactiveMap } from "@solid-primitives/map";
+import DrawflowNode from "./DrawflowNode";
 
 export default class Drawflow {
   private readonly store;
+  public readonly changes = new Changes();
+  public readonly mouseData = new MouseData();
+  public readonly nodes = new ReactiveMap<string, DrawflowNode>();
 
   constructor() {
     this.store = createStore<DrawflowData>({
@@ -102,7 +109,7 @@ export default class Drawflow {
       ).toFixed(4),
     );
 
-    mouseData.isDraggingNode = false;
+    this.mouseData.isDraggingNode = false;
 
     const windowDimensions = this.size;
     const centeredZoomLocation = location.subtract(this.startPosition);
@@ -124,7 +131,13 @@ export default class Drawflow {
   };
 
   public updateBackgroundPosition(moveDistance: Vec2, keyboard = false) {
-    if (mouseData.heldNodeId || keyboard === mouseData.isDraggingNode) return;
+    if (
+      this.mouseData.heldNodeId ||
+      keyboard === this.mouseData.isDraggingNode
+    ) {
+      return;
+    }
+
     drawflow.updateWithPrevious((prev) => ({
       position: prev.position.add(moveDistance.divideBy(drawflow.zoomLevel)),
     }));

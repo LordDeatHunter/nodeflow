@@ -8,10 +8,8 @@ import {
 import { clamp } from "./math-utils";
 import { intersectionOfSets, isSetEmpty } from "./misc-utils";
 import { Vec2 } from "./vec2";
-import { Changes } from "./Changes";
 import { drawflowEventStore } from "./events";
 import Drawflow from "./Drawflow";
-import MouseData from "./MouseData";
 import DrawflowNode from "./DrawflowNode";
 import NodeConnector from "./NodeConnector";
 import ConnectorSection from "./ConnectorSection";
@@ -20,10 +18,8 @@ import { ReactiveMap } from "@solid-primitives/map";
 import ArrayWrapper from "./ArrayWrapper";
 import ConnectorSource from "./ConnectorSource";
 
-export const changes = new Changes();
 export const drawflow = new Drawflow();
-export const mouseData = new MouseData();
-export const nodes = new ReactiveMap<string, DrawflowNode>();
+
 export const Constants = {
   KEYBOARD_ZOOM_AMOUNT: 15,
   MAX_SPEED: 15,
@@ -81,11 +77,11 @@ export const resetMovement = () => {
 };
 
 export const updateNodePosition = (moveSpeed: Vec2) => {
-  const id = mouseData.heldNodeId;
+  const id = drawflow.mouseData.heldNodeId;
 
-  if (!id || !nodes.has(id)) return;
+  if (!id || !drawflow.nodes.has(id)) return;
 
-  const node = nodes.get(id)!;
+  const node = drawflow.nodes.get(id)!;
 
   node.updateWithPrevious((prev) =>
     // TODO: check if this makes sense:
@@ -107,7 +103,7 @@ setInterval(() => {
   const movingUp = !isSetEmpty(intersectionOfSets(heldKeys, KEYS.MOVE_UP));
   const movingDown = !isSetEmpty(intersectionOfSets(heldKeys, KEYS.MOVE_DOWN));
 
-  const isDraggingNode = mouseData.heldNodeId !== undefined;
+  const isDraggingNode = drawflow.mouseData.heldNodeId !== undefined;
 
   drawflow.currentMoveSpeed = Vec2.of(
     calculateMovement(
@@ -125,7 +121,7 @@ setInterval(() => {
       !isDraggingNode,
     ),
   );
-  if (!mouseData.heldNodeId) {
+  if (!drawflow.mouseData.heldNodeId) {
     drawflow.updateBackgroundPosition(drawflow.currentMoveSpeed, true);
   } else {
     updateNodePosition(drawflow.currentMoveSpeed);
@@ -150,12 +146,12 @@ export const addNode = (
     ref: undefined,
     size: Vec2.zero(),
   });
-  nodes.set(id, newNode);
+  drawflow.nodes.set(id, newNode);
 
   if (addToHistory) {
     const oldConnections = getAllSourceConnections(id);
 
-    changes.addChange({
+    drawflow.changes.addChange({
       type: "add",
       source: "node",
       applyChange: () => {
@@ -185,12 +181,12 @@ export const updateNode = (
   data: DeepPartial<DrawflowNodeData>,
   addToHistory = true,
 ) => {
-  if (!nodes.has(nodeId)) return;
+  if (!drawflow.nodes.has(nodeId)) return;
 
-  const node = nodes.get(nodeId)!;
+  const node = drawflow.nodes.get(nodeId)!;
 
   if (addToHistory) {
-    const oldNode = nodes.get(nodeId)!;
+    const oldNode = drawflow.nodes.get(nodeId)!;
     const oldConnections = getAllSourceConnections(nodeId);
     const applyChange = () => {
       updateNode(nodeId, data, false);
@@ -208,7 +204,7 @@ export const updateNode = (
         );
       });
     };
-    changes.addChange({
+    drawflow.changes.addChange({
       type: "update",
       source: "node",
       applyChange,
@@ -223,7 +219,7 @@ export const updateNode = (
 
 export const getNextFreeNodeId = (): string => {
   let newId = "0";
-  for (let i = 1; nodes.has(newId); ++i) {
+  for (let i = 1; drawflow.nodes.has(newId); ++i) {
     newId = i.toString();
   }
   return newId;
@@ -231,9 +227,9 @@ export const getNextFreeNodeId = (): string => {
 
 export const getNextFreeConnectorId = (nodeId: string): string => {
   let newId = "0";
-  if (!nodes.has(nodeId)) return newId;
+  if (!drawflow.nodes.has(nodeId)) return newId;
 
-  const node = nodes.get(nodeId)!;
+  const node = drawflow.nodes.get(nodeId)!;
   for (
     let i = 1;
     Array.from(node.connectorSections.values()).some((section) =>
@@ -249,11 +245,11 @@ export const getNextFreeConnectorId = (nodeId: string): string => {
 
 export const getNextFreeConnectorSectionId = (nodeId: string): string => {
   let newId = "0";
-  if (!nodes.has(nodeId)) {
+  if (!drawflow.nodes.has(nodeId)) {
     return newId;
   }
 
-  const node = nodes.get(nodeId)!;
+  const node = drawflow.nodes.get(nodeId)!;
   for (let i = 1; node.connectorSections.has(newId); ++i) {
     newId = i.toString();
   }
@@ -267,15 +263,15 @@ export const getNextFreeConnectorSectionId = (nodeId: string): string => {
  * @param addToHistory - whether to add this change to the history
  */
 export const removeNode = (nodeId: string, addToHistory = true) => {
-  if (!nodes.has(nodeId)) return;
+  if (!drawflow.nodes.has(nodeId)) return;
 
-  mouseData.deselectNode();
+  drawflow.mouseData.deselectNode();
 
   if (addToHistory) {
     const oldConnections = getAllSourceConnections(nodeId);
-    const oldNode = nodes.get(nodeId)!;
+    const oldNode = drawflow.nodes.get(nodeId)!;
 
-    changes.addChange({
+    drawflow.changes.addChange({
       type: "remove",
       source: "node",
       applyChange: () => {
@@ -300,15 +296,15 @@ export const removeNode = (nodeId: string, addToHistory = true) => {
   removeIncomingConnections(nodeId);
   removeOutgoingConnections(nodeId);
 
-  nodes.delete(nodeId);
+  drawflow.nodes.delete(nodeId);
 };
 
 export const removeIncomingConnections = (nodeId: string) => {
-  if (!nodes.has(nodeId)) {
+  if (!drawflow.nodes.has(nodeId)) {
     return;
   }
 
-  nodes.get(nodeId)!.connectorSections.forEach((section) => {
+  drawflow.nodes.get(nodeId)!.connectorSections.forEach((section) => {
     section.connectors.forEach((connector) => {
       connector.sources.forEach(({ sourceConnector }) => {
         sourceConnector.destinations.filterInPlace(
@@ -322,11 +318,11 @@ export const removeIncomingConnections = (nodeId: string) => {
 };
 
 export const removeOutgoingConnections = (nodeId: string) => {
-  if (!nodes.has(nodeId)) {
+  if (!drawflow.nodes.has(nodeId)) {
     return;
   }
 
-  nodes.get(nodeId)!.connectorSections.forEach((section) => {
+  drawflow.nodes.get(nodeId)!.connectorSections.forEach((section) => {
     section.connectors.forEach((connector) => {
       connector.destinations.forEach(({ destinationConnector }) => {
         destinationConnector.sources.filterInPlace(
@@ -340,10 +336,10 @@ export const removeOutgoingConnections = (nodeId: string) => {
 };
 
 export const getAllSourceConnectors = (nodeId: string): NodeConnector[] => {
-  if (!nodes.has(nodeId)) {
+  if (!drawflow.nodes.has(nodeId)) {
     return [];
   }
-  const node = nodes.get(nodeId)!;
+  const node = drawflow.nodes.get(nodeId)!;
 
   return Array.from(node.connectorSections.values()).reduce(
     (connectors, section) =>
@@ -359,10 +355,10 @@ export const getAllSourceConnectors = (nodeId: string): NodeConnector[] => {
 export const getAllDestinationConnectors = (
   nodeId: string,
 ): NodeConnector[] => {
-  if (!nodes.has(nodeId)) {
+  if (!drawflow.nodes.has(nodeId)) {
     return [];
   }
-  const node = nodes.get(nodeId)!;
+  const node = drawflow.nodes.get(nodeId)!;
 
   return Array.from(node.connectorSections.values()).reduce(
     (connectors, section) =>
@@ -422,7 +418,10 @@ export const addConnection = (
   addToHistory = true,
 ) => {
   // Check if nodes exist
-  if (!nodes.has(sourceNodeId) || !nodes.has(destinationNodeId)) {
+  if (
+    !drawflow.nodes.has(sourceNodeId) ||
+    !drawflow.nodes.has(destinationNodeId)
+  ) {
     return;
   }
 
@@ -463,7 +462,7 @@ export const addConnection = (
   }
 
   if (addToHistory) {
-    changes.addChange({
+    drawflow.changes.addChange({
       type: "add",
       source: "connection",
       applyChange: () =>
@@ -508,7 +507,10 @@ export const removeConnection = (
   addToHistory = true,
 ) => {
   // Check if nodes exist
-  if (!nodes.has(sourceNodeId) || !nodes.has(destinationNodeId)) {
+  if (
+    !drawflow.nodes.has(sourceNodeId) ||
+    !drawflow.nodes.has(destinationNodeId)
+  ) {
     return;
   }
 
@@ -562,7 +564,7 @@ export const removeConnection = (
         false,
       );
     };
-    changes.addChange({
+    drawflow.changes.addChange({
       type: "remove",
       source: "connection",
       applyChange,
@@ -589,10 +591,10 @@ export const addConnector = (
   data: Partial<NodeConnector>,
   addToHistory = true,
 ) => {
-  if (!nodes.has(nodeId)) {
+  if (!drawflow.nodes.has(nodeId)) {
     return;
   }
-  const node = nodes.get(nodeId)!;
+  const node = drawflow.nodes.get(nodeId)!;
 
   if (!node.connectorSections.has(sectionId)) {
     return;
@@ -608,7 +610,7 @@ export const addConnector = (
   }
 
   if (addToHistory) {
-    changes.addChange({
+    drawflow.changes.addChange({
       type: "add",
       source: "connector",
       applyChange: () => {
@@ -644,10 +646,10 @@ export const removeConnector = (
   connectorId: string,
   addToHistory = true,
 ) => {
-  if (!nodes.has(nodeId)) {
+  if (!drawflow.nodes.has(nodeId)) {
     return;
   }
-  const node = nodes.get(nodeId)!;
+  const node = drawflow.nodes.get(nodeId)!;
 
   if (!node.connectorSections.has(sectionId)) {
     return;
@@ -660,7 +662,7 @@ export const removeConnector = (
   const connector = section.connectors.get(connectorId)!;
 
   if (addToHistory) {
-    changes.addChange({
+    drawflow.changes.addChange({
       type: "remove",
       source: "connector",
       applyChange: () => {
@@ -676,10 +678,10 @@ export const removeConnector = (
 };
 
 export const getConnectorCount = (nodeId: string) => {
-  if (!nodes.has(nodeId)) {
+  if (!drawflow.nodes.has(nodeId)) {
     return 0;
   }
-  const node = nodes.get(nodeId)!;
+  const node = drawflow.nodes.get(nodeId)!;
 
   return Array.from(node.connectorSections.values()).reduce(
     (total, section) => total + section.connectors.size,
@@ -691,7 +693,7 @@ export const getConnector = (
   nodeId: string,
   connectorId: string,
 ): Optional<NodeConnector> => {
-  if (!nodes.has(nodeId)) {
+  if (!drawflow.nodes.has(nodeId)) {
     return undefined;
   }
 
@@ -704,10 +706,10 @@ export const getSectionFromConnector = (
   nodeId: string,
   connectorId: string,
 ): Optional<ConnectorSection> => {
-  if (!nodes.has(nodeId)) {
+  if (!drawflow.nodes.has(nodeId)) {
     return undefined;
   }
-  const node = nodes.get(nodeId)!;
+  const node = drawflow.nodes.get(nodeId)!;
 
   return Array.from(node.connectorSections.values()).find((section) =>
     section.connectors.get(connectorId),
@@ -720,17 +722,17 @@ export const addConnectorSection = (
   css?: string,
   addToHistory = true,
 ) => {
-  if (!nodes.has(nodeId)) {
+  if (!drawflow.nodes.has(nodeId)) {
     return;
   }
-  const node = nodes.get(nodeId)!;
+  const node = drawflow.nodes.get(nodeId)!;
 
   if (!sectionId || node.connectorSections.has(sectionId)) {
     sectionId = getNextFreeConnectorSectionId(node.id);
   }
 
   if (addToHistory) {
-    changes.addChange({
+    drawflow.changes.addChange({
       type: "remove",
       source: "connector-section",
       applyChange: () => {
@@ -758,10 +760,10 @@ export const removeConnectorSection = (
   sectionId: string,
   addToHistory = true,
 ) => {
-  if (!nodes.has(nodeId)) {
+  if (!drawflow.nodes.has(nodeId)) {
     return;
   }
-  const node = nodes.get(nodeId)!;
+  const node = drawflow.nodes.get(nodeId)!;
 
   if (!node.connectorSections.has(sectionId)) {
     return;
@@ -769,7 +771,7 @@ export const removeConnectorSection = (
   const section = node.connectorSections.get(sectionId)!;
 
   if (addToHistory) {
-    changes.addChange({
+    drawflow.changes.addChange({
       type: "remove",
       source: "connector-section",
       applyChange: () => {
@@ -795,10 +797,10 @@ export const getTotalConnectedInputs = (
 ): number => getConnector(nodeId, connectorId)?.sources.length ?? 0;
 
 export const getAllConnectors = (nodeId: string): NodeConnector[] => {
-  if (!nodes.has(nodeId)) {
+  if (!drawflow.nodes.has(nodeId)) {
     return [];
   }
-  const node = nodes.get(nodeId)!;
+  const node = drawflow.nodes.get(nodeId)!;
 
   return Array.from(node.connectorSections.values()).reduce(
     (connectors, section) =>

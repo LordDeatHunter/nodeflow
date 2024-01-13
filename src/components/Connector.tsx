@@ -1,8 +1,8 @@
-import { nodes } from "../utils";
 import { Vec2 } from "../utils/vec2";
 import { drawflowEventStore } from "../utils/events";
 import { Component } from "solid-js";
 import NodeConnector from "../utils/NodeConnector";
+import { drawflow } from "../utils";
 
 interface ConnectorProps {
   connector: NodeConnector;
@@ -17,7 +17,7 @@ const Connector: Component<ConnectorProps> = (props) => (
       setTimeout(() => {
         if (!el) return;
 
-        const connector = nodes
+        const connector = drawflow.nodes
           .get(props.nodeId)!
           .connectorSections.get(props.sectionId)!
           .connectors.get(props.connectorId)!;
