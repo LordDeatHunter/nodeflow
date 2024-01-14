@@ -5,7 +5,7 @@ import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
 import { DrawflowCss } from "../drawflow-types";
 import { drawflowEventStore } from "../utils/events";
-import { Vec2 } from "../utils/vec2";
+import { Vec2 } from "../utils/data/Vec2";
 
 interface DrawflowProps {
   css?: DrawflowCss;

@@ -1,7 +1,7 @@
-import { Vec2 } from "../utils/vec2";
+import { Vec2 } from "../utils/data/Vec2";
 import { drawflowEventStore } from "../utils/events";
 import { Component } from "solid-js";
-import NodeConnector from "../utils/NodeConnector";
+import NodeConnector from "../utils/data/NodeConnector";
 import { drawflow } from "../utils";
 
 interface ConnectorProps {

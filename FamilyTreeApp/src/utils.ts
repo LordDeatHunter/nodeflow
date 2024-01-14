@@ -10,7 +10,7 @@ import {
   SetCurveFunction,
 } from "solid-drawflow/src";
 import nodeCss from "./styles/node.module.scss";
-import { Vec2 } from "solid-drawflow/src/utils/vec2";
+import { Vec2 } from "solid-drawflow/src/utils/data/Vec2";
 import { drawflowEventStore } from "solid-drawflow/src/utils/events";
 import curveCss from "./styles/curve.module.scss";
 import NodeBody from "./components/NodeBody";

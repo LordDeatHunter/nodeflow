@@ -7,10 +7,10 @@ import {
   onCleanup,
 } from "solid-js";
 import { drawflow } from "../utils";
-import { Vec2 } from "../utils/vec2";
+import { Vec2 } from "../utils/data/Vec2";
 import { drawflowEventStore } from "../utils/events";
 import Connector from "./Connector";
-import DrawflowNode from "../utils/DrawflowNode";
+import DrawflowNode from "../utils/data/DrawflowNode";
 
 interface NodeProps {
   nodeId: string;

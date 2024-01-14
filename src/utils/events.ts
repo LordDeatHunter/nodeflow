@@ -6,11 +6,11 @@ import {
   removeConnection,
   resetMovement,
 } from "./drawflow-storage";
-import { DrawflowEventPublisher } from "./EventPublishers";
-import { Vec2 } from "./vec2";
+import { DrawflowEventPublisher } from "./data/EventPublishers";
+import { Vec2 } from "./data/Vec2";
 import { windowSize } from "./screen-utils";
 import { DeepPartial, DrawflowData } from "../drawflow-types";
-import NodeConnector from "./NodeConnector";
+import NodeConnector from "./data/NodeConnector";
 
 export interface NodeConnectedEventData {
   outputNodeId: string;

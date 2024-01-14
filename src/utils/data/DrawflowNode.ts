@@ -1,7 +1,7 @@
-import { DrawflowNode as DrawflowNodeData } from "../drawflow-types";
+import { DrawflowNode as DrawflowNodeData } from "../../drawflow-types";
 import { createStore } from "solid-js/store";
-import { Vec2 } from "./vec2";
-import { drawflow } from "./drawflow-storage";
+import { Vec2 } from "./Vec2";
+import { drawflow } from "../drawflow-storage";
 
 export default class DrawflowNode {
   private readonly store;

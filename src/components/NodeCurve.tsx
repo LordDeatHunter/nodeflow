@@ -11,7 +11,7 @@ import {
   SelectableElementCSS,
 } from "../drawflow-types";
 import { drawflowEventStore } from "../utils/events";
-import NodeConnector from "../utils/NodeConnector";
+import NodeConnector from "../utils/data/NodeConnector";
 
 interface NodeCurveProps {
   sourceNodeId: string;

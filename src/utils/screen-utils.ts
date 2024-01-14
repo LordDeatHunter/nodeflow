@@ -1,5 +1,5 @@
 import { createEffect, createSignal } from "solid-js";
-import { Vec2 } from "./vec2";
+import { Vec2 } from "./data/Vec2";
 
 export const [windowSize, setWindowSize] = createSignal<Vec2>(
   Vec2.of(window.innerWidth, window.innerHeight),

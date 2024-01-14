@@ -1,15 +1,15 @@
 import { Optional, SelectableElementCSS } from "../drawflow-types";
 import { clamp } from "./math-utils";
 import { intersectionOfSets, isSetEmpty } from "./misc-utils";
-import { Vec2 } from "./vec2";
-import Drawflow from "./Drawflow";
-import DrawflowNode from "./DrawflowNode";
-import NodeConnector from "./NodeConnector";
-import ConnectorSection from "./ConnectorSection";
-import ConnectorDestination from "./ConnectorDestination";
+import { Vec2 } from "./data/Vec2";
+import Drawflow from "./data/Drawflow";
+import DrawflowNode from "./data/DrawflowNode";
+import NodeConnector from "./data/NodeConnector";
+import ConnectorSection from "./data/ConnectorSection";
+import ConnectorDestination from "./data/ConnectorDestination";
 import { ReactiveMap } from "@solid-primitives/map";
-import ArrayWrapper from "./ArrayWrapper";
-import ConnectorSource from "./ConnectorSource";
+import ArrayWrapper from "./data/ArrayWrapper";
+import ConnectorSource from "./data/ConnectorSource";
 
 export const drawflow = new Drawflow();
 

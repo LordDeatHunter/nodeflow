@@ -1,4 +1,4 @@
-import { Vec2 } from "solid-drawflow/src/utils/vec2";
+import { Vec2 } from "solid-drawflow/src/utils/data/Vec2";
 import {
   addConnection,
   addConnector,

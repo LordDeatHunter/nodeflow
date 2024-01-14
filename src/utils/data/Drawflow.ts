@@ -1,25 +1,25 @@
-import setup from "./setup";
-import { Vec2 } from "./vec2";
+import setup from "../setup";
+import { Vec2 } from "./Vec2";
 import { createStore, produce } from "solid-js/store";
 import {
   DeepPartial,
   DrawflowData,
   DrawflowNode as DrawflowNodeData,
   Optional,
-} from "../drawflow-types";
-import { windowSize } from "./screen-utils";
-import { clamp } from "./math-utils";
+} from "../../drawflow-types";
+import { windowSize } from "../screen-utils";
+import { clamp } from "../math-utils";
 import {
   addConnection,
   Constants,
   getNextFreeNodeId,
-} from "./drawflow-storage";
+} from "../drawflow-storage";
 import { Changes } from "./Changes";
 import MouseData from "./MouseData";
 import { ReactiveMap } from "@solid-primitives/map";
 import DrawflowNode from "./DrawflowNode";
 import ConnectorSection from "./ConnectorSection";
-import { drawflowEventStore } from "./events";
+import { drawflowEventStore } from "../events";
 import ArrayWrapper from "./ArrayWrapper";
 import ConnectorSource from "./ConnectorSource";
 import ConnectorDestination from "./ConnectorDestination";

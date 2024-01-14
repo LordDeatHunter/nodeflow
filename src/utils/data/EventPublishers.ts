@@ -1,4 +1,4 @@
-import { DrawflowEvent, DrawflowEventsDataMap } from "./events";
+import { DrawflowEvent, DrawflowEventsDataMap } from "../events";
 import { ReactiveMap } from "@solid-primitives/map";
 
 export class BaseEventPublisher<

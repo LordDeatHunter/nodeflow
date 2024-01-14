@@ -1,4 +1,4 @@
-import { Vec2 } from "./vec2";
+import { Vec2 } from "./data/Vec2";
 import { Constants } from "./drawflow-storage";
 
 export const getHorizontalCurve = (start: Vec2, end: Vec2): Vec2 =>

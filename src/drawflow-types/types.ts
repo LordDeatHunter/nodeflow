@@ -1,12 +1,12 @@
 import { JSX } from "solid-js";
-import { Vec2 } from "../utils/vec2";
-import ConnectorSectionClass from "../utils/ConnectorSection";
-import DrawflowNodeClass from "../utils/DrawflowNode";
-import NodeConnectorClass from "../utils/NodeConnector";
-import ConnectorDestinationClass from "../utils/ConnectorDestination";
-import ConnectorSourceClass from "../utils/ConnectorSource";
+import { Vec2 } from "../utils/data/Vec2";
+import ConnectorSectionClass from "../utils/data/ConnectorSection";
+import DrawflowNodeClass from "../utils/data/DrawflowNode";
+import NodeConnectorClass from "../utils/data/NodeConnector";
+import ConnectorDestinationClass from "../utils/data/ConnectorDestination";
+import ConnectorSourceClass from "../utils/data/ConnectorSource";
 import { ReactiveMap } from "@solid-primitives/map";
-import ArrayWrapper from "../utils/ArrayWrapper";
+import ArrayWrapper from "../utils/data/ArrayWrapper";
 
 export type Optional<T> = T | undefined;
 
