@@ -1,20 +1,35 @@
 import setup from "./setup";
 import { Vec2 } from "./vec2";
-import { createStore } from "solid-js/store";
-import { DrawflowData } from "../drawflow-types";
+import { createStore, produce } from "solid-js/store";
+import {
+  DeepPartial,
+  DrawflowData,
+  DrawflowNode as DrawflowNodeData,
+  Optional,
+} from "../drawflow-types";
 import { windowSize } from "./screen-utils";
 import { clamp } from "./math-utils";
-import { Constants, drawflow } from "./drawflow-storage";
+import {
+  addConnection,
+  Constants,
+  getNextFreeNodeId,
+} from "./drawflow-storage";
 import { Changes } from "./Changes";
 import MouseData from "./MouseData";
 import { ReactiveMap } from "@solid-primitives/map";
 import DrawflowNode from "./DrawflowNode";
+import ConnectorSection from "./ConnectorSection";
+import { drawflowEventStore } from "./events";
+import ArrayWrapper from "./ArrayWrapper";
+import ConnectorSource from "./ConnectorSource";
+import ConnectorDestination from "./ConnectorDestination";
+import NodeConnector from "./NodeConnector";
 
 export default class Drawflow {
   private readonly store;
-  public readonly changes = new Changes();
-  public readonly mouseData = new MouseData();
-  public readonly nodes = new ReactiveMap<string, DrawflowNode>();
+  public readonly changes;
+  public readonly mouseData;
+  public readonly nodes;
 
   constructor() {
     this.store = createStore<DrawflowData>({
@@ -25,6 +40,10 @@ export default class Drawflow {
       zoomLevel: 1,
       pinchDistance: 0,
     });
+
+    this.changes = new Changes();
+    this.mouseData = new MouseData();
+    this.nodes = new ReactiveMap<string, DrawflowNode>();
 
     setup();
   }
@@ -138,8 +157,249 @@ export default class Drawflow {
       return;
     }
 
-    drawflow.updateWithPrevious((prev) => ({
-      position: prev.position.add(moveDistance.divideBy(drawflow.zoomLevel)),
+    this.updateWithPrevious((prev) => ({
+      position: prev.position.add(moveDistance.divideBy(this.zoomLevel)),
     }));
+  }
+
+  public addNode(
+    data: Partial<DrawflowNodeData>,
+    addToHistory = true,
+  ): DrawflowNode {
+    const id = data.id ?? getNextFreeNodeId();
+    const newNode: Optional<DrawflowNode> = new DrawflowNode({
+      centered: data.centered ?? false,
+      connectorSections:
+        data.connectorSections ?? new ReactiveMap<string, ConnectorSection>(),
+      css: data.css ?? {},
+      customData: data.customData ?? ({} as SolidDrawflow.CustomDataType),
+      display: data.display ?? (() => undefined),
+      id,
+      offset: Vec2.zero(),
+      position: data.position ?? Vec2.zero(),
+      ref: undefined,
+      size: Vec2.zero(),
+    });
+    this.nodes.set(id, newNode);
+
+    if (addToHistory) {
+      const oldConnections = this.getAllSourceConnections(id);
+
+      this.changes.addChange({
+        type: "add",
+        source: "node",
+        applyChange: () => {
+          this.addNode(newNode.asObject(), false);
+          oldConnections.forEach((connection) => {
+            addConnection(
+              connection.sourceNodeId,
+              connection.sourceConnectorId,
+              connection.destinationNodeId,
+              connection.destinationConnectorId,
+              connection.css,
+              false,
+            );
+          });
+        },
+        undoChange: () => {
+          this.removeNode(id, false);
+        },
+      });
+    }
+
+    return newNode;
+  }
+
+  public updateNode(
+    nodeId: string,
+    data: DeepPartial<DrawflowNodeData>,
+    addToHistory = true,
+  ) {
+    if (!this.nodes.has(nodeId)) return;
+
+    const node = this.nodes.get(nodeId)!;
+
+    if (addToHistory) {
+      const oldNode = this.nodes.get(nodeId)!;
+      const oldConnections = this.getAllSourceConnections(nodeId);
+      const applyChange = () => {
+        this.updateNode(nodeId, data, false);
+      };
+      const undoChange = () => {
+        this.updateNode(nodeId, oldNode.asObject(), false);
+        oldConnections.forEach((connection) => {
+          addConnection(
+            connection.sourceNodeId,
+            connection.sourceConnectorId,
+            connection.destinationNodeId,
+            connection.destinationConnectorId,
+            connection.css,
+            false,
+          );
+        });
+      };
+      this.changes.addChange({
+        type: "update",
+        source: "node",
+        applyChange,
+        undoChange,
+      });
+    }
+
+    drawflowEventStore.onNodeDataChanged.publish({ nodeId, data });
+
+    node.updateWithPrevious(produce((prev) => Object.assign(prev, data)));
+  }
+
+  /**
+   * Removes a node and all connections to and from it
+   * @param nodeId - the id of the node to remove
+   * @param addToHistory - whether to add this change to the history
+   */
+  removeNode(nodeId: string, addToHistory = true) {
+    if (!this.nodes.has(nodeId)) return;
+
+    this.mouseData.deselectNode();
+
+    if (addToHistory) {
+      const oldConnections = this.getAllSourceConnections(nodeId);
+      const oldNode = this.nodes.get(nodeId)!;
+
+      this.changes.addChange({
+        type: "remove",
+        source: "node",
+        applyChange: () => {
+          this.removeNode(nodeId, false);
+        },
+        undoChange: () => {
+          this.addNode(oldNode, false);
+          oldConnections.forEach((connection) => {
+            addConnection(
+              connection.sourceNodeId,
+              connection.sourceConnectorId,
+              connection.destinationNodeId,
+              connection.destinationConnectorId,
+              connection.css,
+              false,
+            );
+          });
+        },
+      });
+    }
+
+    this.removeIncomingConnections(nodeId);
+    this.removeOutgoingConnections(nodeId);
+
+    this.nodes.delete(nodeId);
+  }
+
+  public removeIncomingConnections(nodeId: string) {
+    if (!this.nodes.has(nodeId)) {
+      return;
+    }
+
+    this.nodes.get(nodeId)!.connectorSections.forEach((section) => {
+      section.connectors.forEach((connector) => {
+        connector.sources.forEach(({ sourceConnector }) => {
+          sourceConnector.destinations.filterInPlace(
+            ({ destinationConnector }) =>
+              destinationConnector.parentSection.parentNode.id !== nodeId,
+          );
+        });
+        connector.sources = new ArrayWrapper<ConnectorSource>([]);
+      });
+    });
+  }
+
+  public removeOutgoingConnections(nodeId: string) {
+    if (!this.nodes.has(nodeId)) {
+      return;
+    }
+
+    this.nodes.get(nodeId)!.connectorSections.forEach((section) => {
+      section.connectors.forEach((connector) => {
+        connector.destinations.forEach(({ destinationConnector }) => {
+          destinationConnector.sources.filterInPlace(
+            ({ sourceConnector }) =>
+              sourceConnector.parentSection.parentNode.id !== nodeId,
+          );
+        });
+        connector.destinations = new ArrayWrapper<ConnectorDestination>([]);
+      });
+    });
+  }
+
+  public getAllSourceConnectors(nodeId: string): NodeConnector[] {
+    if (!this.nodes.has(nodeId)) {
+      return [];
+    }
+    const node = this.nodes.get(nodeId)!;
+
+    return Array.from(node.connectorSections.values()).reduce(
+      (connectors, section) =>
+        connectors.concat(
+          Array.from(section.connectors.values()).flatMap((connector) =>
+            connector.sources.flatMap((source) => source.sourceConnector),
+          ),
+        ),
+      [] as NodeConnector[],
+    );
+  }
+
+  public getAllDestinationConnectors(nodeId: string): NodeConnector[] {
+    if (!this.nodes.has(nodeId)) {
+      return [];
+    }
+    const node = this.nodes.get(nodeId)!;
+
+    return Array.from(node.connectorSections.values()).reduce(
+      (connectors, section) =>
+        connectors.concat(
+          Array.from(section.connectors.values()).flatMap((connector) =>
+            connector.destinations.flatMap(
+              (destination) => destination.destinationConnector,
+            ),
+          ),
+        ),
+      [] as NodeConnector[],
+    );
+  }
+
+  public getAllSourceConnections(nodeId: string) {
+    return this.getAllSourceConnectors(nodeId)
+      .map((source) => {
+        const filteredDestinations = source.destinations.filter(
+          (destination) =>
+            destination.destinationConnector.parentSection.parentNode.id ===
+            nodeId,
+        );
+        return filteredDestinations.map((destination) => ({
+          sourceNodeId: source.parentSection.parentNode.id,
+          sourceConnectorId: source.id,
+          destinationNodeId:
+            destination.destinationConnector.parentSection.parentNode.id,
+          destinationConnectorId: destination.destinationConnector.id,
+          css: destination.css,
+        }));
+      })
+      .flat();
+  }
+
+  public getAllDestinationConnections(nodeId: string) {
+    return this.getAllDestinationConnectors(nodeId)
+      .map((destination) => {
+        const filteredSources = destination.sources.filter(
+          (source) =>
+            source.sourceConnector.parentSection.parentNode.id === nodeId,
+        );
+        return filteredSources.map((source) => ({
+          sourceNodeId: source.sourceConnector.parentSection.parentNode.id,
+          sourceConnectorId: source.sourceConnector.id,
+          destinationNodeId: destination.parentSection.parentNode.id,
+          destinationConnectorId: destination.id,
+          css: source.sourceConnector.css,
+        }));
+      })
+      .flat();
   }
 }

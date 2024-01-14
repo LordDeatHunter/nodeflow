@@ -1,14 +1,7 @@
-import { produce } from "solid-js/store";
-import {
-  DeepPartial,
-  DrawflowNode as DrawflowNodeData,
-  Optional,
-  SelectableElementCSS,
-} from "../drawflow-types";
+import { Optional, SelectableElementCSS } from "../drawflow-types";
 import { clamp } from "./math-utils";
 import { intersectionOfSets, isSetEmpty } from "./misc-utils";
 import { Vec2 } from "./vec2";
-import { drawflowEventStore } from "./events";
 import Drawflow from "./Drawflow";
 import DrawflowNode from "./DrawflowNode";
 import NodeConnector from "./NodeConnector";
@@ -76,25 +69,7 @@ export const resetMovement = () => {
   KEYS.MOVE_DOWN.forEach((key) => heldKeys.delete(key));
 };
 
-export const updateNodePosition = (moveSpeed: Vec2) => {
-  const id = drawflow.mouseData.heldNodeId;
-
-  if (!id || !drawflow.nodes.has(id)) return;
-
-  const node = drawflow.nodes.get(id)!;
-
-  node.updateWithPrevious((prev) =>
-    // TODO: check if this makes sense:
-    // const newPosition = prev.position.add(
-    //   moveSpeed.divideBy(drawflow.zoomLevel),
-    // );
-
-    ({
-      position: prev.position.add(moveSpeed),
-    }),
-  );
-};
-
+// TODO: Simplify this using events
 setInterval(() => {
   const movingLeft = !isSetEmpty(intersectionOfSets(heldKeys, KEYS.MOVE_LEFT));
   const movingRight = !isSetEmpty(
@@ -121,101 +96,12 @@ setInterval(() => {
       !isDraggingNode,
     ),
   );
-  if (!drawflow.mouseData.heldNodeId) {
+  if (!isDraggingNode) {
     drawflow.updateBackgroundPosition(drawflow.currentMoveSpeed, true);
   } else {
-    updateNodePosition(drawflow.currentMoveSpeed);
+    DrawflowNode.updateHeldNodePosition(drawflow.currentMoveSpeed);
   }
 }, 10);
-
-export const addNode = (
-  data: Partial<DrawflowNodeData>,
-  addToHistory = true,
-): DrawflowNode => {
-  const id = data.id ?? getNextFreeNodeId();
-  const newNode: Optional<DrawflowNode> = new DrawflowNode({
-    centered: data.centered ?? false,
-    connectorSections:
-      data.connectorSections ?? new ReactiveMap<string, ConnectorSection>(),
-    css: data.css ?? {},
-    customData: data.customData ?? ({} as SolidDrawflow.CustomDataType),
-    display: data.display ?? (() => undefined),
-    id,
-    offset: Vec2.zero(),
-    position: data.position ?? Vec2.zero(),
-    ref: undefined,
-    size: Vec2.zero(),
-  });
-  drawflow.nodes.set(id, newNode);
-
-  if (addToHistory) {
-    const oldConnections = getAllSourceConnections(id);
-
-    drawflow.changes.addChange({
-      type: "add",
-      source: "node",
-      applyChange: () => {
-        addNode(newNode.asObject(), false);
-        oldConnections.forEach((connection) => {
-          addConnection(
-            connection.sourceNodeId,
-            connection.sourceConnectorId,
-            connection.destinationNodeId,
-            connection.destinationConnectorId,
-            connection.css,
-            false,
-          );
-        });
-      },
-      undoChange: () => {
-        removeNode(id, false);
-      },
-    });
-  }
-
-  return newNode;
-};
-
-export const updateNode = (
-  nodeId: string,
-  data: DeepPartial<DrawflowNodeData>,
-  addToHistory = true,
-) => {
-  if (!drawflow.nodes.has(nodeId)) return;
-
-  const node = drawflow.nodes.get(nodeId)!;
-
-  if (addToHistory) {
-    const oldNode = drawflow.nodes.get(nodeId)!;
-    const oldConnections = getAllSourceConnections(nodeId);
-    const applyChange = () => {
-      updateNode(nodeId, data, false);
-    };
-    const undoChange = () => {
-      updateNode(nodeId, oldNode.asObject(), false);
-      oldConnections.forEach((connection) => {
-        addConnection(
-          connection.sourceNodeId,
-          connection.sourceConnectorId,
-          connection.destinationNodeId,
-          connection.destinationConnectorId,
-          connection.css,
-          false,
-        );
-      });
-    };
-    drawflow.changes.addChange({
-      type: "update",
-      source: "node",
-      applyChange,
-      undoChange,
-    });
-  }
-
-  drawflowEventStore.onNodeDataChanged.publish({ nodeId, data });
-
-  node.updateWithPrevious(produce((prev) => Object.assign(prev, data)));
-};
 
 export const getNextFreeNodeId = (): string => {
   let newId = "0";
@@ -256,158 +142,6 @@ export const getNextFreeConnectorSectionId = (nodeId: string): string => {
 
   return newId;
 };
-
-/**
- * Removes a node and all connections to and from it
- * @param nodeId - the id of the node to remove
- * @param addToHistory - whether to add this change to the history
- */
-export const removeNode = (nodeId: string, addToHistory = true) => {
-  if (!drawflow.nodes.has(nodeId)) return;
-
-  drawflow.mouseData.deselectNode();
-
-  if (addToHistory) {
-    const oldConnections = getAllSourceConnections(nodeId);
-    const oldNode = drawflow.nodes.get(nodeId)!;
-
-    drawflow.changes.addChange({
-      type: "remove",
-      source: "node",
-      applyChange: () => {
-        removeNode(nodeId, false);
-      },
-      undoChange: () => {
-        addNode(oldNode, false);
-        oldConnections.forEach((connection) => {
-          addConnection(
-            connection.sourceNodeId,
-            connection.sourceConnectorId,
-            connection.destinationNodeId,
-            connection.destinationConnectorId,
-            connection.css,
-            false,
-          );
-        });
-      },
-    });
-  }
-
-  removeIncomingConnections(nodeId);
-  removeOutgoingConnections(nodeId);
-
-  drawflow.nodes.delete(nodeId);
-};
-
-export const removeIncomingConnections = (nodeId: string) => {
-  if (!drawflow.nodes.has(nodeId)) {
-    return;
-  }
-
-  drawflow.nodes.get(nodeId)!.connectorSections.forEach((section) => {
-    section.connectors.forEach((connector) => {
-      connector.sources.forEach(({ sourceConnector }) => {
-        sourceConnector.destinations.filterInPlace(
-          ({ destinationConnector }) =>
-            destinationConnector.parentSection.parentNode.id !== nodeId,
-        );
-      });
-      connector.sources = new ArrayWrapper<ConnectorSource>([]);
-    });
-  });
-};
-
-export const removeOutgoingConnections = (nodeId: string) => {
-  if (!drawflow.nodes.has(nodeId)) {
-    return;
-  }
-
-  drawflow.nodes.get(nodeId)!.connectorSections.forEach((section) => {
-    section.connectors.forEach((connector) => {
-      connector.destinations.forEach(({ destinationConnector }) => {
-        destinationConnector.sources.filterInPlace(
-          ({ sourceConnector }) =>
-            sourceConnector.parentSection.parentNode.id !== nodeId,
-        );
-      });
-      connector.destinations = new ArrayWrapper<ConnectorDestination>([]);
-    });
-  });
-};
-
-export const getAllSourceConnectors = (nodeId: string): NodeConnector[] => {
-  if (!drawflow.nodes.has(nodeId)) {
-    return [];
-  }
-  const node = drawflow.nodes.get(nodeId)!;
-
-  return Array.from(node.connectorSections.values()).reduce(
-    (connectors, section) =>
-      connectors.concat(
-        Array.from(section.connectors.values()).flatMap((connector) =>
-          connector.sources.flatMap((source) => source.sourceConnector),
-        ),
-      ),
-    [] as NodeConnector[],
-  );
-};
-
-export const getAllDestinationConnectors = (
-  nodeId: string,
-): NodeConnector[] => {
-  if (!drawflow.nodes.has(nodeId)) {
-    return [];
-  }
-  const node = drawflow.nodes.get(nodeId)!;
-
-  return Array.from(node.connectorSections.values()).reduce(
-    (connectors, section) =>
-      connectors.concat(
-        Array.from(section.connectors.values()).flatMap((connector) =>
-          connector.destinations.flatMap(
-            (destination) => destination.destinationConnector,
-          ),
-        ),
-      ),
-    [] as NodeConnector[],
-  );
-};
-
-export const getAllSourceConnections = (nodeId: string) =>
-  getAllSourceConnectors(nodeId)
-    .map((source) => {
-      const filteredDestinations = source.destinations.filter(
-        (destination) =>
-          destination.destinationConnector.parentSection.parentNode.id ===
-          nodeId,
-      );
-      return filteredDestinations.map((destination) => ({
-        sourceNodeId: source.parentSection.parentNode.id,
-        sourceConnectorId: source.id,
-        destinationNodeId:
-          destination.destinationConnector.parentSection.parentNode.id,
-        destinationConnectorId: destination.destinationConnector.id,
-        css: destination.css,
-      }));
-    })
-    .flat();
-
-export const getAllDestinationConnections = (nodeId: string) =>
-  getAllDestinationConnectors(nodeId)
-    .map((destination) => {
-      const filteredSources = destination.sources.filter(
-        (source) =>
-          source.sourceConnector.parentSection.parentNode.id === nodeId,
-      );
-      return filteredSources.map((source) => ({
-        sourceNodeId: source.sourceConnector.parentSection.parentNode.id,
-        sourceConnectorId: source.sourceConnector.id,
-        destinationNodeId: destination.parentSection.parentNode.id,
-        destinationConnectorId: destination.id,
-        css: source.sourceConnector.css,
-      }));
-    })
-    .flat();
 
 export const addConnection = (
   sourceNodeId: string,

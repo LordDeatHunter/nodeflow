@@ -1,5 +1,7 @@
 import { DrawflowNode as DrawflowNodeData } from "../drawflow-types";
 import { createStore } from "solid-js/store";
+import { Vec2 } from "./vec2";
+import { drawflow } from "./drawflow-storage";
 
 export default class DrawflowNode {
   private readonly store;
@@ -108,5 +110,24 @@ export default class DrawflowNode {
     updater: (data: DrawflowNodeData) => Partial<DrawflowNodeData>,
   ) {
     this.store[1](updater);
+  }
+
+  public static updateHeldNodePosition(moveSpeed: Vec2) {
+    const id = drawflow.mouseData.heldNodeId;
+
+    if (!id || !drawflow.nodes.has(id)) return;
+
+    const node = drawflow.nodes.get(id)!;
+
+    node.updateWithPrevious((prev) =>
+      // TODO: check if this makes sense:
+      // const newPosition = prev.position.add(
+      //   moveSpeed.divideBy(drawflow.zoomLevel),
+      // );
+
+      ({
+        position: prev.position.add(moveSpeed),
+      }),
+    );
   }
 }

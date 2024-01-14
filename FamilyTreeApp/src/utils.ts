@@ -2,15 +2,12 @@ import {
   addConnection,
   addConnector,
   addConnectorSection,
-  addNode,
   CurveFunctions,
   drawflow,
   DrawflowNode,
   getConnector,
-  removeOutgoingConnections,
   SelectableElementCSS,
   SetCurveFunction,
-  updateNode,
 } from "solid-drawflow/src";
 import nodeCss from "./styles/node.module.scss";
 import { Vec2 } from "solid-drawflow/src/utils/vec2";
@@ -62,7 +59,7 @@ export const createFamilyMemberNode = (
   gender: SolidDrawflow.CustomDataType["gender"],
   position?: Vec2,
 ): DrawflowNode => {
-  const newNode = addNode({
+  const newNode = drawflow.addNode({
     css: {
       normal: gender === "M" ? nodeCss.maleNode : nodeCss.femaleNode,
       selected:
@@ -142,9 +139,9 @@ export const setupEvents = () => {
           drawflow.mouseData.globalMousePosition(),
         );
 
-        const parent = drawflow.nodes.get(heldNodeId!)!;
+        const parent = drawflow.nodes.get(heldNodeId)!;
         addConnection(
-          heldNodeId!,
+          heldNodeId,
           "O",
           newNode.id,
           "I",
@@ -168,7 +165,7 @@ export const setupEvents = () => {
 
       if (gender === node.customData.gender) return;
 
-      updateNode(nodeId, {
+      drawflow.updateNode(nodeId, {
         css: {
           normal: gender === "M" ? nodeCss.maleNode : nodeCss.femaleNode,
           selected:
@@ -179,7 +176,7 @@ export const setupEvents = () => {
       });
 
       // TODO: maybe create new connections to the respective connectors of the new gender? Eg. mother->father, father->mother
-      removeOutgoingConnections(nodeId);
+      drawflow.removeOutgoingConnections(nodeId);
     },
   );
 

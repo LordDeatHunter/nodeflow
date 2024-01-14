@@ -4,7 +4,6 @@ import {
   drawflow,
   heldKeys,
   removeConnection,
-  removeNode,
   resetMovement,
 } from "./drawflow-storage";
 import { DrawflowEventPublisher } from "./EventPublishers";
@@ -270,7 +269,7 @@ drawflowEventStore.onKeyDownInDrawflow.subscribeMultiple([
       switch (event.code) {
         case "Delete":
           if (drawflow.mouseData.heldNodeId) {
-            removeNode(drawflow.mouseData.heldNodeId);
+            drawflow.removeNode(drawflow.mouseData.heldNodeId);
           } else if (drawflow.mouseData.heldConnection) {
             removeConnection(
               drawflow.mouseData.heldConnection.sourceConnector.parentSection

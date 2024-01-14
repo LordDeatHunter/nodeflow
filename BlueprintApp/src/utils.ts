@@ -3,7 +3,6 @@ import {
   addConnection,
   addConnector,
   addConnectorSection,
-  addNode,
   CurveFunctions,
   drawflow,
   DrawflowNode,
@@ -19,7 +18,7 @@ export const createDummyNode = (
   position: Vec2,
   center = false,
 ): DrawflowNode => {
-  const newNode = addNode({
+  const newNode = drawflow.addNode({
     css: {
       normal: nodeCss.node,
       selected: nodeCss.selectedNode,
