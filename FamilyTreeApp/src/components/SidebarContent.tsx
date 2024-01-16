@@ -1,4 +1,4 @@
-import { drawflow, Optional } from "solid-drawflow/src";
+import { mouseData, nodes, Optional } from "solid-drawflow/src";
 import { createMemo, createSignal, Show } from "solid-js";
 import NodeDataDisplay from "./NodeDataDisplay";
 import NodeFormButtons from "./NodeFormButtons";
@@ -12,12 +12,10 @@ const SidebarContent = () => {
     createSignal<Optional<FormDataType>>(undefined);
 
   const nodeData = createMemo<Optional<FormDataType>>(() => {
-    const nodeId = drawflow.mouseData.heldNodeId;
-    if (!nodeId || !drawflow.nodes.has(nodeId)) return undefined;
-
+    if (!mouseData.heldNodeId) return undefined;
     return {
-      ...drawflow.nodes.get(nodeId)!.customData,
-      id: nodeId,
+      ...nodes[mouseData.heldNodeId!].customData,
+      id: mouseData.heldNodeId!,
     };
   });
 

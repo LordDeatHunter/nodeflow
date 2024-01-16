@@ -2,12 +2,17 @@ import {
   addConnection,
   addConnector,
   addConnectorSection,
+  addNode,
   CurveFunctions,
-  drawflow,
   DrawflowNode,
   getConnector,
+  globalMousePosition,
+  mouseData,
+  nodes,
+  removeOutgoingConnections,
   SelectableElementCSS,
   SetCurveFunction,
+  updateNode,
 } from "solid-drawflow/src";
 import nodeCss from "./styles/node.module.scss";
 import { Vec2 } from "solid-drawflow/src/utils/vec2";
@@ -59,7 +64,7 @@ export const createFamilyMemberNode = (
   gender: SolidDrawflow.CustomDataType["gender"],
   position?: Vec2,
 ): DrawflowNode => {
-  const newNode = drawflow.addNode({
+  const newNode = addNode({
     css: {
       normal: gender === "M" ? nodeCss.maleNode : nodeCss.femaleNode,
       selected:
@@ -127,8 +132,8 @@ export const setupEvents = () => {
   drawflowEventStore.onPointerUpInDrawflow.subscribe(
     "spawn-new-node",
     () => {
-      const heldNodeId = drawflow.mouseData.heldNodeId;
-      const heldConnectorId = drawflow.mouseData.heldConnectorId;
+      const heldNodeId = mouseData.heldNodeId;
+      const heldConnectorId = mouseData.heldConnectorId;
 
       if (!heldNodeId || !heldConnectorId) return;
 
@@ -136,12 +141,12 @@ export const setupEvents = () => {
         const newNode = createFamilyMemberNode(
           data[0].name,
           data[0].gender,
-          drawflow.mouseData.globalMousePosition(),
+          globalMousePosition(),
         );
 
-        const parent = drawflow.nodes.get(heldNodeId)!;
+        const parent = nodes[heldNodeId!];
         addConnection(
-          heldNodeId,
+          heldNodeId!,
           "O",
           newNode.id,
           "I",
@@ -155,9 +160,8 @@ export const setupEvents = () => {
   drawflowEventStore.onNodeDataChanged.subscribe(
     "update-node-css",
     ({ nodeId, data }) => {
-      if (!drawflow.nodes.has(nodeId) || !("customData" in data)) return;
-
-      const node = drawflow.nodes.get(nodeId)!;
+      const node = nodes[nodeId];
+      if (!node || !("customData" in data)) return;
       const customData = data.customData as SolidDrawflow.CustomDataType;
 
       if (!("gender" in customData)) return;
@@ -165,7 +169,7 @@ export const setupEvents = () => {
 
       if (gender === node.customData.gender) return;
 
-      drawflow.updateNode(nodeId, {
+      updateNode(nodeId, {
         css: {
           normal: gender === "M" ? nodeCss.maleNode : nodeCss.femaleNode,
           selected:
@@ -176,7 +180,7 @@ export const setupEvents = () => {
       });
 
       // TODO: maybe create new connections to the respective connectors of the new gender? Eg. mother->father, father->mother
-      drawflow.removeOutgoingConnections(nodeId);
+      removeOutgoingConnections(nodeId);
     },
   );
 
@@ -184,7 +188,7 @@ export const setupEvents = () => {
   drawflowEventStore.onNodeConnected.subscribe(
     "create-connection",
     ({ outputNodeId, inputNodeId }) => {
-      const outputNode = drawflow.nodes.get(outputNodeId)!;
+      const outputNode = nodes[outputNodeId];
 
       if (outputNodeId === inputNodeId) return;
 
@@ -217,14 +221,17 @@ export const setupEvents = () => {
   drawflowEventStore.onPointerUpInNode.subscribe(
     "create-connection",
     ({ nodeId }) => {
-      const destinationNode = drawflow.nodes.get(nodeId);
-      const sourceId = drawflow.mouseData.heldNodeId;
-      if (!destinationNode || !sourceId || nodeId === sourceId) {
+      const destinationNode = nodes[nodeId];
+      if (
+        !destinationNode ||
+        !mouseData.heldNodeId ||
+        nodeId === mouseData.heldNodeId
+      ) {
         return;
       }
 
-      if (!drawflow.nodes.has(sourceId)) return;
-      const sourceNode = drawflow.nodes.get(sourceId)!;
+      const sourceNode = nodes[mouseData.heldNodeId];
+      if (!sourceNode) return;
 
       const connector = getConnector(nodeId, "I")?.sources;
       // Return if:
@@ -241,7 +248,7 @@ export const setupEvents = () => {
         return;
 
       addConnection(
-        sourceId,
+        mouseData.heldNodeId,
         "O",
         nodeId,
         "I",
@@ -258,19 +265,16 @@ export const setupEvents = () => {
 };
 
 export const setupDummyConnections = () => {
-  const totalNodes = drawflow.nodes.size;
+  const totalNodes = Object.keys(nodes).length;
 
   for (let i = 0; i < totalNodes; i++) {
     const from = Math.floor(Math.random() * totalNodes);
     const to = Math.floor(Math.random() * totalNodes);
-
-    if (
-      !drawflow.nodes.has(from.toString()) ||
-      !drawflow.nodes.has(to.toString())
-    ) {
+    const fromNode = nodes[from.toString()];
+    const toNode = nodes[to.toString()];
+    if (!fromNode || !toNode) {
       continue;
     }
-    const fromNode = drawflow.nodes.get(from.toString())!;
 
     const sourceGender = fromNode.customData.gender;
 

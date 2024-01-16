@@ -21,7 +21,7 @@ export class Vec2 {
     return new Vec2(position.x, position.y);
   }
 
-  public static zero(): Vec2 {
+  public static default(): Vec2 {
     return new Vec2(0, 0);
   }
 

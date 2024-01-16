@@ -30,7 +30,6 @@
     "vite-plugin-terminal": "^1.1.0"
   },
   "dependencies": {
-    "@solid-primitives/map": "^0.4.8",
     "solid-js": "^1.7.6",
     "solid-styled-components": "^0.28.5"
   }

@@ -9,7 +9,7 @@ import {
   setupDummyNodes,
   setupEvents,
 } from "./utils";
-import { drawflow, Optional, windowSize } from "solid-drawflow/src";
+import { drawflow, mouseData, Optional, windowSize } from "solid-drawflow/src";
 import { drawflowEventStore } from "solid-drawflow/src/utils/events";
 import { Vec2 } from "solid-drawflow/src/utils/vec2";
 
@@ -95,8 +95,8 @@ const App: Component = () => {
         <div
           style={{
             position: "absolute",
-            left: `${drawflow.mouseData.mousePosition.x - 75}px`,
-            top: `${drawflow.mouseData.mousePosition.y - 45}px`,
+            left: `${mouseData.mousePosition.x - 75}px`,
+            top: `${mouseData.mousePosition.y - 45}px`,
             width: "150px",
             height: "90px",
             display: "flex",
