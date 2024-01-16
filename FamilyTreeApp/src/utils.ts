@@ -1,16 +1,13 @@
 import {
   addConnection,
-  addConnector,
-  addConnectorSection,
   CurveFunctions,
   drawflow,
   DrawflowNode,
-  getConnector,
   SelectableElementCSS,
   SetCurveFunction,
 } from "solid-drawflow/src";
 import nodeCss from "./styles/node.module.scss";
-import { Vec2 } from "solid-drawflow/src/utils/data/Vec2";
+import Vec2 from "solid-drawflow/src/utils/data/Vec2";
 import { drawflowEventStore } from "solid-drawflow/src/utils/events";
 import curveCss from "./styles/curve.module.scss";
 import NodeBody from "./components/NodeBody";
@@ -70,11 +67,10 @@ export const createFamilyMemberNode = (
     display: NodeBody,
     centered: true,
   });
-  addConnectorSection(newNode.id, "inputs", nodeCss.inputsSection, false);
-  addConnectorSection(newNode.id, "outputs", nodeCss.outputsSection, false);
+  newNode.addConnectorSection("inputs", nodeCss.inputsSection, false);
+  newNode.addConnectorSection("outputs", nodeCss.outputsSection, false);
 
-  addConnector(
-    newNode.id,
+  newNode.addConnector(
     "outputs",
     "O",
     {
@@ -85,8 +81,7 @@ export const createFamilyMemberNode = (
     },
     false,
   );
-  addConnector(
-    newNode.id,
+  newNode.addConnector(
     "inputs",
     "I",
     {
@@ -185,10 +180,11 @@ export const setupEvents = () => {
     "create-connection",
     ({ outputNodeId, inputNodeId }) => {
       const outputNode = drawflow.nodes.get(outputNodeId)!;
+      const inputNode = drawflow.nodes.get(inputNodeId)!;
 
       if (outputNodeId === inputNodeId) return;
 
-      const connector = getConnector(inputNodeId, "I")?.sources;
+      const connector = inputNode.getConnector("I")?.sources;
 
       // Return if:
       // The connector already has 2 parents
@@ -226,7 +222,7 @@ export const setupEvents = () => {
       if (!drawflow.nodes.has(sourceId)) return;
       const sourceNode = drawflow.nodes.get(sourceId)!;
 
-      const connector = getConnector(nodeId, "I")?.sources;
+      const connector = destinationNode.getConnector("I")?.sources;
       // Return if:
       // The connector already has 2 parents
       // One of the parents is the same gender as the source node
@@ -271,10 +267,11 @@ export const setupDummyConnections = () => {
       continue;
     }
     const fromNode = drawflow.nodes.get(from.toString())!;
+    const toNode = drawflow.nodes.get(to.toString())!;
 
     const sourceGender = fromNode.customData.gender;
 
-    const connector = getConnector(to.toString(), "I")?.sources;
+    const connector = toNode.getConnector("I")?.sources;
     // Continue if:
     // The source node is the same as the destination node
     // The destination node already has a connection

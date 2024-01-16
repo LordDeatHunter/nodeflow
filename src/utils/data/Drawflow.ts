@@ -1,5 +1,5 @@
 import setup from "../setup";
-import { Vec2 } from "./Vec2";
+import Vec2 from "./Vec2";
 import { createStore, produce } from "solid-js/store";
 import {
   DeepPartial,
@@ -9,21 +9,17 @@ import {
 } from "../../drawflow-types";
 import { windowSize } from "../screen-utils";
 import { clamp } from "../math-utils";
-import {
-  addConnection,
-  Constants,
-  getNextFreeNodeId,
-} from "../drawflow-storage";
+import { addConnection, Constants } from "../drawflow-storage";
 import { Changes } from "./Changes";
 import MouseData from "./MouseData";
 import { ReactiveMap } from "@solid-primitives/map";
 import DrawflowNode from "./DrawflowNode";
 import ConnectorSection from "./ConnectorSection";
 import { drawflowEventStore } from "../events";
-import ArrayWrapper from "./ArrayWrapper";
-import ConnectorSource from "./ConnectorSource";
-import ConnectorDestination from "./ConnectorDestination";
 import NodeConnector from "./NodeConnector";
+import ConnectorSource from "./ConnectorSource";
+import ArrayWrapper from "./ArrayWrapper";
+import ConnectorDestination from "./ConnectorDestination";
 
 export default class Drawflow {
   private readonly store;
@@ -166,7 +162,7 @@ export default class Drawflow {
     data: Partial<DrawflowNodeData>,
     addToHistory = true,
   ): DrawflowNode {
-    const id = data.id ?? getNextFreeNodeId();
+    const id = data.id ?? this.getNextFreeNodeId();
     const newNode: Optional<DrawflowNode> = new DrawflowNode({
       centered: data.centered ?? false,
       connectorSections:
@@ -226,7 +222,7 @@ export default class Drawflow {
         this.updateNode(nodeId, data, false);
       };
       const undoChange = () => {
-        this.updateNode(nodeId, oldNode.asObject(), false);
+        this.updateNode(nodeId, oldNode, false);
         oldConnections.forEach((connection) => {
           addConnection(
             connection.sourceNodeId,
@@ -256,14 +252,14 @@ export default class Drawflow {
    * @param nodeId - the id of the node to remove
    * @param addToHistory - whether to add this change to the history
    */
-  removeNode(nodeId: string, addToHistory = true) {
+  public removeNode(nodeId: string, addToHistory = true) {
     if (!this.nodes.has(nodeId)) return;
 
     this.mouseData.deselectNode();
 
     if (addToHistory) {
-      const oldConnections = this.getAllSourceConnections(nodeId);
       const oldNode = this.nodes.get(nodeId)!;
+      const oldConnections = oldNode.getAllSourceConnections();
 
       this.changes.addChange({
         type: "remove",
@@ -272,7 +268,7 @@ export default class Drawflow {
           this.removeNode(nodeId, false);
         },
         undoChange: () => {
-          this.addNode(oldNode, false);
+          this.addNode(oldNode.asObject(), false);
           oldConnections.forEach((connection) => {
             addConnection(
               connection.sourceNodeId,
@@ -333,73 +329,41 @@ export default class Drawflow {
     if (!this.nodes.has(nodeId)) {
       return [];
     }
-    const node = this.nodes.get(nodeId)!;
 
-    return Array.from(node.connectorSections.values()).reduce(
-      (connectors, section) =>
-        connectors.concat(
-          Array.from(section.connectors.values()).flatMap((connector) =>
-            connector.sources.flatMap((source) => source.sourceConnector),
-          ),
-        ),
-      [] as NodeConnector[],
-    );
+    return this.nodes.get(nodeId)!.getAllSourceConnectors();
   }
 
   public getAllDestinationConnectors(nodeId: string): NodeConnector[] {
     if (!this.nodes.has(nodeId)) {
       return [];
     }
-    const node = this.nodes.get(nodeId)!;
 
-    return Array.from(node.connectorSections.values()).reduce(
-      (connectors, section) =>
-        connectors.concat(
-          Array.from(section.connectors.values()).flatMap((connector) =>
-            connector.destinations.flatMap(
-              (destination) => destination.destinationConnector,
-            ),
-          ),
-        ),
-      [] as NodeConnector[],
-    );
+    return this.nodes.get(nodeId)!.getAllDestinationConnectors();
   }
 
   public getAllSourceConnections(nodeId: string) {
-    return this.getAllSourceConnectors(nodeId)
-      .map((source) => {
-        const filteredDestinations = source.destinations.filter(
-          (destination) =>
-            destination.destinationConnector.parentSection.parentNode.id ===
-            nodeId,
-        );
-        return filteredDestinations.map((destination) => ({
-          sourceNodeId: source.parentSection.parentNode.id,
-          sourceConnectorId: source.id,
-          destinationNodeId:
-            destination.destinationConnector.parentSection.parentNode.id,
-          destinationConnectorId: destination.destinationConnector.id,
-          css: destination.css,
-        }));
-      })
-      .flat();
+    if (!this.nodes.has(nodeId)) {
+      return [];
+    }
+
+    return this.nodes.get(nodeId)!.getAllSourceConnections();
   }
 
   public getAllDestinationConnections(nodeId: string) {
-    return this.getAllDestinationConnectors(nodeId)
-      .map((destination) => {
-        const filteredSources = destination.sources.filter(
-          (source) =>
-            source.sourceConnector.parentSection.parentNode.id === nodeId,
-        );
-        return filteredSources.map((source) => ({
-          sourceNodeId: source.sourceConnector.parentSection.parentNode.id,
-          sourceConnectorId: source.sourceConnector.id,
-          destinationNodeId: destination.parentSection.parentNode.id,
-          destinationConnectorId: destination.id,
-          css: source.sourceConnector.css,
-        }));
-      })
-      .flat();
+    if (!this.nodes.has(nodeId)) {
+      return [];
+    }
+
+    return this.nodes.get(nodeId)!.getAllDestinationConnections();
+  }
+
+  public getNextFreeNodeId(): string {
+    let newId = "0";
+
+    for (let i = 1; this.nodes.has(newId); ++i) {
+      newId = i.toString();
+    }
+
+    return newId;
   }
 }

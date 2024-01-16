@@ -1,5 +1,8 @@
 import { createStore } from "solid-js/store";
 import { NodeConnector as NodeConnectorData } from "../../drawflow-types";
+import ArrayWrapper from "./ArrayWrapper";
+import ConnectorSource from "./ConnectorSource";
+import ConnectorDestination from "./ConnectorDestination";
 
 export default class NodeConnector {
   private readonly store;
@@ -100,5 +103,25 @@ export default class NodeConnector {
     updater: (data: NodeConnectorData) => Partial<NodeConnectorData>,
   ) {
     this.store[1](updater);
+  }
+
+  public removeIncomingConnections() {
+    this.sources.forEach(({ sourceConnector }) => {
+      sourceConnector.destinations.filterInPlace(
+        ({ destinationConnector }) =>
+          destinationConnector.parentSection.parentNode.id !== this.id,
+      );
+    });
+    this.sources = new ArrayWrapper<ConnectorSource>([]);
+  }
+
+  public removeOutgoingConnections() {
+    this.destinations.forEach(({ destinationConnector }) => {
+      destinationConnector.sources.filterInPlace(
+        ({ sourceConnector }) =>
+          sourceConnector.parentSection.parentNode.id !== this.id,
+      );
+    });
+    this.destinations = new ArrayWrapper<ConnectorDestination>([]);
   }
 }

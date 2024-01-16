@@ -1,7 +1,17 @@
-import { DrawflowNode as DrawflowNodeData } from "../../drawflow-types";
+import {
+  DrawflowNode as DrawflowNodeData,
+  Optional,
+} from "../../drawflow-types";
 import { createStore } from "solid-js/store";
-import { Vec2 } from "./Vec2";
+import Vec2 from "./Vec2";
 import { drawflow } from "../drawflow-storage";
+import ConnectorSection from "./ConnectorSection";
+import { ReactiveMap } from "@solid-primitives/map";
+import NodeConnector from "./NodeConnector";
+import ArrayWrapper from "./ArrayWrapper";
+import ConnectorDestination from "./ConnectorDestination";
+import ConnectorSource from "./ConnectorSource";
+import { breakApartObjectRecursively } from "../misc-utils";
 
 export default class DrawflowNode {
   private readonly store;
@@ -103,7 +113,7 @@ export default class DrawflowNode {
   }
 
   public asObject(): DrawflowNodeData {
-    return this.store[0];
+    return breakApartObjectRecursively(this.store[0]);
   }
 
   public updateWithPrevious(
@@ -128,6 +138,270 @@ export default class DrawflowNode {
       ({
         position: prev.position.add(moveSpeed),
       }),
+    );
+  }
+
+  public addConnectorSection = (
+    sectionId?: string,
+    css?: string,
+    addToHistory = true,
+  ) => {
+    if (!sectionId || this.connectorSections.has(sectionId)) {
+      sectionId = this.getNextFreeConnectorSectionId();
+    }
+
+    if (addToHistory) {
+      drawflow.changes.addChange({
+        type: "remove",
+        source: "connector-section",
+        applyChange: () => {
+          this.addConnectorSection(sectionId, css, false);
+        },
+        undoChange: () => {
+          this.removeConnectorSection(sectionId!, false);
+        },
+      });
+    }
+
+    this.connectorSections.set(
+      sectionId,
+      new ConnectorSection({
+        connectors: new ReactiveMap<string, NodeConnector>(),
+        css,
+        id: sectionId,
+        parentNode: this,
+      }),
+    );
+  };
+
+  public removeConnectorSection(sectionId: string, addToHistory = true) {
+    if (!this.connectorSections.has(sectionId)) {
+      return;
+    }
+    const section = this.connectorSections.get(sectionId)!;
+
+    if (addToHistory) {
+      drawflow.changes.addChange({
+        type: "remove",
+        source: "connector-section",
+        applyChange: () => {
+          this.removeConnectorSection(sectionId, false);
+        },
+        undoChange: () => {
+          this.addConnectorSection(sectionId, section.css, false);
+        },
+      });
+    }
+
+    this.connectorSections.delete(sectionId);
+  }
+
+  public getConnectorCount() {
+    return Array.from(this.connectorSections.values()).reduce(
+      (total, section) => total + section.connectors.size,
+      0,
+    );
+  }
+
+  public addConnector(
+    sectionId: string,
+    connectorId: Optional<string>,
+    data: Partial<NodeConnector>,
+    addToHistory = true,
+  ) {
+    if (!this.connectorSections.has(sectionId)) {
+      return;
+    }
+    const section = this.connectorSections.get(sectionId)!;
+
+    if (!connectorId || section.connectors.has(connectorId)) {
+      connectorId = this.getNextFreeConnectorId();
+    }
+
+    if (this.getConnector(connectorId)) {
+      return;
+    }
+
+    if (addToHistory) {
+      drawflow.changes.addChange({
+        type: "add",
+        source: "connector",
+        applyChange: () => {
+          this.addConnector(sectionId, connectorId, data, false);
+        },
+        undoChange: () => {
+          this.removeConnector(sectionId, connectorId!, false);
+        },
+      });
+    }
+
+    section.connectors.set(
+      connectorId,
+      new NodeConnector({
+        resizeObserver: undefined,
+        css: data?.css,
+        destinations:
+          data?.destinations ?? new ArrayWrapper<ConnectorDestination>([]),
+        hovered: data?.hovered ?? false,
+        id: connectorId,
+        parentSection: section,
+        position: data?.position ?? Vec2.zero(),
+        ref: undefined,
+        size: Vec2.zero(),
+        sources: data?.sources ?? new ArrayWrapper<ConnectorSource>([]),
+      }),
+    );
+  }
+
+  public removeConnector(
+    sectionId: string,
+    connectorId: string,
+    addToHistory = true,
+  ) {
+    if (!this.connectorSections.has(sectionId)) {
+      return;
+    }
+    const section = this.connectorSections.get(sectionId)!;
+
+    if (!section.connectors.has(connectorId)) {
+      return;
+    }
+    const connector = section.connectors.get(connectorId)!;
+
+    if (addToHistory) {
+      drawflow.changes.addChange({
+        type: "remove",
+        source: "connector",
+        applyChange: () => {
+          this.removeConnector(sectionId, connectorId, false);
+        },
+        undoChange: () => {
+          this.addConnector(sectionId, connectorId, connector, false);
+        },
+      });
+    }
+
+    section.connectors.delete(connectorId);
+  }
+
+  public getConnector(connectorId: string): Optional<NodeConnector> {
+    return this.getSectionFromConnector(connectorId)?.connectors.get(
+      connectorId,
+    );
+  }
+
+  /**
+   * @param connectorId - the id of the connector
+   * @returns the total number of connections coming into the specified connector
+   */
+  public getTotalConnectedInputs(connectorId: string) {
+    return this.getConnector(connectorId)?.sources.length ?? 0;
+  }
+
+  public getAllConnectors(): NodeConnector[] {
+    return Array.from(this.connectorSections.values()).reduce(
+      (connectors, section) =>
+        connectors.concat(Array.from(section.connectors.values())),
+      [] as NodeConnector[],
+    );
+  }
+
+  public getNextFreeConnectorSectionId(): string {
+    let newId = "0";
+
+    for (let i = 1; this.connectorSections.has(newId); ++i) {
+      newId = i.toString();
+    }
+
+    return newId;
+  }
+
+  public getNextFreeConnectorId(): string {
+    let newId = "0";
+
+    for (
+      let i = 1;
+      Array.from(this.connectorSections.values()).some((section) =>
+        section.connectors.has(newId),
+      );
+      ++i
+    ) {
+      newId = i.toString();
+    }
+
+    return newId;
+  }
+
+  public removeIncomingConnections() {
+    this.connectorSections.forEach((section) =>
+      section.removeIncomingConnections(),
+    );
+  }
+
+  public removeOutgoingConnections() {
+    this.connectorSections.forEach((section) =>
+      section.removeOutgoingConnections(),
+    );
+  }
+
+  public getAllSourceConnectors(): NodeConnector[] {
+    return Array.from(this.connectorSections.values()).reduce(
+      (connectors, section) => connectors.concat(section.getSourceConnectors()),
+      [] as NodeConnector[],
+    );
+  }
+
+  public getAllDestinationConnectors(): NodeConnector[] {
+    return Array.from(this.connectorSections.values()).reduce(
+      (connectors, section) =>
+        connectors.concat(section.getDestinationConnectors()),
+      [] as NodeConnector[],
+    );
+  }
+
+  public getAllSourceConnections() {
+    return this.getAllSourceConnectors()
+      .map((source) => {
+        const filteredDestinations = source.destinations.filter(
+          (destination) =>
+            destination.destinationConnector.parentSection.parentNode.id ===
+            this.id,
+        );
+        return filteredDestinations.map((destination) => ({
+          sourceNodeId: source.parentSection.parentNode.id,
+          sourceConnectorId: source.id,
+          destinationNodeId:
+            destination.destinationConnector.parentSection.parentNode.id,
+          destinationConnectorId: destination.destinationConnector.id,
+          css: destination.css,
+        }));
+      })
+      .flat();
+  }
+
+  public getAllDestinationConnections() {
+    return this.getAllDestinationConnectors()
+      .map((destination) => {
+        const filteredSources = destination.sources.filter(
+          (source) =>
+            source.sourceConnector.parentSection.parentNode.id === this.id,
+        );
+        return filteredSources.map((source) => ({
+          sourceNodeId: source.sourceConnector.parentSection.parentNode.id,
+          sourceConnectorId: source.sourceConnector.id,
+          destinationNodeId: destination.parentSection.parentNode.id,
+          destinationConnectorId: destination.id,
+          css: source.sourceConnector.css,
+        }));
+      })
+      .flat();
+  }
+
+  public getSectionFromConnector(
+    connectorId: string,
+  ): Optional<ConnectorSection> {
+    return Array.from(this.connectorSections.values()).find((section) =>
+      section.connectors.get(connectorId),
     );
   }
 }

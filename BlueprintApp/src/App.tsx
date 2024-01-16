@@ -11,7 +11,7 @@ import {
 } from "./utils";
 import { drawflow, Optional, windowSize } from "solid-drawflow/src";
 import { drawflowEventStore } from "solid-drawflow/src/utils/events";
-import { Vec2 } from "solid-drawflow/src/utils/data/Vec2";
+import Vec2 from "solid-drawflow/src/utils/data/Vec2";
 
 const App: Component = () => {
   const [nodePreview, setNodePreview] =

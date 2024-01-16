@@ -1,17 +1,9 @@
 import { Component, createEffect, createMemo } from "solid-js";
-import {
-  CurveFunctions,
-  drawflow,
-  getConnector,
-  getSectionFromConnector,
-} from "../utils";
-import {
-  DrawflowNode,
-  Optional,
-  SelectableElementCSS,
-} from "../drawflow-types";
+import { CurveFunctions, drawflow } from "../utils";
+import { Optional, SelectableElementCSS } from "../drawflow-types";
 import { drawflowEventStore } from "../utils/events";
 import NodeConnector from "../utils/data/NodeConnector";
+import DrawflowNode from "../utils/data/DrawflowNode";
 
 interface NodeCurveProps {
   sourceNodeId: string;
@@ -30,10 +22,10 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
   );
 
   const sourceConnector = createMemo<Optional<NodeConnector>>(() =>
-    getConnector(props.sourceNodeId, props.sourceConnectorId),
+    startNode().getConnector(props.sourceConnectorId),
   );
   const destinationConnector = createMemo<Optional<NodeConnector>>(() =>
-    getConnector(props.destinationNodeId, props.destinationConnectorId),
+    endNode().getConnector(props.destinationConnectorId),
   );
 
   const destinationIndex = createMemo<number>(() =>
@@ -61,12 +53,10 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       size: endNodeSize,
     } = endNode();
 
-    const outputSection = getSectionFromConnector(
-      props.sourceNodeId,
+    const outputSection = startNode().getSectionFromConnector(
       props.sourceConnectorId,
     )!;
-    const inputSection = getSectionFromConnector(
-      props.destinationNodeId,
+    const inputSection = endNode().getSectionFromConnector(
       props.destinationConnectorId,
     )!;
     const input = inputSection.connectors.get(props.destinationConnectorId)!;

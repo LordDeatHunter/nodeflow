@@ -1,11 +1,11 @@
 import { Component, For, Show } from "solid-js";
-import { drawflow, getAllConnectors } from "../utils";
+import { drawflow } from "../utils";
 import Node from "./Node";
 import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
 import { DrawflowCss } from "../drawflow-types";
 import { drawflowEventStore } from "../utils/events";
-import { Vec2 } from "../utils/data/Vec2";
+import Vec2 from "../utils/data/Vec2";
 
 interface DrawflowProps {
   css?: DrawflowCss;
@@ -72,9 +72,9 @@ const Drawflow: Component<DrawflowProps> = (props) => (
           overflow: "visible",
         }}
       >
-        <For each={Array.from(drawflow.nodes.keys())}>
-          {(nodeId) => (
-            <For each={getAllConnectors(nodeId)}>
+        <For each={Array.from(drawflow.nodes.entries())}>
+          {([nodeId, node]) => (
+            <For each={node.getAllConnectors()}>
               {(connector) => (
                 <For each={connector.destinations.array}>
                   {(outputConnection) => (

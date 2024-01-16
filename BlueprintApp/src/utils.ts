@@ -1,12 +1,9 @@
-import { Vec2 } from "solid-drawflow/src/utils/data/Vec2";
+import Vec2 from "solid-drawflow/src/utils/data/Vec2";
 import {
   addConnection,
-  addConnector,
-  addConnectorSection,
   CurveFunctions,
   drawflow,
   DrawflowNode,
-  getTotalConnectedInputs,
   SetCurveFunction,
 } from "solid-drawflow/src";
 import nodeCss from "./styles/node.module.scss";
@@ -27,13 +24,12 @@ export const createDummyNode = (
     display: NodeDisplay,
     centered: center,
   });
-  addConnectorSection(newNode.id, "inputs", nodeCss.inputsSection, false);
-  addConnectorSection(newNode.id, "outputs", nodeCss.outputsSection, false);
+  newNode.addConnectorSection("inputs", nodeCss.inputsSection, false);
+  newNode.addConnectorSection("outputs", nodeCss.outputsSection, false);
 
   const outputs = Math.random() * 6;
   for (let j = 0; j < outputs; j++) {
-    addConnector(
-      newNode.id,
+    newNode.addConnector(
       "outputs",
       undefined,
       {
@@ -44,8 +40,7 @@ export const createDummyNode = (
   }
   const inputs = Math.random() * 6;
   for (let j = 0; j < inputs; j++) {
-    addConnector(
-      newNode.id,
+    newNode.addConnector(
       "inputs",
       undefined,
       {
@@ -124,7 +119,7 @@ export const setupDummyConnections = () => {
 
     if (
       from === to ||
-      getTotalConnectedInputs(to.toString(), toConnector.toString()) > 0
+      toNode.getTotalConnectedInputs(toConnector.toString()) > 0
     ) {
       continue;
     }

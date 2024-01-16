@@ -1,5 +1,5 @@
 import { JSX } from "solid-js";
-import { Vec2 } from "../utils/data/Vec2";
+import Vec2 from "../utils/data/Vec2";
 import ConnectorSectionClass from "../utils/data/ConnectorSection";
 import DrawflowNodeClass from "../utils/data/DrawflowNode";
 import NodeConnectorClass from "../utils/data/NodeConnector";

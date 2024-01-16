@@ -13,6 +13,7 @@ export class Changes {
     this.changes = this.changes.slice(0, this.currentChangeIndex + 1);
     this.changes.push(change);
     this.currentChangeIndex = this.changes.length - 1;
+    console.log("add", this.currentChangeIndex, this.changes);
   }
 
   public undo(): boolean {
@@ -21,6 +22,7 @@ export class Changes {
     }
     this.changes[this.currentChangeIndex].undoChange();
     this.currentChangeIndex--;
+    console.log("undo", this.currentChangeIndex, this.changes);
     return true;
   }
 
@@ -30,6 +32,7 @@ export class Changes {
     }
     this.currentChangeIndex++;
     this.changes[this.currentChangeIndex].applyChange();
+    console.log("redo", this.currentChangeIndex, this.changes);
     return true;
   }
 }

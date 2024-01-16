@@ -18,3 +18,19 @@ export const intersectionOfSets = <T>(...sets: Set<T>[]): Set<T> => {
 };
 export const isArrayEmpty = <T>(arr: T[]) => arr.length === 0;
 export const isSetEmpty = <T>(set: Set<T>) => set.size === 0;
+export const breakApartObjectRecursively = <T>(obj: T): T => {
+  if (typeof obj !== "object" || obj === null) {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(breakApartObjectRecursively) as unknown as T;
+  }
+  if (typeof obj === "object") {
+    return Object.fromEntries(
+      Object.entries(obj).map(([key, value]) => [
+        key,
+        breakApartObjectRecursively(value),
+      ]),
+    ) as unknown as T;
+  }
+};

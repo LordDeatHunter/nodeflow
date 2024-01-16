@@ -7,7 +7,7 @@ import {
   resetMovement,
 } from "./drawflow-storage";
 import { DrawflowEventPublisher } from "./data/EventPublishers";
-import { Vec2 } from "./data/Vec2";
+import Vec2 from "./data/Vec2";
 import { windowSize } from "./screen-utils";
 import { DeepPartial, DrawflowData } from "../drawflow-types";
 import NodeConnector from "./data/NodeConnector";

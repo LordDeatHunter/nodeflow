@@ -1,5 +1,5 @@
 import { createStore } from "solid-js/store";
-import { Vec2 } from "./Vec2";
+import Vec2 from "./Vec2";
 import { MouseData as MouseDataType } from "../../drawflow-types";
 import { drawflow, resetMovement } from "../drawflow-storage";
 
