@@ -6,33 +6,31 @@ import {
   For,
   onCleanup,
 } from "solid-js";
-import { drawflow } from "../utils";
+import { drawflow, mouseData, nodes, setNodes } from "../utils";
+import { DrawflowNode } from "../drawflow-types";
 import { Vec2 } from "../utils/vec2";
 import { drawflowEventStore } from "../utils/events";
+import { produce } from "solid-js/store";
 import Connector from "./Connector";
-import DrawflowNode from "../utils/DrawflowNode";
 
 interface NodeProps {
   nodeId: string;
 }
 
 const Node: Component<NodeProps> = (props) => {
-  const node = createMemo<DrawflowNode>(
-    () => drawflow.nodes.get(props.nodeId)!,
-  );
+  const node = createMemo<DrawflowNode>(() => nodes[props.nodeId]);
   const [isVisible, setIsVisible] = createSignal<boolean>(false);
 
   createEffect(() => {
-    if (
-      drawflow.mouseData.heldNodeId !== props.nodeId ||
-      !drawflow.mouseData.isDraggingNode
-    ) {
+    if (mouseData.heldNodeId !== props.nodeId || !mouseData.draggingNode) {
       return;
     }
 
-    node().position = drawflow.mouseData.mousePosition
+    const position = mouseData.mousePosition
       .divideBy(drawflow.zoomLevel)
-      .subtract(drawflow.mouseData.clickStartPosition ?? Vec2.zero());
+      .subtract(mouseData.clickStartPosition ?? Vec2.default());
+
+    setNodes(props.nodeId, "position", position);
   });
 
   onCleanup(() => {
@@ -40,8 +38,8 @@ const Node: Component<NodeProps> = (props) => {
 
     node().resizeObserver!.disconnect();
 
-    Array.from(node().connectorSections.values()).forEach((section) => {
-      Array.from(section.connectors.values()).forEach((connector) => {
+    Object.values(node().connectorSections).forEach((section) => {
+      Object.values(section.connectors).forEach((connector) => {
         if (!connector.resizeObserver) return;
         connector.resizeObserver.disconnect();
       });
@@ -55,22 +53,29 @@ const Node: Component<NodeProps> = (props) => {
           if (!el) return;
 
           const resizeObserver = new ResizeObserver(() => {
-            node().update({
-              // update the size of the node
-              size: Vec2.of(el.clientWidth, el.clientHeight),
-            });
-
-            // update the position of the connectors
-            Array.from(node().connectorSections.values()).forEach((section) =>
-              Array.from(section.connectors.values()).forEach((connector) => {
-                const connectorEl = connector.ref;
-                if (!connectorEl) return;
-
-                connector.position = Vec2.of(
-                  (connectorEl?.parentElement?.offsetLeft ?? 0) +
-                    connectorEl.offsetLeft,
-                  (connectorEl?.parentElement?.offsetTop ?? 0) +
-                    connectorEl.offsetTop,
+            setNodes(
+              props.nodeId,
+              produce((prev) => {
+                // update the size of the node
+                prev.size = Vec2.of(el.clientWidth, el.clientHeight);
+                // update the position of the connectors
+                Object.entries(prev.connectorSections).forEach(
+                  ([sectionId, section]) => {
+                    Object.entries(section.connectors).forEach(
+                      ([connectorId, connector]) => {
+                        const connectorEl = connector.ref;
+                        if (!connectorEl) return;
+                        prev.connectorSections[sectionId].connectors[
+                          connectorId
+                        ].position = Vec2.of(
+                          (connectorEl?.parentElement?.offsetLeft ?? 0) +
+                            connectorEl.offsetLeft,
+                          (connectorEl?.parentElement?.offsetTop ?? 0) +
+                            connectorEl.offsetTop,
+                        );
+                      },
+                    );
+                  },
                 );
               }),
             );
@@ -79,9 +84,9 @@ const Node: Component<NodeProps> = (props) => {
 
           const positionOffset = node().centered
             ? Vec2.of(el.clientWidth, el.clientHeight).divideBy(2)
-            : Vec2.zero();
+            : Vec2.default();
 
-          node().update({
+          setNodes(props.nodeId, {
             offset: Vec2.of(el.clientLeft, el.clientTop),
             ref: el,
             resizeObserver,
@@ -99,8 +104,7 @@ const Node: Component<NodeProps> = (props) => {
       }}
       classList={{
         [node()?.css?.normal ?? ""]: true,
-        [node()?.css?.selected ?? ""]:
-          drawflow.mouseData.heldNodeId === props.nodeId,
+        [node()?.css?.selected ?? ""]: mouseData.heldNodeId === props.nodeId,
       }}
       onMouseDown={(event) =>
         drawflowEventStore.onMouseDownInNode.publish({
@@ -122,10 +126,10 @@ const Node: Component<NodeProps> = (props) => {
       }
     >
       {node().display({ node: node() })}
-      <For each={Array.from(node().connectorSections.entries())}>
+      <For each={Object.entries(node().connectorSections)}>
         {([sectionId, section]) => (
           <div class={section?.css}>
-            <For each={Array.from(section.connectors.entries())}>
+            <For each={Object.entries(section.connectors)}>
               {([connectorId, connector]) => (
                 <Connector
                   connector={connector}

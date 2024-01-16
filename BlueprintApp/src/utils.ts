@@ -3,10 +3,11 @@ import {
   addConnection,
   addConnector,
   addConnectorSection,
+  addNode,
   CurveFunctions,
-  drawflow,
   DrawflowNode,
   getTotalConnectedInputs,
+  nodes,
   SetCurveFunction,
 } from "solid-drawflow/src";
 import nodeCss from "./styles/node.module.scss";
@@ -18,7 +19,7 @@ export const createDummyNode = (
   position: Vec2,
   center = false,
 ): DrawflowNode => {
-  const newNode = drawflow.addNode({
+  const newNode = addNode({
     css: {
       normal: nodeCss.node,
       selected: nodeCss.selectedNode,
@@ -89,27 +90,22 @@ export const setupDummyNodes = (count: number = 50) => {
 };
 
 export const setupDummyConnections = () => {
-  const totalNodes = drawflow.nodes.size;
+  const totalNodes = Object.keys(nodes).length;
 
   for (let i = 0; i < totalNodes; i++) {
     const from = Math.floor(Math.random() * totalNodes);
     const to = Math.floor(Math.random() * totalNodes);
-
-    if (
-      !drawflow.nodes.has(from.toString()) ||
-      !drawflow.nodes.has(to.toString())
-    ) {
+    const fromNode = nodes[from.toString()];
+    const toNode = nodes[to.toString()];
+    if (!fromNode || !toNode) {
       continue;
     }
-    const fromNode = drawflow.nodes.get(from.toString())!;
-    const toNode = drawflow.nodes.get(to.toString())!;
 
-    const fromConnectors =
-      fromNode.connectorSections.get("outputs")!.connectors;
-    const toConnectors = toNode.connectorSections.get("inputs")!.connectors;
+    const fromConnectors = fromNode.connectorSections["outputs"].connectors;
+    const toConnectors = toNode.connectorSections["inputs"].connectors;
 
-    const fromConnectorValues = Array.from(fromConnectors.values());
-    const toConnectorValues = Array.from(toConnectors.values());
+    const fromConnectorValues = Object.values(fromConnectors);
+    const toConnectorValues = Object.values(toConnectors);
 
     if (fromConnectorValues.length === 0 || toConnectorValues.length === 0) {
       continue;

@@ -1,12 +1,5 @@
 import { JSX } from "solid-js";
 import { Vec2 } from "../utils/vec2";
-import ConnectorSectionClass from "../utils/ConnectorSection";
-import DrawflowNodeClass from "../utils/DrawflowNode";
-import NodeConnectorClass from "../utils/NodeConnector";
-import ConnectorDestinationClass from "../utils/ConnectorDestination";
-import ConnectorSourceClass from "../utils/ConnectorSource";
-import { ReactiveMap } from "@solid-primitives/map";
-import ArrayWrapper from "../utils/ArrayWrapper";
 
 export type Optional<T> = T | undefined;
 
@@ -18,24 +11,22 @@ export type DeepPartial<T> = T extends object
 
 export interface MouseData {
   clickStartPosition?: Vec2;
-  isDraggingNode: boolean;
+  draggingNode: boolean;
   heldNodeId?: string;
   heldConnectorId?: string;
   heldConnection?: {
-    sourceConnector: NodeConnectorClass;
-    destinationConnector: NodeConnectorClass;
+    sourceConnector: NodeConnector;
+    destinationConnector: NodeConnector;
   };
   mousePosition: Vec2;
 }
 
 export type DrawflowNode = {
   centered: boolean;
-  connectorSections: ReactiveMap<string, ConnectorSectionClass>;
+  connectorSections: Record<string, ConnectorSection>;
   css: SelectableElementCSS;
   customData: SolidDrawflow.CustomDataType;
-  readonly display: (props: {
-    node: DrawflowNodeClass;
-  }) => Optional<JSX.Element>;
+  readonly display: (props: { node: DrawflowNode }) => Optional<JSX.Element>;
   id: string;
   offset: Vec2;
   position: Vec2;
@@ -45,10 +36,10 @@ export type DrawflowNode = {
 };
 
 export type ConnectorSection = {
-  connectors: ReactiveMap<string, NodeConnectorClass>;
+  connectors: Record<string, NodeConnector>;
   css?: string;
   id: string;
-  parentNode: DrawflowNodeClass;
+  parentNode: DrawflowNode;
 };
 
 export interface DrawflowData {
@@ -72,24 +63,24 @@ export interface DrawflowCss {
 
 export interface NodeConnector {
   css?: string;
-  destinations: ArrayWrapper<ConnectorDestinationClass>;
+  destinations: ConnectorDestination[];
   hovered: boolean;
   id: string;
   parentSection: ConnectorSection;
   position: Vec2;
-  ref?: HTMLDivElement;
-  resizeObserver?: ResizeObserver;
+  ref: HTMLDivElement;
+  resizeObserver: ResizeObserver;
   size: Vec2;
-  sources: ArrayWrapper<ConnectorSourceClass>;
+  sources: ConnectorSource[];
 }
 
 export interface ConnectorSource {
-  sourceConnector: NodeConnectorClass;
+  sourceConnector: NodeConnector;
 }
 
 export interface ConnectorDestination {
   css: SelectableElementCSS;
-  destinationConnector: NodeConnectorClass;
+  destinationConnector: NodeConnector;
   path?: PathData;
 }
 

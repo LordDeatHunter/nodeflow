@@ -1,10 +1,21 @@
 import { Component, For, Show } from "solid-js";
-import { drawflow, getAllConnectors } from "../utils";
+import {
+  drawflow,
+  getAllConnectors,
+  mouseData,
+  nodes,
+  setDrawflow,
+} from "../utils";
 import Node from "./Node";
 import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
-import { DrawflowCss } from "../drawflow-types";
+import {
+  ConnectorDestination,
+  DrawflowCss,
+  NodeConnector,
+} from "../drawflow-types";
 import { drawflowEventStore } from "../utils/events";
+import setup from "../utils/setup";
 import { Vec2 } from "../utils/vec2";
 
 interface DrawflowProps {
@@ -13,11 +24,13 @@ interface DrawflowProps {
   width: string;
 }
 
+setup();
+
 const Drawflow: Component<DrawflowProps> = (props) => (
   <div
     ref={(el) => {
       const resizeObserver = new ResizeObserver(() => {
-        drawflow.update({
+        setDrawflow({
           size: Vec2.of(el.clientWidth, el.clientHeight),
           startPosition: Vec2.of(el.offsetLeft, el.offsetTop),
         });
@@ -59,7 +72,7 @@ const Drawflow: Component<DrawflowProps> = (props) => (
         transition: "scale 0.1s ease-out",
       }}
     >
-      <For each={Array.from(drawflow.nodes.keys())}>
+      <For each={Object.keys(nodes)}>
         {(nodeId) => <Node nodeId={nodeId} />}
       </For>
       <svg
@@ -72,12 +85,12 @@ const Drawflow: Component<DrawflowProps> = (props) => (
           overflow: "visible",
         }}
       >
-        <For each={Array.from(drawflow.nodes.keys())}>
+        <For each={Object.keys(nodes)}>
           {(nodeId) => (
             <For each={getAllConnectors(nodeId)}>
-              {(connector) => (
-                <For each={connector.destinations.array}>
-                  {(outputConnection) => (
+              {(connector: NodeConnector) => (
+                <For each={connector.destinations}>
+                  {(outputConnection: ConnectorDestination) => (
                     <NodeCurve
                       sourceNodeId={nodeId}
                       sourceConnectorId={connector.id}
@@ -97,11 +110,7 @@ const Drawflow: Component<DrawflowProps> = (props) => (
           )}
         </For>
       </svg>
-      <Show
-        when={
-          drawflow.mouseData.heldNodeId && drawflow.mouseData.heldConnectorId
-        }
-      >
+      <Show when={mouseData.heldNodeId && mouseData.heldConnectorId}>
         <Curve css={props?.css?.newCurve} />
       </Show>
     </div>
