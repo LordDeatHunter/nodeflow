@@ -67,7 +67,10 @@ export const getDrawflowCenter = createMemo<Vec2>(() => {
   const windowDimensions = windowSize();
   const windowCenter = windowDimensions.divideBy(2);
 
-  return drawflow.position.negate().add(windowCenter);
+  return drawflow.startPosition
+    .add(windowCenter)
+    .divideBy(drawflow.zoomLevel)
+    .subtract(drawflow.position);
 });
 
 export const updateZoom = (distance: number, zoomLocation: Vec2): void => {
