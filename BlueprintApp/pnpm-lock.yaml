@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  nodeflow:
+    specifier: 0.0.1
+    version: link:..
   solid-js:
     specifier: ^1.7.8
     version: 1.8.3

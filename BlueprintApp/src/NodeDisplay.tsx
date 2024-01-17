@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import { DrawflowNode } from "solid-drawflow/src";
+import { DrawflowNode } from "nodeflow/src";
 
 const NodeDisplay: Component<{ node: DrawflowNode }> = (props) => (
   <div style={{ padding: "1rem", "padding-left": "2rem" }}>

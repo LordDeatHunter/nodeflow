@@ -1,5 +1,5 @@
 import { type Component, createSignal, JSX, onMount, Show } from "solid-js";
-import Drawflow from "solid-drawflow/src/components/Drawflow";
+import Drawflow from "nodeflow/src/components/Drawflow";
 import curveCss from "./styles/curve.module.scss";
 import nodeCss from "./styles/node.module.scss";
 import drawflowCss from "./styles/drawflow.module.scss";
@@ -9,9 +9,9 @@ import {
   setupDummyNodes,
   setupEvents,
 } from "./utils";
-import { drawflow, mouseData, Optional, windowSize } from "solid-drawflow/src";
-import { drawflowEventStore } from "solid-drawflow/src/utils/events";
-import { Vec2 } from "solid-drawflow/src/utils/vec2";
+import { drawflow, mouseData, Optional, windowSize } from "nodeflow/src";
+import { drawflowEventStore } from "nodeflow/src/utils/events";
+import { Vec2 } from "nodeflow/src/utils/vec2";
 
 const App: Component = () => {
   const [nodePreview, setNodePreview] =

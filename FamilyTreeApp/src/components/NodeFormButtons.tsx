@@ -6,7 +6,7 @@ import {
   removeNode,
   selectNode,
   updateNode,
-} from "solid-drawflow/src";
+} from "nodeflow/src";
 import { FormDataType } from "./SidebarContent";
 import formStyle from "../styles/form.module.scss";
 import { cleanInput, createFamilyMemberNode } from "../utils";

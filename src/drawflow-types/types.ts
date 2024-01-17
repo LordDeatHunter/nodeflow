@@ -25,7 +25,7 @@ export type DrawflowNode = {
   centered: boolean;
   connectorSections: Record<string, ConnectorSection>;
   css: SelectableElementCSS;
-  customData: SolidDrawflow.CustomDataType;
+  customData: Nodeflow.CustomDataType;
   readonly display: (props: { node: DrawflowNode }) => Optional<JSX.Element>;
   id: string;
   offset: Vec2;

@@ -1,11 +1,11 @@
-import { mouseData, nodes, Optional } from "solid-drawflow/src";
+import { mouseData, nodes, Optional } from "nodeflow/src";
 import { createMemo, createSignal, Show } from "solid-js";
 import NodeDataDisplay from "./NodeDataDisplay";
 import NodeFormButtons from "./NodeFormButtons";
 import NodeForm from "./NodeForm";
 import sidebarCss from "../styles/sidebar.module.scss";
 
-export type FormDataType = SolidDrawflow.CustomDataType & { id: string };
+export type FormDataType = Nodeflow.CustomDataType & { id: string };
 
 const SidebarContent = () => {
   const [formData, setFormData] =
