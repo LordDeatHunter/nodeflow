@@ -1,13 +1,13 @@
-import Vec2 from "solid-drawflow/src/utils/data/Vec2";
+import Vec2 from "nodeflow/src/utils/data/Vec2";
 import {
   addConnection,
   CurveFunctions,
   drawflow,
   DrawflowNode,
   SetCurveFunction,
-} from "solid-drawflow/src";
+} from "nodeflow/src";
 import nodeCss from "./styles/node.module.scss";
-import { drawflowEventStore } from "solid-drawflow/src/utils/events";
+import { drawflowEventStore } from "nodeflow/src/utils/events";
 import curveCss from "./styles/curve.module.scss";
 import NodeDisplay from "./NodeDisplay";
 

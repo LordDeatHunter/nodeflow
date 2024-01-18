@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import { DrawflowNode } from "solid-drawflow/src";
+import { DrawflowNode } from "nodeflow/src";
 import nodeCss from "../styles/node.module.scss";
 
 const NodeBody: Component<{ node: DrawflowNode }> = (props) => (

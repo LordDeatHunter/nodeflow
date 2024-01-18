@@ -1,5 +1,5 @@
 import { Component, Show } from "solid-js";
-import { drawflow, Optional } from "solid-drawflow/src";
+import { drawflow, Optional } from "nodeflow/src";
 import { FormDataType } from "./SidebarContent";
 import formStyle from "../styles/form.module.scss";
 import { cleanInput, createFamilyMemberNode } from "../utils";

@@ -1,7 +1,7 @@
 export {};
 
 declare global {
-  namespace SolidDrawflow {
+  namespace Nodeflow {
     export interface CustomDataType {
       gender: "M" | "F";
       name: string;

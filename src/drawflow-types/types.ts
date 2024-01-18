@@ -32,7 +32,7 @@ export type DrawflowNode = {
   centered: boolean;
   connectorSections: ReactiveMap<string, ConnectorSectionClass>;
   css: SelectableElementCSS;
-  customData: SolidDrawflow.CustomDataType;
+  customData: Nodeflow.CustomDataType;
   readonly display: (props: {
     node: DrawflowNodeClass;
   }) => Optional<JSX.Element>;

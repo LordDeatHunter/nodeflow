@@ -5,10 +5,10 @@ import {
   DrawflowNode,
   SelectableElementCSS,
   SetCurveFunction,
-} from "solid-drawflow/src";
+} from "nodeflow/src";
 import nodeCss from "./styles/node.module.scss";
-import Vec2 from "solid-drawflow/src/utils/data/Vec2";
-import { drawflowEventStore } from "solid-drawflow/src/utils/events";
+import Vec2 from "nodeflow/src/utils/data/Vec2";
+import { drawflowEventStore } from "nodeflow/src/utils/events";
 import curveCss from "./styles/curve.module.scss";
 import NodeBody from "./components/NodeBody";
 
@@ -17,7 +17,7 @@ export const fetchRandomData = async (
 ): Promise<
   Array<{
     name: string;
-    gender: SolidDrawflow.CustomDataType["gender"];
+    gender: Nodeflow.CustomDataType["gender"];
   }>
 > => {
   const response = await fetch(
@@ -42,7 +42,7 @@ export const fetchRandomData = async (
 };
 
 const getConnectionCSS = (
-  parentGender: SolidDrawflow.CustomDataType["gender"],
+  parentGender: Nodeflow.CustomDataType["gender"],
 ): SelectableElementCSS => ({
   normal: parentGender == "M" ? curveCss.fatherCurve : curveCss.motherCurve,
   selected:
@@ -53,7 +53,7 @@ const getConnectionCSS = (
 
 export const createFamilyMemberNode = (
   name: string,
-  gender: SolidDrawflow.CustomDataType["gender"],
+  gender: Nodeflow.CustomDataType["gender"],
   position?: Vec2,
 ): DrawflowNode => {
   const newNode = drawflow.addNode({
@@ -153,7 +153,7 @@ export const setupEvents = () => {
       if (!drawflow.nodes.has(nodeId) || !("customData" in data)) return;
 
       const node = drawflow.nodes.get(nodeId)!;
-      const customData = data.customData as SolidDrawflow.CustomDataType;
+      const customData = data.customData as Nodeflow.CustomDataType;
 
       if (!("gender" in customData)) return;
       const gender = customData.gender;

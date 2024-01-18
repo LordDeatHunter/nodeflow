@@ -102,12 +102,15 @@ export default class Drawflow {
     this.store[1](updater);
   }
 
-  public center = () => {
+  public center() {
     const windowDimensions = windowSize();
     const windowCenter = windowDimensions.divideBy(2);
 
-    return this.position.negate().add(windowCenter);
-  };
+    return this.startPosition
+      .add(windowCenter)
+      .divideBy(this.zoomLevel)
+      .subtract(this.position);
+  }
 
   public updateZoom = (distance: number, location: Vec2) => {
     const oldZoom = this.zoomLevel;
@@ -168,7 +171,7 @@ export default class Drawflow {
       connectorSections:
         data.connectorSections ?? new ReactiveMap<string, ConnectorSection>(),
       css: data.css ?? {},
-      customData: data.customData ?? ({} as SolidDrawflow.CustomDataType),
+      customData: data.customData ?? ({} as Nodeflow.CustomDataType),
       display: data.display ?? (() => undefined),
       id,
       offset: Vec2.zero(),
