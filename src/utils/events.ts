@@ -6,7 +6,7 @@ import {
   removeConnection,
   resetMovement,
 } from "./drawflow-storage";
-import { DrawflowEventPublisher } from "./data/EventPublishers";
+import { DrawflowEventPublisher } from "./data";
 import Vec2 from "./data/Vec2";
 import { windowSize } from "./screen-utils";
 import { DeepPartial, DrawflowData } from "../drawflow-types";
@@ -124,12 +124,12 @@ drawflowEventStore.onNodeConnected.subscribeMultiple([
   {
     name: "create-connection",
     event: (data) =>
-      addConnection(
-        data.inputNodeId,
-        data.inputId,
-        data.outputNodeId,
-        data.outputId,
-      ),
+      addConnection({
+        sourceNodeId: data.inputNodeId,
+        sourceConnectorId: data.inputId,
+        destinationNodeId: data.outputNodeId,
+        destinationConnectorId: data.outputId,
+      }),
   },
   {
     name: "reset-mouse-data",
