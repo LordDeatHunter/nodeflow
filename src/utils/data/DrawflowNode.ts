@@ -1,6 +1,10 @@
 import {
   DrawflowNode as DrawflowNodeData,
   Optional,
+  SerializedConnection,
+  SerializedConnectorSection,
+  SerializedDrawflowNode,
+  SerializedNodeConnector,
 } from "../../drawflow-types";
 import { createStore } from "solid-js/store";
 import Vec2 from "./Vec2";
@@ -8,10 +12,7 @@ import { drawflow } from "../drawflow-storage";
 import ConnectorSection from "./ConnectorSection";
 import { ReactiveMap } from "@solid-primitives/map";
 import NodeConnector from "./NodeConnector";
-import ArrayWrapper from "./ArrayWrapper";
-import ConnectorDestination from "./ConnectorDestination";
-import ConnectorSource from "./ConnectorSource";
-import { breakApartObjectRecursively } from "../misc-utils";
+import { deepCopy } from "../misc-utils";
 
 export default class DrawflowNode {
   private readonly store;
@@ -112,8 +113,64 @@ export default class DrawflowNode {
     this.store[1](data);
   }
 
-  public asObject(): DrawflowNodeData {
-    return breakApartObjectRecursively(this.store[0]);
+  public serialize(): SerializedDrawflowNode {
+    const serializedConnectorSections = Array.from(
+      this.connectorSections.values(),
+    ).reduce(
+      (sections, section) => {
+        sections[section.id] = section.serialize();
+        return sections;
+      },
+      {} as Record<string, SerializedConnectorSection>,
+    );
+
+    return {
+      centered: this.centered,
+      connectorSections: serializedConnectorSections,
+      css: deepCopy(this.css),
+      customData: deepCopy(this.customData),
+      id: this.id,
+      display: this.display,
+      position: this.position.serialize(),
+    };
+  }
+
+  public static deserialize(data: Partial<SerializedDrawflowNode>) {
+    const id = data.id ?? drawflow.getNextFreeNodeId();
+
+    const node = new DrawflowNode({
+      centered: data.centered ?? false,
+      connectorSections: new ReactiveMap<string, ConnectorSection>(),
+      css: deepCopy(data.css) ?? {},
+      customData: deepCopy(data.customData) ?? ({} as Nodeflow.CustomDataType),
+      display: data.display ?? (() => undefined),
+      id,
+      offset: Vec2.zero(),
+      position: Vec2.deserializeOrDefault(data.position),
+      ref: undefined,
+      resizeObserver: undefined,
+      size: Vec2.zero(),
+    });
+
+    Object.entries(data.connectorSections ?? []).forEach(
+      ([sectionId, section]) => {
+        node.addConnectorSection(sectionId, section.css, false);
+
+        Object.values(section.connectors).forEach((connector) => {
+          node.addConnector(sectionId, connector, false);
+        });
+      },
+    );
+
+    return node;
+  }
+
+  public serializeConnections(): Array<SerializedConnection> {
+    return Array.from(this.connectorSections.values()).flatMap((section) =>
+      Array.from(section.connectors.values()).flatMap((connector) =>
+        connector.serializeConnections(),
+      ),
+    );
   }
 
   public updateWithPrevious(
@@ -145,7 +202,7 @@ export default class DrawflowNode {
     sectionId?: string,
     css?: string,
     addToHistory = true,
-  ) => {
+  ): ConnectorSection => {
     if (!sectionId || this.connectorSections.has(sectionId)) {
       sectionId = this.getNextFreeConnectorSectionId();
     }
@@ -163,15 +220,16 @@ export default class DrawflowNode {
       });
     }
 
-    this.connectorSections.set(
-      sectionId,
-      new ConnectorSection({
-        connectors: new ReactiveMap<string, NodeConnector>(),
-        css,
-        id: sectionId,
-        parentNode: this,
-      }),
-    );
+    const section = new ConnectorSection({
+      connectors: new ReactiveMap<string, NodeConnector>(),
+      css,
+      id: sectionId,
+      parentNode: this,
+    });
+
+    this.connectorSections.set(sectionId, section);
+
+    return section;
   };
 
   public removeConnectorSection(sectionId: string, addToHistory = true) {
@@ -205,52 +263,16 @@ export default class DrawflowNode {
 
   public addConnector(
     sectionId: string,
-    connectorId: Optional<string>,
-    data: Partial<NodeConnector>,
+    data: Partial<SerializedNodeConnector>,
     addToHistory = true,
   ) {
     if (!this.connectorSections.has(sectionId)) {
       return;
     }
-    const section = this.connectorSections.get(sectionId)!;
 
-    if (!connectorId || section.connectors.has(connectorId)) {
-      connectorId = this.getNextFreeConnectorId();
-    }
-
-    if (this.getConnector(connectorId)) {
-      return;
-    }
-
-    if (addToHistory) {
-      drawflow.changes.addChange({
-        type: "add",
-        source: "connector",
-        applyChange: () => {
-          this.addConnector(sectionId, connectorId, data, false);
-        },
-        undoChange: () => {
-          this.removeConnector(sectionId, connectorId!, false);
-        },
-      });
-    }
-
-    section.connectors.set(
-      connectorId,
-      new NodeConnector({
-        resizeObserver: undefined,
-        css: data?.css,
-        destinations:
-          data?.destinations ?? new ArrayWrapper<ConnectorDestination>([]),
-        hovered: data?.hovered ?? false,
-        id: connectorId,
-        parentSection: section,
-        position: data?.position ?? Vec2.zero(),
-        ref: undefined,
-        size: Vec2.zero(),
-        sources: data?.sources ?? new ArrayWrapper<ConnectorSource>([]),
-      }),
-    );
+    return this.connectorSections
+      .get(sectionId)!
+      .addConnector(data, addToHistory);
   }
 
   public removeConnector(
@@ -261,27 +283,10 @@ export default class DrawflowNode {
     if (!this.connectorSections.has(sectionId)) {
       return;
     }
-    const section = this.connectorSections.get(sectionId)!;
 
-    if (!section.connectors.has(connectorId)) {
-      return;
-    }
-    const connector = section.connectors.get(connectorId)!;
-
-    if (addToHistory) {
-      drawflow.changes.addChange({
-        type: "remove",
-        source: "connector",
-        applyChange: () => {
-          this.removeConnector(sectionId, connectorId, false);
-        },
-        undoChange: () => {
-          this.addConnector(sectionId, connectorId, connector, false);
-        },
-      });
-    }
-
-    section.connectors.delete(connectorId);
+    this.connectorSections
+      .get(sectionId)!
+      .removeConnector(connectorId, addToHistory);
   }
 
   public getConnector(connectorId: string): Optional<NodeConnector> {

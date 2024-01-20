@@ -1,6 +1,9 @@
 import { createStore } from "solid-js/store";
 import Vec2 from "./Vec2";
-import { MouseData as MouseDataType } from "../../drawflow-types";
+import {
+  MouseData as MouseDataType,
+  SerializedMouseData,
+} from "../../drawflow-types";
 import { drawflow, resetMovement } from "../drawflow-storage";
 
 export default class MouseData {
@@ -9,11 +12,61 @@ export default class MouseData {
   public constructor() {
     this.store = createStore<MouseDataType>({
       clickStartPosition: undefined,
-      isDraggingNode: false,
+      heldConnection: undefined,
       heldConnectorId: undefined,
       heldNodeId: undefined,
+      isDraggingNode: false,
       mousePosition: Vec2.zero(),
-      heldConnection: undefined,
+    });
+  }
+
+  public serialize(): SerializedMouseData {
+    const heldConnection = this.heldConnection
+      ? {
+          sourceNodeId:
+            this.heldConnection.sourceConnector.parentSection.parentNode.id,
+          sourceConnectorId: this.heldConnection.sourceConnector.id,
+          destinationNodeId:
+            this.heldConnection.destinationConnector.parentSection.parentNode
+              .id,
+          destinationConnectorId: this.heldConnection.destinationConnector.id,
+        }
+      : undefined;
+
+    return {
+      clickStartPosition: this.clickStartPosition?.serialize(),
+      heldConnection,
+      heldConnectorId: this.heldConnectorId,
+      heldNodeId: this.heldNodeId,
+    };
+  }
+
+  public deserialize(serialized: SerializedMouseData) {
+    let heldConnection;
+
+    if (serialized.heldConnection) {
+      const sourceConnector = drawflow.nodes
+        .get(serialized.heldConnection.sourceNodeId)
+        ?.getConnector(serialized.heldConnection.sourceConnectorId);
+      const destinationConnector = drawflow.nodes
+        .get(serialized.heldConnection.destinationNodeId)
+        ?.getConnector(serialized.heldConnection.destinationConnectorId);
+
+      if (sourceConnector && destinationConnector) {
+        heldConnection = {
+          sourceConnector,
+          destinationConnector,
+        };
+      }
+    }
+
+    this.update({
+      clickStartPosition: Vec2.deserializeOrDefault(
+        serialized.clickStartPosition,
+      ),
+      heldConnection,
+      heldConnectorId: serialized.heldConnectorId,
+      heldNodeId: serialized.heldNodeId,
     });
   }
 

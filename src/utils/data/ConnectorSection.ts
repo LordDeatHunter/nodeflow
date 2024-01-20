@@ -1,12 +1,80 @@
 import { createStore } from "solid-js/store";
-import { ConnectorSection as ConnectorSectionData } from "../../drawflow-types/types";
+import {
+  ConnectorSection as ConnectorSectionData,
+  SerializedConnectorSection,
+  SerializedNodeConnector,
+} from "../../drawflow-types";
 import NodeConnector from "./NodeConnector";
+import { drawflow } from "../drawflow-storage";
 
 export default class ConnectorSection {
   private readonly store;
 
   constructor(data: ConnectorSectionData) {
     this.store = createStore<ConnectorSectionData>(data);
+  }
+
+  public serialize(): SerializedConnectorSection {
+    return {
+      connectors: Object.fromEntries(
+        Array.from(this.connectors.entries()).map(([id, connector]) => [
+          id,
+          connector.serialize(),
+        ]),
+      ),
+      css: this.css,
+      id: this.id,
+    };
+  }
+
+  public removeConnector(connectorId: string, addToHistory = true) {
+    if (!this.connectors.has(connectorId)) {
+      return;
+    }
+    const connector = this.connectors.get(connectorId)!;
+
+    if (addToHistory) {
+      drawflow.changes.addChange({
+        type: "remove",
+        source: "connector",
+        applyChange: () => {
+          this.removeConnector(connectorId, false);
+        },
+        undoChange: () => {
+          this.addConnector(connector.serialize(), false);
+        },
+      });
+    }
+
+    this.connectors.delete(connectorId);
+  }
+
+  public addConnector(
+    data: Partial<SerializedNodeConnector>,
+    addToHistory = true,
+  ) {
+    const connector = NodeConnector.deserialize(data, this);
+
+    if (this.connectors.has(connector.id)) {
+      return;
+    }
+
+    if (addToHistory) {
+      drawflow.changes.addChange({
+        type: "add",
+        source: "connector",
+        applyChange: () => {
+          this.addConnector(connector.serialize(), false);
+        },
+        undoChange: () => {
+          this.removeConnector(connector.id, false);
+        },
+      });
+    }
+
+    this.connectors.set(connector.id, connector);
+
+    return connector;
   }
 
   public get connectors() {

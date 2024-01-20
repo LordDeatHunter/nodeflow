@@ -72,8 +72,8 @@ export const createFamilyMemberNode = (
 
   newNode.addConnector(
     "outputs",
-    "O",
     {
+      id: "O",
       css:
         gender === "M"
           ? nodeCss.maleOutputConnector
@@ -83,8 +83,8 @@ export const createFamilyMemberNode = (
   );
   newNode.addConnector(
     "inputs",
-    "I",
     {
+      id: "I",
       css: nodeCss.inputConnector,
     },
     false,
@@ -135,13 +135,13 @@ export const setupEvents = () => {
         );
 
         const parent = drawflow.nodes.get(heldNodeId)!;
-        addConnection(
-          heldNodeId,
-          "O",
-          newNode.id,
-          "I",
-          getConnectionCSS(parent.customData.gender),
-        );
+        addConnection({
+          sourceNodeId: heldNodeId,
+          sourceConnectorId: "O",
+          destinationNodeId: newNode.id,
+          destinationConnectorId: "I",
+          css: getConnectionCSS(parent.customData.gender),
+        });
       });
     },
     1,
@@ -200,13 +200,13 @@ export const setupEvents = () => {
         return;
       }
 
-      addConnection(
-        outputNodeId,
-        "O",
-        inputNodeId,
-        "I",
-        getConnectionCSS(outputNode.customData.gender),
-      );
+      addConnection({
+        sourceNodeId: outputNodeId,
+        sourceConnectorId: "O",
+        destinationNodeId: inputNodeId,
+        destinationConnectorId: "I",
+        css: getConnectionCSS(outputNode.customData.gender),
+      });
     },
   );
 
@@ -236,13 +236,13 @@ export const setupEvents = () => {
       )
         return;
 
-      addConnection(
-        sourceId,
-        "O",
-        nodeId,
-        "I",
-        getConnectionCSS(sourceNode.customData.gender),
-      );
+      addConnection({
+        sourceNodeId: sourceId,
+        sourceConnectorId: "O",
+        destinationNodeId: nodeId,
+        destinationConnectorId: "I",
+        css: getConnectionCSS(sourceNode.customData.gender),
+      });
     },
   );
 
@@ -287,13 +287,13 @@ export const setupDummyConnections = () => {
       continue;
     }
 
-    addConnection(
-      from.toString(),
-      "O",
-      to.toString(),
-      "I",
-      getConnectionCSS(fromNode.customData.gender),
-    );
+    addConnection({
+      sourceNodeId: from.toString(),
+      sourceConnectorId: "O",
+      destinationNodeId: to.toString(),
+      destinationConnectorId: "I",
+      css: getConnectionCSS(fromNode.customData.gender),
+    });
   }
 };
 

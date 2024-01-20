@@ -1,3 +1,5 @@
+import { SerializedVec2 } from "../../drawflow-types";
+
 export default class Vec2 {
   public x: number;
   public y: number;
@@ -5,6 +7,10 @@ export default class Vec2 {
   private constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
+  }
+
+  public static zero(): Vec2 {
+    return new Vec2(0, 0);
   }
 
   public static of(x: number, y: number): Vec2 {
@@ -17,12 +23,30 @@ export default class Vec2 {
     return new Vec2(event.clientX, event.clientY);
   }
 
-  public static copy(position: Vec2): Vec2 {
+  public static fromVec2(position: Vec2): Vec2 {
     return new Vec2(position.x, position.y);
   }
 
-  public static zero(): Vec2 {
-    return new Vec2(0, 0);
+  public copy(): Vec2 {
+    return new Vec2(this.x, this.y);
+  }
+
+  public serialize(): SerializedVec2 {
+    return {
+      x: this.x,
+      y: this.y,
+    };
+  }
+
+  public static deserialize(serialized: SerializedVec2): Vec2 {
+    return new Vec2(serialized.x, serialized.y);
+  }
+
+  static deserializeOrDefault(
+    serialized?: SerializedVec2,
+    defaultValue = Vec2.zero(),
+  ): Vec2 {
+    return serialized ? Vec2.deserialize(serialized) : defaultValue;
   }
 
   public add(...positions: Vec2[]): Vec2 {

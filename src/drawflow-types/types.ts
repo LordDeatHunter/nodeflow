@@ -18,24 +18,26 @@ export type DeepPartial<T> = T extends object
 
 export interface MouseData {
   clickStartPosition?: Vec2;
-  isDraggingNode: boolean;
-  heldNodeId?: string;
-  heldConnectorId?: string;
   heldConnection?: {
     sourceConnector: NodeConnectorClass;
     destinationConnector: NodeConnectorClass;
   };
+  heldConnectorId?: string;
+  heldNodeId?: string;
+  isDraggingNode: boolean;
   mousePosition: Vec2;
 }
+
+export type DisplayFunc = (props: {
+  node: DrawflowNodeClass;
+}) => Optional<JSX.Element>;
 
 export type DrawflowNode = {
   centered: boolean;
   connectorSections: ReactiveMap<string, ConnectorSectionClass>;
   css: SelectableElementCSS;
   customData: Nodeflow.CustomDataType;
-  readonly display: (props: {
-    node: DrawflowNodeClass;
-  }) => Optional<JSX.Element>;
+  readonly display: DisplayFunc;
   id: string;
   offset: Vec2;
   position: Vec2;
@@ -98,3 +100,10 @@ export interface PathData {
   path: string;
   start: Vec2;
 }
+
+export type Change = {
+  type: "add" | "remove" | "update";
+  source: string;
+  applyChange: () => void;
+  undoChange: () => void;
+};

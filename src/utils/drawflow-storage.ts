@@ -1,4 +1,4 @@
-import { SelectableElementCSS } from "../drawflow-types";
+import { SerializedConnection } from "../drawflow-types";
 import { clamp } from "./math-utils";
 import { intersectionOfSets, isSetEmpty } from "./misc-utils";
 import Vec2 from "./data/Vec2";
@@ -100,13 +100,17 @@ setInterval(() => {
 }, 10);
 
 export const addConnection = (
-  sourceNodeId: string,
-  sourceConnectorId: string,
-  destinationNodeId: string,
-  destinationConnectorId: string,
-  css?: SelectableElementCSS,
+  data: SerializedConnection,
   addToHistory = true,
 ) => {
+  const {
+    sourceNodeId,
+    sourceConnectorId,
+    destinationNodeId,
+    destinationConnectorId,
+    css,
+  } = data;
+
   // Check if nodes exist
   if (
     !drawflow.nodes.has(sourceNodeId) ||
@@ -141,15 +145,7 @@ export const addConnection = (
     drawflow.changes.addChange({
       type: "add",
       source: "connection",
-      applyChange: () =>
-        addConnection(
-          sourceNodeId,
-          sourceConnectorId,
-          destinationNodeId,
-          destinationConnectorId,
-          css,
-          false,
-        ),
+      applyChange: () => addConnection(data, false),
       undoChange: () =>
         removeConnection(
           sourceNodeId,
@@ -208,16 +204,20 @@ export const removeConnection = (
         destination.destinationConnector.parentSection.parentNode.id ===
         destinationNodeId,
     )?.css;
+
     const undoChange = () => {
       addConnection(
-        sourceNodeId,
-        sourceConnectorId,
-        destinationNodeId,
-        destinationConnectorId,
-        css,
+        {
+          sourceNodeId,
+          sourceConnectorId,
+          destinationNodeId,
+          destinationConnectorId,
+          css,
+        },
         false,
       );
     };
+
     const applyChange = () => {
       removeConnection(
         sourceNodeId,
@@ -227,6 +227,7 @@ export const removeConnection = (
         false,
       );
     };
+
     drawflow.changes.addChange({
       type: "remove",
       source: "connection",

@@ -31,7 +31,6 @@ export const createDummyNode = (
   for (let j = 0; j < outputs; j++) {
     newNode.addConnector(
       "outputs",
-      undefined,
       {
         css: nodeCss.outputConnector,
       },
@@ -42,7 +41,6 @@ export const createDummyNode = (
   for (let j = 0; j < inputs; j++) {
     newNode.addConnector(
       "inputs",
-      undefined,
       {
         css: nodeCss.inputConnector,
       },
@@ -59,16 +57,16 @@ export const setupEvents = () => {
     if (data.outputNodeId === data.inputNodeId) {
       return;
     }
-    addConnection(
-      data.outputNodeId,
-      data.outputId,
-      data.inputNodeId,
-      data.inputId,
-      {
+    addConnection({
+      sourceNodeId: data.outputNodeId,
+      sourceConnectorId: data.outputId,
+      destinationNodeId: data.inputNodeId,
+      destinationConnectorId: data.inputId,
+      css: {
         normal: curveCss.connection,
         selected: curveCss["selected-connection"],
       },
-    );
+    });
   });
   SetCurveFunction("getDefaultCurve", CurveFunctions.getHorizontalCurve);
   SetCurveFunction(
@@ -124,15 +122,15 @@ export const setupDummyConnections = () => {
       continue;
     }
 
-    addConnection(
-      from.toString(),
-      fromConnector.id,
-      to.toString(),
-      toConnector.id,
-      {
+    addConnection({
+      sourceNodeId: from.toString(),
+      sourceConnectorId: fromConnector.id,
+      destinationNodeId: to.toString(),
+      destinationConnectorId: toConnector.id,
+      css: {
         normal: curveCss.connection,
         selected: curveCss.selectedConnection,
       },
-    );
+    });
   }
 };

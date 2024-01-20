@@ -1,14 +1,78 @@
 import { createStore } from "solid-js/store";
-import { NodeConnector as NodeConnectorData } from "../../drawflow-types";
+import {
+  NodeConnector as NodeConnectorData,
+  SerializedConnection,
+  SerializedNodeConnector,
+} from "../../drawflow-types";
 import ArrayWrapper from "./ArrayWrapper";
 import ConnectorSource from "./ConnectorSource";
 import ConnectorDestination from "./ConnectorDestination";
+import Vec2 from "./Vec2";
+import ConnectorSection from "./ConnectorSection";
+import { deepCopy } from "../misc-utils";
 
 export default class NodeConnector {
   private readonly store;
 
   constructor(data: NodeConnectorData) {
     this.store = createStore<NodeConnectorData>(data);
+  }
+
+  public serialize(): SerializedNodeConnector {
+    return {
+      css: this.css,
+      hovered: this.hovered,
+      id: this.id,
+      position: this.position.serialize(),
+    };
+  }
+
+  public serializeConnections(): Array<SerializedConnection> {
+    return [
+      ...this.destinations.map(({ destinationConnector, css }) => ({
+        sourceNodeId: this.parentSection.parentNode.id,
+        sourceConnectorId: this.id,
+        destinationNodeId: destinationConnector.parentSection.parentNode.id,
+        destinationConnectorId: destinationConnector.id,
+        css: deepCopy(css),
+      })),
+      ...this.sources.map(({ sourceConnector }) => ({
+        sourceNodeId: sourceConnector.parentSection.parentNode.id,
+        sourceConnectorId: sourceConnector.id,
+        destinationNodeId: this.parentSection.parentNode.id,
+        destinationConnectorId: this.id,
+        css: deepCopy(
+          sourceConnector.destinations.find(
+            (destination) =>
+              destination.destinationConnector.parentSection.parentNode.id ===
+              this.parentSection.parentNode.id,
+          )?.css,
+        ),
+      })),
+    ];
+  }
+
+  public static deserialize(
+    data: Partial<SerializedNodeConnector>,
+    parentSection: ConnectorSection,
+  ) {
+    const connectorId =
+      !data.id || parentSection.connectors.has(data.id)
+        ? parentSection.parentNode.getNextFreeConnectorId()
+        : data.id;
+
+    return new NodeConnector({
+      css: data.css,
+      destinations: new ArrayWrapper<ConnectorDestination>([]),
+      hovered: data.hovered ?? false,
+      id: connectorId,
+      parentSection,
+      position: Vec2.deserializeOrDefault(data.position),
+      ref: undefined,
+      resizeObserver: undefined,
+      size: Vec2.zero(),
+      sources: new ArrayWrapper<ConnectorSource>([]),
+    });
   }
 
   public get css() {

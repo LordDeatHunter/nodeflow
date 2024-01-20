@@ -5,7 +5,9 @@ import {
   DeepPartial,
   DrawflowData,
   DrawflowNode as DrawflowNodeData,
-  Optional,
+  SerializedConnection,
+  SerializedDrawflow,
+  SerializedDrawflowNode,
 } from "../../drawflow-types";
 import { windowSize } from "../screen-utils";
 import { clamp } from "../math-utils";
@@ -14,7 +16,6 @@ import { Changes } from "./Changes";
 import MouseData from "./MouseData";
 import { ReactiveMap } from "@solid-primitives/map";
 import DrawflowNode from "./DrawflowNode";
-import ConnectorSection from "./ConnectorSection";
 import { drawflowEventStore } from "../events";
 import NodeConnector from "./NodeConnector";
 import ConnectorSource from "./ConnectorSource";
@@ -42,6 +43,56 @@ export default class Drawflow {
     this.nodes = new ReactiveMap<string, DrawflowNode>();
 
     setup();
+  }
+
+  public serialize(): SerializedDrawflow {
+    return {
+      changes: this.changes.serialize(),
+      connections: this.serializeConnections(),
+      currentMoveSpeed: this.currentMoveSpeed.serialize(),
+      mouseData: this.mouseData.serialize(),
+      nodes: Object.fromEntries(
+        Array.from(this.nodes.entries()).map(([id, node]) => [
+          id,
+          node.serialize(),
+        ]),
+      ),
+      pinchDistance: this.pinchDistance,
+      position: this.position.serialize(),
+      size: this.size.serialize(),
+      startPosition: this.startPosition.serialize(),
+      zoomLevel: this.zoomLevel,
+    };
+  }
+
+  public deserialize(data: SerializedDrawflow) {
+    this.update({
+      currentMoveSpeed: Vec2.deserializeOrDefault(data.currentMoveSpeed),
+      pinchDistance: data.pinchDistance,
+      position: Vec2.deserializeOrDefault(data.position),
+      size: Vec2.deserializeOrDefault(data.size),
+      startPosition: Vec2.deserializeOrDefault(data.startPosition),
+      zoomLevel: data.zoomLevel,
+    });
+
+    this.nodes.clear();
+    Object.entries(data.nodes).forEach(([_, node]) => {
+      this.addNode(node, false);
+    });
+
+    this.mouseData.deserialize(data.mouseData);
+
+    data.connections.forEach((connection) => {
+      addConnection(connection, false);
+    });
+
+    this.changes.deserialize(data.changes);
+  }
+
+  public serializeConnections(): Array<SerializedConnection> {
+    return Array.from(this.nodes.values()).flatMap((node) =>
+      node.serializeConnections(),
+    );
   }
 
   get currentMoveSpeed() {
@@ -162,51 +213,33 @@ export default class Drawflow {
   }
 
   public addNode(
-    data: Partial<DrawflowNodeData>,
+    data: Partial<SerializedDrawflowNode>,
     addToHistory = true,
   ): DrawflowNode {
-    const id = data.id ?? this.getNextFreeNodeId();
-    const newNode: Optional<DrawflowNode> = new DrawflowNode({
-      centered: data.centered ?? false,
-      connectorSections:
-        data.connectorSections ?? new ReactiveMap<string, ConnectorSection>(),
-      css: data.css ?? {},
-      customData: data.customData ?? ({} as Nodeflow.CustomDataType),
-      display: data.display ?? (() => undefined),
-      id,
-      offset: Vec2.zero(),
-      position: data.position ?? Vec2.zero(),
-      ref: undefined,
-      size: Vec2.zero(),
-    });
-    this.nodes.set(id, newNode);
+    const node = DrawflowNode.deserialize(data);
+
+    this.nodes.set(node.id, node);
 
     if (addToHistory) {
-      const oldConnections = this.getAllSourceConnections(id);
+      const oldConnections = node.serializeConnections();
 
       this.changes.addChange({
         type: "add",
         source: "node",
         applyChange: () => {
-          this.addNode(newNode.asObject(), false);
+          this.addNode(node.serialize(), false);
+
           oldConnections.forEach((connection) => {
-            addConnection(
-              connection.sourceNodeId,
-              connection.sourceConnectorId,
-              connection.destinationNodeId,
-              connection.destinationConnectorId,
-              connection.css,
-              false,
-            );
+            addConnection(connection, false);
           });
         },
         undoChange: () => {
-          this.removeNode(id, false);
+          this.removeNode(node.id, false);
         },
       });
     }
 
-    return newNode;
+    return node;
   }
 
   public updateNode(
@@ -220,21 +253,16 @@ export default class Drawflow {
 
     if (addToHistory) {
       const oldNode = this.nodes.get(nodeId)!;
-      const oldConnections = this.getAllSourceConnections(nodeId);
+      const oldConnections = oldNode.serializeConnections();
+
       const applyChange = () => {
         this.updateNode(nodeId, data, false);
       };
+
       const undoChange = () => {
         this.updateNode(nodeId, oldNode, false);
         oldConnections.forEach((connection) => {
-          addConnection(
-            connection.sourceNodeId,
-            connection.sourceConnectorId,
-            connection.destinationNodeId,
-            connection.destinationConnectorId,
-            connection.css,
-            false,
-          );
+          addConnection(connection, false);
         });
       };
       this.changes.addChange({
@@ -262,25 +290,21 @@ export default class Drawflow {
 
     if (addToHistory) {
       const oldNode = this.nodes.get(nodeId)!;
-      const oldConnections = oldNode.getAllSourceConnections();
+      const oldConnections = oldNode.serializeConnections();
 
       this.changes.addChange({
         type: "remove",
         source: "node",
+
         applyChange: () => {
           this.removeNode(nodeId, false);
         },
+
         undoChange: () => {
-          this.addNode(oldNode.asObject(), false);
+          this.addNode(oldNode.serialize(), false);
+
           oldConnections.forEach((connection) => {
-            addConnection(
-              connection.sourceNodeId,
-              connection.sourceConnectorId,
-              connection.destinationNodeId,
-              connection.destinationConnectorId,
-              connection.css,
-              false,
-            );
+            addConnection(connection, false);
           });
         },
       });
