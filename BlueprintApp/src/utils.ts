@@ -1,13 +1,9 @@
-import { Vec2 } from "nodeflow/src/utils/vec2";
+import Vec2 from "nodeflow/src/utils/data/Vec2";
 import {
   addConnection,
-  addConnector,
-  addConnectorSection,
-  addNode,
   CurveFunctions,
+  drawflow,
   DrawflowNode,
-  getTotalConnectedInputs,
-  nodes,
   SetCurveFunction,
 } from "nodeflow/src";
 import nodeCss from "./styles/node.module.scss";
@@ -19,7 +15,7 @@ export const createDummyNode = (
   position: Vec2,
   center = false,
 ): DrawflowNode => {
-  const newNode = addNode({
+  const newNode = drawflow.addNode({
     css: {
       normal: nodeCss.node,
       selected: nodeCss.selectedNode,
@@ -28,15 +24,13 @@ export const createDummyNode = (
     display: NodeDisplay,
     centered: center,
   });
-  addConnectorSection(newNode.id, "inputs", nodeCss.inputsSection, false);
-  addConnectorSection(newNode.id, "outputs", nodeCss.outputsSection, false);
+  newNode.addConnectorSection("inputs", nodeCss.inputsSection, false);
+  newNode.addConnectorSection("outputs", nodeCss.outputsSection, false);
 
   const outputs = Math.random() * 6;
   for (let j = 0; j < outputs; j++) {
-    addConnector(
-      newNode.id,
+    newNode.addConnector(
       "outputs",
-      undefined,
       {
         css: nodeCss.outputConnector,
       },
@@ -45,10 +39,8 @@ export const createDummyNode = (
   }
   const inputs = Math.random() * 6;
   for (let j = 0; j < inputs; j++) {
-    addConnector(
-      newNode.id,
+    newNode.addConnector(
       "inputs",
-      undefined,
       {
         css: nodeCss.inputConnector,
       },
@@ -65,16 +57,16 @@ export const setupEvents = () => {
     if (data.outputNodeId === data.inputNodeId) {
       return;
     }
-    addConnection(
-      data.outputNodeId,
-      data.outputId,
-      data.inputNodeId,
-      data.inputId,
-      {
+    addConnection({
+      sourceNodeId: data.outputNodeId,
+      sourceConnectorId: data.outputId,
+      destinationNodeId: data.inputNodeId,
+      destinationConnectorId: data.inputId,
+      css: {
         normal: curveCss.connection,
         selected: curveCss["selected-connection"],
       },
-    );
+    });
   });
   SetCurveFunction("getDefaultCurve", CurveFunctions.getHorizontalCurve);
   SetCurveFunction(
@@ -90,22 +82,27 @@ export const setupDummyNodes = (count: number = 50) => {
 };
 
 export const setupDummyConnections = () => {
-  const totalNodes = Object.keys(nodes).length;
+  const totalNodes = drawflow.nodes.size;
 
   for (let i = 0; i < totalNodes; i++) {
     const from = Math.floor(Math.random() * totalNodes);
     const to = Math.floor(Math.random() * totalNodes);
-    const fromNode = nodes[from.toString()];
-    const toNode = nodes[to.toString()];
-    if (!fromNode || !toNode) {
+
+    if (
+      !drawflow.nodes.has(from.toString()) ||
+      !drawflow.nodes.has(to.toString())
+    ) {
       continue;
     }
+    const fromNode = drawflow.nodes.get(from.toString())!;
+    const toNode = drawflow.nodes.get(to.toString())!;
 
-    const fromConnectors = fromNode.connectorSections["outputs"].connectors;
-    const toConnectors = toNode.connectorSections["inputs"].connectors;
+    const fromConnectors =
+      fromNode.connectorSections.get("outputs")!.connectors;
+    const toConnectors = toNode.connectorSections.get("inputs")!.connectors;
 
-    const fromConnectorValues = Object.values(fromConnectors);
-    const toConnectorValues = Object.values(toConnectors);
+    const fromConnectorValues = Array.from(fromConnectors.values());
+    const toConnectorValues = Array.from(toConnectors.values());
 
     if (fromConnectorValues.length === 0 || toConnectorValues.length === 0) {
       continue;
@@ -120,20 +117,20 @@ export const setupDummyConnections = () => {
 
     if (
       from === to ||
-      getTotalConnectedInputs(to.toString(), toConnector.toString()) > 0
+      toNode.getTotalConnectedInputs(toConnector.toString()) > 0
     ) {
       continue;
     }
 
-    addConnection(
-      from.toString(),
-      fromConnector.id,
-      to.toString(),
-      toConnector.id,
-      {
+    addConnection({
+      sourceNodeId: from.toString(),
+      sourceConnectorId: fromConnector.id,
+      destinationNodeId: to.toString(),
+      destinationConnectorId: toConnector.id,
+      css: {
         normal: curveCss.connection,
         selected: curveCss.selectedConnection,
       },
-    );
+    });
   }
 };

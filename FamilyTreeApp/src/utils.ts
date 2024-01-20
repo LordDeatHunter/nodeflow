@@ -1,21 +1,13 @@
 import {
   addConnection,
-  addConnector,
-  addConnectorSection,
-  addNode,
   CurveFunctions,
+  drawflow,
   DrawflowNode,
-  getConnector,
-  globalMousePosition,
-  mouseData,
-  nodes,
-  removeOutgoingConnections,
   SelectableElementCSS,
   SetCurveFunction,
-  updateNode,
 } from "nodeflow/src";
 import nodeCss from "./styles/node.module.scss";
-import { Vec2 } from "nodeflow/src/utils/vec2";
+import Vec2 from "nodeflow/src/utils/data/Vec2";
 import { drawflowEventStore } from "nodeflow/src/utils/events";
 import curveCss from "./styles/curve.module.scss";
 import NodeBody from "./components/NodeBody";
@@ -64,7 +56,7 @@ export const createFamilyMemberNode = (
   gender: Nodeflow.CustomDataType["gender"],
   position?: Vec2,
 ): DrawflowNode => {
-  const newNode = addNode({
+  const newNode = drawflow.addNode({
     css: {
       normal: gender === "M" ? nodeCss.maleNode : nodeCss.femaleNode,
       selected:
@@ -75,14 +67,13 @@ export const createFamilyMemberNode = (
     display: NodeBody,
     centered: true,
   });
-  addConnectorSection(newNode.id, "inputs", nodeCss.inputsSection, false);
-  addConnectorSection(newNode.id, "outputs", nodeCss.outputsSection, false);
+  newNode.addConnectorSection("inputs", nodeCss.inputsSection, false);
+  newNode.addConnectorSection("outputs", nodeCss.outputsSection, false);
 
-  addConnector(
-    newNode.id,
+  newNode.addConnector(
     "outputs",
-    "O",
     {
+      id: "O",
       css:
         gender === "M"
           ? nodeCss.maleOutputConnector
@@ -90,11 +81,10 @@ export const createFamilyMemberNode = (
     },
     false,
   );
-  addConnector(
-    newNode.id,
+  newNode.addConnector(
     "inputs",
-    "I",
     {
+      id: "I",
       css: nodeCss.inputConnector,
     },
     false,
@@ -132,8 +122,8 @@ export const setupEvents = () => {
   drawflowEventStore.onPointerUpInDrawflow.subscribe(
     "spawn-new-node",
     () => {
-      const heldNodeId = mouseData.heldNodeId;
-      const heldConnectorId = mouseData.heldConnectorId;
+      const heldNodeId = drawflow.mouseData.heldNodeId;
+      const heldConnectorId = drawflow.mouseData.heldConnectorId;
 
       if (!heldNodeId || !heldConnectorId) return;
 
@@ -141,17 +131,17 @@ export const setupEvents = () => {
         const newNode = createFamilyMemberNode(
           data[0].name,
           data[0].gender,
-          globalMousePosition(),
+          drawflow.mouseData.globalMousePosition(),
         );
 
-        const parent = nodes[heldNodeId!];
-        addConnection(
-          heldNodeId!,
-          "O",
-          newNode.id,
-          "I",
-          getConnectionCSS(parent.customData.gender),
-        );
+        const parent = drawflow.nodes.get(heldNodeId)!;
+        addConnection({
+          sourceNodeId: heldNodeId,
+          sourceConnectorId: "O",
+          destinationNodeId: newNode.id,
+          destinationConnectorId: "I",
+          css: getConnectionCSS(parent.customData.gender),
+        });
       });
     },
     1,
@@ -160,8 +150,9 @@ export const setupEvents = () => {
   drawflowEventStore.onNodeDataChanged.subscribe(
     "update-node-css",
     ({ nodeId, data }) => {
-      const node = nodes[nodeId];
-      if (!node || !("customData" in data)) return;
+      if (!drawflow.nodes.has(nodeId) || !("customData" in data)) return;
+
+      const node = drawflow.nodes.get(nodeId)!;
       const customData = data.customData as Nodeflow.CustomDataType;
 
       if (!("gender" in customData)) return;
@@ -169,7 +160,7 @@ export const setupEvents = () => {
 
       if (gender === node.customData.gender) return;
 
-      updateNode(nodeId, {
+      drawflow.updateNode(nodeId, {
         css: {
           normal: gender === "M" ? nodeCss.maleNode : nodeCss.femaleNode,
           selected:
@@ -180,7 +171,7 @@ export const setupEvents = () => {
       });
 
       // TODO: maybe create new connections to the respective connectors of the new gender? Eg. mother->father, father->mother
-      removeOutgoingConnections(nodeId);
+      drawflow.removeOutgoingConnections(nodeId);
     },
   );
 
@@ -188,11 +179,12 @@ export const setupEvents = () => {
   drawflowEventStore.onNodeConnected.subscribe(
     "create-connection",
     ({ outputNodeId, inputNodeId }) => {
-      const outputNode = nodes[outputNodeId];
+      const outputNode = drawflow.nodes.get(outputNodeId)!;
+      const inputNode = drawflow.nodes.get(inputNodeId)!;
 
       if (outputNodeId === inputNodeId) return;
 
-      const connector = getConnector(inputNodeId, "I")?.sources;
+      const connector = inputNode.getConnector("I")?.sources;
 
       // Return if:
       // The connector already has 2 parents
@@ -208,32 +200,29 @@ export const setupEvents = () => {
         return;
       }
 
-      addConnection(
-        outputNodeId,
-        "O",
-        inputNodeId,
-        "I",
-        getConnectionCSS(outputNode.customData.gender),
-      );
+      addConnection({
+        sourceNodeId: outputNodeId,
+        sourceConnectorId: "O",
+        destinationNodeId: inputNodeId,
+        destinationConnectorId: "I",
+        css: getConnectionCSS(outputNode.customData.gender),
+      });
     },
   );
 
   drawflowEventStore.onPointerUpInNode.subscribe(
     "create-connection",
     ({ nodeId }) => {
-      const destinationNode = nodes[nodeId];
-      if (
-        !destinationNode ||
-        !mouseData.heldNodeId ||
-        nodeId === mouseData.heldNodeId
-      ) {
+      const destinationNode = drawflow.nodes.get(nodeId);
+      const sourceId = drawflow.mouseData.heldNodeId;
+      if (!destinationNode || !sourceId || nodeId === sourceId) {
         return;
       }
 
-      const sourceNode = nodes[mouseData.heldNodeId];
-      if (!sourceNode) return;
+      if (!drawflow.nodes.has(sourceId)) return;
+      const sourceNode = drawflow.nodes.get(sourceId)!;
 
-      const connector = getConnector(nodeId, "I")?.sources;
+      const connector = destinationNode.getConnector("I")?.sources;
       // Return if:
       // The connector already has 2 parents
       // One of the parents is the same gender as the source node
@@ -247,13 +236,13 @@ export const setupEvents = () => {
       )
         return;
 
-      addConnection(
-        mouseData.heldNodeId,
-        "O",
-        nodeId,
-        "I",
-        getConnectionCSS(sourceNode.customData.gender),
-      );
+      addConnection({
+        sourceNodeId: sourceId,
+        sourceConnectorId: "O",
+        destinationNodeId: nodeId,
+        destinationConnectorId: "I",
+        css: getConnectionCSS(sourceNode.customData.gender),
+      });
     },
   );
 
@@ -265,20 +254,24 @@ export const setupEvents = () => {
 };
 
 export const setupDummyConnections = () => {
-  const totalNodes = Object.keys(nodes).length;
+  const totalNodes = drawflow.nodes.size;
 
   for (let i = 0; i < totalNodes; i++) {
     const from = Math.floor(Math.random() * totalNodes);
     const to = Math.floor(Math.random() * totalNodes);
-    const fromNode = nodes[from.toString()];
-    const toNode = nodes[to.toString()];
-    if (!fromNode || !toNode) {
+
+    if (
+      !drawflow.nodes.has(from.toString()) ||
+      !drawflow.nodes.has(to.toString())
+    ) {
       continue;
     }
+    const fromNode = drawflow.nodes.get(from.toString())!;
+    const toNode = drawflow.nodes.get(to.toString())!;
 
     const sourceGender = fromNode.customData.gender;
 
-    const connector = getConnector(to.toString(), "I")?.sources;
+    const connector = toNode.getConnector("I")?.sources;
     // Continue if:
     // The source node is the same as the destination node
     // The destination node already has a connection
@@ -294,13 +287,13 @@ export const setupDummyConnections = () => {
       continue;
     }
 
-    addConnection(
-      from.toString(),
-      "O",
-      to.toString(),
-      "I",
-      getConnectionCSS(fromNode.customData.gender),
-    );
+    addConnection({
+      sourceNodeId: from.toString(),
+      sourceConnectorId: "O",
+      destinationNodeId: to.toString(),
+      destinationConnectorId: "I",
+      css: getConnectionCSS(fromNode.customData.gender),
+    });
   }
 };
 

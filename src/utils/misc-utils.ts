@@ -16,5 +16,22 @@ export const intersectionOfSets = <T>(...sets: Set<T>[]): Set<T> => {
     firstSet,
   );
 };
+
 export const isArrayEmpty = <T>(arr: T[]) => arr.length === 0;
+
 export const isSetEmpty = <T>(set: Set<T>) => set.size === 0;
+
+export const deepCopy = <T>(obj: T): T => {
+  if (typeof obj !== "object" || obj === null || obj === undefined) {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(deepCopy) as unknown as T;
+  }
+  if (typeof obj === "object") {
+    return Object.fromEntries(
+      Object.entries(obj).map(([key, value]) => [key, deepCopy(value)]),
+    ) as unknown as T;
+  }
+  return obj;
+};

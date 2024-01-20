@@ -1,4 +1,4 @@
-import { Vec2 } from "./vec2";
+import Vec2 from "./data/Vec2";
 import { Constants } from "./drawflow-storage";
 
 export const getHorizontalCurve = (start: Vec2, end: Vec2): Vec2 =>
@@ -70,7 +70,7 @@ export const createDraggingPathCurve = (
 export const CurveFunctions = {
   createNodePathCurve: getCurve,
   createDraggingPathCurve,
-  getDefaultCurve: (_start: Vec2, _end: Vec2) => Vec2.default(),
+  getDefaultCurve: (_start: Vec2, _end: Vec2) => Vec2.zero(),
   getHorizontalCurve,
   getVerticalCurve,
   createDefaultPathString,

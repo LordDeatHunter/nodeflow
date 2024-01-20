@@ -1,8 +1,8 @@
-import { setNodes } from "../utils";
-import { Vec2 } from "../utils/vec2";
+import Vec2 from "../utils/data/Vec2";
 import { drawflowEventStore } from "../utils/events";
 import { Component } from "solid-js";
-import { NodeConnector } from "../drawflow-types";
+import NodeConnector from "../utils/data/NodeConnector";
+import { drawflow } from "../utils";
 
 interface ConnectorProps {
   connector: NodeConnector;
@@ -17,36 +17,25 @@ const Connector: Component<ConnectorProps> = (props) => (
       setTimeout(() => {
         if (!el) return;
 
+        const connector = drawflow.nodes
+          .get(props.nodeId)!
+          .connectorSections.get(props.sectionId)!
+          .connectors.get(props.connectorId)!;
+
         const resizeObserver = new ResizeObserver(() => {
-          setNodes(
-            props.nodeId,
-            "connectorSections",
-            props.sectionId,
-            "connectors",
-            props.connectorId,
-            "size",
-            Vec2.of(el.offsetWidth, el.offsetHeight),
-          );
+          connector.size = Vec2.of(el.offsetWidth, el.offsetHeight);
         });
         resizeObserver.observe(el);
 
-        setNodes(
-          props.nodeId,
-          "connectorSections",
-          props.sectionId,
-          "connectors",
-          props.connectorId,
-          (prev) => ({
-            ...prev,
-            position: Vec2.of(
-              (el?.parentElement?.offsetLeft ?? 0) + el.offsetLeft,
-              (el?.parentElement?.offsetTop ?? 0) + el.offsetTop,
-            ),
-            ref: el,
-            resizeObserver,
-            size: Vec2.of(el.offsetWidth, el.offsetHeight),
-          }),
-        );
+        connector.update({
+          position: Vec2.of(
+            (el?.parentElement?.offsetLeft ?? 0) + el.offsetLeft,
+            (el?.parentElement?.offsetTop ?? 0) + el.offsetTop,
+          ),
+          ref: el,
+          resizeObserver,
+          size: Vec2.of(el.offsetWidth, el.offsetHeight),
+        });
       })
     }
     class={props.connector?.css}

@@ -1,11 +1,5 @@
 import { Component, createMemo } from "solid-js";
-import {
-  CurveFunctions,
-  getConnector,
-  globalMousePosition,
-  mouseData,
-  nodes,
-} from "../utils";
+import { CurveFunctions, drawflow } from "../utils";
 import { Optional, PathData } from "../drawflow-types";
 
 interface CurveProps {
@@ -14,25 +8,29 @@ interface CurveProps {
 
 const Curve: Component<CurveProps> = (props) => {
   const curveData = createMemo<Optional<PathData>>(() => {
-    if (!mouseData.heldNodeId || !mouseData.heldConnectorId) {
+    const nodeId = drawflow.mouseData.heldNodeId;
+    const connectorId = drawflow.mouseData.heldConnectorId;
+
+    if (!nodeId || !connectorId) {
       return undefined;
     }
+
+    const node = drawflow.nodes.get(nodeId)!;
+
     const {
       position: startPosition,
       offset: startNodeOffset,
       size: startNodeSize,
-    } = nodes[mouseData.heldNodeId];
-    const output = getConnector(
-      mouseData.heldNodeId,
-      mouseData.heldConnectorId,
-    )!;
+    } = node;
+
+    const output = node.getConnector(connectorId)!;
 
     const start = startPosition.add(
       startNodeOffset,
       output.position,
       output.size.divideBy(2),
     );
-    const end = globalMousePosition();
+    const end = drawflow.mouseData.globalMousePosition();
 
     return {
       start,

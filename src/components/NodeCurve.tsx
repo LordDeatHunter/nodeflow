@@ -1,20 +1,9 @@
 import { Component, createEffect, createMemo } from "solid-js";
-import {
-  CurveFunctions,
-  getConnector,
-  getSectionFromConnector,
-  mouseData,
-  nodes,
-  setNodes,
-} from "../utils";
-import {
-  DrawflowNode,
-  NodeConnector,
-  Optional,
-  PathData,
-  SelectableElementCSS,
-} from "../drawflow-types";
+import { CurveFunctions, drawflow } from "../utils";
+import { Optional, SelectableElementCSS } from "../drawflow-types";
 import { drawflowEventStore } from "../utils/events";
+import NodeConnector from "../utils/data/NodeConnector";
+import DrawflowNode from "../utils/data/DrawflowNode";
 
 interface NodeCurveProps {
   sourceNodeId: string;
@@ -25,16 +14,18 @@ interface NodeCurveProps {
 }
 
 const NodeCurve: Component<NodeCurveProps> = (props) => {
-  const startNode = createMemo<DrawflowNode>(() => nodes[props.sourceNodeId]);
+  const startNode = createMemo<DrawflowNode>(
+    () => drawflow.nodes.get(props.sourceNodeId)!,
+  );
   const endNode = createMemo<DrawflowNode>(
-    () => nodes[props.destinationNodeId],
+    () => drawflow.nodes.get(props.destinationNodeId)!,
   );
 
   const sourceConnector = createMemo<Optional<NodeConnector>>(() =>
-    getConnector(props.sourceNodeId, props.sourceConnectorId),
+    startNode().getConnector(props.sourceConnectorId),
   );
   const destinationConnector = createMemo<Optional<NodeConnector>>(() =>
-    getConnector(props.destinationNodeId, props.destinationConnectorId),
+    endNode().getConnector(props.destinationConnectorId),
   );
 
   const destinationIndex = createMemo<number>(() =>
@@ -62,16 +53,14 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       size: endNodeSize,
     } = endNode();
 
-    const outputSection = getSectionFromConnector(
-      props.sourceNodeId,
+    const outputSection = startNode().getSectionFromConnector(
       props.sourceConnectorId,
     )!;
-    const inputSection = getSectionFromConnector(
-      props.destinationNodeId,
+    const inputSection = endNode().getSectionFromConnector(
       props.destinationConnectorId,
     )!;
-    const input = inputSection.connectors[props.destinationConnectorId]!;
-    const output = outputSection.connectors[props.sourceConnectorId]!;
+    const input = inputSection.connectors.get(props.destinationConnectorId)!;
+    const output = outputSection.connectors.get(props.sourceConnectorId)!;
 
     const start = startPosition.add(
       startNodeOffset,
@@ -84,7 +73,7 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       input.size.divideBy(2),
     );
 
-    const path: PathData = {
+    sourceConnector()!.destinations.get(destinationIndex()).path = {
       start,
       end,
       path: CurveFunctions.createNodePathCurve(
@@ -94,20 +83,6 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
         endPosition.add(endNodeOffset).add(endNodeSize.divideBy(2)),
       ),
     };
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: Solid doesn't like this
-    setNodes(
-      props.sourceNodeId,
-      "connectorSections",
-      outputSection.id,
-      "connectors",
-      props.sourceConnectorId,
-      "destinations",
-      destinationIndex(),
-      "path",
-      path,
-    );
   });
 
   return (
@@ -119,20 +94,20 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
           destinationConnector: destinationConnector()!,
         });
       }}
-      d={sourceConnector()!.destinations[destinationIndex()].path?.path}
+      d={sourceConnector()!.destinations.get(destinationIndex()).path?.path}
       stroke="black"
       stroke-width={1}
       fill="none"
       classList={{
         [props.css?.normal ?? ""]: true,
         [props.css?.selected ?? ""]:
-          mouseData.heldConnection?.sourceConnector.parentSection.parentNode
-            .id === props.sourceNodeId &&
-          mouseData.heldConnection?.sourceConnector.id ===
+          drawflow.mouseData.heldConnection?.sourceConnector.parentSection
+            .parentNode.id === props.sourceNodeId &&
+          drawflow.mouseData.heldConnection?.sourceConnector.id ===
             props.sourceConnectorId &&
-          mouseData.heldConnection?.destinationConnector.parentSection
+          drawflow.mouseData.heldConnection?.destinationConnector.parentSection
             .parentNode.id === props.destinationNodeId &&
-          mouseData.heldConnection?.destinationConnector.id ===
+          drawflow.mouseData.heldConnection?.destinationConnector.id ===
             props.destinationConnectorId,
       }}
       style={{

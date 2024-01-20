@@ -1,5 +1,12 @@
 import { JSX } from "solid-js";
-import { Vec2 } from "../utils/vec2";
+import Vec2 from "../utils/data/Vec2";
+import ConnectorSectionClass from "../utils/data/ConnectorSection";
+import DrawflowNodeClass from "../utils/data/DrawflowNode";
+import NodeConnectorClass from "../utils/data/NodeConnector";
+import ConnectorDestinationClass from "../utils/data/ConnectorDestination";
+import ConnectorSourceClass from "../utils/data/ConnectorSource";
+import { ReactiveMap } from "@solid-primitives/map";
+import ArrayWrapper from "../utils/data/ArrayWrapper";
 
 export type Optional<T> = T | undefined;
 
@@ -11,22 +18,26 @@ export type DeepPartial<T> = T extends object
 
 export interface MouseData {
   clickStartPosition?: Vec2;
-  draggingNode: boolean;
-  heldNodeId?: string;
-  heldConnectorId?: string;
   heldConnection?: {
-    sourceConnector: NodeConnector;
-    destinationConnector: NodeConnector;
+    sourceConnector: NodeConnectorClass;
+    destinationConnector: NodeConnectorClass;
   };
+  heldConnectorId?: string;
+  heldNodeId?: string;
+  isDraggingNode: boolean;
   mousePosition: Vec2;
 }
 
+export type DisplayFunc = (props: {
+  node: DrawflowNodeClass;
+}) => Optional<JSX.Element>;
+
 export type DrawflowNode = {
   centered: boolean;
-  connectorSections: Record<string, ConnectorSection>;
+  connectorSections: ReactiveMap<string, ConnectorSectionClass>;
   css: SelectableElementCSS;
   customData: Nodeflow.CustomDataType;
-  readonly display: (props: { node: DrawflowNode }) => Optional<JSX.Element>;
+  readonly display: DisplayFunc;
   id: string;
   offset: Vec2;
   position: Vec2;
@@ -36,10 +47,10 @@ export type DrawflowNode = {
 };
 
 export type ConnectorSection = {
-  connectors: Record<string, NodeConnector>;
+  connectors: ReactiveMap<string, NodeConnectorClass>;
   css?: string;
   id: string;
-  parentNode: DrawflowNode;
+  parentNode: DrawflowNodeClass;
 };
 
 export interface DrawflowData {
@@ -63,24 +74,24 @@ export interface DrawflowCss {
 
 export interface NodeConnector {
   css?: string;
-  destinations: ConnectorDestination[];
+  destinations: ArrayWrapper<ConnectorDestinationClass>;
   hovered: boolean;
   id: string;
   parentSection: ConnectorSection;
   position: Vec2;
-  ref: HTMLDivElement;
-  resizeObserver: ResizeObserver;
+  ref?: HTMLDivElement;
+  resizeObserver?: ResizeObserver;
   size: Vec2;
-  sources: ConnectorSource[];
+  sources: ArrayWrapper<ConnectorSourceClass>;
 }
 
 export interface ConnectorSource {
-  sourceConnector: NodeConnector;
+  sourceConnector: NodeConnectorClass;
 }
 
 export interface ConnectorDestination {
   css: SelectableElementCSS;
-  destinationConnector: NodeConnector;
+  destinationConnector: NodeConnectorClass;
   path?: PathData;
 }
 
@@ -89,3 +100,10 @@ export interface PathData {
   path: string;
   start: Vec2;
 }
+
+export type Change = {
+  type: "add" | "remove" | "update";
+  source: string;
+  applyChange: () => void;
+  undoChange: () => void;
+};

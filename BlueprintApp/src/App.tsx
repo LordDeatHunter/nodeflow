@@ -9,9 +9,9 @@ import {
   setupDummyNodes,
   setupEvents,
 } from "./utils";
-import { drawflow, mouseData, Optional, windowSize } from "nodeflow/src";
+import { drawflow, Optional, windowSize } from "nodeflow/src";
 import { drawflowEventStore } from "nodeflow/src/utils/events";
-import { Vec2 } from "nodeflow/src/utils/vec2";
+import Vec2 from "nodeflow/src/utils/data/Vec2";
 
 const App: Component = () => {
   const [nodePreview, setNodePreview] =
@@ -95,8 +95,8 @@ const App: Component = () => {
         <div
           style={{
             position: "absolute",
-            left: `${mouseData.mousePosition.x - 75}px`,
-            top: `${mouseData.mousePosition.y - 45}px`,
+            left: `${drawflow.mouseData.mousePosition.x - 75}px`,
+            top: `${drawflow.mouseData.mousePosition.y - 45}px`,
             width: "150px",
             height: "90px",
             display: "flex",
