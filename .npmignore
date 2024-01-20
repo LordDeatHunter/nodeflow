@@ -1,0 +1,7 @@
+assets/
+examples/
+node_modules/
+
+.idea/
+.vscode/
+.DS_Store

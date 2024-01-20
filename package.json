@@ -1,19 +1,22 @@
 {
   "name": "nodeflow",
-  "version": "0.0.1",
-  "description": "",
+  "version": "0.0.1-a1",
+  "description": "Library for creating node/graph-based applications",
   "scripts": {
-    "start": "run-p dev:*",
-    "dev:drawflow": "vite --port 3000",
-    "dev:blueprint": "pnpm --prefix ./BlueprintApp start",
-    "dev:familytree": "pnpm --prefix ./FamilyTreeApp start",
     "build": "vite build",
+    "dev:blueprint": "pnpm --prefix ./examples/BlueprintApp start",
+    "dev:familytree": "pnpm --prefix ./examples/FamilyTreeApp start",
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
     "serve": "vite preview",
-    "lint": "eslint --ext .js,.jsx,.ts,.tsx ."
+    "start": "run-p dev:*"
   },
   "types": "src/types.d.ts",
   "license": "MIT",
+  "files": [
+    "dist"
+  ],
   "devDependencies": {
+    "@types/node": "^20.11.5",
     "@typescript-eslint/eslint-plugin": "^6.6.0",
     "@typescript-eslint/parser": "^6.6.0",
     "eslint": "8.48.0",
