@@ -1,5 +1,10 @@
 {
-  "name": "nodeflow",
+  "name": "nodeflow-lib",
+  "author": "LordDeatHunter",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LordDeatHunter/nodeflow"
+  },
   "version": "0.0.1-a1",
   "description": "Library for creating node/graph-based applications",
   "scripts": {
