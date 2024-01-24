@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   nodeflow-lib:
-    specifier: 0.0.1-a16
-    version: 0.0.1-a16(solid-js@1.8.3)(solid-styled-components@0.28.5)
+    specifier: 0.0.1
+    version: 0.0.1(solid-js@1.8.3)(solid-styled-components@0.28.5)
   solid-js:
     specifier: ^1.7.8
     version: 1.8.3
@@ -2340,8 +2340,8 @@ packages:
     resolution: {integrity: sha512-uYr7J37ae/ORWdZeQ1xxMJe3NtdmqMC/JZK+geofDrkLUApKRHPd18/TxtBOJ4A0/+uUIliorNrfYV6s1b02eQ==}
     dev: true
 
-  /nodeflow-lib@0.0.1-a16(solid-js@1.8.3)(solid-styled-components@0.28.5):
-    resolution: {integrity: sha512-BaRAoqtZqMMUk1vTjBLp2kt81Sk2dzAym+RcBchPhJPLpkKAnM5UNKC0SxkroKZZN3uRlL4nK8SQUmfO47eUqA==}
+  /nodeflow-lib@0.0.1(solid-js@1.8.3)(solid-styled-components@0.28.5):
+    resolution: {integrity: sha512-T9PFQIv7E7tagEX+5WpcW40YRkzZoKw9WUq6UEDeKZ9BxW2DI8G2w9bquiCUFAiR8WOSLaS8wxvPhv4cyFJFXg==}
     peerDependencies:
       solid-js: ^1.7.6
       solid-styled-components: ^0.28.5
