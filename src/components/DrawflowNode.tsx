@@ -6,18 +6,17 @@ import {
   For,
   onCleanup,
 } from "solid-js";
-import { drawflow } from "../utils";
+import { drawflow, drawflowEventStore } from "../utils";
 import Vec2 from "../utils/data/Vec2";
-import { drawflowEventStore } from "../utils/events";
 import Connector from "./Connector";
-import DrawflowNode from "../utils/data/DrawflowNode";
+import DrawflowNodeData from "../utils/data/DrawflowNodeData";
 
 interface NodeProps {
   nodeId: string;
 }
 
-const Node: Component<NodeProps> = (props) => {
-  const node = createMemo<DrawflowNode>(
+const DrawflowNode: Component<NodeProps> = (props) => {
+  const node = createMemo<DrawflowNodeData>(
     () => drawflow.nodes.get(props.nodeId)!,
   );
   const [isVisible, setIsVisible] = createSignal<boolean>(false);
@@ -142,4 +141,4 @@ const Node: Component<NodeProps> = (props) => {
   );
 };
 
-export default Node;
+export default DrawflowNode;

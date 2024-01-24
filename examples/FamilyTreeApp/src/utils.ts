@@ -2,13 +2,13 @@ import {
   addConnection,
   CurveFunctions,
   drawflow,
-  DrawflowNode,
+  drawflowEventStore,
+  DrawflowNodeData,
   SelectableElementCSS,
   SetCurveFunction,
-} from "nodeflow/src";
+  Vec2,
+} from "nodeflow-lib";
 import nodeCss from "./styles/node.module.scss";
-import Vec2 from "nodeflow/src/utils/data/Vec2";
-import { drawflowEventStore } from "nodeflow/src/utils/events";
 import curveCss from "./styles/curve.module.scss";
 import NodeBody from "./components/NodeBody";
 
@@ -17,7 +17,7 @@ export const fetchRandomData = async (
 ): Promise<
   Array<{
     name: string;
-    gender: Nodeflow.CustomDataType["gender"];
+    gender: CustomNodeflowDataType["gender"];
   }>
 > => {
   const response = await fetch(
@@ -42,7 +42,7 @@ export const fetchRandomData = async (
 };
 
 const getConnectionCSS = (
-  parentGender: Nodeflow.CustomDataType["gender"],
+  parentGender: CustomNodeflowDataType["gender"],
 ): SelectableElementCSS => ({
   normal: parentGender == "M" ? curveCss.fatherCurve : curveCss.motherCurve,
   selected:
@@ -53,9 +53,9 @@ const getConnectionCSS = (
 
 export const createFamilyMemberNode = (
   name: string,
-  gender: Nodeflow.CustomDataType["gender"],
+  gender: CustomNodeflowDataType["gender"],
   position?: Vec2,
-): DrawflowNode => {
+): DrawflowNodeData => {
   const newNode = drawflow.addNode({
     css: {
       normal: gender === "M" ? nodeCss.maleNode : nodeCss.femaleNode,
@@ -153,7 +153,7 @@ export const setupEvents = () => {
       if (!drawflow.nodes.has(nodeId) || !("customData" in data)) return;
 
       const node = drawflow.nodes.get(nodeId)!;
-      const customData = data.customData as Nodeflow.CustomDataType;
+      const customData = data.customData as CustomNodeflowDataType;
 
       if (!("gender" in customData)) return;
       const gender = customData.gender;

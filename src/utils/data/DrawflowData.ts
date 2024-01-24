@@ -1,10 +1,10 @@
-import setup from "../setup";
+import { setup } from "../setup";
 import Vec2 from "./Vec2";
 import { createStore, produce } from "solid-js/store";
 import {
   DeepPartial,
-  DrawflowData,
-  DrawflowNode as DrawflowNodeData,
+  DrawflowDataType,
+  DrawflowNodeType,
   SerializedConnection,
   SerializedDrawflow,
   SerializedDrawflowNode,
@@ -12,24 +12,24 @@ import {
 import { windowSize } from "../screen-utils";
 import { clamp } from "../math-utils";
 import { addConnection, Constants } from "../drawflow-storage";
-import { Changes } from "./Changes";
+import Changes from "./Changes";
 import MouseData from "./MouseData";
 import { ReactiveMap } from "@solid-primitives/map";
-import DrawflowNode from "./DrawflowNode";
+import DrawflowNodeData from "./DrawflowNodeData";
 import { drawflowEventStore } from "../events";
 import NodeConnector from "./NodeConnector";
 import ConnectorSource from "./ConnectorSource";
 import ArrayWrapper from "./ArrayWrapper";
 import ConnectorDestination from "./ConnectorDestination";
 
-export default class Drawflow {
+export default class DrawflowData {
   private readonly store;
   public readonly changes;
   public readonly mouseData;
   public readonly nodes;
 
   constructor() {
-    this.store = createStore<DrawflowData>({
+    this.store = createStore<DrawflowDataType>({
       currentMoveSpeed: Vec2.zero(),
       position: Vec2.zero(),
       startPosition: Vec2.zero(),
@@ -40,7 +40,7 @@ export default class Drawflow {
 
     this.changes = new Changes();
     this.mouseData = new MouseData();
-    this.nodes = new ReactiveMap<string, DrawflowNode>();
+    this.nodes = new ReactiveMap<string, DrawflowNodeData>();
 
     setup();
   }
@@ -143,12 +143,12 @@ export default class Drawflow {
     this.store[1]({ pinchDistance: value });
   }
 
-  public update(data: Partial<DrawflowData>) {
+  public update(data: Partial<DrawflowDataType>) {
     this.store[1](data);
   }
 
   public updateWithPrevious(
-    updater: (data: DrawflowData) => Partial<DrawflowData>,
+    updater: (data: DrawflowDataType) => Partial<DrawflowDataType>,
   ) {
     this.store[1](updater);
   }
@@ -215,8 +215,8 @@ export default class Drawflow {
   public addNode(
     data: Partial<SerializedDrawflowNode>,
     addToHistory = true,
-  ): DrawflowNode {
-    const node = DrawflowNode.deserialize(data);
+  ): DrawflowNodeData {
+    const node = DrawflowNodeData.deserialize(data);
 
     this.nodes.set(node.id, node);
 
@@ -244,7 +244,7 @@ export default class Drawflow {
 
   public updateNode(
     nodeId: string,
-    data: DeepPartial<DrawflowNodeData>,
+    data: DeepPartial<DrawflowNodeType>,
     addToHistory = true,
   ) {
     if (!this.nodes.has(nodeId)) return;

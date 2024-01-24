@@ -1,5 +1,5 @@
 import {
-  DrawflowNode as DrawflowNodeData,
+  DrawflowNodeType,
   Optional,
   SerializedConnection,
   SerializedConnectorSection,
@@ -14,11 +14,11 @@ import { ReactiveMap } from "@solid-primitives/map";
 import NodeConnector from "./NodeConnector";
 import { deepCopy } from "../misc-utils";
 
-export default class DrawflowNode {
+export default class DrawflowNodeData {
   private readonly store;
 
-  constructor(data: DrawflowNodeData) {
-    this.store = createStore<DrawflowNodeData>(data);
+  constructor(data: DrawflowNodeType) {
+    this.store = createStore<DrawflowNodeType>(data);
   }
 
   public get centered() {
@@ -109,7 +109,7 @@ export default class DrawflowNode {
     this.store[1]({ size: value });
   }
 
-  public update(data: Partial<DrawflowNodeData>) {
+  public update(data: Partial<DrawflowNodeType>) {
     this.store[1](data);
   }
 
@@ -138,11 +138,11 @@ export default class DrawflowNode {
   public static deserialize(data: Partial<SerializedDrawflowNode>) {
     const id = data.id ?? drawflow.getNextFreeNodeId();
 
-    const node = new DrawflowNode({
+    const node = new DrawflowNodeData({
       centered: data.centered ?? false,
       connectorSections: new ReactiveMap<string, ConnectorSection>(),
       css: deepCopy(data.css) ?? {},
-      customData: deepCopy(data.customData) ?? ({} as Nodeflow.CustomDataType),
+      customData: deepCopy(data.customData) ?? ({} as CustomNodeflowDataType),
       display: data.display ?? (() => undefined),
       id,
       offset: Vec2.zero(),
@@ -174,7 +174,7 @@ export default class DrawflowNode {
   }
 
   public updateWithPrevious(
-    updater: (data: DrawflowNodeData) => Partial<DrawflowNodeData>,
+    updater: (data: DrawflowNodeType) => Partial<DrawflowNodeType>,
   ) {
     this.store[1](updater);
   }

@@ -2,7 +2,7 @@ import { drawflowEventStore } from "./events";
 
 let setupDone = false;
 
-export default () => {
+export const setup = () => {
   if (setupDone) {
     return;
   }
@@ -18,3 +18,5 @@ export default () => {
 
   setupDone = true;
 };
+
+export const isSetupDone = (): Readonly<boolean> => setupDone;

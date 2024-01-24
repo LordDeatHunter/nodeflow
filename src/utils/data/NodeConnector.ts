@@ -1,6 +1,6 @@
 import { createStore } from "solid-js/store";
 import {
-  NodeConnector as NodeConnectorData,
+  NodeConnectorType,
   SerializedConnection,
   SerializedNodeConnector,
 } from "../../drawflow-types";
@@ -14,8 +14,8 @@ import { deepCopy } from "../misc-utils";
 export default class NodeConnector {
   private readonly store;
 
-  constructor(data: NodeConnectorData) {
-    this.store = createStore<NodeConnectorData>(data);
+  constructor(data: NodeConnectorType) {
+    this.store = createStore<NodeConnectorType>(data);
   }
 
   public serialize(): SerializedNodeConnector {
@@ -159,12 +159,12 @@ export default class NodeConnector {
     this.store[1]({ sources: value });
   }
 
-  public update(data: Partial<NodeConnectorData>) {
+  public update(data: Partial<NodeConnectorType>) {
     this.store[1](data);
   }
 
   public updateWithPrevious(
-    updater: (data: NodeConnectorData) => Partial<NodeConnectorData>,
+    updater: (data: NodeConnectorType) => Partial<NodeConnectorType>,
   ) {
     this.store[1](updater);
   }

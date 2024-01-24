@@ -11,10 +11,12 @@
   },
   "types": "src/types.d.ts",
   "dependencies": {
+    "nodeflow-lib": "0.0.1-a16",
     "solid-js": "^1.7.8",
     "solid-styled-components": "^0.28.5"
   },
   "devDependencies": {
+    "@types/node": "^20.11.5",
     "@typescript-eslint/eslint-plugin": "^6.6.0",
     "@typescript-eslint/parser": "^6.6.0",
     "eslint": "8.48.0",

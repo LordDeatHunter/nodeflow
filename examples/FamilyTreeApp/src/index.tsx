@@ -3,7 +3,14 @@ import { render } from "solid-js/web";
 
 import "./index.scss";
 import App from "./App";
-import "nodeflow/src/types.d";
+import "nodeflow-lib";
+
+declare global {
+  export interface CustomNodeflowDataType {
+    gender: "M" | "F";
+    name: string;
+  }
+}
 
 const root = document.getElementById("root");
 

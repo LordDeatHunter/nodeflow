@@ -1,10 +1,9 @@
 import { Component, For, Show } from "solid-js";
-import { drawflow } from "../utils";
-import Node from "./Node";
+import { drawflow, drawflowEventStore } from "../utils";
+import DrawflowNode from "./DrawflowNode";
 import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
 import { DrawflowCss } from "../drawflow-types";
-import { drawflowEventStore } from "../utils/events";
 import Vec2 from "../utils/data/Vec2";
 
 interface DrawflowProps {
@@ -60,7 +59,7 @@ const Drawflow: Component<DrawflowProps> = (props) => (
       }}
     >
       <For each={Array.from(drawflow.nodes.keys())}>
-        {(nodeId) => <Node nodeId={nodeId} />}
+        {(nodeId) => <DrawflowNode nodeId={nodeId} />}
       </For>
       <svg
         style={{

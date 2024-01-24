@@ -1,10 +1,8 @@
 export {};
 
 declare global {
-  namespace Nodeflow {
-    export interface CustomDataType {
-      gender: "M" | "F";
-      name: string;
-    }
+  export interface CustomNodeflowDataType {
+    gender: "M" | "F";
+    name: string;
   }
 }

@@ -20,30 +20,30 @@ export class BaseEventPublisher<
     (data: EventData, eventName: string, priority: number) => boolean
   >();
 
-  blacklist(
+  public blacklist(
     key: string,
     filter: (data: EventData, key: string, priority: number) => boolean,
   ) {
     this.blacklistFilters.set(key, filter);
   }
 
-  unblacklist(key: string) {
+  public unblacklist(key: string) {
     this.blacklistFilters.delete(key);
   }
 
-  unblacklistMultiple(keys: string[]) {
+  public unblacklistMultiple(keys: string[]) {
     keys.forEach(this.unblacklist);
   }
 
-  clearBlacklist() {
+  public clearBlacklist() {
     this.blacklistFilters.clear();
   }
 
-  subscribe(name: string, callback: EventCallback, priority = 0) {
+  public subscribe(name: string, callback: EventCallback, priority = 0) {
     this.subscriptions.set(name, { name, event: callback, priority });
   }
 
-  subscribeMultiple(
+  public subscribeMultiple(
     subscriptions: {
       name: string;
       event: EventCallback;
@@ -55,15 +55,15 @@ export class BaseEventPublisher<
     );
   }
 
-  unsubscribe(key: string) {
+  public unsubscribe(key: string) {
     this.subscriptions.delete(key);
   }
 
-  unsubsribeMultiple(keys: string[]) {
+  public unsubsribeMultiple(keys: string[]) {
     keys.forEach(this.unsubscribe);
   }
 
-  publish(data: EventData) {
+  public publish(data: EventData) {
     Array.from(this.subscriptions.values())
       .sort((a, b) => b.priority - a.priority)
       .filter(({ name, priority }) => {
@@ -74,7 +74,7 @@ export class BaseEventPublisher<
       .forEach((callback) => callback(data));
   }
 
-  clear() {
+  public clear() {
     this.subscriptions.clear();
   }
 

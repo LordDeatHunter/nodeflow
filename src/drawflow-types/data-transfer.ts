@@ -39,7 +39,7 @@ export interface SerializedDrawflowNode {
   centered: boolean;
   connectorSections: Record<string, SerializedConnectorSection>;
   css: SelectableElementCSS;
-  customData: Nodeflow.CustomDataType;
+  customData: CustomNodeflowDataType;
   display: DisplayFunc; // TODO: find a way to serialize this
   id: string;
   position: SerializedVec2;

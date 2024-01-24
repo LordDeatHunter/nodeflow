@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
+    "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "declaration": true,
+    "emitDeclarationOnly": false,
     "esModuleInterop": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -9,8 +11,21 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "noEmit": true,
+    "outDir": "dist",
     "strict": true,
+    "strictNullChecks": true,
     "target": "ESNext",
-    "types": ["vite/client"]
-  }
+    "types": [
+      "vite/client",
+      "solid-js"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "examples"
+  ]
 }

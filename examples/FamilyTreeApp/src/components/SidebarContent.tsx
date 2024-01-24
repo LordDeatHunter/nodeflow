@@ -1,11 +1,11 @@
-import { drawflow, Optional } from "nodeflow/src";
+import { drawflow, Optional } from "nodeflow-lib";
 import { createMemo, createSignal, Show } from "solid-js";
 import NodeDataDisplay from "./NodeDataDisplay";
 import NodeFormButtons from "./NodeFormButtons";
 import NodeForm from "./NodeForm";
 import sidebarCss from "../styles/sidebar.module.scss";
 
-export type FormDataType = Nodeflow.CustomDataType & { id: string };
+export type FormDataType = CustomNodeflowDataType & { id: string };
 
 const SidebarContent = () => {
   const [formData, setFormData] =

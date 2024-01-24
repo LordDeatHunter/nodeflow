@@ -1,11 +1,10 @@
 import { type Component, createMemo, onMount } from "solid-js";
-import Drawflow from "nodeflow/src/components/Drawflow";
+import { Drawflow, drawflow, windowSize } from "nodeflow-lib";
 import curveCss from "./styles/curve.module.scss";
 import drawflowCss from "./styles/drawflow.module.scss";
 import { setupDummyConnections, setupDummyNodes, setupEvents } from "./utils";
 import Sidebar from "./components/Sidebar";
 import SidebarContent from "./components/SidebarContent";
-import { drawflow, windowSize } from "nodeflow/src";
 
 const App: Component = () => {
   onMount(() => {

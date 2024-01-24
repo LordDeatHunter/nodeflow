@@ -1,20 +1,20 @@
-import Vec2 from "nodeflow/src/utils/data/Vec2";
 import {
   addConnection,
   CurveFunctions,
   drawflow,
-  DrawflowNode,
+  drawflowEventStore,
+  DrawflowNodeData,
   SetCurveFunction,
-} from "nodeflow/src";
+  Vec2,
+} from "nodeflow-lib";
 import nodeCss from "./styles/node.module.scss";
-import { drawflowEventStore } from "nodeflow/src/utils/events";
 import curveCss from "./styles/curve.module.scss";
 import NodeDisplay from "./NodeDisplay";
 
 export const createDummyNode = (
   position: Vec2,
   center = false,
-): DrawflowNode => {
+): DrawflowNodeData => {
   const newNode = drawflow.addNode({
     css: {
       normal: nodeCss.node,

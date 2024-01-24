@@ -6,10 +6,10 @@ import {
   removeConnection,
   resetMovement,
 } from "./drawflow-storage";
-import { DrawflowEventPublisher } from "./data";
+import { DrawflowEventPublisher } from "./data/EventPublishers";
 import Vec2 from "./data/Vec2";
 import { windowSize } from "./screen-utils";
-import { DeepPartial, DrawflowData } from "../drawflow-types";
+import { DeepPartial, DrawflowDataType } from "../drawflow-types";
 import NodeConnector from "./data/NodeConnector";
 
 export interface NodeConnectedEventData {
@@ -69,7 +69,7 @@ export interface DrawflowEventsDataMap {
   onMouseMoveInDocument: { event: MouseEvent };
   onMouseMoveInDrawflow: { event: MouseEvent };
   onNodeConnected: NodeConnectedEventData;
-  onNodeDataChanged: { nodeId: string; data: DeepPartial<DrawflowData> };
+  onNodeDataChanged: { nodeId: string; data: DeepPartial<DrawflowDataType> };
   onPointerDownInNodeCurve: NodeCurvePointerDownEventData;
   onPointerLeaveFromDocument: { event: PointerEvent };
   onPointerUpInConnector: NodeConnectorPointerUpEventData;

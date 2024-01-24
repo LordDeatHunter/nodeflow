@@ -1,9 +1,6 @@
 import { createStore } from "solid-js/store";
 import Vec2 from "./Vec2";
-import {
-  MouseData as MouseDataType,
-  SerializedMouseData,
-} from "../../drawflow-types";
+import { MouseDataType, SerializedMouseData } from "../../drawflow-types";
 import { drawflow, resetMovement } from "../drawflow-storage";
 
 export default class MouseData {

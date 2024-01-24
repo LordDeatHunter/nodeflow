@@ -1,9 +1,8 @@
 import { Component, createEffect, createMemo } from "solid-js";
-import { CurveFunctions, drawflow } from "../utils";
+import { CurveFunctions, drawflow, drawflowEventStore } from "../utils";
 import { Optional, SelectableElementCSS } from "../drawflow-types";
-import { drawflowEventStore } from "../utils/events";
 import NodeConnector from "../utils/data/NodeConnector";
-import DrawflowNode from "../utils/data/DrawflowNode";
+import DrawflowNodeData from "../utils/data/DrawflowNodeData";
 
 interface NodeCurveProps {
   sourceNodeId: string;
@@ -14,10 +13,10 @@ interface NodeCurveProps {
 }
 
 const NodeCurve: Component<NodeCurveProps> = (props) => {
-  const startNode = createMemo<DrawflowNode>(
+  const startNode = createMemo<DrawflowNodeData>(
     () => drawflow.nodes.get(props.sourceNodeId)!,
   );
-  const endNode = createMemo<DrawflowNode>(
+  const endNode = createMemo<DrawflowNodeData>(
     () => drawflow.nodes.get(props.destinationNodeId)!,
   );
 

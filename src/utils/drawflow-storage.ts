@@ -2,8 +2,8 @@ import { SerializedConnection } from "../drawflow-types";
 import { clamp } from "./math-utils";
 import { intersectionOfSets, isSetEmpty } from "./misc-utils";
 import Vec2 from "./data/Vec2";
-import Drawflow from "./data/Drawflow";
-import DrawflowNode from "./data/DrawflowNode";
+import Drawflow from "./data/DrawflowData";
+import DrawflowNodeData from "./data/DrawflowNodeData";
 import ConnectorDestination from "./data/ConnectorDestination";
 import ConnectorSource from "./data/ConnectorSource";
 
@@ -95,7 +95,7 @@ setInterval(() => {
   if (!isDraggingNode) {
     drawflow.updateBackgroundPosition(drawflow.currentMoveSpeed, true);
   } else {
-    DrawflowNode.updateHeldNodePosition(drawflow.currentMoveSpeed);
+    DrawflowNodeData.updateHeldNodePosition(drawflow.currentMoveSpeed);
   }
 }, 10);
 

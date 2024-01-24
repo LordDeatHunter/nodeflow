@@ -1,11 +1,11 @@
 import { createStore } from "solid-js/store";
-import { ConnectorSource as ConnectorSourceData } from "../../drawflow-types";
+import { ConnectorSourceType } from "../../drawflow-types";
 
 export default class ConnectorSource {
   private readonly store;
 
-  constructor(data: ConnectorSourceData) {
-    this.store = createStore<ConnectorSourceData>(data);
+  constructor(data: ConnectorSourceType) {
+    this.store = createStore<ConnectorSourceType>(data);
   }
 
   public get sourceConnector() {
@@ -16,12 +16,12 @@ export default class ConnectorSource {
     this.store[1]({ sourceConnector: value });
   }
 
-  public update(data: Partial<ConnectorSourceData>) {
+  public update(data: Partial<ConnectorSourceType>) {
     this.store[1](data);
   }
 
   public updateWithPrevious(
-    updater: (data: ConnectorSourceData) => ConnectorSourceData,
+    updater: (data: ConnectorSourceType) => ConnectorSourceType,
   ) {
     this.store[1](updater);
   }

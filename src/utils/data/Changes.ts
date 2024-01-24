@@ -1,6 +1,6 @@
 import { Change, SerializedChanges } from "../../drawflow-types";
 
-export class Changes {
+export default class Changes {
   private changes: Array<Change> = [];
   private currentChangeIndex = -1;
   // TODO: add a max number of changes

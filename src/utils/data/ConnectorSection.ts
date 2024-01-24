@@ -1,6 +1,6 @@
 import { createStore } from "solid-js/store";
 import {
-  ConnectorSection as ConnectorSectionData,
+  ConnectorSectionType,
   SerializedConnectorSection,
   SerializedNodeConnector,
 } from "../../drawflow-types";
@@ -10,8 +10,8 @@ import { drawflow } from "../drawflow-storage";
 export default class ConnectorSection {
   private readonly store;
 
-  constructor(data: ConnectorSectionData) {
-    this.store = createStore<ConnectorSectionData>(data);
+  constructor(data: ConnectorSectionType) {
+    this.store = createStore<ConnectorSectionType>(data);
   }
 
   public serialize(): SerializedConnectorSection {
@@ -109,12 +109,12 @@ export default class ConnectorSection {
     this.store[1]({ parentNode: value });
   }
 
-  public update(data: Partial<ConnectorSectionData>) {
+  public update(data: Partial<ConnectorSectionType>) {
     this.store[1](data);
   }
 
   public updateWithPrevious(
-    updater: (data: ConnectorSectionData) => Partial<ConnectorSectionData>,
+    updater: (data: ConnectorSectionType) => Partial<ConnectorSectionType>,
   ) {
     this.store[1](updater);
   }
