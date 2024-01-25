@@ -1,4 +1,4 @@
-import { Change, SerializedChanges } from "../../drawflow-types";
+import { Change, SerializedChanges } from "../../nodeflow-types";
 
 export default class Changes {
   private changes: Array<Change> = [];

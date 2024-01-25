@@ -1,4 +1,4 @@
-import drawflowCss from "../styles/sidebar.module.scss";
+import nodeflowCss from "../styles/sidebar.module.scss";
 import { Component, createSignal, JSX } from "solid-js";
 import Chevron from "../../assets/right-arrow.svg";
 
@@ -8,16 +8,16 @@ const Sidebar: Component<{ children: JSX.Element }> = (props) => {
   return (
     <div
       class={
-        drawflowCss[
+        nodeflowCss[
           showSidebar() ? "sidebar-container" : "sidebar-container-closed"
         ]
       }
     >
-      <div class={drawflowCss["sidebar"]}>{props.children}</div>
+      <div class={nodeflowCss["sidebar"]}>{props.children}</div>
       <img
         src={Chevron}
         class={
-          drawflowCss[
+          nodeflowCss[
             showSidebar() ? "sidebar-toggle" : "sidebar-toggle-closed"
           ]
         }

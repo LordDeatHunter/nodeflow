@@ -3,7 +3,7 @@ import {
   NodeConnectorType,
   SerializedConnection,
   SerializedNodeConnector,
-} from "../../drawflow-types";
+} from "../../nodeflow-types";
 import ArrayWrapper from "./ArrayWrapper";
 import ConnectorSource from "./ConnectorSource";
 import ConnectorDestination from "./ConnectorDestination";

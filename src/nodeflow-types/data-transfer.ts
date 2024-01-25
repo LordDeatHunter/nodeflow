@@ -10,12 +10,12 @@ export interface SerializedChanges {
   currentChangeIndex: number;
 }
 
-export interface SerializedDrawflow {
+export interface SerializedNodeflowData {
   changes: SerializedChanges;
   connections: Array<SerializedConnection>;
   currentMoveSpeed: SerializedVec2;
   mouseData: SerializedMouseData;
-  nodes: Record<string, SerializedDrawflowNode>;
+  nodes: Record<string, SerializedNodeflowNode>;
   pinchDistance: number;
   position: SerializedVec2;
   size: SerializedVec2;
@@ -35,7 +35,7 @@ export interface SerializedMouseData {
   heldNodeId?: string;
 }
 
-export interface SerializedDrawflowNode {
+export interface SerializedNodeflowNode {
   centered: boolean;
   connectorSections: Record<string, SerializedConnectorSection>;
   css: SelectableElementCSS;

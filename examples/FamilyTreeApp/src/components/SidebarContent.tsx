@@ -1,9 +1,10 @@
-import { drawflow, Optional } from "nodeflow-lib";
+import { NodeflowLib, Optional } from "nodeflow-lib";
 import { createMemo, createSignal, Show } from "solid-js";
 import NodeDataDisplay from "./NodeDataDisplay";
 import NodeFormButtons from "./NodeFormButtons";
 import NodeForm from "./NodeForm";
 import sidebarCss from "../styles/sidebar.module.scss";
+import { FamilyTreeConstants } from "../Constants";
 
 export type FormDataType = CustomNodeflowDataType & { id: string };
 
@@ -12,11 +13,14 @@ const SidebarContent = () => {
     createSignal<Optional<FormDataType>>(undefined);
 
   const nodeData = createMemo<Optional<FormDataType>>(() => {
-    const nodeId = drawflow.mouseData.heldNodeId;
-    if (!nodeId || !drawflow.nodes.has(nodeId)) return undefined;
+    const nodeflowData = NodeflowLib.get().getNodeflow(
+      FamilyTreeConstants.MAIN_NODEFLOW,
+    )!;
+    const nodeId = nodeflowData.mouseData.heldNodeId;
+    if (!nodeId || !nodeflowData.nodes.has(nodeId)) return undefined;
 
     return {
-      ...drawflow.nodes.get(nodeId)!.customData,
+      ...nodeflowData.nodes.get(nodeId)!.customData,
       id: nodeId,
     };
   });

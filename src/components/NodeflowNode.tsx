@@ -6,32 +6,33 @@ import {
   For,
   onCleanup,
 } from "solid-js";
-import { drawflow, drawflowEventStore } from "../utils";
+import { NodeflowData } from "../utils";
 import Vec2 from "../utils/data/Vec2";
 import Connector from "./Connector";
-import DrawflowNodeData from "../utils/data/DrawflowNodeData";
+import NodeflowNodeData from "../utils/data/NodeflowNodeData";
 
 interface NodeProps {
   nodeId: string;
+  nodeflowData: NodeflowData;
 }
 
-const DrawflowNode: Component<NodeProps> = (props) => {
-  const node = createMemo<DrawflowNodeData>(
-    () => drawflow.nodes.get(props.nodeId)!,
+const NodeflowNode: Component<NodeProps> = (props) => {
+  const node = createMemo<NodeflowNodeData>(
+    () => props.nodeflowData.nodes.get(props.nodeId)!,
   );
   const [isVisible, setIsVisible] = createSignal<boolean>(false);
 
   createEffect(() => {
     if (
-      drawflow.mouseData.heldNodeId !== props.nodeId ||
-      !drawflow.mouseData.isDraggingNode
+      props.nodeflowData.mouseData.heldNodeId !== props.nodeId ||
+      !props.nodeflowData.mouseData.isDraggingNode
     ) {
       return;
     }
 
-    node().position = drawflow.mouseData.mousePosition
-      .divideBy(drawflow.zoomLevel)
-      .subtract(drawflow.mouseData.clickStartPosition ?? Vec2.zero());
+    node().position = props.nodeflowData.mouseData.mousePosition
+      .divideBy(props.nodeflowData.zoomLevel)
+      .subtract(props.nodeflowData.mouseData.clickStartPosition ?? Vec2.zero());
   });
 
   onCleanup(() => {
@@ -99,22 +100,22 @@ const DrawflowNode: Component<NodeProps> = (props) => {
       classList={{
         [node()?.css?.normal ?? ""]: true,
         [node()?.css?.selected ?? ""]:
-          drawflow.mouseData.heldNodeId === props.nodeId,
+          props.nodeflowData.mouseData.heldNodeId === props.nodeId,
       }}
       onMouseDown={(event) =>
-        drawflowEventStore.onMouseDownInNode.publish({
+        props.nodeflowData.eventStore.onMouseDownInNode.publish({
           event,
           nodeId: props.nodeId,
         })
       }
       onTouchStart={(event) =>
-        drawflowEventStore.onTouchStartInNode.publish({
+        props.nodeflowData.eventStore.onTouchStartInNode.publish({
           event,
           nodeId: props.nodeId,
         })
       }
       onPointerUp={(event) =>
-        drawflowEventStore.onPointerUpInNode.publish({
+        props.nodeflowData.eventStore.onPointerUpInNode.publish({
           event,
           nodeId: props.nodeId,
         })
@@ -131,6 +132,7 @@ const DrawflowNode: Component<NodeProps> = (props) => {
                   connectorId={connectorId}
                   nodeId={props.nodeId}
                   sectionId={sectionId}
+                  nodeflowData={props.nodeflowData}
                 />
               )}
             </For>
@@ -141,4 +143,4 @@ const DrawflowNode: Component<NodeProps> = (props) => {
   );
 };
 
-export default DrawflowNode;
+export default NodeflowNode;

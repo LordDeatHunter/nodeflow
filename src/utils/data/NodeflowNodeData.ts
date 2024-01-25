@@ -1,24 +1,26 @@
 import {
-  DrawflowNodeType,
+  NodeflowNodeType,
   Optional,
   SerializedConnection,
   SerializedConnectorSection,
-  SerializedDrawflowNode,
   SerializedNodeConnector,
-} from "../../drawflow-types";
+  SerializedNodeflowNode,
+} from "../../nodeflow-types";
 import { createStore } from "solid-js/store";
 import Vec2 from "./Vec2";
-import { drawflow } from "../drawflow-storage";
 import ConnectorSection from "./ConnectorSection";
 import { ReactiveMap } from "@solid-primitives/map";
 import NodeConnector from "./NodeConnector";
 import { deepCopy } from "../misc-utils";
+import { NodeflowData } from "./index";
 
-export default class DrawflowNodeData {
+export default class NodeflowNodeData {
   private readonly store;
+  private readonly nodeflowData;
 
-  constructor(data: DrawflowNodeType) {
-    this.store = createStore<DrawflowNodeType>(data);
+  constructor(nodeflowData: NodeflowData, data: NodeflowNodeType) {
+    this.nodeflowData = nodeflowData;
+    this.store = createStore<NodeflowNodeType>(data);
   }
 
   public get centered() {
@@ -109,11 +111,11 @@ export default class DrawflowNodeData {
     this.store[1]({ size: value });
   }
 
-  public update(data: Partial<DrawflowNodeType>) {
+  public update(data: Partial<NodeflowNodeType>) {
     this.store[1](data);
   }
 
-  public serialize(): SerializedDrawflowNode {
+  public serialize(): SerializedNodeflowNode {
     const serializedConnectorSections = Array.from(
       this.connectorSections.values(),
     ).reduce(
@@ -135,10 +137,13 @@ export default class DrawflowNodeData {
     };
   }
 
-  public static deserialize(data: Partial<SerializedDrawflowNode>) {
-    const id = data.id ?? drawflow.getNextFreeNodeId();
+  public static deserialize(
+    nodeflowData: NodeflowData,
+    data: Partial<SerializedNodeflowNode>,
+  ) {
+    const id = data.id ?? nodeflowData.getNextFreeNodeId();
 
-    const node = new DrawflowNodeData({
+    const node = new NodeflowNodeData(nodeflowData, {
       centered: data.centered ?? false,
       connectorSections: new ReactiveMap<string, ConnectorSection>(),
       css: deepCopy(data.css) ?? {},
@@ -174,28 +179,9 @@ export default class DrawflowNodeData {
   }
 
   public updateWithPrevious(
-    updater: (data: DrawflowNodeType) => Partial<DrawflowNodeType>,
+    updater: (data: NodeflowNodeType) => Partial<NodeflowNodeType>,
   ) {
     this.store[1](updater);
-  }
-
-  public static updateHeldNodePosition(moveSpeed: Vec2) {
-    const id = drawflow.mouseData.heldNodeId;
-
-    if (!id || !drawflow.nodes.has(id)) return;
-
-    const node = drawflow.nodes.get(id)!;
-
-    node.updateWithPrevious((prev) =>
-      // TODO: check if this makes sense:
-      // const newPosition = prev.position.add(
-      //   moveSpeed.divideBy(drawflow.zoomLevel),
-      // );
-
-      ({
-        position: prev.position.add(moveSpeed),
-      }),
-    );
   }
 
   public addConnectorSection = (
@@ -208,7 +194,7 @@ export default class DrawflowNodeData {
     }
 
     if (addToHistory) {
-      drawflow.changes.addChange({
+      this.nodeflowData.changes.addChange({
         type: "remove",
         source: "connector-section",
         applyChange: () => {
@@ -220,7 +206,7 @@ export default class DrawflowNodeData {
       });
     }
 
-    const section = new ConnectorSection({
+    const section = new ConnectorSection(this.nodeflowData, {
       connectors: new ReactiveMap<string, NodeConnector>(),
       css,
       id: sectionId,
@@ -239,7 +225,7 @@ export default class DrawflowNodeData {
     const section = this.connectorSections.get(sectionId)!;
 
     if (addToHistory) {
-      drawflow.changes.addChange({
+      this.nodeflowData.changes.addChange({
         type: "remove",
         source: "connector-section",
         applyChange: () => {

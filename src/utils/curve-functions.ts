@@ -1,5 +1,5 @@
 import Vec2 from "./data/Vec2";
-import { Constants } from "./drawflow-storage";
+import { Constants } from "./nodeflow-storage";
 
 export const getHorizontalCurve = (start: Vec2, end: Vec2): Vec2 =>
   Vec2.of((end.x - start.x) / 1.5, 0);

@@ -1,8 +1,9 @@
 import { Component, Show } from "solid-js";
-import { drawflow, Optional } from "nodeflow-lib";
+import { NodeflowLib, Optional } from "nodeflow-lib";
 import { FormDataType } from "./SidebarContent";
 import formStyle from "../styles/form.module.scss";
 import { cleanInput, createFamilyMemberNode } from "../utils";
+import { FamilyTreeConstants } from "../Constants";
 
 interface NodeFormButtonsProps {
   mode: "add" | "empty" | "view" | "edit";
@@ -16,30 +17,35 @@ const AddButton: Component<{ onClick: () => void }> = (props) => (
 );
 
 const NodeFormButtons: Component<NodeFormButtonsProps> = (props) => {
+  const nodeflowData = NodeflowLib.get().getNodeflow(
+    FamilyTreeConstants.MAIN_NODEFLOW,
+  )!;
+
   const onAdd = () => props.setFormData({ name: "" } as FormDataType);
   const onCancel = () => props.setFormData(undefined);
   const onEdit = () => props.setFormData({ ...props.nodeData! });
   const onRemoveEditingNode = () => {
-    drawflow.removeNode(props.formData!.id);
+    nodeflowData.removeNode(props.formData!.id);
     props.setFormData(undefined);
   };
-  const onRemovePreviewNode = () => drawflow.removeNode(props.nodeData!.id);
+  const onRemovePreviewNode = () => nodeflowData.removeNode(props.nodeData!.id);
   const onSaveNewNode = () => {
     if (!props.formData?.name || !props.formData?.gender) return;
     const node = createFamilyMemberNode(
+      nodeflowData,
       cleanInput(props.formData!.name),
       props.formData!.gender,
-      drawflow.center(),
+      nodeflowData.center(),
     );
-    drawflow.mouseData.selectNode(
+    nodeflowData.mouseData.selectNode(
       node!.id,
-      drawflow.mouseData.mousePosition!,
+      nodeflowData.mouseData.mousePosition!,
       false,
     );
     props.setFormData(undefined);
   };
   const onUpdateNode = () => {
-    drawflow.updateNode(props.formData!.id, {
+    nodeflowData.updateNode(props.formData!.id, {
       customData: {
         ...props.formData,
         name: cleanInput(props.formData!.name),

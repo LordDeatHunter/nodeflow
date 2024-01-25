@@ -1,4 +1,4 @@
-import { SerializedVec2 } from "../../drawflow-types";
+import { SerializedVec2 } from "../../nodeflow-types";
 
 export default class Vec2 {
   public x: number;

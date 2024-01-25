@@ -1,5 +1,5 @@
 import { createStore } from "solid-js/store";
-import { ConnectorDestinationType } from "../../drawflow-types";
+import { ConnectorDestinationType } from "../../nodeflow-types";
 
 export default class ConnectorDestination {
   private readonly store;

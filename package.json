@@ -5,7 +5,7 @@
     "type": "git",
     "url": "https://github.com/LordDeatHunter/nodeflow"
   },
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Library for creating node/graph-based applications",
   "scripts": {
     "build": "rollup -c rollup.config.js",

@@ -1,10 +1,10 @@
 import { JSX } from "solid-js";
 import Vec2 from "../utils/data/Vec2";
-import ConnectorSectionClass from "../utils/data/ConnectorSection";
-import DrawflowNodeClass from "../utils/data/DrawflowNodeData";
-import NodeConnectorClass from "../utils/data/NodeConnector";
-import ConnectorDestinationClass from "../utils/data/ConnectorDestination";
-import ConnectorSourceClass from "../utils/data/ConnectorSource";
+import ConnectorSection from "../utils/data/ConnectorSection";
+import NodeflowNodeData from "../utils/data/NodeflowNodeData";
+import NodeConnector from "../utils/data/NodeConnector";
+import ConnectorDestination from "../utils/data/ConnectorDestination";
+import ConnectorSource from "../utils/data/ConnectorSource";
 import { ReactiveMap } from "@solid-primitives/map";
 import ArrayWrapper from "../utils/data/ArrayWrapper";
 
@@ -19,8 +19,8 @@ export type DeepPartial<T> = T extends object
 export interface MouseDataType {
   clickStartPosition?: Vec2;
   heldConnection?: {
-    sourceConnector: NodeConnectorClass;
-    destinationConnector: NodeConnectorClass;
+    sourceConnector: NodeConnector;
+    destinationConnector: NodeConnector;
   };
   heldConnectorId?: string;
   heldNodeId?: string;
@@ -29,12 +29,12 @@ export interface MouseDataType {
 }
 
 export type DisplayFunc = (props: {
-  node: DrawflowNodeClass;
+  node: NodeflowNodeData;
 }) => Optional<JSX.Element>;
 
-export type DrawflowNodeType = {
+export type NodeflowNodeType = {
   centered: boolean;
-  connectorSections: ReactiveMap<string, ConnectorSectionClass>;
+  connectorSections: ReactiveMap<string, ConnectorSection>;
   css: SelectableElementCSS;
   customData: CustomNodeflowDataType;
   readonly display: DisplayFunc;
@@ -47,13 +47,13 @@ export type DrawflowNodeType = {
 };
 
 export type ConnectorSectionType = {
-  connectors: ReactiveMap<string, NodeConnectorClass>;
+  connectors: ReactiveMap<string, NodeConnector>;
   css?: string;
   id: string;
-  parentNode: DrawflowNodeClass;
+  parentNode: NodeflowNodeData;
 };
 
-export interface DrawflowDataType {
+export interface NodeflowDataType {
   currentMoveSpeed: Vec2;
   pinchDistance: number;
   position: Vec2;
@@ -67,14 +67,14 @@ export interface SelectableElementCSS {
   selected?: string;
 }
 
-export interface DrawflowCss {
+export interface NodeflowCss {
   newCurve?: string;
-  drawflow?: string;
+  nodeflow?: string;
 }
 
 export interface NodeConnectorType {
   css?: string;
-  destinations: ArrayWrapper<ConnectorDestinationClass>;
+  destinations: ArrayWrapper<ConnectorDestination>;
   hovered: boolean;
   id: string;
   parentSection: ConnectorSectionType;
@@ -82,16 +82,16 @@ export interface NodeConnectorType {
   ref?: HTMLDivElement;
   resizeObserver?: ResizeObserver;
   size: Vec2;
-  sources: ArrayWrapper<ConnectorSourceClass>;
+  sources: ArrayWrapper<ConnectorSource>;
 }
 
 export interface ConnectorSourceType {
-  sourceConnector: NodeConnectorClass;
+  sourceConnector: NodeConnector;
 }
 
 export interface ConnectorDestinationType {
   css: SelectableElementCSS;
-  destinationConnector: NodeConnectorClass;
+  destinationConnector: NodeConnector;
   path?: PathData;
 }
 

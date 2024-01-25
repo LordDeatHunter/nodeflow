@@ -1,12 +1,14 @@
 import { createStore } from "solid-js/store";
 import Vec2 from "./Vec2";
-import { MouseDataType, SerializedMouseData } from "../../drawflow-types";
-import { drawflow, resetMovement } from "../drawflow-storage";
+import { MouseDataType, SerializedMouseData } from "../../nodeflow-types";
+import { NodeflowData } from "./index";
 
 export default class MouseData {
   private readonly store;
+  private readonly nodeflowData: NodeflowData;
 
-  public constructor() {
+  public constructor(nodeflowData: NodeflowData) {
+    this.nodeflowData = nodeflowData;
     this.store = createStore<MouseDataType>({
       clickStartPosition: undefined,
       heldConnection: undefined,
@@ -42,10 +44,10 @@ export default class MouseData {
     let heldConnection;
 
     if (serialized.heldConnection) {
-      const sourceConnector = drawflow.nodes
+      const sourceConnector = this.nodeflowData.nodes
         .get(serialized.heldConnection.sourceNodeId)
         ?.getConnector(serialized.heldConnection.sourceConnectorId);
-      const destinationConnector = drawflow.nodes
+      const destinationConnector = this.nodeflowData.nodes
         .get(serialized.heldConnection.destinationNodeId)
         ?.getConnector(serialized.heldConnection.destinationConnectorId);
 
@@ -142,8 +144,8 @@ export default class MouseData {
       heldNodeId: nodeId,
       mousePosition: position,
       clickStartPosition: position
-        .divideBy(drawflow.zoomLevel)
-        .subtract(drawflow.nodes.get(nodeId)!.position),
+        .divideBy(this.nodeflowData.zoomLevel)
+        .subtract(this.nodeflowData.nodes.get(nodeId)!.position),
     });
   };
 
@@ -153,7 +155,7 @@ export default class MouseData {
       heldConnectorId: undefined,
       heldConnection: undefined,
     });
-    resetMovement();
+    this.nodeflowData.resetMovement();
   };
 
   public startCreatingConnection = (
@@ -167,19 +169,19 @@ export default class MouseData {
       heldConnectorId: outputId,
       mousePosition: position,
       clickStartPosition: position
-        .divideBy(drawflow.zoomLevel)
-        .subtract(drawflow.nodes.get(nodeId)!.position),
+        .divideBy(this.nodeflowData.zoomLevel)
+        .subtract(this.nodeflowData.nodes.get(nodeId)!.position),
     });
   };
 
   /**
-   * 1. Subtract the starting position of the drawflow from the mouse position, this makes the cursor relative to the start of the drawflow
+   * 1. Subtract the starting position of the canvas from the mouse position, this makes the cursor relative to the start of the canvas
    * 2. Divide by the zoom level, this zooms the working area to the relevant size
-   * 3. Subtract the drawflow offset to get the final position
+   * 3. Subtract the canvas offset to get the final position
    */
   public globalMousePosition = () =>
     this.mousePosition
-      .subtract(drawflow.startPosition)
-      .divideBy(drawflow.zoomLevel)
-      .subtract(drawflow.position);
+      .subtract(this.nodeflowData.startPosition)
+      .divideBy(this.nodeflowData.zoomLevel)
+      .subtract(this.nodeflowData.position);
 }

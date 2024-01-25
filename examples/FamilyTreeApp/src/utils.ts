@@ -1,9 +1,7 @@
 import {
-  addConnection,
   CurveFunctions,
-  drawflow,
-  drawflowEventStore,
-  DrawflowNodeData,
+  NodeflowData,
+  NodeflowNodeData,
   SelectableElementCSS,
   SetCurveFunction,
   Vec2,
@@ -52,11 +50,12 @@ const getConnectionCSS = (
 });
 
 export const createFamilyMemberNode = (
+  nodeflowData: NodeflowData,
   name: string,
   gender: CustomNodeflowDataType["gender"],
   position?: Vec2,
-): DrawflowNodeData => {
-  const newNode = drawflow.addNode({
+): NodeflowNodeData => {
+  const newNode = nodeflowData.addNode({
     css: {
       normal: gender === "M" ? nodeCss.maleNode : nodeCss.femaleNode,
       selected:
@@ -93,10 +92,14 @@ export const createFamilyMemberNode = (
   return newNode;
 };
 
-export const setupDummyNodes = async (count: number = 50) => {
+export const setupDummyNodes = async (
+  nodeflowData: NodeflowData,
+  count: number = 50,
+) => {
   const data = await fetchRandomData(count);
   for (const person of data) {
     createFamilyMemberNode(
+      nodeflowData,
       person.name,
       person.gender,
       Vec2.of((Math.random() * 2 - 1) * 2000, (Math.random() * 2 - 1) * 2000),
@@ -104,38 +107,39 @@ export const setupDummyNodes = async (count: number = 50) => {
   }
 };
 
-export const setupEvents = () => {
-  drawflowEventStore.onPointerUpInConnector.blacklist(
+export const setupEvents = (nodeflowData: NodeflowData) => {
+  nodeflowData.eventStore.onPointerUpInConnector.blacklist(
     "prevent-connections-to-parent-connectors",
     ({ connectorId }, name) =>
       connectorId === "O" && name === "connect-held-nodes",
   );
-  drawflowEventStore.onTouchStartInConnector.blacklist(
+  nodeflowData.eventStore.onTouchStartInConnector.blacklist(
     "prevent-connections-from-parent-connectors",
     ({ connectorId }) => connectorId === "I",
   );
-  drawflowEventStore.onMouseDownInConnector.blacklist(
+  nodeflowData.eventStore.onMouseDownInConnector.blacklist(
     "prevent-connections-from-parent-connectors",
     ({ connectorId }) => connectorId === "I",
   );
 
-  drawflowEventStore.onPointerUpInDrawflow.subscribe(
+  nodeflowData.eventStore.onPointerUpInNodeflow.subscribe(
     "spawn-new-node",
     () => {
-      const heldNodeId = drawflow.mouseData.heldNodeId;
-      const heldConnectorId = drawflow.mouseData.heldConnectorId;
+      const heldNodeId = nodeflowData.mouseData.heldNodeId;
+      const heldConnectorId = nodeflowData.mouseData.heldConnectorId;
 
       if (!heldNodeId || !heldConnectorId) return;
 
       fetchRandomData(1).then((data) => {
         const newNode = createFamilyMemberNode(
+          nodeflowData,
           data[0].name,
           data[0].gender,
-          drawflow.mouseData.globalMousePosition(),
+          nodeflowData.mouseData.globalMousePosition(),
         );
 
-        const parent = drawflow.nodes.get(heldNodeId)!;
-        addConnection({
+        const parent = nodeflowData.nodes.get(heldNodeId)!;
+        nodeflowData.addConnection({
           sourceNodeId: heldNodeId,
           sourceConnectorId: "O",
           destinationNodeId: newNode.id,
@@ -147,12 +151,12 @@ export const setupEvents = () => {
     1,
   );
 
-  drawflowEventStore.onNodeDataChanged.subscribe(
+  nodeflowData.eventStore.onNodeDataChanged.subscribe(
     "update-node-css",
     ({ nodeId, data }) => {
-      if (!drawflow.nodes.has(nodeId) || !("customData" in data)) return;
+      if (!nodeflowData.nodes.has(nodeId) || !("customData" in data)) return;
 
-      const node = drawflow.nodes.get(nodeId)!;
+      const node = nodeflowData.nodes.get(nodeId)!;
       const customData = data.customData as CustomNodeflowDataType;
 
       if (!("gender" in customData)) return;
@@ -160,7 +164,7 @@ export const setupEvents = () => {
 
       if (gender === node.customData.gender) return;
 
-      drawflow.updateNode(nodeId, {
+      nodeflowData.updateNode(nodeId, {
         css: {
           normal: gender === "M" ? nodeCss.maleNode : nodeCss.femaleNode,
           selected:
@@ -171,16 +175,16 @@ export const setupEvents = () => {
       });
 
       // TODO: maybe create new connections to the respective connectors of the new gender? Eg. mother->father, father->mother
-      drawflow.removeOutgoingConnections(nodeId);
+      nodeflowData.removeOutgoingConnections(nodeId);
     },
   );
 
   // Override the default create-connection subscription to only allow one connection per input, and set custom css
-  drawflowEventStore.onNodeConnected.subscribe(
+  nodeflowData.eventStore.onNodeConnected.subscribe(
     "create-connection",
     ({ outputNodeId, inputNodeId }) => {
-      const outputNode = drawflow.nodes.get(outputNodeId)!;
-      const inputNode = drawflow.nodes.get(inputNodeId)!;
+      const outputNode = nodeflowData.nodes.get(outputNodeId)!;
+      const inputNode = nodeflowData.nodes.get(inputNodeId)!;
 
       if (outputNodeId === inputNodeId) return;
 
@@ -200,7 +204,7 @@ export const setupEvents = () => {
         return;
       }
 
-      addConnection({
+      nodeflowData.addConnection({
         sourceNodeId: outputNodeId,
         sourceConnectorId: "O",
         destinationNodeId: inputNodeId,
@@ -210,17 +214,17 @@ export const setupEvents = () => {
     },
   );
 
-  drawflowEventStore.onPointerUpInNode.subscribe(
+  nodeflowData.eventStore.onPointerUpInNode.subscribe(
     "create-connection",
     ({ nodeId }) => {
-      const destinationNode = drawflow.nodes.get(nodeId);
-      const sourceId = drawflow.mouseData.heldNodeId;
+      const destinationNode = nodeflowData.nodes.get(nodeId);
+      const sourceId = nodeflowData.mouseData.heldNodeId;
       if (!destinationNode || !sourceId || nodeId === sourceId) {
         return;
       }
 
-      if (!drawflow.nodes.has(sourceId)) return;
-      const sourceNode = drawflow.nodes.get(sourceId)!;
+      if (!nodeflowData.nodes.has(sourceId)) return;
+      const sourceNode = nodeflowData.nodes.get(sourceId)!;
 
       const connector = destinationNode.getConnector("I")?.sources;
       // Return if:
@@ -236,7 +240,7 @@ export const setupEvents = () => {
       )
         return;
 
-      addConnection({
+      nodeflowData.addConnection({
         sourceNodeId: sourceId,
         sourceConnectorId: "O",
         destinationNodeId: nodeId,
@@ -253,21 +257,21 @@ export const setupEvents = () => {
   );
 };
 
-export const setupDummyConnections = () => {
-  const totalNodes = drawflow.nodes.size;
+export const setupDummyConnections = (nodeflowData: NodeflowData) => {
+  const totalNodes = nodeflowData.nodes.size;
 
   for (let i = 0; i < totalNodes; i++) {
     const from = Math.floor(Math.random() * totalNodes);
     const to = Math.floor(Math.random() * totalNodes);
 
     if (
-      !drawflow.nodes.has(from.toString()) ||
-      !drawflow.nodes.has(to.toString())
+      !nodeflowData.nodes.has(from.toString()) ||
+      !nodeflowData.nodes.has(to.toString())
     ) {
       continue;
     }
-    const fromNode = drawflow.nodes.get(from.toString())!;
-    const toNode = drawflow.nodes.get(to.toString())!;
+    const fromNode = nodeflowData.nodes.get(from.toString())!;
+    const toNode = nodeflowData.nodes.get(to.toString())!;
 
     const sourceGender = fromNode.customData.gender;
 
@@ -287,7 +291,7 @@ export const setupDummyConnections = () => {
       continue;
     }
 
-    addConnection({
+    nodeflowData.addConnection({
       sourceNodeId: from.toString(),
       sourceConnectorId: "O",
       destinationNodeId: to.toString(),

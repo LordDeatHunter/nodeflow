@@ -1,9 +1,7 @@
 import {
-  addConnection,
   CurveFunctions,
-  drawflow,
-  drawflowEventStore,
-  DrawflowNodeData,
+  NodeflowData,
+  NodeflowNodeData,
   SetCurveFunction,
   Vec2,
 } from "nodeflow-lib";
@@ -12,10 +10,11 @@ import curveCss from "./styles/curve.module.scss";
 import NodeDisplay from "./NodeDisplay";
 
 export const createDummyNode = (
+  nodeflowData: NodeflowData,
   position: Vec2,
   center = false,
-): DrawflowNodeData => {
-  const newNode = drawflow.addNode({
+): NodeflowNodeData => {
+  const newNode = nodeflowData.addNode({
     css: {
       normal: nodeCss.node,
       selected: nodeCss.selectedNode,
@@ -51,23 +50,26 @@ export const createDummyNode = (
   return newNode;
 };
 
-export const setupEvents = () => {
+export const setupEvents = (nodeflowData: NodeflowData) => {
   // Override the default create-connection subscription to prevent connecting to the same node, and set custom css when creating a connection
-  drawflowEventStore.onNodeConnected.subscribe("create-connection", (data) => {
-    if (data.outputNodeId === data.inputNodeId) {
-      return;
-    }
-    addConnection({
-      sourceNodeId: data.outputNodeId,
-      sourceConnectorId: data.outputId,
-      destinationNodeId: data.inputNodeId,
-      destinationConnectorId: data.inputId,
-      css: {
-        normal: curveCss.connection,
-        selected: curveCss["selected-connection"],
-      },
-    });
-  });
+  nodeflowData.eventStore.onNodeConnected.subscribe(
+    "create-connection",
+    (data) => {
+      if (data.outputNodeId === data.inputNodeId) {
+        return;
+      }
+      nodeflowData.addConnection({
+        sourceNodeId: data.outputNodeId,
+        sourceConnectorId: data.outputId,
+        destinationNodeId: data.inputNodeId,
+        destinationConnectorId: data.inputId,
+        css: {
+          normal: curveCss.connection,
+          selected: curveCss.selectedConnection,
+        },
+      });
+    },
+  );
   SetCurveFunction("getDefaultCurve", CurveFunctions.getHorizontalCurve);
   SetCurveFunction(
     "createNodePathCurve",
@@ -75,27 +77,33 @@ export const setupEvents = () => {
   );
 };
 
-export const setupDummyNodes = (count: number = 50) => {
+export const setupDummyNodes = (
+  nodeflowData: NodeflowData,
+  count: number = 50,
+) => {
   for (let i = 0; i < count; i++) {
-    createDummyNode(Vec2.of(Math.random() * 2000, Math.random() * 2000));
+    createDummyNode(
+      nodeflowData,
+      Vec2.of(Math.random() * 2000, Math.random() * 2000),
+    );
   }
 };
 
-export const setupDummyConnections = () => {
-  const totalNodes = drawflow.nodes.size;
+export const setupDummyConnections = (nodeflowData: NodeflowData) => {
+  const totalNodes = nodeflowData.nodes.size;
 
   for (let i = 0; i < totalNodes; i++) {
     const from = Math.floor(Math.random() * totalNodes);
     const to = Math.floor(Math.random() * totalNodes);
 
     if (
-      !drawflow.nodes.has(from.toString()) ||
-      !drawflow.nodes.has(to.toString())
+      !nodeflowData.nodes.has(from.toString()) ||
+      !nodeflowData.nodes.has(to.toString())
     ) {
       continue;
     }
-    const fromNode = drawflow.nodes.get(from.toString())!;
-    const toNode = drawflow.nodes.get(to.toString())!;
+    const fromNode = nodeflowData.nodes.get(from.toString())!;
+    const toNode = nodeflowData.nodes.get(to.toString())!;
 
     const fromConnectors =
       fromNode.connectorSections.get("outputs")!.connectors;
@@ -122,7 +130,7 @@ export const setupDummyConnections = () => {
       continue;
     }
 
-    addConnection({
+    nodeflowData.addConnection({
       sourceNodeId: from.toString(),
       sourceConnectorId: fromConnector.id,
       destinationNodeId: to.toString(),

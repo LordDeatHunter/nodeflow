@@ -1,5 +1,11 @@
-import { DrawflowEvent, DrawflowEventsDataMap } from "../events";
 import { ReactiveMap } from "@solid-primitives/map";
+import { NodeflowData } from "./index";
+import {
+  DocumentEvent,
+  DocumentEventsDataMap,
+  NodeflowEvent,
+  NodeflowEventsDataMap,
+} from "../../nodeflow-types";
 
 export class BaseEventPublisher<
   EventData,
@@ -87,6 +93,17 @@ export class BaseEventPublisher<
   }
 }
 
-export class DrawflowEventPublisher<
-  T extends keyof DrawflowEventsDataMap,
-> extends BaseEventPublisher<DrawflowEventsDataMap[T], DrawflowEvent<T>> {}
+export class NodeflowEventPublisher<
+  T extends keyof NodeflowEventsDataMap,
+> extends BaseEventPublisher<NodeflowEventsDataMap[T], NodeflowEvent<T>> {
+  public readonly nodeflowData: NodeflowData;
+
+  public constructor(nodeflowData: NodeflowData) {
+    super();
+    this.nodeflowData = nodeflowData;
+  }
+}
+
+export class DocumentEventPublisher<
+  T extends keyof DocumentEventsDataMap,
+> extends BaseEventPublisher<DocumentEventsDataMap[T], DocumentEvent<T>> {}

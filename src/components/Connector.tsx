@@ -1,5 +1,5 @@
 import Vec2 from "../utils/data/Vec2";
-import { drawflow, drawflowEventStore } from "../utils";
+import { NodeflowData } from "../utils";
 import { Component } from "solid-js";
 import NodeConnector from "../utils/data/NodeConnector";
 
@@ -8,6 +8,7 @@ interface ConnectorProps {
   connectorId: string;
   nodeId: string;
   sectionId: string;
+  nodeflowData: NodeflowData;
 }
 
 const Connector: Component<ConnectorProps> = (props) => (
@@ -16,7 +17,7 @@ const Connector: Component<ConnectorProps> = (props) => (
       setTimeout(() => {
         if (!el) return;
 
-        const connector = drawflow.nodes
+        const connector = props.nodeflowData.nodes
           .get(props.nodeId)!
           .connectorSections.get(props.sectionId)!
           .connectors.get(props.connectorId)!;
@@ -39,21 +40,21 @@ const Connector: Component<ConnectorProps> = (props) => (
     }
     class={props.connector?.css}
     onMouseDown={(event) =>
-      drawflowEventStore.onMouseDownInConnector.publish({
+      props.nodeflowData.eventStore.onMouseDownInConnector.publish({
         event,
         nodeId: props.nodeId,
         connectorId: props.connectorId,
       })
     }
     onTouchStart={(event) =>
-      drawflowEventStore.onTouchStartInConnector.publish({
+      props.nodeflowData.eventStore.onTouchStartInConnector.publish({
         event,
         nodeId: props.nodeId,
         connectorId: props.connectorId,
       })
     }
     onPointerUp={(event) =>
-      drawflowEventStore.onPointerUpInConnector.publish({
+      props.nodeflowData.eventStore.onPointerUpInConnector.publish({
         event,
         nodeId: props.nodeId,
         connectorId: props.connectorId,

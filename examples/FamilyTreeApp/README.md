@@ -4,4 +4,4 @@ This is a Family Tree example built using Nodeflow.
 
 The data about the family members is fetched from [RandomUser.me](https://randomuser.me/).
 
-![family_drawflow_example_1.png](../../assets/family_tree_example_1.png)
+![family_tree_example_1.png](../../assets/family_tree_example_1.png)

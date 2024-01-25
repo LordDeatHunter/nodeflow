@@ -3,14 +3,16 @@ import {
   ConnectorSectionType,
   SerializedConnectorSection,
   SerializedNodeConnector,
-} from "../../drawflow-types";
+} from "../../nodeflow-types";
 import NodeConnector from "./NodeConnector";
-import { drawflow } from "../drawflow-storage";
+import { NodeflowData } from "./index";
 
 export default class ConnectorSection {
   private readonly store;
+  private readonly nodeflowData;
 
-  constructor(data: ConnectorSectionType) {
+  constructor(nodeflowData: NodeflowData, data: ConnectorSectionType) {
+    this.nodeflowData = nodeflowData;
     this.store = createStore<ConnectorSectionType>(data);
   }
 
@@ -34,7 +36,7 @@ export default class ConnectorSection {
     const connector = this.connectors.get(connectorId)!;
 
     if (addToHistory) {
-      drawflow.changes.addChange({
+      this.nodeflowData.changes.addChange({
         type: "remove",
         source: "connector",
         applyChange: () => {
@@ -60,7 +62,7 @@ export default class ConnectorSection {
     }
 
     if (addToHistory) {
-      drawflow.changes.addChange({
+      this.nodeflowData.changes.addChange({
         type: "add",
         source: "connector",
         applyChange: () => {

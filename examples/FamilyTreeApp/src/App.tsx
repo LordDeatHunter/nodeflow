@@ -1,28 +1,35 @@
 import { type Component, createMemo, onMount } from "solid-js";
-import { Drawflow, drawflow, windowSize } from "nodeflow-lib";
+import { NodeflowLib, windowSize } from "nodeflow-lib";
 import curveCss from "./styles/curve.module.scss";
-import drawflowCss from "./styles/drawflow.module.scss";
+import nodeflowCss from "./styles/nodeflow.module.scss";
 import { setupDummyConnections, setupDummyNodes, setupEvents } from "./utils";
 import Sidebar from "./components/Sidebar";
 import SidebarContent from "./components/SidebarContent";
+import { FamilyTreeConstants } from "./Constants";
 
 const App: Component = () => {
+  const [nodeflowData, Nodeflow] = NodeflowLib.get().createCanvas(
+    FamilyTreeConstants.MAIN_NODEFLOW,
+  );
+
   onMount(() => {
-    setupEvents();
-    setupDummyNodes().then(() => setupDummyConnections());
+    setupEvents(nodeflowData);
+    setupDummyNodes(nodeflowData).then(() =>
+      setupDummyConnections(nodeflowData),
+    );
   });
 
   const newCurveCss = createMemo(() => {
-    const nodeId = drawflow.mouseData.heldNodeId;
+    const nodeId = nodeflowData.mouseData.heldNodeId;
 
     if (
       !nodeId ||
-      !drawflow.mouseData.heldConnectorId ||
-      !drawflow.nodes.has(nodeId)
+      !nodeflowData.mouseData.heldConnectorId ||
+      !nodeflowData.nodes.has(nodeId)
     ) {
       return undefined;
     }
-    const heldNode = drawflow.nodes.get(nodeId)!;
+    const heldNode = nodeflowData.nodes.get(nodeId)!;
 
     return heldNode.customData.gender === "M"
       ? curveCss.newFatherCurve
@@ -31,8 +38,8 @@ const App: Component = () => {
 
   return (
     <>
-      <Drawflow
-        css={{ newCurve: newCurveCss(), drawflow: drawflowCss.drawflow }}
+      <Nodeflow
+        css={{ newCurve: newCurveCss(), nodeflow: nodeflowCss.nodeflow }}
         width={`${windowSize().x}px`}
         height={`${windowSize().y}px`}
       />

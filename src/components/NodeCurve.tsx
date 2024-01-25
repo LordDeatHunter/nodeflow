@@ -1,8 +1,8 @@
 import { Component, createEffect, createMemo } from "solid-js";
-import { CurveFunctions, drawflow, drawflowEventStore } from "../utils";
-import { Optional, SelectableElementCSS } from "../drawflow-types";
+import { CurveFunctions, NodeflowData } from "../utils";
+import { Optional, SelectableElementCSS } from "../nodeflow-types";
 import NodeConnector from "../utils/data/NodeConnector";
-import DrawflowNodeData from "../utils/data/DrawflowNodeData";
+import NodeflowNodeData from "../utils/data/NodeflowNodeData";
 
 interface NodeCurveProps {
   sourceNodeId: string;
@@ -10,14 +10,15 @@ interface NodeCurveProps {
   destinationNodeId: string;
   destinationConnectorId: string;
   css: SelectableElementCSS;
+  nodeflowData: NodeflowData;
 }
 
 const NodeCurve: Component<NodeCurveProps> = (props) => {
-  const startNode = createMemo<DrawflowNodeData>(
-    () => drawflow.nodes.get(props.sourceNodeId)!,
+  const startNode = createMemo<NodeflowNodeData>(
+    () => props.nodeflowData.nodes.get(props.sourceNodeId)!,
   );
-  const endNode = createMemo<DrawflowNodeData>(
-    () => drawflow.nodes.get(props.destinationNodeId)!,
+  const endNode = createMemo<NodeflowNodeData>(
+    () => props.nodeflowData.nodes.get(props.destinationNodeId)!,
   );
 
   const sourceConnector = createMemo<Optional<NodeConnector>>(() =>
@@ -87,7 +88,7 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
   return (
     <path
       onPointerDown={(event) => {
-        drawflowEventStore.onPointerDownInNodeCurve.publish({
+        props.nodeflowData.eventStore.onPointerDownInNodeCurve.publish({
           event,
           sourceConnector: sourceConnector()!,
           destinationConnector: destinationConnector()!,
@@ -100,14 +101,14 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       classList={{
         [props.css?.normal ?? ""]: true,
         [props.css?.selected ?? ""]:
-          drawflow.mouseData.heldConnection?.sourceConnector.parentSection
-            .parentNode.id === props.sourceNodeId &&
-          drawflow.mouseData.heldConnection?.sourceConnector.id ===
+          props.nodeflowData.mouseData.heldConnection?.sourceConnector
+            .parentSection.parentNode.id === props.sourceNodeId &&
+          props.nodeflowData.mouseData.heldConnection?.sourceConnector.id ===
             props.sourceConnectorId &&
-          drawflow.mouseData.heldConnection?.destinationConnector.parentSection
-            .parentNode.id === props.destinationNodeId &&
-          drawflow.mouseData.heldConnection?.destinationConnector.id ===
-            props.destinationConnectorId,
+          props.nodeflowData.mouseData.heldConnection?.destinationConnector
+            .parentSection.parentNode.id === props.destinationNodeId &&
+          props.nodeflowData.mouseData.heldConnection?.destinationConnector
+            .id === props.destinationConnectorId,
       }}
       style={{
         cursor: "pointer",

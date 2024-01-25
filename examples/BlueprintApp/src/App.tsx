@@ -1,15 +1,8 @@
 import { type Component, createSignal, JSX, onMount, Show } from "solid-js";
-import {
-  Drawflow,
-  drawflow,
-  drawflowEventStore,
-  Optional,
-  Vec2,
-  windowSize,
-} from "nodeflow-lib";
+import { NodeflowLib, Optional, Vec2, windowSize } from "nodeflow-lib";
 import curveCss from "./styles/curve.module.scss";
 import nodeCss from "./styles/node.module.scss";
-import drawflowCss from "./styles/drawflow.module.scss";
+import nodeflowCss from "./styles/nodeflow.module.scss";
 import {
   createDummyNode,
   setupDummyConnections,
@@ -21,31 +14,33 @@ const App: Component = () => {
   const [nodePreview, setNodePreview] =
     createSignal<Optional<JSX.Element>>(undefined);
 
+  const [nodeflowData, Nodeflow] = NodeflowLib.get().createCanvas("main");
+
   const createNode = (data: { event: PointerEvent }) => {
     if (!nodePreview()) return;
 
     setNodePreview(undefined);
 
     const clickPos = Vec2.fromEvent(data.event);
-    const drawflowPosition = drawflow.startPosition;
-    const drawflowSize = drawflow.size;
+    const nodeflowPosition = nodeflowData.startPosition;
+    const nodeflowSize = nodeflowData.size;
 
-    if (!clickPos.isWithinRect(drawflowPosition, drawflowSize)) return;
+    if (!clickPos.isWithinRect(nodeflowPosition, nodeflowSize)) return;
 
     const nodePosition = clickPos
-      .subtract(drawflowPosition)
-      .divideBy(drawflow.zoomLevel)
-      .subtract(drawflow.position);
+      .subtract(nodeflowPosition)
+      .divideBy(nodeflowData.zoomLevel)
+      .subtract(nodeflowData.position);
 
-    createDummyNode(nodePosition, true);
+    createDummyNode(nodeflowData, nodePosition, true);
   };
 
   onMount(() => {
-    setupEvents();
-    setupDummyNodes();
-    setupDummyConnections();
+    setupEvents(nodeflowData);
+    setupDummyNodes(nodeflowData);
+    setupDummyConnections(nodeflowData);
 
-    drawflowEventStore.onPointerUpInDocument.subscribe(
+    NodeflowLib.get().globalEventStore.onPointerUpInDocument.subscribe(
       "create-node",
       createNode,
     );
@@ -60,10 +55,10 @@ const App: Component = () => {
         height: `${windowSize().y}px`,
       }}
     >
-      <Drawflow
+      <Nodeflow
         css={{
           newCurve: curveCss.newConnection,
-          drawflow: drawflowCss.drawflow,
+          nodeflow: nodeflowCss.nodeflow,
         }}
         height="100%"
         width="100%"
@@ -99,8 +94,8 @@ const App: Component = () => {
         <div
           style={{
             position: "absolute",
-            left: `${drawflow.mouseData.mousePosition.x - 75}px`,
-            top: `${drawflow.mouseData.mousePosition.y - 45}px`,
+            left: `${nodeflowData.mouseData.mousePosition.x - 75}px`,
+            top: `${nodeflowData.mouseData.mousePosition.y - 45}px`,
             width: "150px",
             height: "90px",
             display: "flex",
