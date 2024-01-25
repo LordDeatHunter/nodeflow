@@ -23,13 +23,20 @@ export const createDummyNode = (
     display: NodeDisplay,
     centered: center,
   });
-  newNode.addConnectorSection("inputs", nodeCss.inputsSection, false);
-  newNode.addConnectorSection("outputs", nodeCss.outputsSection, false);
+  const inputSection = newNode.addConnectorSection(
+    "inputs",
+    nodeCss.inputsSection,
+    false,
+  );
+  const outputSection = newNode.addConnectorSection(
+    "outputs",
+    nodeCss.outputsSection,
+    false,
+  );
 
   const outputs = Math.random() * 6;
   for (let j = 0; j < outputs; j++) {
-    newNode.addConnector(
-      "outputs",
+    outputSection.addConnector(
       {
         css: nodeCss.outputConnector,
       },
@@ -38,8 +45,7 @@ export const createDummyNode = (
   }
   const inputs = Math.random() * 6;
   for (let j = 0; j < inputs; j++) {
-    newNode.addConnector(
-      "inputs",
+    inputSection.addConnector(
       {
         css: nodeCss.inputConnector,
       },

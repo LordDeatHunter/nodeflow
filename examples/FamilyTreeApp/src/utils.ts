@@ -66,11 +66,18 @@ export const createFamilyMemberNode = (
     display: NodeBody,
     centered: true,
   });
-  newNode.addConnectorSection("inputs", nodeCss.inputsSection, false);
-  newNode.addConnectorSection("outputs", nodeCss.outputsSection, false);
-
-  newNode.addConnector(
+  const inputSection = newNode.addConnectorSection(
+    "inputs",
+    nodeCss.inputsSection,
+    false,
+  );
+  const outputSection = newNode.addConnectorSection(
     "outputs",
+    nodeCss.outputsSection,
+    false,
+  );
+
+  outputSection.addConnector(
     {
       id: "O",
       css:
@@ -80,8 +87,7 @@ export const createFamilyMemberNode = (
     },
     false,
   );
-  newNode.addConnector(
-    "inputs",
+  inputSection.addConnector(
     {
       id: "I",
       css: nodeCss.inputConnector,

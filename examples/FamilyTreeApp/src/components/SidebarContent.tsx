@@ -13,6 +13,9 @@ const SidebarContent = () => {
     createSignal<Optional<FormDataType>>(undefined);
 
   const nodeData = createMemo<Optional<FormDataType>>(() => {
+    if (!NodeflowLib.get().hasNodeflow(FamilyTreeConstants.MAIN_NODEFLOW))
+      return undefined;
+
     const nodeflowData = NodeflowLib.get().getNodeflow(
       FamilyTreeConstants.MAIN_NODEFLOW,
     )!;
