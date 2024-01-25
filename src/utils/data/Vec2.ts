@@ -1,5 +1,8 @@
 import { SerializedVec2 } from "../../nodeflow-types";
 
+/**
+ * A data structure containing an x and y numerical value.
+ */
 export default class Vec2 {
   public x: number;
   public y: number;

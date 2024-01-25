@@ -3,10 +3,16 @@ import Vec2 from "./Vec2";
 import { MouseDataType, SerializedMouseData } from "../../nodeflow-types";
 import { NodeflowData } from "./index";
 
+/**
+ * Represents additional mouse data used in the nodeflow canvas, such held objects and mouse position.
+ */
 export default class MouseData {
   private readonly store;
   private readonly nodeflowData: NodeflowData;
 
+  /**
+   * @param nodeflowData - The nodeflow object of the canvas that this mouse data will be used in
+   */
   public constructor(nodeflowData: NodeflowData) {
     this.nodeflowData = nodeflowData;
     this.store = createStore<MouseDataType>({
@@ -14,7 +20,7 @@ export default class MouseData {
       heldConnection: undefined,
       heldConnectorId: undefined,
       heldNodeId: undefined,
-      isDraggingNode: false,
+      isDraggingObject: false,
       mousePosition: Vec2.zero(),
     });
   }
@@ -73,8 +79,8 @@ export default class MouseData {
     return this.store[0].clickStartPosition;
   }
 
-  get isDraggingNode() {
-    return this.store[0].isDraggingNode;
+  get isDraggingObject() {
+    return this.store[0].isDraggingObject;
   }
 
   get heldConnectorId() {
@@ -97,8 +103,8 @@ export default class MouseData {
     this.store[1]({ clickStartPosition: value });
   }
 
-  set isDraggingNode(value) {
-    this.store[1]({ isDraggingNode: value });
+  set isDraggingObject(value) {
+    this.store[1]({ isDraggingObject: value });
   }
 
   set heldConnectorId(value) {
@@ -129,7 +135,7 @@ export default class MouseData {
 
   public reset() {
     this.store[1]({
-      isDraggingNode: false,
+      isDraggingObject: false,
       heldConnection: undefined,
       heldConnectorId: undefined,
       heldNodeId: undefined,
@@ -138,7 +144,7 @@ export default class MouseData {
 
   public selectNode = (nodeId: string, position: Vec2, dragging = true) => {
     this.update({
-      isDraggingNode: dragging,
+      isDraggingObject: dragging,
       heldConnectorId: undefined,
       heldConnection: undefined,
       heldNodeId: nodeId,
@@ -149,6 +155,9 @@ export default class MouseData {
     });
   };
 
+  /**
+   * Deselects the currently selected node, connector and connection.
+   */
   public deselectNode = () => {
     this.update({
       heldNodeId: undefined,
@@ -164,7 +173,7 @@ export default class MouseData {
     outputId: string,
   ) => {
     this.update({
-      isDraggingNode: false,
+      isDraggingObject: false,
       heldNodeId: nodeId,
       heldConnectorId: outputId,
       mousePosition: position,
@@ -175,9 +184,11 @@ export default class MouseData {
   };
 
   /**
-   * 1. Subtract the starting position of the canvas from the mouse position, this makes the cursor relative to the start of the canvas
-   * 2. Divide by the zoom level, this zooms the working area to the relevant size
-   * 3. Subtract the canvas offset to get the final position
+   * Calculates the global mouse position, relative to the canvas.
+   *
+   * 1. Subtracts the starting position of the canvas from the mouse position, this makes the cursor relative to the start of the canvas
+   * 2. Divides by the zoom level, this zooms the working area to the relevant size
+   * 3. Subtracts the canvas offset to get the final position
    */
   public globalMousePosition = () =>
     this.mousePosition

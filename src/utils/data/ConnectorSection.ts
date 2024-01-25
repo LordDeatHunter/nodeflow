@@ -7,6 +7,9 @@ import {
 import NodeConnector from "./NodeConnector";
 import { NodeflowData } from "./index";
 
+/**
+ * Represents a section containing connectors on a node. Used for grouping connectors together.
+ */
 export default class ConnectorSection {
   private readonly store;
   private readonly nodeflowData;
@@ -29,6 +32,12 @@ export default class ConnectorSection {
     };
   }
 
+  /**
+   * Removes a connector from the connector section
+   *
+   * @param connectorId - The id of the connector to remove
+   * @param addToHistory - Whether to add the change to the history
+   */
   public removeConnector(connectorId: string, addToHistory = true) {
     if (!this.connectors.has(connectorId)) {
       return;
@@ -51,6 +60,12 @@ export default class ConnectorSection {
     this.connectors.delete(connectorId);
   }
 
+  /**
+   * Adds a connector to the connector section
+   *
+   * @param data - The data of the connector to add
+   * @param addToHistory - Whether to add the change to the history
+   */
   public addConnector(
     data: Partial<SerializedNodeConnector>,
     addToHistory = true,
@@ -121,12 +136,18 @@ export default class ConnectorSection {
     this.store[1](updater);
   }
 
+  /**
+   * Removes all connections going into any of the connectors of the current connector section.
+   */
   public removeIncomingConnections() {
     this.connectors.forEach((connector) =>
       connector.removeIncomingConnections(),
     );
   }
 
+  /**
+   * Removes all connections going out of the connectors of the current connector section.
+   */
   public removeOutgoingConnections() {
     this.connectors.forEach((connector) =>
       connector.removeOutgoingConnections(),

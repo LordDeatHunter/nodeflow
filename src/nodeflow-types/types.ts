@@ -24,7 +24,7 @@ export interface MouseDataType {
   };
   heldConnectorId?: string;
   heldNodeId?: string;
-  isDraggingNode: boolean;
+  isDraggingObject: boolean;
   mousePosition: Vec2;
 }
 

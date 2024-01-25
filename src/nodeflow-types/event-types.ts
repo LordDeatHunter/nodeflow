@@ -1,9 +1,6 @@
 import NodeConnector from "../utils/data/NodeConnector";
 import { DeepPartial, NodeflowDataType } from "./index";
-import {
-  DocumentEventPublisher,
-  NodeflowEventPublisher,
-} from "../utils/data/EventPublishers";
+import { DocumentEventPublisher, NodeflowEventPublisher } from "../utils";
 
 export interface NodeConnectedEventData {
   outputNodeId: string;

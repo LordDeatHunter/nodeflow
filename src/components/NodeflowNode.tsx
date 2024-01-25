@@ -25,7 +25,7 @@ const NodeflowNode: Component<NodeProps> = (props) => {
   createEffect(() => {
     if (
       props.nodeflowData.mouseData.heldNodeId !== props.nodeId ||
-      !props.nodeflowData.mouseData.isDraggingNode
+      !props.nodeflowData.mouseData.isDraggingObject
     ) {
       return;
     }

@@ -1,4 +1,5 @@
 export const Constants = {
+  CURVE_MULTIPLIER: 3,
   KEYBOARD_ZOOM_AMOUNT: 15,
   MAX_SPEED: 15,
   MAX_ZOOM: 200,
@@ -8,7 +9,6 @@ export const Constants = {
   MOVE_SPEED_INCREASE: 1.5,
   SQRT_2_OVER_2: 0.7071067811865476,
   ZOOM_MULTIPLIER: 0.005,
-  CURVE_MULTIPLIER: 3,
 } as const;
 
 export const heldKeys = new Set<string>();
@@ -18,4 +18,4 @@ export const KEYS: Record<string, Set<string>> = {
   MOVE_LEFT: new Set(["ArrowLeft", "KeyA"]),
   MOVE_RIGHT: new Set(["ArrowRight", "KeyD"]),
   MOVE_UP: new Set(["ArrowUp", "KeyW"]),
-};
+} as const;

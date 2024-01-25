@@ -23,14 +23,20 @@ import ConnectorDestination from "./ConnectorDestination";
 import { intersectionOfSets, isSetEmpty } from "../misc-utils";
 import { NodeflowEventPublisher } from "./EventPublishers";
 
+/**
+ * NodeflowData is a class that manages the state of a Nodeflow canvas.
+ * It uses the createStore function from solid-js/store to create a reactive store for the state.
+ */
 export default class NodeflowData {
   private readonly store;
   public readonly changes;
   public readonly mouseData;
+  /** A ReactiveMap that stores all the nodes on the Nodeflow canvas. */
   public readonly nodes;
+  /** An instance of the NodeflowEventRecord class that handles various event subscriptions and publishing. */
   public readonly eventStore: NodeflowEventRecord;
 
-  constructor() {
+  public constructor() {
     this.store = createStore<NodeflowDataType>({
       currentMoveSpeed: Vec2.zero(),
       position: Vec2.zero(),
@@ -91,26 +97,26 @@ export default class NodeflowData {
         intersectionOfSets(heldKeys, KEYS.MOVE_DOWN),
       );
 
-      const isDraggingNode = this.mouseData.heldNodeId !== undefined;
+      const isDraggingObject = this.mouseData.heldNodeId !== undefined;
 
       this.currentMoveSpeed = Vec2.of(
-        NodeflowData.calculateMovement(
+        NodeflowData.calculateDirectionalMovementAmount(
           movingLeft || movingRight,
           this.currentMoveSpeed.x,
           movingRight,
           movingLeft,
-          !isDraggingNode,
+          !isDraggingObject,
         ),
-        NodeflowData.calculateMovement(
+        NodeflowData.calculateDirectionalMovementAmount(
           movingUp || movingDown,
           this.currentMoveSpeed.y,
           movingDown,
           movingUp,
-          !isDraggingNode,
+          !isDraggingObject,
         ),
       );
 
-      if (!isDraggingNode) {
+      if (!isDraggingObject) {
         this.updateBackgroundPosition(this.currentMoveSpeed, true);
       } else {
         this.updateHeldNodePosition(
@@ -164,6 +170,18 @@ export default class NodeflowData {
     this.changes.deserialize(data.changes);
   }
 
+  /**
+   * Serializes all the connections in the NodeflowData instance into an array of SerializedConnection objects.
+   */
+  public serializeConnections(): Array<SerializedConnection> {
+    return Array.from(this.nodes.values()).flatMap((node) =>
+      node.serializeConnections(),
+    );
+  }
+
+  /**
+   * Resets the currentMoveSpeed to zero and clears the held keys.
+   */
   public resetMovement = () => {
     this.currentMoveSpeed = Vec2.zero();
     KEYS.MOVE_LEFT.forEach((key) => heldKeys.delete(key));
@@ -171,12 +189,6 @@ export default class NodeflowData {
     KEYS.MOVE_UP.forEach((key) => heldKeys.delete(key));
     KEYS.MOVE_DOWN.forEach((key) => heldKeys.delete(key));
   };
-
-  public serializeConnections(): Array<SerializedConnection> {
-    return Array.from(this.nodes.values()).flatMap((node) =>
-      node.serializeConnections(),
-    );
-  }
 
   get currentMoveSpeed() {
     return this.store[0].currentMoveSpeed;
@@ -226,16 +238,37 @@ export default class NodeflowData {
     this.store[1]({ pinchDistance: value });
   }
 
+  /**
+   * Updates the NodeflowData instance with the provided data.
+   *
+   * @example
+   * nodeflowData.update({
+   *   position: Vec2.of(100, 100),
+   *   zoomLevel: 2,
+   * });
+   */
   public update(data: Partial<NodeflowDataType>) {
     this.store[1](data);
   }
 
+  /**
+   * Updates the NodeflowData instance with the provided data using the current data as a base.
+   *
+   * @example
+   * nodeflowData.updateWithPrevious((prev) => ({
+   *   position: prev.position.add(Vec2.of(100, 100)),
+   *   zoomLevel: prev.zoomLevel * 2,
+   * }));
+   */
   public updateWithPrevious(
     updater: (data: NodeflowDataType) => Partial<NodeflowDataType>,
   ) {
     this.store[1](updater);
   }
 
+  /**
+   * @returns the position of the center of the Nodeflow canvas.
+   */
   public center() {
     const windowDimensions = windowSize();
     const windowCenter = windowDimensions.divideBy(2);
@@ -246,7 +279,17 @@ export default class NodeflowData {
       .subtract(this.position);
   }
 
-  public static calculateMovement(
+  /**
+   * Calculates the movement speed based on the current speed, and the movement keys pressed.
+   *
+   * @param isMoving - whether there is currently movement being applied in the given direction
+   * @param initialSpeed - the initial speed
+   * @param positiveMovement - whether the player is moving in the positive direction (right or down)
+   * @param negativeMovement - whether the player is moving in the negative direction (left or up)
+   * @param inverse - whether to inverse the movement
+   * @returns the new movement speed
+   */
+  public static calculateDirectionalMovementAmount(
     isMoving: boolean,
     initialSpeed: number,
     positiveMovement: boolean,
@@ -289,7 +332,7 @@ export default class NodeflowData {
       ).toFixed(4),
     );
 
-    this.mouseData.isDraggingNode = false;
+    this.mouseData.isDraggingObject = false;
 
     const windowDimensions = this.size;
     const centeredZoomLocation = location.subtract(this.startPosition);
@@ -310,10 +353,17 @@ export default class NodeflowData {
     }));
   };
 
+  /**
+   * Updates the position of the background based on the mouse movement.
+   * If the mouse is dragging a node, the background will not move.
+   *
+   * @param moveDistance - the distance to move the background by
+   * @param keyboard - whether the movement is from the keyboard
+   */
   public updateBackgroundPosition(moveDistance: Vec2, keyboard = false) {
     if (
       this.mouseData.heldNodeId ||
-      keyboard === this.mouseData.isDraggingNode
+      keyboard === this.mouseData.isDraggingObject
     ) {
       return;
     }
@@ -323,6 +373,13 @@ export default class NodeflowData {
     }));
   }
 
+  /**
+   * Creates a new node and adds it to the canvas.
+   *
+   * @param data - the data to create the node with
+   * @param addToHistory - whether to add this change to the history
+   * @returns the created node
+   */
   public addNode(
     data: Partial<SerializedNodeflowNode>,
     addToHistory = true,
@@ -353,6 +410,13 @@ export default class NodeflowData {
     return node;
   }
 
+  /**
+   * Updates a node with the provided data.
+   *
+   * @param nodeId - the id of the node to update
+   * @param data - the data to update the node with
+   * @param addToHistory - whether to add this change to the history
+   */
   public updateNode(
     nodeId: string,
     data: DeepPartial<NodeflowNodeType>,
@@ -391,6 +455,7 @@ export default class NodeflowData {
 
   /**
    * Removes a node and all connections to and from it
+   *
    * @param nodeId - the id of the node to remove
    * @param addToHistory - whether to add this change to the history
    */
@@ -427,6 +492,11 @@ export default class NodeflowData {
     this.nodes.delete(nodeId);
   }
 
+  /**
+   * Removes all connections going into the node with the provided id.
+   *
+   * @param nodeId - the id of the node to remove incoming connections from
+   */
   public removeIncomingConnections(nodeId: string) {
     if (!this.nodes.has(nodeId)) {
       return;
@@ -445,6 +515,11 @@ export default class NodeflowData {
     });
   }
 
+  /**
+   * Removes all connections going out of the node with the provided id.
+   *
+   * @param nodeId - the id of the node to remove outgoing connections from
+   */
   public removeOutgoingConnections(nodeId: string) {
     if (!this.nodes.has(nodeId)) {
       return;
@@ -463,6 +538,11 @@ export default class NodeflowData {
     });
   }
 
+  /**
+   * @param nodeId - the id of the node to get the source connectors from
+   *
+   * @returns a list of all the connectors on the given node that have outgoing connections
+   */
   public getAllSourceConnectors(nodeId: string): NodeConnector[] {
     if (!this.nodes.has(nodeId)) {
       return [];
@@ -471,6 +551,11 @@ export default class NodeflowData {
     return this.nodes.get(nodeId)!.getAllSourceConnectors();
   }
 
+  /**
+   * @param nodeId - the id of the node to get the destination connectors from
+   *
+   * @returns a list of all the connectors that the current node is connected to
+   */
   public getAllDestinationConnectors(nodeId: string): NodeConnector[] {
     if (!this.nodes.has(nodeId)) {
       return [];
@@ -479,7 +564,12 @@ export default class NodeflowData {
     return this.nodes.get(nodeId)!.getAllDestinationConnectors();
   }
 
-  public getAllSourceConnections(nodeId: string) {
+  /**
+   * @param nodeId - the id of the node
+   *
+   * @returns a list of all the connections that are going into the node
+   */
+  public getAllSourceConnections(nodeId: string): SerializedConnection[] {
     if (!this.nodes.has(nodeId)) {
       return [];
     }
@@ -487,7 +577,12 @@ export default class NodeflowData {
     return this.nodes.get(nodeId)!.getAllSourceConnections();
   }
 
-  public getAllDestinationConnections(nodeId: string) {
+  /**
+   * @param nodeId - the id of the node to get the destination connections from.
+   *
+   * @returns a list of all the connections that are coming out of the node
+   */
+  public getAllDestinationConnections(nodeId: string): SerializedConnection[] {
     if (!this.nodes.has(nodeId)) {
       return [];
     }
@@ -495,6 +590,11 @@ export default class NodeflowData {
     return this.nodes.get(nodeId)!.getAllDestinationConnections();
   }
 
+  /**
+   * Looks for a free numeric id for a node, starting from 0.
+   *
+   * @returns a stringified number that is not currently in use as a node id
+   */
   public getNextFreeNodeId(): string {
     let newId = "0";
 
@@ -505,6 +605,9 @@ export default class NodeflowData {
     return newId;
   }
 
+  /**
+   * Creates a new connection between two connectors.
+   */
   public addConnection(data: SerializedConnection, addToHistory = true) {
     const {
       sourceNodeId,
@@ -571,6 +674,9 @@ export default class NodeflowData {
     );
   }
 
+  /**
+   * Removes a connection defined by the provided data.
+   */
   public removeConnection(
     sourceNodeId: string,
     sourceConnectorId: string,
@@ -645,6 +751,11 @@ export default class NodeflowData {
     );
   }
 
+  /**
+   * Updates the position of the held node based on the mouse movement.
+   *
+   * @param moveSpeed - the distance to move the node by
+   */
   public updateHeldNodePosition(moveSpeed: Vec2) {
     const id = this.mouseData.heldNodeId;
 
@@ -698,7 +809,7 @@ export default class NodeflowData {
         name: "reset-mouse-data",
         event: () =>
           this.mouseData.updateWithPrevious((prev) => ({
-            isDraggingNode: false,
+            isDraggingObject: false,
             heldConnectorId: undefined,
             heldNodeId: prev.heldConnectorId ? undefined : prev.heldNodeId,
           })),
@@ -743,7 +854,7 @@ export default class NodeflowData {
           const mousePosition = Vec2.fromEvent(touch);
 
           this.mouseData.update({
-            isDraggingNode: true,
+            isDraggingObject: true,
             heldNodeId: undefined,
             mousePosition,
             clickStartPosition: Vec2.of(
@@ -885,7 +996,7 @@ export default class NodeflowData {
               event.clientX / this.zoomLevel - this.position.x,
               event.clientY / this.zoomLevel - this.position.y,
             ),
-            isDraggingNode: true,
+            isDraggingObject: true,
             heldConnection: undefined,
             heldConnectorId: undefined,
             heldNodeId: undefined,
@@ -960,7 +1071,7 @@ export default class NodeflowData {
         name: "reset-mouse-data",
         event: () =>
           this.mouseData.update({
-            isDraggingNode: false,
+            isDraggingObject: false,
             heldConnectorId: undefined,
             heldNodeId: undefined,
           }),
@@ -1008,7 +1119,7 @@ export default class NodeflowData {
         name: "update-mouse-data",
         event: ({ event, sourceConnector, destinationConnector }) =>
           this.mouseData.update({
-            isDraggingNode: false,
+            isDraggingObject: false,
             heldConnection: {
               sourceConnector,
               destinationConnector,
@@ -1025,7 +1136,7 @@ export default class NodeflowData {
         name: "reset-mouse-data",
         event: () =>
           this.mouseData.update({
-            isDraggingNode: false,
+            isDraggingObject: false,
             heldConnection: undefined,
             heldConnectorId: undefined,
           }),

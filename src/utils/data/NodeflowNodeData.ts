@@ -323,12 +323,18 @@ export default class NodeflowNodeData {
     return newId;
   }
 
+  /**
+   * Removes all connections going into the current node.
+   */
   public removeIncomingConnections() {
     this.connectorSections.forEach((section) =>
       section.removeIncomingConnections(),
     );
   }
 
+  /**
+   * Removes all connections going out of the current node.
+   */
   public removeOutgoingConnections() {
     this.connectorSections.forEach((section) =>
       section.removeOutgoingConnections(),
@@ -350,7 +356,7 @@ export default class NodeflowNodeData {
     );
   }
 
-  public getAllSourceConnections() {
+  public getAllSourceConnections(): SerializedConnection[] {
     return this.getAllSourceConnectors()
       .map((source) => {
         const filteredDestinations = source.destinations.filter(
@@ -358,32 +364,36 @@ export default class NodeflowNodeData {
             destination.destinationConnector.parentSection.parentNode.id ===
             this.id,
         );
-        return filteredDestinations.map((destination) => ({
-          sourceNodeId: source.parentSection.parentNode.id,
-          sourceConnectorId: source.id,
-          destinationNodeId:
-            destination.destinationConnector.parentSection.parentNode.id,
-          destinationConnectorId: destination.destinationConnector.id,
-          css: destination.css,
-        }));
+
+        return filteredDestinations.map(
+          (destination): SerializedConnection => ({
+            sourceNodeId: source.parentSection.parentNode.id,
+            sourceConnectorId: source.id,
+            destinationNodeId:
+              destination.destinationConnector.parentSection.parentNode.id,
+            destinationConnectorId: destination.destinationConnector.id,
+            css: destination.css,
+          }),
+        );
       })
       .flat();
   }
 
-  public getAllDestinationConnections() {
+  public getAllDestinationConnections(): SerializedConnection[] {
     return this.getAllDestinationConnectors()
       .map((destination) => {
         const filteredSources = destination.sources.filter(
           (source) =>
             source.sourceConnector.parentSection.parentNode.id === this.id,
         );
-        return filteredSources.map((source) => ({
-          sourceNodeId: source.sourceConnector.parentSection.parentNode.id,
-          sourceConnectorId: source.sourceConnector.id,
-          destinationNodeId: destination.parentSection.parentNode.id,
-          destinationConnectorId: destination.id,
-          css: source.sourceConnector.css,
-        }));
+        return filteredSources.map(
+          (source): SerializedConnection => ({
+            sourceNodeId: source.sourceConnector.parentSection.parentNode.id,
+            sourceConnectorId: source.sourceConnector.id,
+            destinationNodeId: destination.parentSection.parentNode.id,
+            destinationConnectorId: destination.id,
+          }),
+        );
       })
       .flat();
   }

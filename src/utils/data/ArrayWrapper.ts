@@ -1,5 +1,10 @@
 import { createStore } from "solid-js/store";
 
+/**
+ * ArrayWrapper is a utility class that wraps an array with additional functionality.
+ * It uses the createStore function from solid-js/store to create a reactive store for the array.
+ * This allows the array to be reactive and update whenever the store updates.
+ */
 export default class ArrayWrapper<T> {
   private readonly store;
 

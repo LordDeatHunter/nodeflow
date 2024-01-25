@@ -1,6 +1,9 @@
 import { createStore } from "solid-js/store";
 import { ConnectorSourceType } from "../../nodeflow-types";
 
+/**
+ * Represents a connector's source data, such as the source connector that is connected to the original connector and the curve data between the two.
+ */
 export default class ConnectorSource {
   private readonly store;
 

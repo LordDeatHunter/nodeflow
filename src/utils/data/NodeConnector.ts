@@ -11,6 +11,9 @@ import Vec2 from "./Vec2";
 import ConnectorSection from "./ConnectorSection";
 import { deepCopy } from "../misc-utils";
 
+/**
+ * Represents a connector on a node, that can be connected to other connectors.
+ */
 export default class NodeConnector {
   private readonly store;
 
@@ -169,6 +172,9 @@ export default class NodeConnector {
     this.store[1](updater);
   }
 
+  /**
+   * Removes all connections going into the current connector.
+   */
   public removeIncomingConnections() {
     this.sources.forEach(({ sourceConnector }) => {
       sourceConnector.destinations.filterInPlace(
@@ -179,6 +185,9 @@ export default class NodeConnector {
     this.sources = new ArrayWrapper<ConnectorSource>([]);
   }
 
+  /**
+   * Removes all connections going out of the current connector.
+   */
   public removeOutgoingConnections() {
     this.destinations.forEach(({ destinationConnector }) => {
       destinationConnector.sources.filterInPlace(
