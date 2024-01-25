@@ -8,6 +8,7 @@ export interface SerializedVec2 {
 export interface SerializedChanges {
   changes: Array<Change>;
   currentChangeIndex: number;
+  maxChanges: number;
 }
 
 export interface SerializedNodeflowData {
