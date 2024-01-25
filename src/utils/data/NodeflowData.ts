@@ -109,10 +109,13 @@ export default class NodeflowData {
           !isDraggingNode,
         ),
       );
+
       if (!isDraggingNode) {
         this.updateBackgroundPosition(this.currentMoveSpeed, true);
       } else {
-        this.updateHeldNodePosition(this.currentMoveSpeed);
+        this.updateHeldNodePosition(
+          this.currentMoveSpeed.divideBy(this.zoomLevel),
+        );
       }
     }, 10);
   }
@@ -649,16 +652,9 @@ export default class NodeflowData {
 
     const node = this.nodes.get(id)!;
 
-    node.updateWithPrevious((prev) =>
-      // TODO: check if this makes sense:
-      // const newPosition = prev.position.add(
-      //   moveSpeed.divideBy(this.zoomLevel),
-      // );
-
-      ({
-        position: prev.position.add(moveSpeed),
-      }),
-    );
+    node.updateWithPrevious((prev) => ({
+      position: prev.position.add(moveSpeed),
+    }));
   }
 
   private setupDefaultEventHandlers() {
