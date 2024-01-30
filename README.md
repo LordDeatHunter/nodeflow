@@ -70,4 +70,4 @@ For rendering the canvas, you just use the `Nodeflow` component:
 ## Examples
 
 There are 2 example projects: 👨‍👩‍👧‍👦 a [FamilyTree App](./examples/FamilyTreeApp) and 📘 a [Blueprint App](./examples/BlueprintApp).\
-For the time being, the examples are not hosted anywhere, so you will have to clone the repository and run them locally.
+You can check them out in action [here](https://lorddeathunter.github.io/nodeflow/).
