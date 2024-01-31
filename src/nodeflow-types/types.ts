@@ -111,6 +111,13 @@ export type Change = {
 };
 
 export type NodeflowSettings = {
+  canAddNodes: boolean;
+  canCreateConnections: boolean;
+  canDeleteConnections: boolean;
+  canDeleteNodes: boolean;
+  canMoveNodes: boolean;
+  canPan: boolean;
+  canZoom: boolean;
   debugMode: boolean;
   keyboardZoomMultiplier: number;
   maxMovementSpeed: number;

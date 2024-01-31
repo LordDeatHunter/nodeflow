@@ -40,6 +40,13 @@ export default class NodeflowData {
   /** An instance of the NodeflowEventRecord class that handles various event subscriptions and publishing. */
   public readonly eventStore: NodeflowEventRecord;
   public static readonly DEFAULT_SETTINGS: NodeflowSettings = {
+    canAddNodes: true,
+    canCreateConnections: true,
+    canDeleteConnections: true,
+    canDeleteNodes: true,
+    canMoveNodes: true,
+    canPan: true,
+    canZoom: true,
     debugMode: false,
     keyboardZoomMultiplier: 15,
     maxMovementSpeed: 15,
@@ -138,9 +145,9 @@ export default class NodeflowData {
         ),
       );
 
-      if (!isDraggingObject) {
+      if (!isDraggingObject && this.settings.canPan) {
         this.updateBackgroundPosition(this.currentMoveSpeed, true);
-      } else {
+      } else if (isDraggingObject && this.settings.canMoveNodes) {
         this.updateHeldNodePosition(
           this.currentMoveSpeed.divideBy(this.zoomLevel),
         );
@@ -914,7 +921,9 @@ export default class NodeflowData {
             (touch1X + touch2X) / 2,
             (touch1Y + touch2Y) / 2,
           );
-          this.updateZoom(currDist - this.pinchDistance, centerPosition);
+          if (this.settings.canZoom) {
+            this.updateZoom(currDist - this.pinchDistance, centerPosition);
+          }
           this.pinchDistance = currDist;
         },
       },
@@ -952,9 +961,12 @@ export default class NodeflowData {
           // TODO: change to map
           switch (event.code) {
             case "Delete":
-              if (this.mouseData.heldNodeId) {
+              if (this.mouseData.heldNodeId && this.settings.canDeleteNodes) {
                 this.removeNode(this.mouseData.heldNodeId);
-              } else if (this.mouseData.heldConnection) {
+              } else if (
+                this.mouseData.heldConnection &&
+                this.settings.canDeleteConnections
+              ) {
                 this.removeConnection(
                   this.mouseData.heldConnection.sourceConnector.parentSection
                     .parentNode.id,
@@ -969,15 +981,18 @@ export default class NodeflowData {
               this.mouseData.deselectNode();
               break;
             case "Space":
-              if (this.mouseData.heldNodeId) {
-                console.log(this.nodes.get(this.mouseData.heldNodeId));
-              } else {
-                console.log(this.nodes);
+              if (this.settings.debugMode) {
+                if (this.mouseData.heldNodeId) {
+                  console.log(this.nodes.get(this.mouseData.heldNodeId));
+                } else {
+                  console.log(this.nodes);
+                }
               }
               break;
             case "Equal":
             case "Minus":
               if (event.ctrlKey) {
+                if (!this.settings.canZoom) return;
                 event.preventDefault();
                 this.updateZoom(
                   this.settings.keyboardZoomMultiplier *
@@ -1006,6 +1021,7 @@ export default class NodeflowData {
       {
         name: "update-zoom",
         event: ({ event }) => {
+          if (!this.settings.canZoom) return;
           this.updateZoom(-event.deltaY, Vec2.fromEvent(event));
         },
       },
@@ -1024,18 +1040,19 @@ export default class NodeflowData {
       },
       {
         name: "reset-mouse-data",
-        event: ({ event }) =>
+        event: ({ event }) => {
           this.mouseData.update({
             clickStartPosition: Vec2.of(
               event.clientX / this.zoomLevel - this.position.x,
               event.clientY / this.zoomLevel - this.position.y,
             ),
-            isDraggingObject: true,
+            isDraggingObject: this.settings.canPan,
             heldConnection: undefined,
             heldConnectorId: undefined,
             heldNodeId: undefined,
             mousePosition: Vec2.fromEvent(event),
-          }),
+          });
+        },
       },
       {
         name: "stop-propagation",
@@ -1090,6 +1107,7 @@ export default class NodeflowData {
       {
         name: "connect-held-nodes",
         event: ({ event, nodeId, connectorId }) => {
+          if (!this.settings.canCreateConnections) return;
           if (!this.mouseData.heldConnectorId) return;
           this.eventStore.onNodeConnected.publish({
             outputNodeId: this.mouseData.heldNodeId!,
@@ -1117,7 +1135,11 @@ export default class NodeflowData {
       {
         name: "select-node",
         event: ({ event, nodeId }) => {
-          this.mouseData.selectNode(nodeId, Vec2.fromEvent(event));
+          this.mouseData.selectNode(
+            nodeId,
+            Vec2.fromEvent(event),
+            this.settings.canMoveNodes,
+          );
         },
       },
       {
@@ -1131,7 +1153,11 @@ export default class NodeflowData {
         name: "select-node",
         event: ({ event, nodeId }) => {
           const { clientX: x, clientY: y } = event.touches[0];
-          this.mouseData.selectNode(nodeId, Vec2.of(x, y));
+          this.mouseData.selectNode(
+            nodeId,
+            Vec2.of(x, y),
+            this.settings.canMoveNodes,
+          );
         },
       },
       {
