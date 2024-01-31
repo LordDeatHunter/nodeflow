@@ -99,6 +99,8 @@ export interface PathData {
   end: Vec2;
   path: string;
   start: Vec2;
+  anchorStart: Vec2;
+  anchorEnd: Vec2;
 }
 
 export type Change = {
@@ -106,4 +108,22 @@ export type Change = {
   source: string;
   applyChange: () => void;
   undoChange: () => void;
+};
+
+export type NodeflowSettings = {
+  canAddNodes: boolean;
+  canCreateConnections: boolean;
+  canDeleteConnections: boolean;
+  canDeleteNodes: boolean;
+  canMoveNodes: boolean;
+  canPan: boolean;
+  canZoom: boolean;
+  debugMode: boolean;
+  keyboardZoomMultiplier: number;
+  maxMovementSpeed: number;
+  maxZoom: number;
+  minZoom: number;
+  movementAcceleration: number;
+  movementSlowdown: number;
+  zoomMultiplier: number;
 };

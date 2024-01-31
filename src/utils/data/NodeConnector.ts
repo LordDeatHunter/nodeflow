@@ -197,4 +197,11 @@ export default class NodeConnector {
     });
     this.destinations = new ArrayWrapper<ConnectorDestination>([]);
   }
+
+  public getCenter(): Vec2 {
+    const { position: nodePosition, offset: nodeOffset } =
+      this.parentSection.parentNode;
+
+    return nodePosition.add(nodeOffset, this.position, this.size.divideBy(2));
+  }
 }

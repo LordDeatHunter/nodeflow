@@ -108,4 +108,12 @@ export default class Vec2 {
       this.y <= start.y + size.y
     );
   }
+
+  public distanceTo(position: Vec2): number {
+    return Math.hypot(this.x - position.x, this.y - position.y);
+  }
+
+  public abs(): Vec2 {
+    return Vec2.of(Math.abs(this.x), Math.abs(this.y));
+  }
 }

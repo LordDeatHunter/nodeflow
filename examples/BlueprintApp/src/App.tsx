@@ -1,5 +1,11 @@
 import { type Component, createSignal, JSX, onMount, Show } from "solid-js";
-import { NodeflowLib, Optional, Vec2, windowSize } from "nodeflow-lib";
+import {
+  NodeflowData,
+  NodeflowLib,
+  Optional,
+  Vec2,
+  windowSize,
+} from "nodeflow-lib";
 import curveCss from "./styles/curve.module.scss";
 import nodeCss from "./styles/node.module.scss";
 import nodeflowCss from "./styles/nodeflow.module.scss";
@@ -9,12 +15,17 @@ import {
   setupDummyNodes,
   setupEvents,
 } from "./utils";
+import { BPCurveFunctions } from "./BPCurveFunctions";
 
 const App: Component = () => {
   const [nodePreview, setNodePreview] =
     createSignal<Optional<JSX.Element>>(undefined);
 
-  const [nodeflowData, Nodeflow] = NodeflowLib.get().createCanvas("main");
+  const [nodeflowData, Nodeflow] = NodeflowLib.get().createCanvas(
+    "main",
+    {},
+    (nodeflow: NodeflowData) => new BPCurveFunctions(nodeflow),
+  );
 
   const createNode = (data: { event: PointerEvent }) => {
     if (!nodePreview()) return;

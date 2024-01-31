@@ -1,11 +1,12 @@
 export { default as ArrayWrapper } from "./ArrayWrapper";
 export { default as Changes } from "./Changes";
+export { default as CurveFunctions } from "./CurveFunctions";
 export { default as ConnectorDestination } from "./ConnectorDestination";
 export { default as ConnectorSection } from "./ConnectorSection";
 export { default as ConnectorSource } from "./ConnectorSource";
-export { default as NodeflowData } from "./NodeflowData";
-export { default as NodeflowNodeData } from "./NodeflowNodeData";
 export * from "./EventPublishers";
 export { default as MouseData } from "./MouseData";
 export { default as NodeConnector } from "./NodeConnector";
+export { default as NodeflowData } from "./NodeflowData";
+export { default as NodeflowNodeData } from "./NodeflowNodeData";
 export { default as Vec2 } from "./Vec2";

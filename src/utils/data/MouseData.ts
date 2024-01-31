@@ -172,6 +172,7 @@ export default class MouseData {
     position: Vec2,
     outputId: string,
   ) => {
+    if (!this.nodeflowData.settings.canCreateConnections) return;
     this.update({
       isDraggingObject: false,
       heldNodeId: nodeId,
