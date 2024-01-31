@@ -1,10 +1,4 @@
-import {
-  CurveFunctions,
-  NodeflowData,
-  NodeflowNodeData,
-  SetCurveFunction,
-  Vec2,
-} from "nodeflow-lib";
+import { NodeflowData, NodeflowNodeData, Vec2 } from "nodeflow-lib";
 import nodeCss from "./styles/node.module.scss";
 import curveCss from "./styles/curve.module.scss";
 import NodeDisplay from "./NodeDisplay";
@@ -75,11 +69,6 @@ export const setupEvents = (nodeflowData: NodeflowData) => {
         },
       });
     },
-  );
-  SetCurveFunction("getDefaultCurve", CurveFunctions.getHorizontalCurve);
-  SetCurveFunction(
-    "createNodePathCurve",
-    CurveFunctions.createDraggingPathCurve,
   );
 };
 

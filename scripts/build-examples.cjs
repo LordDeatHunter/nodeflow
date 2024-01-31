@@ -50,12 +50,12 @@ const buildExamples = async () => {
             childProcess.stderr.pipe(process.stderr);
 
             childProcess.on("exit", (code) => {
-                if (code !== 0) {
-                    console.log(`Successfully built ${examplePath}.`);
+                if (code === 0) {
+                    console.log(`Successfully built "${outputFolderName}".`);
                     copyFolder(path.join(examplePath, "dist"), path.join(buildPath, outputFolderName));
                     return;
                 }
-                console.error(`Failed to build ${examplePath} with code ${code}.`);
+                console.error(`Failed to build "${outputFolderName}" with code ${code}.`);
                 process.exit(1);
             });
         });

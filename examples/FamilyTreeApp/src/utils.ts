@@ -1,9 +1,7 @@
 import {
-  CurveFunctions,
   NodeflowData,
   NodeflowNodeData,
   SelectableElementCSS,
-  SetCurveFunction,
   Vec2,
 } from "nodeflow-lib";
 import nodeCss from "./styles/node.module.scss";
@@ -254,12 +252,6 @@ export const setupEvents = (nodeflowData: NodeflowData) => {
         css: getConnectionCSS(sourceNode.customData.gender),
       });
     },
-  );
-
-  SetCurveFunction("getDefaultCurve", CurveFunctions.getVerticalCurve);
-  SetCurveFunction(
-    "createNodePathCurve",
-    CurveFunctions.createDraggingPathCurve,
   );
 };
 
