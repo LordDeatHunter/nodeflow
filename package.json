@@ -6,14 +6,14 @@
     "url": "https://github.com/LordDeatHunter/nodeflow"
   },
   "homepage": "https://lorddeathunter.github.io/nodeflow",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Library for creating node/graph-based applications",
   "scripts": {
     "build": "rollup -c rollup.config.js",
     "build-examples": "node scripts/build-examples.cjs",
     "deploy-examples": "run-s build-examples && gh-pages -d examples-build",
-    "dev:blueprint": "run-s --prefix ./examples/BlueprintApp start",
-    "dev:familytree": "run-s --prefix ./examples/FamilyTreeApp start",
+    "dev:blueprint": "pnpm --prefix ./examples/BlueprintApp start",
+    "dev:familytree": "pnpm --prefix ./examples/FamilyTreeApp start",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
     "serve": "vite preview",
     "start": "run-p dev:*"

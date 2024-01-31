@@ -1,5 +1,5 @@
-import { Component, createEffect, createMemo } from "solid-js";
-import { CurveFunctions, NodeflowData } from "../utils";
+import { Component, createEffect, createMemo, Show } from "solid-js";
+import { NodeflowData } from "../utils";
 import { Optional, SelectableElementCSS } from "../nodeflow-types";
 import NodeConnector from "../utils/data/NodeConnector";
 import NodeflowNodeData from "../utils/data/NodeflowNodeData";
@@ -41,80 +41,95 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
     if (destinationIndex() < 0) {
       return;
     }
+    const { curveFunctions } = props.nodeflowData;
 
-    const {
-      position: startPosition,
-      offset: startNodeOffset,
-      size: startNodeSize,
-    } = startNode();
-    const {
-      position: endPosition,
-      offset: endNodeOffset,
-      size: endNodeSize,
-    } = endNode();
+    const output = startNode().getConnector(props.sourceConnectorId)!;
+    const input = endNode().getConnector(props.destinationConnectorId)!;
 
-    const outputSection = startNode().getSectionFromConnector(
-      props.sourceConnectorId,
-    )!;
-    const inputSection = endNode().getSectionFromConnector(
-      props.destinationConnectorId,
-    )!;
-    const input = inputSection.connectors.get(props.destinationConnectorId)!;
-    const output = outputSection.connectors.get(props.sourceConnectorId)!;
+    const start = output.getCenter();
+    const end = input.getCenter();
 
-    const start = startPosition.add(
-      startNodeOffset,
-      output.position,
-      output.size.divideBy(2),
-    );
-    const end = endPosition.add(
-      endNodeOffset,
-      input.position,
-      input.size.divideBy(2),
+    const { anchorStart, anchorEnd } = curveFunctions.calculateCurveAnchors(
+      start,
+      end,
+      startNode().getCenter(),
+      endNode().getCenter(),
     );
 
     sourceConnector()!.destinations.get(destinationIndex()).path = {
       start,
       end,
-      path: CurveFunctions.createNodePathCurve(
+      anchorStart,
+      anchorEnd,
+      path: curveFunctions.createDefaultCurvePath(
         start,
         end,
-        startPosition.add(startNodeOffset).add(startNodeSize.divideBy(2)),
-        endPosition.add(endNodeOffset).add(endNodeSize.divideBy(2)),
+        anchorStart,
+        anchorEnd,
       ),
     };
   });
 
   return (
-    <path
-      onPointerDown={(event) => {
-        props.nodeflowData.eventStore.onPointerDownInNodeCurve.publish({
-          event,
-          sourceConnector: sourceConnector()!,
-          destinationConnector: destinationConnector()!,
-        });
-      }}
-      d={sourceConnector()!.destinations.get(destinationIndex()).path?.path}
-      stroke="black"
-      stroke-width={1}
-      fill="none"
-      classList={{
-        [props.css?.normal ?? ""]: true,
-        [props.css?.selected ?? ""]:
-          props.nodeflowData.mouseData.heldConnection?.sourceConnector
-            .parentSection.parentNode.id === props.sourceNodeId &&
-          props.nodeflowData.mouseData.heldConnection?.sourceConnector.id ===
-            props.sourceConnectorId &&
-          props.nodeflowData.mouseData.heldConnection?.destinationConnector
-            .parentSection.parentNode.id === props.destinationNodeId &&
-          props.nodeflowData.mouseData.heldConnection?.destinationConnector
-            .id === props.destinationConnectorId,
-      }}
-      style={{
-        cursor: "pointer",
-        "pointer-events": "visibleStroke",
-      }}
-    />
+    <>
+      <path
+        onPointerDown={(event) => {
+          props.nodeflowData.eventStore.onPointerDownInNodeCurve.publish({
+            event,
+            sourceConnector: sourceConnector()!,
+            destinationConnector: destinationConnector()!,
+          });
+        }}
+        d={sourceConnector()!.destinations.get(destinationIndex()).path?.path}
+        stroke="black"
+        stroke-width={1}
+        fill="none"
+        classList={{
+          [props.css?.normal ?? ""]: true,
+          [props.css?.selected ?? ""]:
+            props.nodeflowData.mouseData.heldConnection?.sourceConnector
+              .parentSection.parentNode.id === props.sourceNodeId &&
+            props.nodeflowData.mouseData.heldConnection?.sourceConnector.id ===
+              props.sourceConnectorId &&
+            props.nodeflowData.mouseData.heldConnection?.destinationConnector
+              .parentSection.parentNode.id === props.destinationNodeId &&
+            props.nodeflowData.mouseData.heldConnection?.destinationConnector
+              .id === props.destinationConnectorId,
+        }}
+        style={{
+          cursor: "pointer",
+          "pointer-events": "visibleStroke",
+        }}
+      />
+      <Show when={props.nodeflowData.settings.debugMode}>
+        <circle
+          cx={
+            sourceConnector()!.destinations.get(destinationIndex()).path
+              ?.anchorStart?.x
+          }
+          cy={
+            sourceConnector()!.destinations.get(destinationIndex()).path
+              ?.anchorStart?.y
+          }
+          r={4}
+          fill="none"
+          class={props.css?.normal ?? ""}
+        />
+        <circle
+          cx={
+            sourceConnector()!.destinations.get(destinationIndex()).path
+              ?.anchorEnd?.x
+          }
+          cy={
+            sourceConnector()!.destinations.get(destinationIndex()).path
+              ?.anchorEnd?.y
+          }
+          r={4}
+          fill="none"
+          class={props.css?.normal ?? ""}
+        />
+      </Show>
+    </>
   );
 };
 export default NodeCurve;

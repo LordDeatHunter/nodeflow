@@ -1,5 +1,4 @@
 export * from "./data";
-export * from "./curve-functions";
 export * from "./nodeflow-storage";
 export * from "./math-utils";
 export * from "./misc-utils";

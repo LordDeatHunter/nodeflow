@@ -405,4 +405,8 @@ export default class NodeflowNodeData {
       section.connectors.get(connectorId),
     );
   }
+
+  public getCenter(): Vec2 {
+    return this.position.add(this.offset).add(this.size.divideBy(2));
+  }
 }

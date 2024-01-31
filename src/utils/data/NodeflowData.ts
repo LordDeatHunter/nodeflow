@@ -5,13 +5,14 @@ import {
   NodeflowDataType,
   NodeflowEventRecord,
   NodeflowNodeType,
+  NodeflowSettings,
   SerializedConnection,
   SerializedNodeflowData,
   SerializedNodeflowNode,
 } from "../../nodeflow-types";
 import { windowSize } from "../screen-utils";
 import { clamp } from "../math-utils";
-import { Constants, heldKeys, KEYS } from "../nodeflow-storage";
+import { heldKeys, KEYS } from "../nodeflow-storage";
 import Changes from "./Changes";
 import MouseData from "./MouseData";
 import { ReactiveMap } from "@solid-primitives/map";
@@ -22,6 +23,7 @@ import ArrayWrapper from "./ArrayWrapper";
 import ConnectorDestination from "./ConnectorDestination";
 import { intersectionOfSets, isSetEmpty } from "../misc-utils";
 import { NodeflowEventPublisher } from "./EventPublishers";
+import CurveFunctions from "./CurveFunctions";
 
 /**
  * NodeflowData is a class that manages the state of a Nodeflow canvas.
@@ -31,12 +33,32 @@ export default class NodeflowData {
   private readonly store;
   public readonly changes;
   public readonly mouseData;
+  public readonly curveFunctions;
+  public readonly settingsStore;
   /** A ReactiveMap that stores all the nodes on the Nodeflow canvas. */
   public readonly nodes;
   /** An instance of the NodeflowEventRecord class that handles various event subscriptions and publishing. */
   public readonly eventStore: NodeflowEventRecord;
+  public static readonly DEFAULT_SETTINGS: NodeflowSettings = {
+    debugMode: false,
+    keyboardZoomMultiplier: 15,
+    maxMovementSpeed: 15,
+    maxZoom: 200,
+    minZoom: 0.02,
+    movementAcceleration: 1.5,
+    movementSlowdown: 0.85,
+    zoomMultiplier: 0.005,
+  } as const;
 
-  public constructor() {
+  public constructor(
+    settings: Partial<NodeflowSettings>,
+    curveFunctions?: (nodeflow: NodeflowData) => CurveFunctions,
+  ) {
+    this.settingsStore = createStore<NodeflowSettings>({
+      ...NodeflowData.DEFAULT_SETTINGS,
+      ...settings,
+    });
+    this.curveFunctions = curveFunctions?.(this) ?? new CurveFunctions(this);
     this.store = createStore<NodeflowDataType>({
       currentMoveSpeed: Vec2.zero(),
       position: Vec2.zero(),
@@ -100,14 +122,14 @@ export default class NodeflowData {
       const isDraggingObject = this.mouseData.heldNodeId !== undefined;
 
       this.currentMoveSpeed = Vec2.of(
-        NodeflowData.calculateDirectionalMovementAmount(
+        this.calculateDirectionalMovementAmount(
           movingLeft || movingRight,
           this.currentMoveSpeed.x,
           movingRight,
           movingLeft,
           !isDraggingObject,
         ),
-        NodeflowData.calculateDirectionalMovementAmount(
+        this.calculateDirectionalMovementAmount(
           movingUp || movingDown,
           this.currentMoveSpeed.y,
           movingDown,
@@ -177,6 +199,18 @@ export default class NodeflowData {
     return Array.from(this.nodes.values()).flatMap((node) =>
       node.serializeConnections(),
     );
+  }
+
+  public get settings() {
+    return this.settingsStore[0];
+  }
+
+  public updateSettings(
+    settings:
+      | Partial<NodeflowSettings>
+      | ((prev: NodeflowSettings) => Partial<NodeflowSettings>),
+  ) {
+    this.settingsStore[1](settings);
   }
 
   /**
@@ -289,7 +323,7 @@ export default class NodeflowData {
    * @param inverse - whether to inverse the movement
    * @returns the new movement speed
    */
-  public static calculateDirectionalMovementAmount(
+  public calculateDirectionalMovementAmount(
     isMoving: boolean,
     initialSpeed: number,
     positiveMovement: boolean,
@@ -298,19 +332,19 @@ export default class NodeflowData {
   ) {
     let speed = initialSpeed;
     if (isMoving) {
-      const change = Constants.MOVE_SPEED_INCREASE * (inverse ? -1 : 1);
+      const change = this.settings.movementAcceleration * (inverse ? -1 : 1);
       speed = clamp(
         speed +
           (positiveMovement ? change : 0) -
           (negativeMovement ? change : 0),
-        -Constants.MAX_SPEED,
-        Constants.MAX_SPEED,
+        -this.settings.maxMovementSpeed,
+        this.settings.maxMovementSpeed,
       );
     } else {
       speed = clamp(
-        speed * Constants.MOVE_SLOWDOWN,
-        -Constants.MAX_SPEED,
-        Constants.MAX_SPEED,
+        speed * this.settings.movementSlowdown,
+        -this.settings.maxMovementSpeed,
+        this.settings.maxMovementSpeed,
       );
     }
     if (speed <= 0.1 && speed >= -0.1) speed = 0;
@@ -325,10 +359,10 @@ export default class NodeflowData {
     const newZoom = Number(
       clamp(
         distance > 0
-          ? oldZoom + oldZoom * distance * Constants.ZOOM_MULTIPLIER
-          : oldZoom / (1 - distance * Constants.ZOOM_MULTIPLIER),
-        Constants.MIN_ZOOM,
-        Constants.MAX_ZOOM,
+          ? oldZoom + oldZoom * distance * this.settings.zoomMultiplier
+          : oldZoom / (1 - distance * this.settings.zoomMultiplier),
+        this.settings.minZoom,
+        this.settings.maxZoom,
       ).toFixed(4),
     );
 
@@ -946,7 +980,7 @@ export default class NodeflowData {
               if (event.ctrlKey) {
                 event.preventDefault();
                 this.updateZoom(
-                  Constants.KEYBOARD_ZOOM_AMOUNT *
+                  this.settings.keyboardZoomMultiplier *
                     (event.code === "Equal" ? 1 : -1),
                   windowSize().divideBy(2),
                 );

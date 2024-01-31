@@ -1,5 +1,5 @@
-import { Component, createMemo } from "solid-js";
-import { CurveFunctions, NodeflowData } from "../utils";
+import { Component, createMemo, Show } from "solid-js";
+import { NodeflowData } from "../utils";
 import { Optional, PathData } from "../nodeflow-types";
 
 interface CurveProps {
@@ -9,38 +9,39 @@ interface CurveProps {
 
 const Curve: Component<CurveProps> = (props) => {
   const curveData = createMemo<Optional<PathData>>(() => {
-    const nodeId = props.nodeflowData.mouseData.heldNodeId;
-    const connectorId = props.nodeflowData.mouseData.heldConnectorId;
+    const { mouseData, curveFunctions, nodes } = props.nodeflowData;
+
+    const nodeId = mouseData.heldNodeId;
+    const connectorId = mouseData.heldConnectorId;
 
     if (!nodeId || !connectorId) {
       return undefined;
     }
 
-    const node = props.nodeflowData.nodes.get(nodeId)!;
-
-    const {
-      position: startPosition,
-      offset: startNodeOffset,
-      size: startNodeSize,
-    } = node;
+    const node = nodes.get(nodeId)!;
 
     const output = node.getConnector(connectorId)!;
 
-    const start = startPosition.add(
-      startNodeOffset,
-      output.position,
-      output.size.divideBy(2),
+    const start = output.getCenter();
+    const end = mouseData.globalMousePosition();
+
+    const { anchorStart, anchorEnd } = curveFunctions.calculateCurveAnchors(
+      start,
+      end,
+      node.getCenter(),
+      end,
     );
-    const end = props.nodeflowData.mouseData.globalMousePosition();
 
     return {
       start,
       end,
-      path: CurveFunctions.createDraggingPathCurve(
+      anchorStart,
+      anchorEnd,
+      path: curveFunctions.createDefaultCurvePath(
         start,
         end,
-        startPosition.add(startNodeOffset).add(startNodeSize.divideBy(2)),
-        end,
+        anchorStart,
+        anchorEnd,
       ),
     };
   });
@@ -63,6 +64,22 @@ const Curve: Component<CurveProps> = (props) => {
         fill="transparent"
         class={props.css}
       />
+      <Show when={props.nodeflowData.settings.debugMode}>
+        <circle
+          cx={curveData()?.anchorStart.x}
+          cy={curveData()?.anchorStart.y}
+          r={4}
+          fill="none"
+          class={props.css ?? ""}
+        />
+        <circle
+          cx={curveData()?.anchorEnd.x}
+          cy={curveData()?.anchorEnd.y}
+          r={4}
+          fill="none"
+          class={props.css ?? ""}
+        />
+      </Show>
     </svg>
   );
 };
