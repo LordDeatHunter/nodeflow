@@ -134,12 +134,14 @@ export const setupEvents = (nodeflowData: NodeflowData) => {
 
       if (!heldNodeId || !heldConnectorId) return;
 
+      const position = nodeflowData.mouseData.globalMousePosition();
+
       fetchRandomData(1).then((data) => {
         const newNode = createFamilyMemberNode(
           nodeflowData,
           data[0].name,
           data[0].gender,
-          nodeflowData.mouseData.globalMousePosition(),
+          position,
         );
 
         const parent = nodeflowData.nodes.get(heldNodeId)!;
