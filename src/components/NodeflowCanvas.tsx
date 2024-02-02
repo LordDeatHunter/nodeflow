@@ -30,6 +30,7 @@ const NodeflowCanvas =
       style={{
         height: props.height,
         width: props.width,
+        overflow: "hidden",
       }}
       onMouseMove={(event) =>
         nodeflowData.eventStore.onMouseMoveInNodeflow.publish({ event })
@@ -58,7 +59,6 @@ const NodeflowCanvas =
     >
       <div
         style={{
-          position: "absolute",
           transform: `scale(${nodeflowData.zoomLevel}) translate(${nodeflowData.position.x}px, ${nodeflowData.position.y}px)`,
           "transform-origin": "center",
           transition: "scale 0.1s ease-out",
