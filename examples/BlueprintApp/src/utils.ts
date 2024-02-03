@@ -8,24 +8,29 @@ export const createDummyNode = (
   position: Vec2,
   center = false,
 ): NodeflowNodeData => {
-  const newNode = nodeflowData.addNode({
-    css: {
-      normal: nodeCss.node,
-      selected: nodeCss.selectedNode,
+  const historyGroup = crypto.randomUUID();
+
+  const newNode = nodeflowData.addNode(
+    {
+      css: {
+        normal: nodeCss.node,
+        selected: nodeCss.selectedNode,
+      },
+      position,
+      display: NodeDisplay,
+      centered: center,
     },
-    position,
-    display: NodeDisplay,
-    centered: center,
-  });
+    historyGroup,
+  );
   const inputSection = newNode.addConnectorSection(
     "inputs",
     nodeCss.inputsSection,
-    false,
+    historyGroup,
   );
   const outputSection = newNode.addConnectorSection(
     "outputs",
     nodeCss.outputsSection,
-    false,
+    historyGroup,
   );
 
   const outputs = Math.random() * 6;
@@ -34,7 +39,7 @@ export const createDummyNode = (
       {
         css: nodeCss.outputConnector,
       },
-      false,
+      historyGroup,
     );
   }
   const inputs = Math.random() * 6;
@@ -43,7 +48,7 @@ export const createDummyNode = (
       {
         css: nodeCss.inputConnector,
       },
-      false,
+      historyGroup,
     );
   }
 

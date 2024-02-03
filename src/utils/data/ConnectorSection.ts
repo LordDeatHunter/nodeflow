@@ -6,6 +6,8 @@ import {
 } from "../../nodeflow-types";
 import NodeConnector from "./NodeConnector";
 import { NodeflowData } from "./index";
+import Changes from "./Changes";
+import NodeflowLib from "../NodeflowLib";
 
 /**
  * Represents a section containing connectors on a node. Used for grouping connectors together.
@@ -33,42 +35,13 @@ export default class ConnectorSection {
   }
 
   /**
-   * Removes a connector from the connector section
-   *
-   * @param connectorId - The id of the connector to remove
-   * @param addToHistory - Whether to add the change to the history
-   */
-  public removeConnector(connectorId: string, addToHistory = true) {
-    if (!this.connectors.has(connectorId)) {
-      return;
-    }
-    const connector = this.connectors.get(connectorId)!;
-
-    if (addToHistory) {
-      this.nodeflowData.changes.addChange({
-        type: "remove",
-        source: "connector",
-        applyChange: () => {
-          this.removeConnector(connectorId, false);
-        },
-        undoChange: () => {
-          this.addConnector(connector.serialize(), false);
-        },
-      });
-    }
-
-    this.connectors.delete(connectorId);
-  }
-
-  /**
    * Adds a connector to the connector section
    *
    * @param data - The data of the connector to add
-   * @param addToHistory - Whether to add the change to the history
    */
   public addConnector(
     data: Partial<SerializedNodeConnector>,
-    addToHistory = true,
+    hasHistoryGroup: string | boolean = true,
   ) {
     const connector = NodeConnector.deserialize(data, this);
 
@@ -76,22 +49,82 @@ export default class ConnectorSection {
       return;
     }
 
-    if (addToHistory) {
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+
+    if (historyGroup) {
+      const serializedConnector = connector.serialize();
+      const connectorSectionId = this.id;
+      const connectorId = serializedConnector.id;
+      const nodeId = this.parentNode.id;
+      const nodeflowId = this.nodeflowData.id;
+
       this.nodeflowData.changes.addChange({
         type: "add",
         source: "connector",
         applyChange: () => {
-          this.addConnector(connector.serialize(), false);
+          NodeflowLib.get()
+            .getNodeflow(nodeflowId)
+            ?.nodes.get(nodeId)
+            ?.addConnector(connectorSectionId, serializedConnector, false);
         },
         undoChange: () => {
-          this.removeConnector(connector.id, false);
+          NodeflowLib.get()
+            .getNodeflow(nodeflowId)
+            ?.nodes.get(nodeId)
+            ?.removeConnector(connectorSectionId, connectorId, false);
         },
+        historyGroup,
       });
     }
 
     this.connectors.set(connector.id, connector);
 
     return connector;
+  }
+
+  /**
+   * Removes a connector from the connector section
+   *
+   * @param connectorId - The id of the connector to remove
+   */
+  public removeConnector(
+    connectorId: string,
+    hasHistoryGroup: string | boolean = true,
+  ): void {
+    if (!this.connectors.has(connectorId)) {
+      return;
+    }
+    const connector = this.connectors.get(connectorId)!;
+
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+
+    if (historyGroup) {
+      const serializedConnector = connector.serialize();
+      const connectorSectionId = this.id;
+      const connectorId = serializedConnector.id;
+      const nodeId = this.parentNode.id;
+      const nodeflowId = this.nodeflowData.id;
+
+      this.nodeflowData.changes.addChange({
+        type: "remove",
+        source: "connector",
+        applyChange: () => {
+          NodeflowLib.get()
+            .getNodeflow(nodeflowId)
+            ?.nodes.get(nodeId)
+            ?.removeConnector(connectorSectionId, connectorId, false);
+        },
+        undoChange: () => {
+          NodeflowLib.get()
+            .getNodeflow(nodeflowId)
+            ?.nodes.get(nodeId)
+            ?.addConnector(connectorSectionId, serializedConnector, false);
+        },
+        historyGroup,
+      });
+    }
+
+    this.connectors.delete(connectorId);
   }
 
   public get connectors() {

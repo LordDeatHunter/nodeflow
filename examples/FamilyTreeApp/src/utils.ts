@@ -53,26 +53,33 @@ export const createFamilyMemberNode = (
   gender: CustomNodeflowDataType["gender"],
   position?: Vec2,
 ): NodeflowNodeData => {
-  const newNode = nodeflowData.addNode({
-    css: {
-      normal: gender === "M" ? nodeCss.maleNode : nodeCss.femaleNode,
-      selected:
-        gender === "M" ? nodeCss.selectedMaleNode : nodeCss.selectedFemaleNode,
+  const historyGroup = name;
+
+  const newNode = nodeflowData.addNode(
+    {
+      css: {
+        normal: gender === "M" ? nodeCss.maleNode : nodeCss.femaleNode,
+        selected:
+          gender === "M"
+            ? nodeCss.selectedMaleNode
+            : nodeCss.selectedFemaleNode,
+      },
+      position,
+      customData: { gender, name },
+      display: NodeBody,
+      centered: true,
     },
-    position,
-    customData: { gender, name },
-    display: NodeBody,
-    centered: true,
-  });
+    historyGroup,
+  );
   const inputSection = newNode.addConnectorSection(
     "inputs",
     nodeCss.inputsSection,
-    false,
+    historyGroup,
   );
   const outputSection = newNode.addConnectorSection(
     "outputs",
     nodeCss.outputsSection,
-    false,
+    historyGroup,
   );
 
   outputSection.addConnector(
@@ -83,14 +90,14 @@ export const createFamilyMemberNode = (
           ? nodeCss.maleOutputConnector
           : nodeCss.femaleOutputConnector,
     },
-    false,
+    historyGroup,
   );
   inputSection.addConnector(
     {
       id: "I",
       css: nodeCss.inputConnector,
     },
-    false,
+    historyGroup,
   );
 
   return newNode;

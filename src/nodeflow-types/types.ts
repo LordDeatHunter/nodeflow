@@ -108,6 +108,7 @@ export type Change = {
   source: string;
   applyChange: () => void;
   undoChange: () => void;
+  historyGroup: string;
 };
 
 export type NodeflowSettings = {

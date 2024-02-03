@@ -21,9 +21,10 @@ import NodeConnector from "./NodeConnector";
 import ConnectorSource from "./ConnectorSource";
 import ArrayWrapper from "./ArrayWrapper";
 import ConnectorDestination from "./ConnectorDestination";
-import { intersectionOfSets, isSetEmpty } from "../misc-utils";
+import { deepCopy, intersectionOfSets, isSetEmpty } from "../misc-utils";
 import { NodeflowEventPublisher } from "./EventPublishers";
 import CurveFunctions from "./CurveFunctions";
+import NodeflowLib from "../NodeflowLib";
 
 /**
  * NodeflowData is a class that manages the state of a Nodeflow canvas.
@@ -39,6 +40,7 @@ export default class NodeflowData {
   public readonly nodes;
   /** An instance of the NodeflowEventRecord class that handles various event subscriptions and publishing. */
   public readonly eventStore: NodeflowEventRecord;
+  public readonly id;
   public static readonly DEFAULT_SETTINGS: NodeflowSettings = {
     canAddNodes: true,
     canCreateConnections: true,
@@ -58,9 +60,11 @@ export default class NodeflowData {
   } as const;
 
   public constructor(
+    id: string,
     settings: Partial<NodeflowSettings>,
     curveFunctions?: (nodeflow: NodeflowData) => CurveFunctions,
   ) {
+    this.id = id;
     this.settingsStore = createStore<NodeflowSettings>({
       ...NodeflowData.DEFAULT_SETTINGS,
       ...settings,
@@ -175,7 +179,10 @@ export default class NodeflowData {
     };
   }
 
-  public deserialize(data: SerializedNodeflowData) {
+  public deserialize(
+    data: SerializedNodeflowData,
+    hasHistoryGroup: string | boolean = false,
+  ) {
     this.update({
       currentMoveSpeed: Vec2.deserializeOrDefault(data.currentMoveSpeed),
       pinchDistance: data.pinchDistance,
@@ -185,15 +192,17 @@ export default class NodeflowData {
       zoomLevel: data.zoomLevel,
     });
 
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+
     this.nodes.clear();
-    Object.entries(data.nodes).forEach(([_, node]) => {
-      this.addNode(node, false);
+    Object.values(data.nodes).forEach((node) => {
+      this.addNode(node, historyGroup);
     });
 
     this.mouseData.deserialize(data.mouseData);
 
     data.connections.forEach((connection) => {
-      this.addConnection(connection, false);
+      this.addConnection(connection, historyGroup);
     });
 
     this.changes.deserialize(data.changes);
@@ -418,33 +427,38 @@ export default class NodeflowData {
    * Creates a new node and adds it to the canvas.
    *
    * @param data - the data to create the node with
-   * @param addToHistory - whether to add this change to the history
    * @returns the created node
    */
   public addNode(
     data: Partial<SerializedNodeflowNode>,
-    addToHistory = true,
+    hasHistoryGroup: string | boolean = true,
   ): NodeflowNodeData {
     const node = NodeflowNodeData.deserialize(this, data);
 
     this.nodes.set(node.id, node);
 
-    if (addToHistory) {
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+
+    if (historyGroup) {
       const oldConnections = node.serializeConnections();
+      const serializedNode = node.serialize();
+      const nodeflowId = this.id;
 
       this.changes.addChange({
         type: "add",
         source: "node",
         applyChange: () => {
-          this.addNode(node.serialize(), false);
+          const nodeflow = NodeflowLib.get().getNodeflow(nodeflowId);
+          nodeflow?.addNode(serializedNode, false);
 
           oldConnections.forEach((connection) => {
-            this.addConnection(connection, false);
+            nodeflow?.addConnection(connection, false);
           });
         },
         undoChange: () => {
-          this.removeNode(node.id, false);
+          NodeflowLib.get().getNodeflow(nodeflowId)?.removeNode(node.id, false);
         },
+        historyGroup,
       });
     }
 
@@ -456,74 +470,92 @@ export default class NodeflowData {
    *
    * @param nodeId - the id of the node to update
    * @param data - the data to update the node with
-   * @param addToHistory - whether to add this change to the history
    */
   public updateNode(
     nodeId: string,
     data: DeepPartial<NodeflowNodeType>,
-    addToHistory = true,
+    hasHistoryGroup: string | boolean = true,
   ) {
     if (!this.nodes.has(nodeId)) return;
 
     const node = this.nodes.get(nodeId)!;
 
-    if (addToHistory) {
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+
+    if (historyGroup) {
       const oldNode = this.nodes.get(nodeId)!;
+      const serializedNode = oldNode.serialize();
       const oldConnections = oldNode.serializeConnections();
+      const nodeflowId = this.id;
 
-      const applyChange = () => {
-        this.updateNode(nodeId, data, false);
-      };
+      const oldData = Object.entries(serializedNode).reduce(
+        (acc, [key, value]) => {
+          if (key in data) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            acc[key] = deepCopy(value);
+          }
+          return acc;
+        },
+        {} as DeepPartial<NodeflowNodeType>,
+      );
 
-      const undoChange = () => {
-        this.updateNode(nodeId, oldNode, false);
-        oldConnections.forEach((connection) => {
-          this.addConnection(connection, false);
-        });
-      };
       this.changes.addChange({
         type: "update",
         source: "node",
-        applyChange,
-        undoChange,
+        applyChange: () => {
+          NodeflowLib.get()
+            .getNodeflow(nodeflowId)
+            ?.updateNode(nodeId, data, false);
+        },
+        undoChange: () => {
+          const nodeflow = NodeflowLib.get().getNodeflow(nodeflowId);
+          nodeflow?.updateNode(nodeId, oldData, false);
+          oldConnections.forEach((connection) => {
+            nodeflow?.addConnection(connection, false);
+          });
+        },
+        historyGroup,
       });
     }
 
-    this.eventStore.onNodeDataChanged.publish({ nodeId, data });
-
     node.updateWithPrevious(produce((prev) => Object.assign(prev, data)));
+
+    this.eventStore.onNodeDataChanged.publish({ nodeId, data });
   }
 
   /**
    * Removes a node and all connections to and from it
    *
    * @param nodeId - the id of the node to remove
-   * @param addToHistory - whether to add this change to the history
    */
-  public removeNode(nodeId: string, addToHistory = true) {
+  public removeNode(nodeId: string, hasHistoryGroup: string | boolean = true) {
     if (!this.nodes.has(nodeId)) return;
 
     this.mouseData.deselectNode();
 
-    if (addToHistory) {
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+
+    if (historyGroup) {
       const oldNode = this.nodes.get(nodeId)!;
       const oldConnections = oldNode.serializeConnections();
+      const nodeflowId = this.id;
 
       this.changes.addChange({
         type: "remove",
         source: "node",
-
         applyChange: () => {
-          this.removeNode(nodeId, false);
+          NodeflowLib.get().getNodeflow(nodeflowId)?.removeNode(nodeId, false);
         },
-
         undoChange: () => {
-          this.addNode(oldNode.serialize(), false);
+          const nodeflow = NodeflowLib.get().getNodeflow(nodeflowId);
+          nodeflow?.addNode(oldNode.serialize(), false);
 
           oldConnections.forEach((connection) => {
-            this.addConnection(connection, false);
+            nodeflow?.addConnection(connection, false);
           });
         },
+        historyGroup,
       });
     }
 
@@ -649,7 +681,10 @@ export default class NodeflowData {
   /**
    * Creates a new connection between two connectors.
    */
-  public addConnection(data: SerializedConnection, addToHistory = true) {
+  public addConnection(
+    data: SerializedConnection,
+    hasHistoryGroup: string | boolean = true,
+  ) {
     const {
       sourceNodeId,
       sourceConnectorId,
@@ -685,19 +720,26 @@ export default class NodeflowData {
       return;
     }
 
-    if (addToHistory) {
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+
+    if (historyGroup) {
+      const nodeflowId = this.id;
+
       this.changes.addChange({
         type: "add",
         source: "connection",
         applyChange: () => this.addConnection(data, false),
         undoChange: () =>
-          this.removeConnection(
-            sourceNodeId,
-            sourceConnectorId,
-            destinationNodeId,
-            destinationConnectorId,
-            false,
-          ),
+          NodeflowLib.get()
+            .getNodeflow(nodeflowId)
+            ?.removeConnection(
+              sourceNodeId,
+              sourceConnectorId,
+              destinationNodeId,
+              destinationConnectorId,
+              false,
+            ),
+        historyGroup,
       });
     }
 
@@ -723,7 +765,7 @@ export default class NodeflowData {
     sourceConnectorId: string,
     destinationNodeId: string,
     destinationConnectorId: string,
-    addToHistory = true,
+    hasHistoryGroup: string | boolean = true,
   ) {
     // Check if nodes exist
     if (!this.nodes.has(sourceNodeId) || !this.nodes.has(destinationNodeId)) {
@@ -742,15 +784,18 @@ export default class NodeflowData {
       return;
     }
 
-    if (addToHistory) {
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+
+    if (historyGroup) {
       const css = sourceConnector.destinations.find(
         (destination) =>
           destination.destinationConnector.parentSection.parentNode.id ===
           destinationNodeId,
       )?.css;
+      const nodeflowId = this.id;
 
       const undoChange = () => {
-        this.addConnection(
+        NodeflowLib.get().getNodeflow(nodeflowId)?.addConnection(
           {
             sourceNodeId,
             sourceConnectorId,
@@ -763,13 +808,15 @@ export default class NodeflowData {
       };
 
       const applyChange = () => {
-        this.removeConnection(
-          sourceNodeId,
-          sourceConnectorId,
-          destinationNodeId,
-          destinationConnectorId,
-          false,
-        );
+        NodeflowLib.get()
+          .getNodeflow(nodeflowId)
+          ?.removeConnection(
+            sourceNodeId,
+            sourceConnectorId,
+            destinationNodeId,
+            destinationConnectorId,
+            false,
+          );
       };
 
       this.changes.addChange({
@@ -777,6 +824,7 @@ export default class NodeflowData {
         source: "connection",
         applyChange,
         undoChange,
+        historyGroup,
       });
     }
 
