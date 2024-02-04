@@ -47,13 +47,14 @@ const NodeFormButtons: Component<NodeFormButtonsProps> = (props) => {
   };
   const onUpdateNode = () => {
     const nodeId = props.formData!.id;
-    const currentData: Optional<CustomNodeflowDataType> =
-      nodeflowData.nodes.get(nodeId)?.customData;
+    const node = nodeflowData.nodes.get(nodeId);
 
-    if (currentData === undefined) {
+    if (node === undefined) {
       props.setFormData(undefined);
       return;
     }
+
+    const currentData = node.customData;
 
     const filteredData = Object.fromEntries(
       Object.entries(props.formData!)
@@ -95,6 +96,11 @@ const NodeFormButtons: Component<NodeFormButtonsProps> = (props) => {
     props.setFormData(undefined);
 
     if ("gender" in filteredData) {
+      node.getConnector("O").css =
+        filteredData.gender === "M"
+          ? nodeCss.maleOutputConnector
+          : nodeCss.femaleOutputConnector;
+
       // TODO: maybe create new connections to the respective connectors of the new gender? Eg. mother->father, father->mother
       nodeflowData.removeOutgoingConnections(nodeId);
     }
