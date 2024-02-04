@@ -53,26 +53,33 @@ export const createFamilyMemberNode = (
   gender: CustomNodeflowDataType["gender"],
   position?: Vec2,
 ): NodeflowNodeData => {
-  const newNode = nodeflowData.addNode({
-    css: {
-      normal: gender === "M" ? nodeCss.maleNode : nodeCss.femaleNode,
-      selected:
-        gender === "M" ? nodeCss.selectedMaleNode : nodeCss.selectedFemaleNode,
+  const historyGroup = name;
+
+  const newNode = nodeflowData.addNode(
+    {
+      css: {
+        normal: gender === "M" ? nodeCss.maleNode : nodeCss.femaleNode,
+        selected:
+          gender === "M"
+            ? nodeCss.selectedMaleNode
+            : nodeCss.selectedFemaleNode,
+      },
+      position,
+      customData: { gender, name },
+      display: NodeBody,
+      centered: true,
     },
-    position,
-    customData: { gender, name },
-    display: NodeBody,
-    centered: true,
-  });
+    historyGroup,
+  );
   const inputSection = newNode.addConnectorSection(
     "inputs",
     nodeCss.inputsSection,
-    false,
+    historyGroup,
   );
   const outputSection = newNode.addConnectorSection(
     "outputs",
     nodeCss.outputsSection,
-    false,
+    historyGroup,
   );
 
   outputSection.addConnector(
@@ -83,14 +90,14 @@ export const createFamilyMemberNode = (
           ? nodeCss.maleOutputConnector
           : nodeCss.femaleOutputConnector,
     },
-    false,
+    historyGroup,
   );
   inputSection.addConnector(
     {
       id: "I",
       css: nodeCss.inputConnector,
     },
-    false,
+    historyGroup,
   );
 
   return newNode;
@@ -155,34 +162,6 @@ export const setupEvents = (nodeflowData: NodeflowData) => {
       });
     },
     1,
-  );
-
-  nodeflowData.eventStore.onNodeDataChanged.subscribe(
-    "update-node-css",
-    ({ nodeId, data }) => {
-      if (!nodeflowData.nodes.has(nodeId) || !("customData" in data)) return;
-
-      const node = nodeflowData.nodes.get(nodeId)!;
-      const customData = data.customData as CustomNodeflowDataType;
-
-      if (!("gender" in customData)) return;
-      const gender = customData.gender;
-
-      if (gender === node.customData.gender) return;
-
-      nodeflowData.updateNode(nodeId, {
-        css: {
-          normal: gender === "M" ? nodeCss.maleNode : nodeCss.femaleNode,
-          selected:
-            gender === "M"
-              ? nodeCss.selectedMaleNode
-              : nodeCss.selectedFemaleNode,
-        },
-      });
-
-      // TODO: maybe create new connections to the respective connectors of the new gender? Eg. mother->father, father->mother
-      nodeflowData.removeOutgoingConnections(nodeId);
-    },
   );
 
   // Override the default create-connection subscription to only allow one connection per input, and set custom css

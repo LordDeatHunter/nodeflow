@@ -58,12 +58,22 @@ export default class Changes {
   /**
    * Undoes the most recent change.
    * @returns {boolean} - Returns true if the undo operation was successful, false if there are no changes to undo.
-   */ public undo(): boolean {
+   */
+  public undo(): boolean {
     if (this.currentChangeIndex === -1) {
       return false;
     }
-    this.changes[this.currentChangeIndex].undoChange();
-    this.currentChangeIndex--;
+
+    const currentGroup = this.changes[this.currentChangeIndex].historyGroup;
+
+    while (
+      this.currentChangeIndex > -1 &&
+      this.changes[this.currentChangeIndex].historyGroup === currentGroup
+    ) {
+      this.changes[this.currentChangeIndex].undoChange();
+      this.currentChangeIndex--;
+    }
+
     return true;
   }
 
@@ -75,8 +85,28 @@ export default class Changes {
     if (this.currentChangeIndex === this.changes.length - 1) {
       return false;
     }
-    this.currentChangeIndex++;
-    this.changes[this.currentChangeIndex].applyChange();
+
+    const currentGroup = this.changes[this.currentChangeIndex + 1].historyGroup;
+
+    while (
+      this.currentChangeIndex < this.changes.length - 1 &&
+      this.changes[this.currentChangeIndex + 1].historyGroup === currentGroup
+    ) {
+      this.currentChangeIndex++;
+      this.changes[this.currentChangeIndex].applyChange();
+    }
+
     return true;
+  }
+
+  public static evaluateHistoryGroup(historyGroup?: string | boolean) {
+    if (historyGroup === undefined) {
+      return crypto.randomUUID();
+    }
+    // If historyGroup is a boolean, generate a random UUID if true, otherwise set it to undefined
+    if (typeof historyGroup === "boolean") {
+      return historyGroup ? crypto.randomUUID() : undefined;
+    }
+    return historyGroup;
   }
 }

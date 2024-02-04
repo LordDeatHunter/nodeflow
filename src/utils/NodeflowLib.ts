@@ -29,11 +29,10 @@ export default class NodeflowLib {
   }
 
   public createCanvas(
-    id: string,
     ...params: ConstructorParameters<typeof NodeflowData>
   ): [NodeflowData, ReturnType<typeof NodeflowCanvas>] {
     const nodeflowData = new NodeflowData(...params);
-    this.nodeflows.set(id, nodeflowData);
+    this.nodeflows.set(params[0], nodeflowData);
 
     return [nodeflowData, NodeflowCanvas(nodeflowData)];
   }
