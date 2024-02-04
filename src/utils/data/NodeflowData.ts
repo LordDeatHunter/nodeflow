@@ -491,9 +491,7 @@ export default class NodeflowData {
       const oldData = Object.entries(serializedNode).reduce(
         (acc, [key, value]) => {
           if (key in data) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            acc[key] = deepCopy(value);
+            Object.assign(acc, { [key]: deepCopy(value) });
           }
           return acc;
         },

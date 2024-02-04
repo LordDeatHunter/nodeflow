@@ -4,6 +4,7 @@ import { FormDataType } from "./SidebarContent";
 import formStyle from "../styles/form.module.scss";
 import { cleanInput, createFamilyMemberNode } from "../utils";
 import { FamilyTreeConstants } from "../Constants";
+import nodeCss from "../styles/node.module.scss";
 
 interface NodeFormButtonsProps {
   mode: "add" | "empty" | "view" | "edit";
@@ -45,13 +46,58 @@ const NodeFormButtons: Component<NodeFormButtonsProps> = (props) => {
     props.setFormData(undefined);
   };
   const onUpdateNode = () => {
-    nodeflowData.updateNode(props.formData!.id, {
-      customData: {
-        ...props.formData,
-        name: cleanInput(props.formData!.name),
-      },
-    });
+    const nodeId = props.formData!.id;
+    const currentData: Optional<CustomNodeflowDataType> =
+      nodeflowData.nodes.get(nodeId)?.customData;
+
+    if (currentData === undefined) {
+      props.setFormData(undefined);
+      return;
+    }
+
+    const filteredData = Object.fromEntries(
+      Object.entries(props.formData!)
+        .map(([key, value]) => [
+          key,
+          typeof value === "string" ? cleanInput(value) : value,
+        ])
+        .filter(
+          ([key, value]) =>
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            key !== "id" && !!value && value !== currentData[key],
+        ),
+    );
+
+    if (Object.keys(filteredData).length === 0) {
+      props.setFormData(undefined);
+      return;
+    }
+
+    const newData = {
+      customData: { ...currentData, ...filteredData },
+    };
+
+    if ("gender" in filteredData) {
+      Object.assign(newData, {
+        css: {
+          normal:
+            filteredData.gender === "M" ? nodeCss.maleNode : nodeCss.femaleNode,
+          selected:
+            filteredData.gender === "M"
+              ? nodeCss.selectedMaleNode
+              : nodeCss.selectedFemaleNode,
+        },
+      });
+    }
+
+    nodeflowData.updateNode(nodeId, newData);
     props.setFormData(undefined);
+
+    if ("gender" in filteredData) {
+      // TODO: maybe create new connections to the respective connectors of the new gender? Eg. mother->father, father->mother
+      nodeflowData.removeOutgoingConnections(nodeId);
+    }
   };
 
   return (
