@@ -96,7 +96,7 @@ const NodeFormButtons: Component<NodeFormButtonsProps> = (props) => {
     props.setFormData(undefined);
 
     if ("gender" in filteredData) {
-      node.getConnector("O").css =
+      node.getConnector("O")!.css =
         filteredData.gender === "M"
           ? nodeCss.maleOutputConnector
           : nodeCss.femaleOutputConnector;

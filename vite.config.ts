@@ -4,7 +4,7 @@ import eslint from "vite-plugin-eslint";
 // import devtools from 'solid-devtools/vite';
 
 export default defineConfig({
-  base: "/nodeflow"
+  base: "/nodeflow",
   plugins: [
     // Uncomment the following line to enable solid-devtools. https://github.com/thetarnav/solid-devtools/tree/main/packages/extension#readme
     // devtools(),
