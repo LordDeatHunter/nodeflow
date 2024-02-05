@@ -427,6 +427,8 @@ export default class NodeflowData {
    * Creates a new node and adds it to the canvas.
    *
    * @param data - the data to create the node with
+   * @param hasHistoryGroup - {string} - the history group to add the change to.{boolean} - whether to add the change to the history. Defaults to true.
+   *
    * @returns the created node
    */
   public addNode(
@@ -470,6 +472,7 @@ export default class NodeflowData {
    *
    * @param nodeId - the id of the node to update
    * @param data - the data to update the node with
+   * @param hasHistoryGroup - {string} - the history group to add the change to. {boolean} - whether to add the change to the history. Defaults to true.
    */
   public updateNode(
     nodeId: string,
@@ -526,6 +529,7 @@ export default class NodeflowData {
    * Removes a node and all connections to and from it
    *
    * @param nodeId - the id of the node to remove
+   * @param hasHistoryGroup - {string} - the history group to add the change to. {boolean} - whether to add the change to the history. Defaults to true.
    */
   public removeNode(nodeId: string, hasHistoryGroup: string | boolean = true) {
     if (!this.nodes.has(nodeId)) return;
@@ -757,6 +761,12 @@ export default class NodeflowData {
 
   /**
    * Removes a connection defined by the provided data.
+   *
+   * @param sourceNodeId - the id of the node that the connection is coming from
+   * @param sourceConnectorId - the id of the connector that the connection is coming from
+   * @param destinationNodeId - the id of the node that the connection is going to
+   * @param destinationConnectorId - the id of the connector that the connection is going to
+   * @param hasHistoryGroup - {string} - the history group to add the change to. {boolean} - whether to add the change to the history. Defaults to true.
    */
   public removeConnection(
     sourceNodeId: string,

@@ -38,6 +38,9 @@ export default class ConnectorSection {
    * Adds a connector to the connector section
    *
    * @param data - The data of the connector to add
+   * @param hasHistoryGroup - {string} - the history group to add the change to. {boolean} - whether to add the change to the history. Defaults to true.
+   *
+   * @returns The added connector
    */
   public addConnector(
     data: Partial<SerializedNodeConnector>,
@@ -86,6 +89,7 @@ export default class ConnectorSection {
    * Removes a connector from the connector section
    *
    * @param connectorId - The id of the connector to remove
+   * @param hasHistoryGroup - {string} - the history group to add the change to. {boolean} - whether to add the change to the history. Defaults to true.
    */
   public removeConnector(
     connectorId: string,
