@@ -5,6 +5,7 @@ export { default as ConnectorDestination } from "./ConnectorDestination";
 export { default as ConnectorSection } from "./ConnectorSection";
 export { default as ConnectorSource } from "./ConnectorSource";
 export * from "./EventPublishers";
+export { default as KeyboardData } from "./KeyboardData";
 export { default as MouseData } from "./MouseData";
 export { default as NodeConnector } from "./NodeConnector";
 export { default as NodeflowData } from "./NodeflowData";

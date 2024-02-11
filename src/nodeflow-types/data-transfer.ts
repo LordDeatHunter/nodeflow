@@ -26,15 +26,26 @@ export interface SerializedNodeflowData {
 
 export interface SerializedMouseData {
   clickStartPosition?: SerializedVec2;
-  heldConnection?: {
-    sourceNodeId: string;
-    sourceConnectorId: string;
-    destinationNodeId: string;
-    destinationConnectorId: string;
-  };
-  heldConnectorId?: string;
-  heldNodeId?: string;
+  selections: Array<SerializedSelectableElement>;
 }
+
+export type SerializedSelectableElement =
+  | {
+      connectorId: string;
+      nodeId: string;
+      type: "connector";
+    }
+  | {
+      nodeId: string;
+      type: "node";
+    }
+  | {
+      type: "nodeflow";
+    }
+  | {
+      connection: SerializedConnection;
+      type: "connection";
+    };
 
 export interface SerializedNodeflowNode {
   centered: boolean;

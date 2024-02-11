@@ -19,12 +19,12 @@ const SidebarContent = () => {
     const nodeflowData = NodeflowLib.get().getNodeflow(
       FamilyTreeConstants.MAIN_NODEFLOW,
     )!;
-    const nodeId = nodeflowData.mouseData.heldNodeId;
-    if (!nodeId || !nodeflowData.nodes.has(nodeId)) return undefined;
+    const node = nodeflowData.mouseData.heldNodes.at(-1)?.node;
+    if (!node) return undefined;
 
     return {
-      ...nodeflowData.nodes.get(nodeId)!.customData,
-      id: nodeId,
+      ...node.customData,
+      id: node.id,
     };
   });
 

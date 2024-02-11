@@ -9,18 +9,12 @@ interface CurveProps {
 
 const Curve: Component<CurveProps> = (props) => {
   const curveData = createMemo<Optional<PathData>>(() => {
-    const { mouseData, curveFunctions, nodes } = props.nodeflowData;
+    const { mouseData, curveFunctions } = props.nodeflowData;
 
-    const nodeId = mouseData.heldNodeId;
-    const connectorId = mouseData.heldConnectorId;
+    if (mouseData.heldConnectors.length !== 1) return undefined;
 
-    if (!nodeId || !connectorId) {
-      return undefined;
-    }
-
-    const node = nodes.get(nodeId)!;
-
-    const output = node.getConnector(connectorId)!;
+    const output = mouseData.heldConnectors[0].connector;
+    const node = output.parentSection.parentNode;
 
     const start = output.getCenter();
     const end = mouseData.globalMousePosition();

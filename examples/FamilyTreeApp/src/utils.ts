@@ -120,26 +120,27 @@ export const setupDummyNodes = async (
 
 export const setupEvents = (nodeflowData: NodeflowData) => {
   nodeflowData.eventStore.onPointerUpInConnector.blacklist(
-    "prevent-connections-to-parent-connectors",
+    "familytree-app:prevent-connections-to-parent-connectors",
     ({ connectorId }, name) =>
-      connectorId === "O" && name === "connect-held-nodes",
+      connectorId === "O" && name === "nodeflow:connect-held-nodes",
   );
   nodeflowData.eventStore.onTouchStartInConnector.blacklist(
-    "prevent-connections-from-parent-connectors",
+    "familytree-app:prevent-connections-from-parent-connectors",
     ({ connectorId }) => connectorId === "I",
   );
   nodeflowData.eventStore.onMouseDownInConnector.blacklist(
-    "prevent-connections-from-parent-connectors",
+    "familytree-app:prevent-connections-from-parent-connectors",
     ({ connectorId }) => connectorId === "I",
   );
 
   nodeflowData.eventStore.onPointerUpInNodeflow.subscribe(
-    "spawn-new-node",
+    "familytree-app:spawn-new-node",
     () => {
-      const heldNodeId = nodeflowData.mouseData.heldNodeId;
-      const heldConnectorId = nodeflowData.mouseData.heldConnectorId;
+      const heldConnectors = nodeflowData.mouseData.heldConnectors;
 
-      if (!heldNodeId || !heldConnectorId) return;
+      if (heldConnectors.length !== 1) return;
+
+      const heldNode = heldConnectors[0].connector.parentSection.parentNode;
 
       const position = nodeflowData.mouseData.globalMousePosition();
 
@@ -151,13 +152,12 @@ export const setupEvents = (nodeflowData: NodeflowData) => {
           position,
         );
 
-        const parent = nodeflowData.nodes.get(heldNodeId)!;
         nodeflowData.addConnection({
-          sourceNodeId: heldNodeId,
+          sourceNodeId: heldNode.id,
           sourceConnectorId: "O",
           destinationNodeId: newNode.id,
           destinationConnectorId: "I",
-          css: getConnectionCSS(parent.customData.gender),
+          css: getConnectionCSS(heldNode.customData.gender),
         });
       });
     },
@@ -166,7 +166,7 @@ export const setupEvents = (nodeflowData: NodeflowData) => {
 
   // Override the default create-connection subscription to only allow one connection per input, and set custom css
   nodeflowData.eventStore.onNodeConnected.subscribe(
-    "create-connection",
+    "nodeflow:create-connection",
     ({ outputNodeId, inputNodeId }) => {
       const outputNode = nodeflowData.nodes.get(outputNodeId)!;
       const inputNode = nodeflowData.nodes.get(inputNodeId)!;
@@ -200,16 +200,21 @@ export const setupEvents = (nodeflowData: NodeflowData) => {
   );
 
   nodeflowData.eventStore.onPointerUpInNode.subscribe(
-    "create-connection",
+    "nodeflow:create-connection",
     ({ nodeId }) => {
       const destinationNode = nodeflowData.nodes.get(nodeId);
-      const sourceId = nodeflowData.mouseData.heldNodeId;
-      if (!destinationNode || !sourceId || nodeId === sourceId) {
-        return;
-      }
 
-      if (!nodeflowData.nodes.has(sourceId)) return;
-      const sourceNode = nodeflowData.nodes.get(sourceId)!;
+      if (
+        !destinationNode ||
+        nodeflowData.mouseData.heldConnectors.length !== 1
+      )
+        return;
+
+      const sourceNode =
+        nodeflowData.mouseData.heldConnectors[0].connector.parentSection
+          .parentNode;
+
+      if (nodeId === sourceNode.id) return;
 
       const connector = destinationNode.getConnector("I")?.sources;
       // Return if:
@@ -226,13 +231,14 @@ export const setupEvents = (nodeflowData: NodeflowData) => {
         return;
 
       nodeflowData.addConnection({
-        sourceNodeId: sourceId,
+        sourceNodeId: sourceNode.id,
         sourceConnectorId: "O",
         destinationNodeId: nodeId,
         destinationConnectorId: "I",
         css: getConnectionCSS(sourceNode.customData.gender),
       });
     },
+    2,
   );
 };
 

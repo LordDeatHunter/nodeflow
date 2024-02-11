@@ -99,13 +99,17 @@ export default class Changes {
     return true;
   }
 
-  public static evaluateHistoryGroup(historyGroup?: string | boolean) {
-    if (historyGroup === undefined) {
-      return crypto.randomUUID();
-    }
+  /**
+   * Evaluates the history group.\
+   * If provided a string, it returns the string.\
+   * If provided a boolean, it returns a random UUID if true, otherwise it returns false.\
+   * @param historyGroup
+   * @returns {string} the history group, if generated, otherwise false.
+   */
+  public static evaluateHistoryGroup(historyGroup: string | boolean = true) {
     // If historyGroup is a boolean, generate a random UUID if true, otherwise set it to undefined
     if (typeof historyGroup === "boolean") {
-      return historyGroup ? crypto.randomUUID() : undefined;
+      return historyGroup ? crypto.randomUUID() : false;
     }
     return historyGroup;
   }

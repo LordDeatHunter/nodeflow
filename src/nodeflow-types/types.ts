@@ -7,6 +7,7 @@ import ConnectorDestination from "../utils/data/ConnectorDestination";
 import ConnectorSource from "../utils/data/ConnectorSource";
 import { ReactiveMap } from "@solid-primitives/map";
 import ArrayWrapper from "../utils/data/ArrayWrapper";
+import { KeyboardKeyCode } from "../utils/constants";
 
 export type Optional<T> = T | undefined;
 
@@ -18,15 +19,44 @@ export type DeepPartial<T> = T extends object
 
 export interface MouseDataType {
   clickStartPosition?: Vec2;
-  heldConnection?: {
-    sourceConnector: NodeConnector;
-    destinationConnector: NodeConnector;
-  };
-  heldConnectorId?: string;
-  heldNodeId?: string;
-  isDraggingObject: boolean;
   mousePosition: Vec2;
+  pointerDown: boolean;
+  selections: ArrayWrapper<SelectableElement>;
 }
+
+export interface KeyboardDataType {
+  heldKeys: Set<KeyboardKeyCode>;
+}
+
+export interface ConnectionType {
+  sourceConnector: NodeConnector;
+  destinationConnector: NodeConnector;
+}
+
+export interface SelectableConnector {
+  connector: NodeConnector;
+  type: "connector";
+}
+
+export interface SelectableNode {
+  node: NodeflowNodeData;
+  type: "node";
+}
+
+export interface SelectableNodeflow {
+  type: "nodeflow";
+}
+
+export interface SelectableConnection {
+  connection: ConnectionType;
+  type: "connection";
+}
+
+export type SelectableElement =
+  | SelectableConnector
+  | SelectableNode
+  | SelectableNodeflow
+  | SelectableConnection;
 
 export type DisplayFunc = (props: {
   node: NodeflowNodeData;

@@ -8,8 +8,8 @@ import { createStore } from "solid-js/store";
 export default class ArrayWrapper<T> {
   private readonly store;
 
-  public constructor(array: T[]) {
-    this.store = createStore<T[]>(array);
+  public constructor(array?: T[]) {
+    this.store = createStore<T[]>(array ?? []);
   }
 
   public get array(): ReadonlyArray<T> {
@@ -18,6 +18,10 @@ export default class ArrayWrapper<T> {
 
   public get length() {
     return this.store[0].length;
+  }
+
+  public at(index: number) {
+    return this.store[0].at(index);
   }
 
   public forEach(callback: (value: T, index: number, array: T[]) => void) {

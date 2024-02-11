@@ -23,18 +23,14 @@ const App: Component = () => {
   });
 
   const newCurveCss = createMemo(() => {
-    const nodeId = nodeflowData.mouseData.heldNodeId;
+    const node = nodeflowData.mouseData.heldNodes;
+    const connector = nodeflowData.mouseData.heldConnector;
 
-    if (
-      !nodeId ||
-      !nodeflowData.mouseData.heldConnectorId ||
-      !nodeflowData.nodes.has(nodeId)
-    ) {
+    if (!node || !connector) {
       return undefined;
     }
-    const heldNode = nodeflowData.nodes.get(nodeId)!;
 
-    return heldNode.customData.gender === "M"
+    return node.customData.gender === "M"
       ? curveCss.newFatherCurve
       : curveCss.newMotherCurve;
   });

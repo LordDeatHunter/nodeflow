@@ -12,7 +12,6 @@ import {
 } from "../../nodeflow-types";
 import { windowSize } from "../screen-utils";
 import { clamp } from "../math-utils";
-import { heldKeys, KEYS } from "../nodeflow-storage";
 import Changes from "./Changes";
 import MouseData from "./MouseData";
 import { ReactiveMap } from "@solid-primitives/map";
@@ -25,6 +24,8 @@ import { deepCopy, intersectionOfSets, isSetEmpty } from "../misc-utils";
 import { NodeflowEventPublisher } from "./EventPublishers";
 import CurveFunctions from "./CurveFunctions";
 import NodeflowLib from "../NodeflowLib";
+import { KeyboardKeyCode, MOUSE_BUTTONS } from "../constants";
+import KeyboardData from "./KeyboardData";
 
 /**
  * NodeflowData is a class that manages the state of a Nodeflow canvas.
@@ -34,6 +35,7 @@ export default class NodeflowData {
   private readonly store;
   public readonly changes;
   public readonly mouseData;
+  public readonly keyboardData;
   public readonly curveFunctions;
   public readonly settingsStore;
   /** A ReactiveMap that stores all the nodes on the Nodeflow canvas. */
@@ -59,6 +61,14 @@ export default class NodeflowData {
     zoomMultiplier: 0.005,
   } as const;
 
+  public readonly keymap: Record<string, Set<KeyboardKeyCode>> = {
+    MOVE_DOWN: new Set(["ArrowDown", "KeyS"]),
+    MOVE_LEFT: new Set(["ArrowLeft", "KeyA"]),
+    MOVE_RIGHT: new Set(["ArrowRight", "KeyD"]),
+    MOVE_UP: new Set(["ArrowUp", "KeyW"]),
+    SELECT_MULTIPLE: new Set(["ShiftLeft", "ShiftRight"]),
+  } as const;
+
   public constructor(
     id: string,
     settings: Partial<NodeflowSettings>,
@@ -81,6 +91,7 @@ export default class NodeflowData {
 
     this.changes = new Changes();
     this.mouseData = new MouseData(this);
+    this.keyboardData = new KeyboardData(this);
     this.nodes = new ReactiveMap<string, NodeflowNodeData>();
 
     this.eventStore = {
@@ -120,17 +131,19 @@ export default class NodeflowData {
     // TODO: Simplify this using events
     setInterval(() => {
       const movingLeft = !isSetEmpty(
-        intersectionOfSets(heldKeys, KEYS.MOVE_LEFT),
+        intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_LEFT),
       );
       const movingRight = !isSetEmpty(
-        intersectionOfSets(heldKeys, KEYS.MOVE_RIGHT),
+        intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_RIGHT),
       );
-      const movingUp = !isSetEmpty(intersectionOfSets(heldKeys, KEYS.MOVE_UP));
+      const movingUp = !isSetEmpty(
+        intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_UP),
+      );
       const movingDown = !isSetEmpty(
-        intersectionOfSets(heldKeys, KEYS.MOVE_DOWN),
+        intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_DOWN),
       );
 
-      const isDraggingObject = this.mouseData.heldNodeId !== undefined;
+      const hasSelectedNodes = this.mouseData.heldNodes.length > 0;
 
       this.currentMoveSpeed = Vec2.of(
         this.calculateDirectionalMovementAmount(
@@ -138,20 +151,20 @@ export default class NodeflowData {
           this.currentMoveSpeed.x,
           movingRight,
           movingLeft,
-          !isDraggingObject,
+          !hasSelectedNodes,
         ),
         this.calculateDirectionalMovementAmount(
           movingUp || movingDown,
           this.currentMoveSpeed.y,
           movingDown,
           movingUp,
-          !isDraggingObject,
+          !hasSelectedNodes,
         ),
       );
 
-      if (!isDraggingObject && this.settings.canPan) {
+      if (this.settings.canPan && !hasSelectedNodes) {
         this.updateBackgroundPosition(this.currentMoveSpeed, true);
-      } else if (isDraggingObject && this.settings.canMoveNodes) {
+      } else if (hasSelectedNodes && this.settings.canMoveNodes) {
         this.updateHeldNodePosition(
           this.currentMoveSpeed.divideBy(this.zoomLevel),
         );
@@ -234,10 +247,10 @@ export default class NodeflowData {
    */
   public resetMovement = () => {
     this.currentMoveSpeed = Vec2.zero();
-    KEYS.MOVE_LEFT.forEach((key) => heldKeys.delete(key));
-    KEYS.MOVE_RIGHT.forEach((key) => heldKeys.delete(key));
-    KEYS.MOVE_UP.forEach((key) => heldKeys.delete(key));
-    KEYS.MOVE_DOWN.forEach((key) => heldKeys.delete(key));
+    this.keymap.MOVE_LEFT.forEach((key) => this.keyboardData.releaseKey(key));
+    this.keymap.MOVE_RIGHT.forEach((key) => this.keyboardData.releaseKey(key));
+    this.keymap.MOVE_UP.forEach((key) => this.keyboardData.releaseKey(key));
+    this.keymap.MOVE_DOWN.forEach((key) => this.keyboardData.releaseKey(key));
   };
 
   get currentMoveSpeed() {
@@ -382,7 +395,7 @@ export default class NodeflowData {
       ).toFixed(4),
     );
 
-    this.mouseData.isDraggingObject = false;
+    this.mouseData.pointerDown = false;
 
     const windowDimensions = this.size;
     const centeredZoomLocation = location.subtract(this.startPosition);
@@ -412,7 +425,7 @@ export default class NodeflowData {
    */
   public updateBackgroundPosition(moveDistance: Vec2, keyboard = false) {
     if (
-      this.mouseData.heldNodeId ||
+      !this.mouseData.hasSelectedNodeflow() ||
       keyboard === this.mouseData.isDraggingObject
     ) {
       return;
@@ -435,11 +448,11 @@ export default class NodeflowData {
     data: Partial<SerializedNodeflowNode>,
     hasHistoryGroup: string | boolean = true,
   ): NodeflowNodeData {
-    const node = NodeflowNodeData.deserialize(this, data);
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+
+    const node = NodeflowNodeData.deserialize(this, data, historyGroup);
 
     this.nodes.set(node.id, node);
-
-    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
 
     if (historyGroup) {
       const oldConnections = node.serializeConnections();
@@ -460,7 +473,7 @@ export default class NodeflowData {
         undoChange: () => {
           NodeflowLib.get().getNodeflow(nodeflowId)?.removeNode(node.id, false);
         },
-        historyGroup,
+        historyGroup: historyGroup as string,
       });
     }
 
@@ -516,7 +529,7 @@ export default class NodeflowData {
             nodeflow?.addConnection(connection, false);
           });
         },
-        historyGroup,
+        historyGroup: historyGroup as string,
       });
     }
 
@@ -534,7 +547,7 @@ export default class NodeflowData {
   public removeNode(nodeId: string, hasHistoryGroup: string | boolean = true) {
     if (!this.nodes.has(nodeId)) return;
 
-    this.mouseData.deselectNode();
+    this.mouseData.clearSelections();
 
     const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
 
@@ -557,7 +570,7 @@ export default class NodeflowData {
             nodeflow?.addConnection(connection, false);
           });
         },
-        historyGroup,
+        historyGroup: historyGroup as string,
       });
     }
 
@@ -585,7 +598,7 @@ export default class NodeflowData {
               destinationConnector.parentSection.parentNode.id !== nodeId,
           );
         });
-        connector.sources = new ArrayWrapper<ConnectorSource>([]);
+        connector.sources = new ArrayWrapper<ConnectorSource>();
       });
     });
   }
@@ -608,7 +621,7 @@ export default class NodeflowData {
               sourceConnector.parentSection.parentNode.id !== nodeId,
           );
         });
-        connector.destinations = new ArrayWrapper<ConnectorDestination>([]);
+        connector.destinations = new ArrayWrapper<ConnectorDestination>();
       });
     });
   }
@@ -741,7 +754,7 @@ export default class NodeflowData {
               destinationConnectorId,
               false,
             ),
-        historyGroup,
+        historyGroup: historyGroup as string,
       });
     }
 
@@ -832,7 +845,7 @@ export default class NodeflowData {
         source: "connection",
         applyChange,
         undoChange,
-        historyGroup,
+        historyGroup: historyGroup as string,
       });
     }
 
@@ -854,21 +867,17 @@ export default class NodeflowData {
    * @param moveSpeed - the distance to move the node by
    */
   public updateHeldNodePosition(moveSpeed: Vec2) {
-    const id = this.mouseData.heldNodeId;
-
-    if (!id || !this.nodes.has(id)) return;
-
-    const node = this.nodes.get(id)!;
-
-    node.updateWithPrevious((prev) => ({
-      position: prev.position.add(moveSpeed),
-    }));
+    this.mouseData.heldNodes.forEach((element) =>
+      element.node.updateWithPrevious((prev) => ({
+        position: prev.position.add(moveSpeed),
+      })),
+    );
   }
 
   private setupDefaultEventHandlers() {
     this.eventStore.onNodeConnected.subscribeMultiple([
       {
-        name: "create-connection",
+        name: "nodeflow:create-connection",
         event: (data) =>
           this.addConnection({
             sourceNodeId: data.inputNodeId,
@@ -878,14 +887,14 @@ export default class NodeflowData {
           }),
       },
       {
-        name: "reset-mouse-data",
+        name: "nodeflow:reset-mouse-data",
         event: () => this.mouseData.reset(),
       },
     ]);
 
     this.eventStore.onMouseMoveInNodeflow.subscribeMultiple([
       {
-        name: "update-background-position",
+        name: "nodeflow:update-background-position",
         event: ({ event }) => {
           this.updateBackgroundPosition(
             Vec2.of(event.movementX, event.movementY),
@@ -896,38 +905,41 @@ export default class NodeflowData {
 
     this.eventStore.onPointerUpInNodeflow.subscribeMultiple([
       {
-        name: "stop-propagation",
+        name: "nodeflow:stop-propagation",
         event: ({ event }) => {
           event.stopPropagation();
           event.preventDefault();
         },
       },
       {
-        name: "reset-mouse-data",
-        event: () =>
-          this.mouseData.updateWithPrevious((prev) => ({
-            isDraggingObject: false,
-            heldConnectorId: undefined,
-            heldNodeId: prev.heldConnectorId ? undefined : prev.heldNodeId,
-          })),
+        name: "nodeflow:reset-mouse-data",
+        event: () => {
+          this.mouseData.pointerDown = false;
+
+          if (this.mouseData.heldConnectors.length === 1) {
+            this.mouseData.clearSelectedByType("node");
+          }
+
+          this.mouseData.clearSelectedByType("connector");
+        },
       },
     ]);
 
     this.eventStore.onTouchStartInNodeflow.subscribeMultiple([
       {
-        name: "stop-propagation",
+        name: "nodeflow:stop-propagation",
         event: ({ event }) => event.stopPropagation(),
       },
       {
-        name: "clear-held-keys",
+        name: "nodeflow:clear-held-keys",
         event: ({ event }) => {
           if (event.touches.length === 1) {
-            heldKeys.clear();
+            this.keyboardData.clearKeys();
           }
         },
       },
       {
-        name: "handle-pinch",
+        name: "nodeflow:handle-pinch",
         event: ({ event }) => {
           const { touches } = event;
 
@@ -941,7 +953,7 @@ export default class NodeflowData {
         },
       },
       {
-        name: "update-mouse-data",
+        name: "nodeflow:update-mouse-data",
         event: ({ event }) => {
           const { touches } = event;
 
@@ -950,9 +962,9 @@ export default class NodeflowData {
           const touch = touches[0];
           const mousePosition = Vec2.fromEvent(touch);
 
+          this.mouseData.clearSelectedByType("node");
           this.mouseData.update({
-            isDraggingObject: true,
-            heldNodeId: undefined,
+            pointerDown: true,
             mousePosition,
             clickStartPosition: Vec2.of(
               mousePosition.x / this.zoomLevel - this.position.x,
@@ -965,7 +977,7 @@ export default class NodeflowData {
 
     this.eventStore.onTouchMoveInNodeflow.subscribeMultiple([
       {
-        name: "handle-pinch",
+        name: "nodeflow:handle-pinch",
         event: ({ event }) => {
           const { touches } = event;
           if (touches.length !== 2) return;
@@ -984,7 +996,7 @@ export default class NodeflowData {
         },
       },
       {
-        name: "update-mouse-data",
+        name: "nodeflow:update-mouse-data",
         event: ({ event }) => {
           const { touches } = event;
 
@@ -1002,44 +1014,57 @@ export default class NodeflowData {
     ]);
 
     this.eventStore.onKeyUpInNodeflow.subscribe(
-      "remove-held-key",
-      ({ event }) => heldKeys.delete(event.key),
+      "nodeflow:remove-held-key",
+      ({ event }) =>
+        this.keyboardData.releaseKey(event.code as KeyboardKeyCode),
     );
 
     this.eventStore.onKeyDownInNodeflow.subscribeMultiple([
       {
-        name: "add-held-key",
-        event: ({ event }) => heldKeys.add(event.key),
+        name: "nodeflow:add-held-key",
+        event: ({ event }) =>
+          this.keyboardData.pressKey(event.code as KeyboardKeyCode),
+        priority: 10,
       },
       {
-        name: "handle-controls",
+        name: "nodeflow:handle-controls",
         event: ({ event }) => {
-          // TODO: change to map
+          // TODO: change to map or event system
           switch (event.code) {
             case "Delete":
-              if (this.mouseData.heldNodeId && this.settings.canDeleteNodes) {
-                this.removeNode(this.mouseData.heldNodeId);
+              if (
+                this.mouseData.heldNodes.length > 0 &&
+                this.settings.canDeleteNodes
+              ) {
+                const changeGroup = Changes.evaluateHistoryGroup();
+                this.mouseData.heldNodes.forEach((element) =>
+                  this.removeNode(element.node.id, changeGroup),
+                );
               } else if (
-                this.mouseData.heldConnection &&
+                this.mouseData.heldConnections.length > 0 &&
                 this.settings.canDeleteConnections
               ) {
-                this.removeConnection(
-                  this.mouseData.heldConnection.sourceConnector.parentSection
-                    .parentNode.id,
-                  this.mouseData.heldConnection.sourceConnector.id,
-                  this.mouseData.heldConnection.destinationConnector
-                    .parentSection.parentNode.id,
-                  this.mouseData.heldConnection.destinationConnector.id,
+                const changeGroup = Changes.evaluateHistoryGroup();
+                this.mouseData.heldConnections.forEach((element) =>
+                  this.removeConnection(
+                    element.connection.sourceConnector.parentSection.parentNode
+                      .id,
+                    element.connection.sourceConnector.id,
+                    element.connection.destinationConnector.parentSection
+                      .parentNode.id,
+                    element.connection.destinationConnector.id,
+                    changeGroup,
+                  ),
                 );
               }
               break;
             case "Escape":
-              this.mouseData.deselectNode();
+              this.mouseData.clearSelections();
               break;
             case "Space":
               if (this.settings.debugMode) {
-                if (this.mouseData.heldNodeId) {
-                  console.log(this.nodes.get(this.mouseData.heldNodeId));
+                if (this.mouseData.heldNodes.length > 0) {
+                  console.log(this.mouseData.heldNodes);
                 } else {
                   console.log(this.nodes);
                 }
@@ -1075,14 +1100,14 @@ export default class NodeflowData {
 
     this.eventStore.onWheelInNodeflow.subscribeMultiple([
       {
-        name: "update-zoom",
+        name: "nodeflow:update-zoom",
         event: ({ event }) => {
           if (!this.settings.canZoom) return;
           this.updateZoom(-event.deltaY, Vec2.fromEvent(event));
         },
       },
       {
-        name: "prevent-scroll",
+        name: "nodeflow:prevent-scroll",
         event: ({ event }) => {
           event.preventDefault();
         },
@@ -1091,38 +1116,50 @@ export default class NodeflowData {
 
     this.eventStore.onMouseDownInNodeflow.subscribeMultiple([
       {
-        name: "reset-movement",
-        event: () => this.resetMovement(),
+        name: "nodeflow:reset-movement",
+        event: ({ event }) => {
+          if (event.button !== MOUSE_BUTTONS.LEFT) return;
+          this.resetMovement();
+        },
       },
       {
-        name: "reset-mouse-data",
+        name: "nodeflow:reset-mouse-data",
         event: ({ event }) => {
+          if (event.button === MOUSE_BUTTONS.LEFT) {
+            this.mouseData.clearSelections();
+          }
+
+          this.mouseData.selectNodeflow();
+
           this.mouseData.update({
             clickStartPosition: Vec2.of(
               event.clientX / this.zoomLevel - this.position.x,
               event.clientY / this.zoomLevel - this.position.y,
             ),
-            isDraggingObject: this.settings.canPan,
-            heldConnection: undefined,
-            heldConnectorId: undefined,
-            heldNodeId: undefined,
+            pointerDown: this.settings.canPan,
             mousePosition: Vec2.fromEvent(event),
           });
         },
       },
       {
-        name: "stop-propagation",
+        name: "nodeflow:stop-propagation",
         event: ({ event }) => event.stopPropagation(),
       },
     ]);
 
+    this.eventStore.onMouseDownInConnector.blacklist(
+      "nodeflow:allow-pan",
+      (data, eventName) =>
+        data.event.button !== MOUSE_BUTTONS.LEFT &&
+        eventName.startsWith("nodeflow"),
+    );
     this.eventStore.onMouseDownInConnector.subscribeMultiple([
       {
-        name: "stop-propagation",
+        name: "nodeflow:stop-propagation",
         event: ({ event }) => event.stopPropagation(),
       },
       {
-        name: "start-creating-connection",
+        name: "nodeflow:start-creating-connection",
         event: ({ event, nodeId, connectorId }) => {
           this.mouseData.startCreatingConnection(
             nodeId,
@@ -1135,11 +1172,11 @@ export default class NodeflowData {
 
     this.eventStore.onTouchStartInConnector.subscribeMultiple([
       {
-        name: "stop-propagation",
+        name: "nodeflow:stop-propagation",
         event: ({ event }) => event.stopPropagation(),
       },
       {
-        name: "start-creating-connection",
+        name: "nodeflow:start-creating-connection",
         event: ({ event, nodeId, connectorId }) => {
           const { clientX: x, clientY: y } = event.touches[0];
           this.mouseData.startCreatingConnection(
@@ -1153,7 +1190,7 @@ export default class NodeflowData {
 
     this.eventStore.onPointerUpInConnector.subscribeMultiple([
       {
-        name: "stop-propagation",
+        name: "nodeflow:stop-propagation",
         event: ({ event }) => {
           event.preventDefault();
           event.stopPropagation();
@@ -1161,13 +1198,18 @@ export default class NodeflowData {
         priority: 2,
       },
       {
-        name: "connect-held-nodes",
+        name: "nodeflow:connect-held-nodes",
         event: ({ event, nodeId, connectorId }) => {
           if (!this.settings.canCreateConnections) return;
-          if (!this.mouseData.heldConnectorId) return;
+
+          const heldConnector = this.mouseData.heldConnectors.at(-1)?.connector;
+          const heldNode = heldConnector?.parentSection?.parentNode;
+
+          if (!heldConnector || !heldNode) return;
+
           this.eventStore.onNodeConnected.publish({
-            outputNodeId: this.mouseData.heldNodeId!,
-            outputId: this.mouseData.heldConnectorId!,
+            outputNodeId: heldNode.id,
+            outputId: heldConnector.id,
             inputNodeId: nodeId,
             inputId: connectorId,
             event,
@@ -1176,21 +1218,28 @@ export default class NodeflowData {
         priority: 2,
       },
       {
-        name: "reset-mouse-data",
-        event: () =>
-          this.mouseData.update({
-            isDraggingObject: false,
-            heldConnectorId: undefined,
-            heldNodeId: undefined,
-          }),
+        name: "nodeflow:reset-mouse-data",
+        event: () => {
+          this.mouseData.pointerDown = false;
+        },
         priority: 1,
       },
     ]);
 
+    this.eventStore.onMouseDownInNode.blacklist(
+      "nodeflow:allow-pan",
+      (data, eventName) =>
+        data.event.button !== MOUSE_BUTTONS.LEFT &&
+        eventName.startsWith("nodeflow"),
+    );
     this.eventStore.onMouseDownInNode.subscribeMultiple([
       {
-        name: "select-node",
+        name: "nodeflow:select-node",
         event: ({ event, nodeId }) => {
+          if (!this.keyboardData.isActionPressed(this.keymap.SELECT_MULTIPLE)) {
+            this.mouseData.clearSelections();
+          }
+
           this.mouseData.selectNode(
             nodeId,
             Vec2.fromEvent(event),
@@ -1199,16 +1248,20 @@ export default class NodeflowData {
         },
       },
       {
-        name: "stop-propagation",
+        name: "nodeflow:stop-propagation",
         event: ({ event }) => event.stopPropagation(),
       },
     ]);
 
     this.eventStore.onTouchStartInNode.subscribeMultiple([
       {
-        name: "select-node",
+        name: "nodeflow:select-node",
         event: ({ event, nodeId }) => {
           const { clientX: x, clientY: y } = event.touches[0];
+          if (!this.keyboardData.isActionPressed(this.keymap.SELECT_MULTIPLE)) {
+            this.mouseData.clearSelections();
+          }
+
           this.mouseData.selectNode(
             nodeId,
             Vec2.of(x, y),
@@ -1217,14 +1270,21 @@ export default class NodeflowData {
         },
       },
       {
-        name: "stop-propagation",
+        name: "nodeflow:stop-propagation",
         event: ({ event }) => event.stopPropagation(),
       },
     ]);
 
+    this.eventStore.onPointerDownInNodeCurve.blacklist(
+      "nodeflow:allow-pan",
+      (data, eventName) =>
+        data.event.button !== MOUSE_BUTTONS.LEFT &&
+        eventName.startsWith("nodeflow"),
+    );
+
     this.eventStore.onPointerDownInNodeCurve.subscribeMultiple([
       {
-        name: "stop-propagation",
+        name: "nodeflow:stop-propagation",
         event: ({ event }) => {
           event.preventDefault();
           event.stopPropagation();
@@ -1232,30 +1292,45 @@ export default class NodeflowData {
         priority: 1,
       },
       {
-        name: "update-mouse-data",
-        event: ({ event, sourceConnector, destinationConnector }) =>
-          this.mouseData.update({
-            isDraggingObject: false,
-            heldConnection: {
+        name: "nodeflow:update-mouse-data",
+        event: ({ event, sourceConnector, destinationConnector }) => {
+          this.mouseData.pointerDown = true;
+          this.mouseData.mousePosition = Vec2.fromEvent(event);
+
+          if (!this.keyboardData.isActionPressed(this.keymap.SELECT_MULTIPLE)) {
+            this.mouseData.clearSelections();
+          }
+
+          this.mouseData.selections.push({
+            type: "connection",
+            connection: {
               sourceConnector,
               destinationConnector,
             },
-            heldConnectorId: undefined,
-            heldNodeId: undefined,
-            mousePosition: Vec2.fromEvent(event),
-          }),
+          });
+        },
       },
     ]);
 
     this.eventStore.onPointerUpInNode.subscribeMultiple([
       {
-        name: "reset-mouse-data",
-        event: () =>
-          this.mouseData.update({
-            isDraggingObject: false,
-            heldConnection: undefined,
-            heldConnectorId: undefined,
-          }),
+        name: "nodeflow:reset-mouse-data",
+        event: () => {
+          this.mouseData.pointerDown = false;
+
+          if (this.mouseData.heldConnectors.length === 1) {
+            this.mouseData.clearSelectedByType("node");
+          }
+
+          this.mouseData.clearSelectedByType("connector");
+        },
+      },
+      {
+        name: "nodeflow:stop-propagation",
+        event: ({ event }) => {
+          event.stopPropagation();
+          event.preventDefault();
+        },
       },
     ]);
   }
