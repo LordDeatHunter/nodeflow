@@ -39,7 +39,7 @@ export default class MouseData {
           case "connector":
             return {
               connectorId: selection.connector.id,
-              nodeId: selection.connector.parentSection.parentNode.id,
+              nodeId: selection.connector.parentNode.id,
               type: "connector",
             };
           case "node":
@@ -57,8 +57,7 @@ export default class MouseData {
                     .parentNode.id,
                 sourceConnectorId: selection.connection.sourceConnector.id,
                 sourceNodeId:
-                  selection.connection.sourceConnector.parentSection.parentNode
-                    .id,
+                  selection.connection.sourceConnector.parentNode.id,
               },
               type: "connection",
             };
@@ -298,12 +297,11 @@ export default class MouseData {
       (selection) =>
         selection.type === "connection" &&
         selection.connection.sourceConnector.id === sourceConnectorId &&
-        selection.connection.sourceConnector.parentSection.parentNode.id ===
-          sourceNodeId &&
+        selection.connection.sourceConnector.parentNode.id === sourceNodeId &&
         selection.connection.destinationConnector.id ===
           destinationConnectorId &&
-        selection.connection.destinationConnector.parentSection.parentNode
-          .id === destinationNodeId,
+        selection.connection.destinationConnector.parentNode.id ===
+          destinationNodeId,
     );
   }
 

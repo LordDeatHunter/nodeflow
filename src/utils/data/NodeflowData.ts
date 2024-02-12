@@ -595,7 +595,7 @@ export default class NodeflowData {
         connector.sources.forEach(({ sourceConnector }) => {
           sourceConnector.destinations.filterInPlace(
             ({ destinationConnector }) =>
-              destinationConnector.parentSection.parentNode.id !== nodeId,
+              destinationConnector.parentNode.id !== nodeId,
           );
         });
         connector.sources = new ArrayWrapper<ConnectorSource>();
@@ -617,8 +617,7 @@ export default class NodeflowData {
       section.connectors.forEach((connector) => {
         connector.destinations.forEach(({ destinationConnector }) => {
           destinationConnector.sources.filterInPlace(
-            ({ sourceConnector }) =>
-              sourceConnector.parentSection.parentNode.id !== nodeId,
+            ({ sourceConnector }) => sourceConnector.parentNode.id !== nodeId,
           );
         });
         connector.destinations = new ArrayWrapper<ConnectorDestination>();
@@ -810,8 +809,7 @@ export default class NodeflowData {
     if (historyGroup) {
       const css = sourceConnector.destinations.find(
         (destination) =>
-          destination.destinationConnector.parentSection.parentNode.id ===
-          destinationNodeId,
+          destination.destinationConnector.parentNode.id === destinationNodeId,
       )?.css;
       const nodeflowId = this.id;
 
@@ -851,13 +849,11 @@ export default class NodeflowData {
 
     sourceConnector.destinations.filterInPlace(
       (destination) =>
-        destination.destinationConnector.parentSection.parentNode.id !==
-        destinationNodeId,
+        destination.destinationConnector.parentNode.id !== destinationNodeId,
     );
 
     destinationConnector.sources.filterInPlace(
-      (source) =>
-        source.sourceConnector.parentSection.parentNode.id !== sourceNodeId,
+      (source) => source.sourceConnector.parentNode.id !== sourceNodeId,
     );
   }
 
@@ -1047,8 +1043,7 @@ export default class NodeflowData {
                 const changeGroup = Changes.evaluateHistoryGroup();
                 this.mouseData.heldConnections.forEach((element) =>
                   this.removeConnection(
-                    element.connection.sourceConnector.parentSection.parentNode
-                      .id,
+                    element.connection.sourceConnector.parentNode.id,
                     element.connection.sourceConnector.id,
                     element.connection.destinationConnector.parentSection
                       .parentNode.id,
@@ -1203,7 +1198,7 @@ export default class NodeflowData {
           if (!this.settings.canCreateConnections) return;
 
           const heldConnector = this.mouseData.heldConnectors.at(-1)?.connector;
-          const heldNode = heldConnector?.parentSection?.parentNode;
+          const heldNode = heldConnector?.parentNode;
 
           if (!heldConnector || !heldNode) return;
 

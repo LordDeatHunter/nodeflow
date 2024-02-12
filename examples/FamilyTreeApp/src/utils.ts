@@ -140,7 +140,7 @@ export const setupEvents = (nodeflowData: NodeflowData) => {
 
       if (heldConnectors.length !== 1) return;
 
-      const heldNode = heldConnectors[0].connector.parentSection.parentNode;
+      const heldNode = heldConnectors[0].connector.parentNode;
 
       const position = nodeflowData.mouseData.globalMousePosition();
 
@@ -182,8 +182,8 @@ export const setupEvents = (nodeflowData: NodeflowData) => {
         connector?.length === 2 ||
         connector?.some(
           (source) =>
-            source.sourceConnector.parentSection.parentNode.customData
-              .gender === outputNode.customData.gender,
+            source.sourceConnector.parentNode.customData.gender ===
+            outputNode.customData.gender,
         )
       ) {
         return;
@@ -224,8 +224,8 @@ export const setupEvents = (nodeflowData: NodeflowData) => {
         connector?.length === 2 ||
         connector?.some(
           (source) =>
-            source.sourceConnector.parentSection.parentNode.customData
-              .gender === sourceNode.customData.gender,
+            source.sourceConnector.parentNode.customData.gender ===
+            sourceNode.customData.gender,
         )
       )
         return;
@@ -269,8 +269,7 @@ export const setupDummyConnections = (nodeflowData: NodeflowData) => {
       connector?.length === 2 ||
       connector?.some(
         (source) =>
-          source.sourceConnector.parentSection.parentNode.customData.gender ===
-          sourceGender,
+          source.sourceConnector.parentNode.customData.gender === sourceGender,
       )
     ) {
       continue;

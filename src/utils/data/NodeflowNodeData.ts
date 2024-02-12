@@ -394,16 +394,14 @@ export default class NodeflowNodeData {
       .map((source) => {
         const filteredDestinations = source.destinations.filter(
           (destination) =>
-            destination.destinationConnector.parentSection.parentNode.id ===
-            this.id,
+            destination.destinationConnector.parentNode.id === this.id,
         );
 
         return filteredDestinations.map(
           (destination): SerializedConnection => ({
-            sourceNodeId: source.parentSection.parentNode.id,
+            sourceNodeId: source.parentNode.id,
             sourceConnectorId: source.id,
-            destinationNodeId:
-              destination.destinationConnector.parentSection.parentNode.id,
+            destinationNodeId: destination.destinationConnector.parentNode.id,
             destinationConnectorId: destination.destinationConnector.id,
             css: destination.css,
           }),
@@ -416,14 +414,13 @@ export default class NodeflowNodeData {
     return this.getAllDestinationConnectors()
       .map((destination) => {
         const filteredSources = destination.sources.filter(
-          (source) =>
-            source.sourceConnector.parentSection.parentNode.id === this.id,
+          (source) => source.sourceConnector.parentNode.id === this.id,
         );
         return filteredSources.map(
           (source): SerializedConnection => ({
-            sourceNodeId: source.sourceConnector.parentSection.parentNode.id,
+            sourceNodeId: source.sourceConnector.parentNode.id,
             sourceConnectorId: source.sourceConnector.id,
-            destinationNodeId: destination.parentSection.parentNode.id,
+            destinationNodeId: destination.parentNode.id,
             destinationConnectorId: destination.id,
           }),
         );

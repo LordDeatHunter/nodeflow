@@ -33,22 +33,22 @@ export default class NodeConnector {
   public serializeConnections(): Array<SerializedConnection> {
     return [
       ...this.destinations.map(({ destinationConnector, css }) => ({
-        sourceNodeId: this.parentSection.parentNode.id,
+        sourceNodeId: this.parentNode.id,
         sourceConnectorId: this.id,
-        destinationNodeId: destinationConnector.parentSection.parentNode.id,
+        destinationNodeId: destinationConnector.parentNode.id,
         destinationConnectorId: destinationConnector.id,
         css: deepCopy(css),
       })),
       ...this.sources.map(({ sourceConnector }) => ({
-        sourceNodeId: sourceConnector.parentSection.parentNode.id,
+        sourceNodeId: sourceConnector.parentNode.id,
         sourceConnectorId: sourceConnector.id,
-        destinationNodeId: this.parentSection.parentNode.id,
+        destinationNodeId: this.parentNode.id,
         destinationConnectorId: this.id,
         css: deepCopy(
           sourceConnector.destinations.find(
             (destination) =>
-              destination.destinationConnector.parentSection.parentNode.id ===
-              this.parentSection.parentNode.id,
+              destination.destinationConnector.parentNode.id ===
+              this.parentNode.id,
           )?.css,
         ),
       })),
@@ -100,6 +100,10 @@ export default class NodeConnector {
 
   public get parentSection() {
     return this.store[0].parentSection;
+  }
+
+  public get parentNode() {
+    return this.store[0].parentSection.parentNode;
   }
 
   public get position() {
@@ -179,7 +183,7 @@ export default class NodeConnector {
     this.sources.forEach(({ sourceConnector }) => {
       sourceConnector.destinations.filterInPlace(
         ({ destinationConnector }) =>
-          destinationConnector.parentSection.parentNode.id !== this.id,
+          destinationConnector.parentNode.id !== this.id,
       );
     });
     this.sources = new ArrayWrapper<ConnectorSource>();
@@ -191,16 +195,14 @@ export default class NodeConnector {
   public removeOutgoingConnections() {
     this.destinations.forEach(({ destinationConnector }) => {
       destinationConnector.sources.filterInPlace(
-        ({ sourceConnector }) =>
-          sourceConnector.parentSection.parentNode.id !== this.id,
+        ({ sourceConnector }) => sourceConnector.parentNode.id !== this.id,
       );
     });
     this.destinations = new ArrayWrapper<ConnectorDestination>();
   }
 
   public getCenter(): Vec2 {
-    const { position: nodePosition, offset: nodeOffset } =
-      this.parentSection.parentNode;
+    const { position: nodePosition, offset: nodeOffset } = this.parentNode;
 
     return nodePosition.add(nodeOffset, this.position, this.size.divideBy(2));
   }
