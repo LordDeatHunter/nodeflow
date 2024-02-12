@@ -22,10 +22,14 @@ const NodeflowNode: Component<NodeProps> = (props) => {
   );
   const [isVisible, setIsVisible] = createSignal<boolean>(false);
 
+  // TODO: change this to an event that handles multiple nodes.
   createEffect(() => {
+    const lastSelection = props.nodeflowData.mouseData.selections.at(-1);
+
     if (
-      props.nodeflowData.mouseData.heldNodeId !== props.nodeId ||
-      !props.nodeflowData.mouseData.isDraggingObject
+      lastSelection?.type !== "node" ||
+      lastSelection.node.id !== props.nodeId ||
+      !props.nodeflowData.mouseData.pointerDown
     ) {
       return;
     }
@@ -100,7 +104,7 @@ const NodeflowNode: Component<NodeProps> = (props) => {
       classList={{
         [node()?.css?.normal ?? ""]: true,
         [node()?.css?.selected ?? ""]:
-          props.nodeflowData.mouseData.heldNodeId === props.nodeId,
+          props.nodeflowData.mouseData.hasSelectedNode(props.nodeId),
       }}
       onMouseDown={(event) =>
         props.nodeflowData.eventStore.onMouseDownInNode.publish({

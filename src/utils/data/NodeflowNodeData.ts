@@ -219,7 +219,7 @@ export default class NodeflowNodeData {
             ?.nodes.get(nodeId)
             ?.removeConnectorSection(sectionId!, false);
         },
-        historyGroup,
+        historyGroup: historyGroup as string,
       });
     }
 
@@ -266,7 +266,7 @@ export default class NodeflowNodeData {
             ?.nodes.get(nodeId)
             ?.addConnectorSection(sectionId, sectionCss, false);
         },
-        historyGroup,
+        historyGroup: historyGroup as string,
       });
     }
 

@@ -66,7 +66,7 @@ export default class NodeConnector {
 
     return new NodeConnector({
       css: data.css,
-      destinations: new ArrayWrapper<ConnectorDestination>([]),
+      destinations: new ArrayWrapper<ConnectorDestination>(),
       hovered: data.hovered ?? false,
       id: connectorId,
       parentSection,
@@ -74,7 +74,7 @@ export default class NodeConnector {
       ref: undefined,
       resizeObserver: undefined,
       size: Vec2.zero(),
-      sources: new ArrayWrapper<ConnectorSource>([]),
+      sources: new ArrayWrapper<ConnectorSource>(),
     });
   }
 
@@ -182,7 +182,7 @@ export default class NodeConnector {
           destinationConnector.parentSection.parentNode.id !== this.id,
       );
     });
-    this.sources = new ArrayWrapper<ConnectorSource>([]);
+    this.sources = new ArrayWrapper<ConnectorSource>();
   }
 
   /**
@@ -195,7 +195,7 @@ export default class NodeConnector {
           sourceConnector.parentSection.parentNode.id !== this.id,
       );
     });
-    this.destinations = new ArrayWrapper<ConnectorDestination>([]);
+    this.destinations = new ArrayWrapper<ConnectorDestination>();
   }
 
   public getCenter(): Vec2 {

@@ -76,7 +76,7 @@ export default class ConnectorSection {
             ?.nodes.get(nodeId)
             ?.removeConnector(connectorSectionId, connectorId, false);
         },
-        historyGroup,
+        historyGroup: historyGroup as string,
       });
     }
 
@@ -124,7 +124,7 @@ export default class ConnectorSection {
             ?.nodes.get(nodeId)
             ?.addConnector(connectorSectionId, serializedConnector, false);
         },
-        historyGroup,
+        historyGroup: historyGroup as string,
       });
     }
 

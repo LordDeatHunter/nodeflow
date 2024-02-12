@@ -105,12 +105,7 @@ const NodeflowCanvas =
             )}
           </For>
         </svg>
-        <Show
-          when={
-            nodeflowData.mouseData.heldNodeId &&
-            nodeflowData.mouseData.heldConnectorId
-          }
-        >
+        <Show when={nodeflowData.mouseData.heldConnectors.length === 1}>
           <Curve css={props?.css?.newCurve} nodeflowData={nodeflowData} />
         </Show>
       </div>

@@ -87,14 +87,12 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
         classList={{
           [props.css?.normal ?? ""]: true,
           [props.css?.selected ?? ""]:
-            props.nodeflowData.mouseData.heldConnection?.sourceConnector
-              .parentSection.parentNode.id === props.sourceNodeId &&
-            props.nodeflowData.mouseData.heldConnection?.sourceConnector.id ===
-              props.sourceConnectorId &&
-            props.nodeflowData.mouseData.heldConnection?.destinationConnector
-              .parentSection.parentNode.id === props.destinationNodeId &&
-            props.nodeflowData.mouseData.heldConnection?.destinationConnector
-              .id === props.destinationConnectorId,
+            props.nodeflowData.mouseData.hasSelectedConnection(
+              props.sourceNodeId,
+              props.sourceConnectorId,
+              props.destinationNodeId,
+              props.destinationConnectorId,
+            ),
         }}
         style={{
           cursor: "pointer",

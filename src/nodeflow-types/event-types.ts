@@ -1,5 +1,4 @@
-import NodeConnector from "../utils/data/NodeConnector";
-import { DeepPartial, NodeflowDataType } from "./index";
+import { ConnectionType, DeepPartial, NodeflowDataType } from "./index";
 import { DocumentEventPublisher, NodeflowEventPublisher } from "../utils";
 
 export interface NodeConnectedEventData {
@@ -44,11 +43,9 @@ export interface NodeConnectorPointerUpEventData {
   event: PointerEvent;
 }
 
-export interface NodeCurvePointerDownEventData {
+export type NodeCurvePointerDownEventData = ConnectionType & {
   event: PointerEvent;
-  sourceConnector: NodeConnector;
-  destinationConnector: NodeConnector;
-}
+};
 
 export interface NodeflowEventsDataMap {
   onKeyDownInNodeflow: { event: KeyboardEvent };
