@@ -162,6 +162,10 @@ export default class NodeflowData {
         ),
       );
 
+      if (this.currentMoveSpeed.x === 0 && this.currentMoveSpeed.y === 0) {
+        return;
+      }
+
       if (this.settings.canPan && !hasSelectedNodes) {
         this.updateBackgroundPosition(this.currentMoveSpeed, true);
       } else if (hasSelectedNodes && this.settings.canMoveNodes) {
@@ -402,6 +406,7 @@ export default class NodeflowData {
 
     const oldScreenSize = windowDimensions.multiplyBy(oldZoom);
     const newScreenSize = windowDimensions.multiplyBy(newZoom);
+
     const oldOffset = centeredZoomLocation
       .subtract(oldScreenSize.divideBy(2))
       .divideBy(oldZoom);

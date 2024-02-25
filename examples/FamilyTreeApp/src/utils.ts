@@ -132,7 +132,6 @@ export const setupEvents = (nodeflowData: NodeflowData) => {
     "familytree-app:prevent-connections-from-parent-connectors",
     ({ connectorId }) => connectorId === "I",
   );
-
   nodeflowData.eventStore.onPointerUpInNodeflow.subscribe(
     "familytree-app:spawn-new-node",
     () => {
