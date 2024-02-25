@@ -23,14 +23,13 @@ const App: Component = () => {
   });
 
   const newCurveCss = createMemo(() => {
-    const node = nodeflowData.mouseData.heldNodes;
-    const connector = nodeflowData.mouseData.heldConnector;
+    const connector = nodeflowData.mouseData.heldConnectors.at(-1);
 
-    if (!node || !connector) {
+    if (!connector) {
       return undefined;
     }
 
-    return node.customData.gender === "M"
+    return connector.connector.parentNode.customData.gender === "M"
       ? curveCss.newFatherCurve
       : curveCss.newMotherCurve;
   });
