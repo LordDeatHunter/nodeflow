@@ -38,11 +38,10 @@ const NodeFormButtons: Component<NodeFormButtonsProps> = (props) => {
       props.formData!.gender,
       nodeflowData.center(),
     );
-    nodeflowData.mouseData.selectNode(
-      node!.id,
-      nodeflowData.mouseData.mousePosition!,
-      false,
-    );
+
+    nodeflowData.mouseData.clearSelections();
+    node.select(node.getCenter());
+
     props.setFormData(undefined);
   };
   const onUpdateNode = () => {

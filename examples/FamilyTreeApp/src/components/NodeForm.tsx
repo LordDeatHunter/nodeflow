@@ -25,30 +25,32 @@ const NodeForm: Component<{
     <div class={formStyle.fieldDisplayContainer}>
       <p>Gender</p>
       <div class={formStyle.horizontalRadioContainer}>
-        <input
-          type="radio"
-          id="male"
-          name="gender"
-          value="M"
-          checked={props.formData.gender === "M"}
-          onChange={() => props.updateFormData({ gender: "M" })}
-          class={formStyle.radioInputMale}
-        />
-        <Male />
-        <label for="male">Male</label>
-      </div>
-      <div class={formStyle.horizontalRadioContainer}>
-        <input
-          type="radio"
-          id="female"
-          name="gender"
-          value="M"
-          checked={props.formData.gender === "F"}
-          onChange={() => props.updateFormData({ gender: "F" })}
-          class={formStyle.radioInputFemale}
-        />
-        <Female />
-        <label for="female">Female</label>
+        <div class={formStyle.horizontalRadioInput}>
+          <input
+            type="radio"
+            id="male"
+            name="gender"
+            value="M"
+            checked={props.formData.gender === "M"}
+            onChange={() => props.updateFormData({ gender: "M" })}
+            class={formStyle.radioInputMale}
+          />
+          <Male />
+          <label for="male">Male</label>
+        </div>
+        <div class={formStyle.horizontalRadioInput}>
+          <input
+            type="radio"
+            id="female"
+            name="gender"
+            value="M"
+            checked={props.formData.gender === "F"}
+            onChange={() => props.updateFormData({ gender: "F" })}
+            class={formStyle.radioInputFemale}
+          />
+          <Female />
+          <label for="female">Female</label>
+        </div>
       </div>
     </div>
   </div>

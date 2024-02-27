@@ -25,6 +25,10 @@ export default class NodeflowNodeData {
     this.store = createStore<NodeflowNodeType>(data);
   }
 
+  public get nodeflow() {
+    return this.nodeflowData;
+  }
+
   public get centered() {
     return this.store[0].centered;
   }
@@ -438,5 +442,9 @@ export default class NodeflowNodeData {
 
   public getCenter(): Vec2 {
     return this.position.add(this.offset).add(this.size.divideBy(2));
+  }
+
+  public select(position?: Vec2) {
+    this.nodeflowData.selectNode(this.id, position);
   }
 }

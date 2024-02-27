@@ -1334,4 +1334,8 @@ export default class NodeflowData {
       },
     ]);
   }
+
+  public selectNode(nodeId: string, position?: Vec2) {
+    this.mouseData.selectNode(nodeId, position ?? Vec2.zero(), false);
+  }
 }

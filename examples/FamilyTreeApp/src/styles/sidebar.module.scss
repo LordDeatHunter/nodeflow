@@ -4,8 +4,6 @@ $animation-time: 0.3s;
 
 @mixin baseSidebarContainer {
   height: 100%;
-  flex-direction: row;
-  align-items: center;
   position: absolute;
   transition: all $animation-time ease-in-out;
   left: 0;
@@ -47,7 +45,6 @@ $animation-time: 0.3s;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 0;
   top: 0;
   left: 0;
   z-index: 1;
@@ -98,7 +95,8 @@ $sidebar-toggle-size: 3rem;
 
 .sidebarContent {
   width: 100%;
-  min-height: 50%;
+  height: 100%;
+  padding: 20px 0;
   display: flex;
   flex-direction: column;
   align-items: center;

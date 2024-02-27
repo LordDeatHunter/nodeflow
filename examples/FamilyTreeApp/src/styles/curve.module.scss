@@ -1,12 +1,5 @@
 @use "colors";
-
-@function darkenAndSaturate($strokeColor, $saturation: 25%, $darkness: 15%) {
-  @return darken(saturate($strokeColor, $saturation), $darkness);
-}
-
-@function lightenAndDesaturate($strokeColor, $saturation: 25%, $lightness: 15%) {
-  @return lighten(desaturate($strokeColor, $saturation), $lightness);
-}
+@use "utils";
 
 @mixin baseCurve($strokeColor) {
   position: relative;
@@ -20,7 +13,7 @@
 
 @mixin hoverHighlight($strokeColor) {
   &:hover {
-    stroke: darkenAndSaturate($strokeColor, 10%, $darkness: 30%);
+    stroke: utils.darkenAndSaturate($strokeColor, 10%, $darkness: 30%);
     filter: drop-shadow(0 0 2px $strokeColor);
   }
 }
@@ -39,21 +32,21 @@
 }
 
 .selectedFatherCurve {
-  @include baseCurve(darkenAndSaturate(colors.$male-color));
-  filter: drop-shadow(0 0 2px darkenAndSaturate(colors.$male-color));
+  @include baseCurve(utils.darkenAndSaturate(colors.$male-color));
+  filter: drop-shadow(0 0 2px utils.darkenAndSaturate(colors.$male-color));
 }
 
 .selectedMotherCurve {
-  @include baseCurve(darkenAndSaturate(colors.$female-color));
-  filter: drop-shadow(0 0 2px darkenAndSaturate(colors.$female-color));
+  @include baseCurve(utils.darkenAndSaturate(colors.$female-color));
+  filter: drop-shadow(0 0 2px utils.darkenAndSaturate(colors.$female-color));
 }
 
 .newFatherCurve {
-  @include baseCurve(lightenAndDesaturate(colors.$male-color));
-  filter: drop-shadow(0 0 2px darkenAndSaturate(colors.$male-color));
+  @include baseCurve(utils.lightenAndDesaturate(colors.$male-color));
+  filter: drop-shadow(0 0 2px utils.darkenAndSaturate(colors.$male-color));
 }
 
 .newMotherCurve {
-  @include baseCurve(lightenAndDesaturate(colors.$female-color));
-  filter: drop-shadow(0 0 2px darkenAndSaturate(colors.$female-color));
+  @include baseCurve(utils.lightenAndDesaturate(colors.$female-color));
+  filter: drop-shadow(0 0 2px utils.darkenAndSaturate(colors.$female-color));
 }

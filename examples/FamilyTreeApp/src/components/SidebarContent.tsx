@@ -1,4 +1,4 @@
-import { NodeflowLib, Optional } from "nodeflow-lib";
+import { NodeflowLib, NodeflowNodeData, Optional } from "nodeflow-lib";
 import { createMemo, createSignal, Show } from "solid-js";
 import NodeDataDisplay from "./NodeDataDisplay";
 import NodeFormButtons from "./NodeFormButtons";
@@ -12,19 +12,25 @@ const SidebarContent = () => {
   const [formData, setFormData] =
     createSignal<Optional<FormDataType>>(undefined);
 
-  const nodeData = createMemo<Optional<FormDataType>>(() => {
-    if (!NodeflowLib.get().hasNodeflow(FamilyTreeConstants.MAIN_NODEFLOW))
+  const node = createMemo<Optional<NodeflowNodeData>>(() => {
+    if (!NodeflowLib.get().hasNodeflow(FamilyTreeConstants.MAIN_NODEFLOW)) {
       return undefined;
+    }
 
     const nodeflowData = NodeflowLib.get().getNodeflow(
       FamilyTreeConstants.MAIN_NODEFLOW,
     )!;
-    const node = nodeflowData.mouseData.heldNodes.at(-1)?.node;
-    if (!node) return undefined;
+
+    return nodeflowData.mouseData.heldNodes.at(-1)?.node;
+  });
+
+  const nodeData = createMemo<Optional<FormDataType>>(() => {
+    const nodeData = node();
+    if (!nodeData) return undefined;
 
     return {
-      ...node.customData,
-      id: node.id,
+      ...nodeData.customData,
+      id: nodeData.id,
     };
   });
 
@@ -47,7 +53,7 @@ const SidebarContent = () => {
       <Show when={showForm()} fallback={<h2>No Node Selected</h2>}>
         <Show
           when={formData() !== undefined}
-          fallback={<NodeDataDisplay nodeData={nodeData()!} />}
+          fallback={<NodeDataDisplay nodeData={node()!} />}
         >
           <NodeForm
             formData={formData()!}
