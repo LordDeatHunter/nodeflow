@@ -1,6 +1,6 @@
 import { Component, createMemo, For, Show } from "solid-js";
 import formStyle from "../styles/form.module.scss";
-import NodeflowNodeData from "nodeflow-lib/src/utils/data/NodeflowNodeData";
+import { NodeflowNodeData } from "nodeflow-lib";
 
 const NodeDataDisplay: Component<{ nodeData: NodeflowNodeData }> = (props) => {
   const parentNodes = createMemo(() =>
