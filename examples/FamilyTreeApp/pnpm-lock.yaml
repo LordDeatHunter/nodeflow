@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   nodeflow-lib:
-    specifier: 0.0.4
-    version: 0.0.4(solid-js@1.8.3)(solid-styled-components@0.28.5)
+    specifier: 0.0.5
+    version: 0.0.5(solid-js@1.8.3)(solid-styled-components@0.28.5)
   solid-js:
     specifier: ^1.7.8
     version: 1.8.3
@@ -838,12 +838,12 @@ packages:
       solid-js: 1.8.3
     dev: true
 
-  /@solid-primitives/map@0.4.9(solid-js@1.8.3):
-    resolution: {integrity: sha512-wMbIhfn24QDnNqJHRskFjKJ2bwvcx28/S0xBKoZdRdUaqIPZYWOVT8SM++dfWS44YdC2kJPF4RSTY1022aujLA==}
+  /@solid-primitives/map@0.4.10(solid-js@1.8.3):
+    resolution: {integrity: sha512-Y4aTvQN1DjMmTQeNS3H1Fc+fVVPVslYGAOxD8gIMgQtHn+yLd4Zc4pm/x0m/lsy7NnEi0nskz4G7vbEd9M5sOA==}
     peerDependencies:
       solid-js: ^1.6.12
     dependencies:
-      '@solid-primitives/trigger': 1.0.9(solid-js@1.8.3)
+      '@solid-primitives/trigger': 1.0.10(solid-js@1.8.3)
       solid-js: 1.8.3
     dev: false
 
@@ -933,12 +933,12 @@ packages:
       solid-js: 1.8.3
     dev: true
 
-  /@solid-primitives/trigger@1.0.9(solid-js@1.8.3):
-    resolution: {integrity: sha512-hW9r8LkFQ0KSAtesSVUfZ9uIAuttslndgfJs+hD+SD1C5JwHyDm4sFoJKzahexh04iKX29JXmuDEjdjudIWqFQ==}
+  /@solid-primitives/trigger@1.0.10(solid-js@1.8.3):
+    resolution: {integrity: sha512-gPNhmIBMxaJm2gWAAqUkpF5Vk6yZgaJ9+MFQN5eIRQ//GPIUqkNtSSar5sU+iG2I5QmS4iU7gOnvv3XvxXI1fg==}
     peerDependencies:
       solid-js: ^1.6.12
     dependencies:
-      '@solid-primitives/utils': 6.2.2(solid-js@1.8.3)
+      '@solid-primitives/utils': 6.2.3(solid-js@1.8.3)
       solid-js: 1.8.3
     dev: false
 
@@ -950,8 +950,8 @@ packages:
       solid-js: 1.8.3
     dev: true
 
-  /@solid-primitives/utils@6.2.2(solid-js@1.8.3):
-    resolution: {integrity: sha512-11ypVbp987XxETeRqY5Y3OmmTpm8/jZqJXRvo6AyqBthzkvvjEdReuUMU2yVb+pwWGxfZpWHZ6EUCcGXUMhfwg==}
+  /@solid-primitives/utils@6.2.3(solid-js@1.8.3):
+    resolution: {integrity: sha512-CqAwKb2T5Vi72+rhebSsqNZ9o67buYRdEJrIFzRXz3U59QqezuuxPsyzTSVCacwS5Pf109VRsgCJQoxKRoECZQ==}
     peerDependencies:
       solid-js: ^1.6.12
     dependencies:
@@ -2340,13 +2340,13 @@ packages:
     resolution: {integrity: sha512-uYr7J37ae/ORWdZeQ1xxMJe3NtdmqMC/JZK+geofDrkLUApKRHPd18/TxtBOJ4A0/+uUIliorNrfYV6s1b02eQ==}
     dev: true
 
-  /nodeflow-lib@0.0.4(solid-js@1.8.3)(solid-styled-components@0.28.5):
-    resolution: {integrity: sha512-iNOv6D6+JJMziZjgXIvNR8adwat33SE5uzNU2muZPZcQSOTcBZAirXwZYQeBSWCWt5fhuURHYlW4hOn/hbWftg==}
+  /nodeflow-lib@0.0.5(solid-js@1.8.3)(solid-styled-components@0.28.5):
+    resolution: {integrity: sha512-nczOkrziDPhPvRn54VYulHi1ILjKd8BzahBbRPDcmYQqR5i18053Kw7oQfHxuN9QSIJqltj9JEYap/zffRLhHw==}
     peerDependencies:
       solid-js: ^1.7.6
       solid-styled-components: ^0.28.5
     dependencies:
-      '@solid-primitives/map': 0.4.9(solid-js@1.8.3)
+      '@solid-primitives/map': 0.4.10(solid-js@1.8.3)
       solid-js: 1.8.3
       solid-styled-components: 0.28.5(solid-js@1.8.3)
     dev: false
