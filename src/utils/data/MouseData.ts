@@ -155,6 +155,12 @@ export default class MouseData {
     ) as Array<SelectableNode>;
   }
 
+  public filterSelections(
+    predicate: (selection: SelectableElement) => boolean,
+  ) {
+    this.selections.filterInPlace(predicate);
+  }
+
   get mousePosition() {
     return this.store[0].mousePosition;
   }

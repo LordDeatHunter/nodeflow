@@ -1,12 +1,8 @@
-import {
-  NodeflowData,
-  NodeflowNodeData,
-  SelectableElementCSS,
-  Vec2,
-} from "nodeflow-lib";
+import { NodeflowNodeData, SelectableElementCSS, Vec2 } from "nodeflow-lib";
 import nodeCss from "./styles/node.module.scss";
 import curveCss from "./styles/curve.module.scss";
 import NodeBody from "./components/NodeBody";
+import { nodeflowData } from "./App";
 
 export const fetchRandomData = async (
   amount: number,
@@ -48,7 +44,6 @@ const getConnectionCSS = (
 });
 
 export const createFamilyMemberNode = (
-  nodeflowData: NodeflowData,
   name: string,
   gender: CustomNodeflowDataType["gender"],
   position?: Vec2,
@@ -103,14 +98,10 @@ export const createFamilyMemberNode = (
   return newNode;
 };
 
-export const setupDummyNodes = async (
-  nodeflowData: NodeflowData,
-  count: number = 50,
-) => {
+export const setupDummyNodes = async (count: number = 50) => {
   const data = await fetchRandomData(count);
   for (const person of data) {
     createFamilyMemberNode(
-      nodeflowData,
       person.name,
       person.gender,
       Vec2.of((Math.random() * 2 - 1) * 2000, (Math.random() * 2 - 1) * 2000),
@@ -118,7 +109,7 @@ export const setupDummyNodes = async (
   }
 };
 
-export const setupEvents = (nodeflowData: NodeflowData) => {
+export const setupEvents = () => {
   nodeflowData.eventStore.onPointerUpInConnector.blacklist(
     "familytree-app:prevent-connections-to-parent-connectors",
     ({ connectorId }, name) =>
@@ -145,7 +136,6 @@ export const setupEvents = (nodeflowData: NodeflowData) => {
 
       fetchRandomData(1).then((data) => {
         const newNode = createFamilyMemberNode(
-          nodeflowData,
           data[0].name,
           data[0].gender,
           position,
@@ -241,7 +231,7 @@ export const setupEvents = (nodeflowData: NodeflowData) => {
   );
 };
 
-export const setupDummyConnections = (nodeflowData: NodeflowData) => {
+export const setupDummyConnections = () => {
   const totalNodes = nodeflowData.nodes.size;
 
   for (let i = 0; i < totalNodes; i++) {

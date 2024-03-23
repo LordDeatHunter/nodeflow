@@ -1,10 +1,10 @@
-import { NodeflowData, NodeflowNodeData, Vec2 } from "nodeflow-lib";
+import { NodeflowNodeData, Vec2 } from "nodeflow-lib";
 import nodeCss from "./styles/node.module.scss";
 import curveCss from "./styles/curve.module.scss";
 import NodeDisplay from "./NodeDisplay";
+import { nodeflowData } from "./App";
 
 export const createDummyNode = (
-  nodeflowData: NodeflowData,
   position: Vec2,
   center = false,
 ): NodeflowNodeData => {
@@ -55,7 +55,7 @@ export const createDummyNode = (
   return newNode;
 };
 
-export const setupEvents = (nodeflowData: NodeflowData) => {
+export const setupEvents = () => {
   // Override the default create-connection subscription to prevent connecting to the same node, and set custom css when creating a connection
   nodeflowData.eventStore.onNodeConnected.subscribe(
     "create-connection",
@@ -77,19 +77,13 @@ export const setupEvents = (nodeflowData: NodeflowData) => {
   );
 };
 
-export const setupDummyNodes = (
-  nodeflowData: NodeflowData,
-  count: number = 50,
-) => {
+export const setupDummyNodes = (count: number = 50) => {
   for (let i = 0; i < count; i++) {
-    createDummyNode(
-      nodeflowData,
-      Vec2.of(Math.random() * 2000, Math.random() * 2000),
-    );
+    createDummyNode(Vec2.of(Math.random() * 2000, Math.random() * 2000));
   }
 };
 
-export const setupDummyConnections = (nodeflowData: NodeflowData) => {
+export const setupDummyConnections = () => {
   const totalNodes = nodeflowData.nodes.size;
 
   for (let i = 0; i < totalNodes; i++) {

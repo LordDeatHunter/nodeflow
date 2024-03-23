@@ -8,18 +8,16 @@ import SidebarContent from "./components/SidebarContent";
 import { FamilyTreeConstants } from "./Constants";
 import { FTCurveFunctions } from "./FTCurveFunctions";
 
-const App: Component = () => {
-  const [nodeflowData, Nodeflow] = NodeflowLib.get().createCanvas(
-    FamilyTreeConstants.MAIN_NODEFLOW,
-    {},
-    (nf: NodeflowData) => new FTCurveFunctions(nf),
-  );
+const [nodeflowData, Nodeflow] = NodeflowLib.get().createCanvas(
+  FamilyTreeConstants.MAIN_NODEFLOW,
+  {},
+  (nf: NodeflowData) => new FTCurveFunctions(nf),
+);
 
+const App: Component = () => {
   onMount(() => {
-    setupEvents(nodeflowData);
-    setupDummyNodes(nodeflowData).then(() =>
-      setupDummyConnections(nodeflowData),
-    );
+    setupEvents();
+    setupDummyNodes().then(() => setupDummyConnections());
   });
 
   const newCurveCss = createMemo(() => {
@@ -48,4 +46,5 @@ const App: Component = () => {
   );
 };
 
+export { nodeflowData };
 export default App;

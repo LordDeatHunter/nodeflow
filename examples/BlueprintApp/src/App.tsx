@@ -17,15 +17,15 @@ import {
 } from "./utils";
 import { BPCurveFunctions } from "./BPCurveFunctions";
 
+const [nodeflowData, Nodeflow] = NodeflowLib.get().createCanvas(
+  "main",
+  {},
+  (nodeflow: NodeflowData) => new BPCurveFunctions(nodeflow),
+);
+
 const App: Component = () => {
   const [nodePreview, setNodePreview] =
     createSignal<Optional<JSX.Element>>(undefined);
-
-  const [nodeflowData, Nodeflow] = NodeflowLib.get().createCanvas(
-    "main",
-    {},
-    (nodeflow: NodeflowData) => new BPCurveFunctions(nodeflow),
-  );
 
   const createNode = (data: { event: PointerEvent }) => {
     if (!nodePreview()) return;
@@ -43,13 +43,13 @@ const App: Component = () => {
       .divideBy(nodeflowData.zoomLevel)
       .subtract(nodeflowData.position);
 
-    createDummyNode(nodeflowData, nodePosition, true);
+    createDummyNode(nodePosition, true);
   };
 
   onMount(() => {
-    setupEvents(nodeflowData);
-    setupDummyNodes(nodeflowData);
-    setupDummyConnections(nodeflowData);
+    setupEvents();
+    setupDummyNodes();
+    setupDummyConnections();
 
     NodeflowLib.get().globalEventStore.onPointerUpInDocument.subscribe(
       "create-node",
@@ -123,4 +123,5 @@ const App: Component = () => {
   );
 };
 
+export { nodeflowData };
 export default App;

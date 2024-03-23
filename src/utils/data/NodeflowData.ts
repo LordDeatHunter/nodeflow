@@ -552,7 +552,9 @@ export default class NodeflowData {
   public removeNode(nodeId: string, hasHistoryGroup: string | boolean = true) {
     if (!this.nodes.has(nodeId)) return;
 
-    this.mouseData.clearSelections();
+    this.mouseData.filterSelections(
+      (selection) => selection.type !== "node" || selection.node.id !== nodeId,
+    );
 
     const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
 
@@ -1063,8 +1065,8 @@ export default class NodeflowData {
               break;
             case "Space":
               if (this.settings.debugMode) {
-                if (this.mouseData.heldNodes.length > 0) {
-                  console.log(this.mouseData.heldNodes);
+                if (this.mouseData.selections.length > 0) {
+                  console.log(this.mouseData.selections);
                 } else {
                   console.log(this.nodes);
                 }

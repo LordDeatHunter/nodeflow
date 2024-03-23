@@ -432,6 +432,16 @@ export default class NodeflowNodeData {
       .flat();
   }
 
+  public getAllSourceNodes(): NodeflowNodeData[] {
+    return this.getAllSourceConnectors().map((source) => source.parentNode);
+  }
+
+  public getAllDestinationNodes(): NodeflowNodeData[] {
+    return this.getAllDestinationConnectors().map(
+      (destination) => destination.parentNode,
+    );
+  }
+
   public getSectionFromConnector(
     connectorId: string,
   ): Optional<ConnectorSection> {
