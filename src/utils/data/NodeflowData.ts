@@ -71,7 +71,7 @@ export default class NodeflowData {
 
   public constructor(
     id: string,
-    settings: Partial<NodeflowSettings>,
+    settings: Partial<NodeflowSettings> = {},
     curveFunctions?: (nodeflow: NodeflowData) => CurveFunctions,
   ) {
     this.id = id;

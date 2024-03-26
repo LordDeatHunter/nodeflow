@@ -46,8 +46,8 @@ const destinationNode = nodeflowData.addNode({
 });
 
 // add a connector section to the nodes
-const outputSection = sourceNode.addConnectorSection("output");
-const inputSection = node2.addConnectorSection("input");
+const outputSection = sourceNode.addConnectorSection({ id: "output" });
+const inputSection = node2.addConnectorSection({ id: "input" });
 
 // add a connector to each connector section
 outputSection.addConnector({ id: "source-connector" });

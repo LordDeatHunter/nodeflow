@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   nodeflow-lib:
-    specifier: 0.0.5
-    version: 0.0.5(solid-js@1.8.3)(solid-styled-components@0.28.5)
+    specifier: 0.0.6
+    version: 0.0.6(solid-js@1.8.3)(solid-styled-components@0.28.5)
   solid-js:
     specifier: ^1.7.8
     version: 1.8.3
@@ -838,12 +838,12 @@ packages:
       solid-js: 1.8.3
     dev: true
 
-  /@solid-primitives/map@0.4.10(solid-js@1.8.3):
-    resolution: {integrity: sha512-Y4aTvQN1DjMmTQeNS3H1Fc+fVVPVslYGAOxD8gIMgQtHn+yLd4Zc4pm/x0m/lsy7NnEi0nskz4G7vbEd9M5sOA==}
+  /@solid-primitives/map@0.4.11(solid-js@1.8.3):
+    resolution: {integrity: sha512-OAD65RPxMDYv41oAvadPCqedZfDX92BbWLUC+Qwh9okVMDAF/5UM+t1916OAfGV01Cr30d/fxIT1x86P+gFgSQ==}
     peerDependencies:
       solid-js: ^1.6.12
     dependencies:
-      '@solid-primitives/trigger': 1.0.10(solid-js@1.8.3)
+      '@solid-primitives/trigger': 1.0.11(solid-js@1.8.3)
       solid-js: 1.8.3
     dev: false
 
@@ -933,8 +933,8 @@ packages:
       solid-js: 1.8.3
     dev: true
 
-  /@solid-primitives/trigger@1.0.10(solid-js@1.8.3):
-    resolution: {integrity: sha512-gPNhmIBMxaJm2gWAAqUkpF5Vk6yZgaJ9+MFQN5eIRQ//GPIUqkNtSSar5sU+iG2I5QmS4iU7gOnvv3XvxXI1fg==}
+  /@solid-primitives/trigger@1.0.11(solid-js@1.8.3):
+    resolution: {integrity: sha512-4oc8grBzBit7ByXgE1aZ0QXfhdlhXaiFjDKYsOhRyUJa8fN4hdr2IgsYqjmHwxyjK+Dm2OUwkCI1bGkaLgtgXg==}
     peerDependencies:
       solid-js: ^1.6.12
     dependencies:
@@ -2340,13 +2340,13 @@ packages:
     resolution: {integrity: sha512-uYr7J37ae/ORWdZeQ1xxMJe3NtdmqMC/JZK+geofDrkLUApKRHPd18/TxtBOJ4A0/+uUIliorNrfYV6s1b02eQ==}
     dev: true
 
-  /nodeflow-lib@0.0.5(solid-js@1.8.3)(solid-styled-components@0.28.5):
-    resolution: {integrity: sha512-nczOkrziDPhPvRn54VYulHi1ILjKd8BzahBbRPDcmYQqR5i18053Kw7oQfHxuN9QSIJqltj9JEYap/zffRLhHw==}
+  /nodeflow-lib@0.0.6(solid-js@1.8.3)(solid-styled-components@0.28.5):
+    resolution: {integrity: sha512-aLUwteA9no1275WHhah4wrerQeN3Vx5NYs8MzBjvgDy6ppS8bHL6tm1IfJpVti/nE9G2CT2teLGIeuptwoupjA==}
     peerDependencies:
       solid-js: ^1.7.6
       solid-styled-components: ^0.28.5
     dependencies:
-      '@solid-primitives/map': 0.4.10(solid-js@1.8.3)
+      '@solid-primitives/map': 0.4.11(solid-js@1.8.3)
       solid-js: 1.8.3
       solid-styled-components: 0.28.5(solid-js@1.8.3)
     dev: false

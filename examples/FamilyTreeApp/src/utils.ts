@@ -67,13 +67,17 @@ export const createFamilyMemberNode = (
     historyGroup,
   );
   const inputSection = newNode.addConnectorSection(
-    "inputs",
-    nodeCss.inputsSection,
+    {
+      id: "inputs",
+      css: nodeCss.inputsSection,
+    },
     historyGroup,
   );
   const outputSection = newNode.addConnectorSection(
-    "outputs",
-    nodeCss.outputsSection,
+    {
+      id: "outputs",
+      css: nodeCss.outputsSection,
+    },
     historyGroup,
   );
 
