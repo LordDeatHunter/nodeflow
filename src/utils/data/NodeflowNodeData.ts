@@ -168,11 +168,14 @@ export default class NodeflowNodeData {
 
     Object.entries(data.connectorSections ?? []).forEach(
       ([sectionId, section]) => {
-        node.addConnectorSection(sectionId, section.css, historyGroup);
-
-        Object.values(section.connectors).forEach((connector) => {
-          node.addConnector(sectionId, connector, historyGroup);
-        });
+        node.addConnectorSection(
+          {
+            css: section.css,
+            id: sectionId,
+            connectors: section.connectors,
+          },
+          historyGroup,
+        );
       },
     );
 
@@ -194,19 +197,21 @@ export default class NodeflowNodeData {
   }
 
   public addConnectorSection(
-    sectionId?: string,
-    css?: string,
+    data: Partial<SerializedConnectorSection>,
     hasHistoryGroup: string | boolean = true,
   ): ConnectorSection {
-    if (!sectionId || this.connectorSections.has(sectionId)) {
-      sectionId = this.getNextFreeConnectorSectionId();
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+    const section = ConnectorSection.deserialize(data, this, historyGroup);
+
+    if (this.connectorSections.has(section.id)) {
+      return this.connectorSections.get(section.id)!;
     }
 
-    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
-
     if (historyGroup) {
+      const serializedConnector = section.serialize();
       const nodeflowId = this.nodeflowData.id;
       const nodeId = this.id;
+      const sectionId = serializedConnector.id;
 
       this.nodeflowData.changes.addChange({
         type: "remove",
@@ -215,26 +220,19 @@ export default class NodeflowNodeData {
           NodeflowLib.get()
             .getNodeflow(nodeflowId)
             ?.nodes.get(nodeId)
-            ?.addConnectorSection(sectionId, css, false);
+            ?.addConnectorSection(serializedConnector, false);
         },
         undoChange: () => {
           NodeflowLib.get()
             .getNodeflow(nodeflowId)
             ?.nodes.get(nodeId)
-            ?.removeConnectorSection(sectionId!, false);
+            ?.removeConnectorSection(sectionId, false);
         },
         historyGroup: historyGroup as string,
       });
     }
 
-    const section = new ConnectorSection(this.nodeflowData, {
-      connectors: new ReactiveMap<string, NodeConnector>(),
-      css,
-      id: sectionId,
-      parentNode: this,
-    });
-
-    this.connectorSections.set(sectionId, section);
+    this.connectorSections.set(section.id, section);
 
     return section;
   }
@@ -251,8 +249,8 @@ export default class NodeflowNodeData {
     const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
 
     if (historyGroup) {
+      const serializedSection = section.serialize();
       const nodeflowId = this.nodeflowData.id;
-      const sectionCss = section.css;
       const nodeId = this.id;
 
       this.nodeflowData.changes.addChange({
@@ -262,13 +260,13 @@ export default class NodeflowNodeData {
           NodeflowLib.get()
             .getNodeflow(nodeflowId)
             ?.nodes.get(nodeId)
-            ?.removeConnectorSection(sectionId!, false);
+            ?.removeConnectorSection(sectionId, false);
         },
         undoChange: () => {
           NodeflowLib.get()
             .getNodeflow(nodeflowId)
             ?.nodes.get(nodeId)
-            ?.addConnectorSection(sectionId, sectionCss, false);
+            ?.addConnectorSection(serializedSection, false);
         },
         historyGroup: historyGroup as string,
       });

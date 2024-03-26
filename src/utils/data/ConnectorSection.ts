@@ -5,9 +5,10 @@ import {
   SerializedNodeConnector,
 } from "../../nodeflow-types";
 import NodeConnector from "./NodeConnector";
-import { NodeflowData } from "./index";
+import { NodeflowData, NodeflowNodeData } from "./index";
 import Changes from "./Changes";
 import NodeflowLib from "../NodeflowLib";
+import { ReactiveMap } from "@solid-primitives/map";
 
 /**
  * Represents a section containing connectors on a node. Used for grouping connectors together.
@@ -34,6 +35,32 @@ export default class ConnectorSection {
     };
   }
 
+  public static deserialize(
+    data: Partial<SerializedConnectorSection>,
+    node: NodeflowNodeData,
+    hasHistoryGroup: string | boolean = true,
+  ): ConnectorSection {
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+
+    const sectionId =
+      !data.id || node.connectorSections.has(data.id)
+        ? node.getNextFreeConnectorSectionId()
+        : data.id;
+
+    const connectorSection = new ConnectorSection(node.nodeflow, {
+      connectors: new ReactiveMap(),
+      css: data.css,
+      id: sectionId,
+      parentNode: node,
+    });
+
+    for (const [id, connectorData] of Object.entries(data.connectors ?? {})) {
+      connectorSection.addConnector({ ...connectorData, id }, historyGroup);
+    }
+
+    return connectorSection;
+  }
+
   /**
    * Adds a connector to the connector section
    *
@@ -45,11 +72,11 @@ export default class ConnectorSection {
   public addConnector(
     data: Partial<SerializedNodeConnector>,
     hasHistoryGroup: string | boolean = true,
-  ) {
+  ): NodeConnector {
     const connector = NodeConnector.deserialize(data, this);
 
     if (this.connectors.has(connector.id)) {
-      return;
+      return this.connectors.get(connector.id)!;
     }
 
     const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
