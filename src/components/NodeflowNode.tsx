@@ -99,8 +99,11 @@ const NodeflowNode: Component<NodeProps> = (props) => {
       style={{
         left: `${node().position.x}px`,
         top: `${node().position.y}px`,
+        position: "absolute",
         opacity: isVisible() ? 1 : 0,
+        border: "1px solid black",
       }}
+      id={`node-${props.nodeId}`}
       classList={{
         [node()?.css?.normal ?? ""]: true,
         [node()?.css?.selected ?? ""]:
@@ -128,7 +131,7 @@ const NodeflowNode: Component<NodeProps> = (props) => {
       {node().display({ node: node() })}
       <For each={Array.from(node().connectorSections.entries())}>
         {([sectionId, section]) => (
-          <div class={section?.css}>
+          <div class={section?.css} id={`section-${sectionId}`}>
             <For each={Array.from(section.connectors.entries())}>
               {([connectorId, connector]) => (
                 <Connector

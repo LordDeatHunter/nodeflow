@@ -14,6 +14,7 @@
     "deploy-examples": "run-s build-examples && gh-pages -d examples-build",
     "dev:blueprint": "pnpm --prefix ./examples/BlueprintApp start",
     "dev:familytree": "pnpm --prefix ./examples/FamilyTreeApp start",
+    "dev:nostyle": "pnpm --prefix ./examples/NoStyle start",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
     "serve": "vite preview",
     "start": "run-p dev:*"

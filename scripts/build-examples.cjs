@@ -6,7 +6,8 @@ const examplesPath = path.resolve(__dirname, "..", "examples");
 
 const FOLDER_MAP = {
     "BlueprintApp": "blueprint",
-    "FamilyTreeApp": "familytree"
+    "FamilyTreeApp": "familytree",
+    "NoStyle": "nostyle",
 }
 
 const recreateFolder = (path) => {

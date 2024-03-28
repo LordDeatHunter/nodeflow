@@ -25,6 +25,7 @@ const NodeflowCanvas =
         });
         resizeObserver.observe(el);
       }}
+      id={`nodeflow-${nodeflowData.id}`}
       tabIndex="0"
       class={props?.css?.nodeflow}
       style={{
@@ -59,6 +60,8 @@ const NodeflowCanvas =
     >
       <div
         style={{
+          width: "100%",
+          height: "100%",
           position: "absolute",
           transform: `scale(${nodeflowData.zoomLevel}) translate(${nodeflowData.position.x}px, ${nodeflowData.position.y}px)`,
           "transform-origin": "center",
