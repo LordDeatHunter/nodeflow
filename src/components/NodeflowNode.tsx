@@ -1,6 +1,5 @@
 import {
   type Component,
-  createEffect,
   createMemo,
   createRenderEffect,
   createSignal,
@@ -22,7 +21,6 @@ const NodeflowNode: Component<NodeProps> = (props) => {
     () => props.nodeflowData.nodes.get(props.nodeId)!,
   );
   const [isVisible, setIsVisible] = createSignal<boolean>(false);
-  const [_collisions, setCollisions] = createSignal<number>(0);
 
   // TODO: change this to an event that handles multiple nodes.
   createRenderEffect(() => {
@@ -49,12 +47,6 @@ const NodeflowNode: Component<NodeProps> = (props) => {
         prev.position,
         newPosition,
       );
-
-      createEffect(() => {
-        setCollisions(
-          props.nodeflowData.chunking.checkForCollisions(prev.id).length,
-        );
-      });
 
       return {
         position: newPosition,

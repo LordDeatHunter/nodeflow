@@ -460,4 +460,13 @@ export default class NodeflowNodeData {
   public get rect() {
     return Rect.of(this.position, this.size);
   }
+
+  public getCollidingNodes() {
+    // TODO: This gets called every time the node's position changes.
+    return this.nodeflowData.chunking.checkForCollisions(this.id);
+  }
+
+  public isColliding() {
+    return this.getCollidingNodes().length > 0;
+  }
 }

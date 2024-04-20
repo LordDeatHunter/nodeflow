@@ -59,7 +59,7 @@ export default class NodeflowData {
     maxZoom: 200,
     minZoom: 0.02,
     movementAcceleration: 1.5,
-    movementSlowdown: 0.85,
+    movementDeceleration: 0.85,
     zoomMultiplier: 0.005,
   } as const;
 
@@ -378,7 +378,7 @@ export default class NodeflowData {
       );
     } else {
       speed = clamp(
-        speed * this.settings.movementSlowdown,
+        speed * this.settings.movementDeceleration,
         -this.settings.maxMovementSpeed,
         this.settings.maxMovementSpeed,
       );
