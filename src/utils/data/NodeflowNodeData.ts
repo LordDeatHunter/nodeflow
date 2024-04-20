@@ -15,6 +15,7 @@ import { deepCopy } from "../misc-utils";
 import { NodeflowData } from "./index";
 import Changes from "./Changes";
 import NodeflowLib from "../NodeflowLib";
+import Rect from "./Rect";
 
 export default class NodeflowNodeData {
   private readonly store;
@@ -454,5 +455,9 @@ export default class NodeflowNodeData {
 
   public select(position?: Vec2) {
     this.nodeflowData.selectNode(this.id, position);
+  }
+
+  public get rect() {
+    return Rect.of(this.position, this.size);
   }
 }

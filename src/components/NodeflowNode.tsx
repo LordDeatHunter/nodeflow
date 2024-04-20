@@ -2,15 +2,16 @@ import {
   type Component,
   createEffect,
   createMemo,
+  createRenderEffect,
   createSignal,
   For,
   onCleanup,
 } from "solid-js";
-import { NodeflowData } from "../utils";
+import { NodeflowData, NodeflowNodeData } from "../utils";
 import Vec2 from "../utils/data/Vec2";
 import Connector from "./Connector";
-import NodeflowNodeData from "../utils/data/NodeflowNodeData";
 
+// TODO: Probably better to pass the node data directly instead of the id.
 interface NodeProps {
   nodeId: string;
   nodeflowData: NodeflowData;
@@ -21,9 +22,10 @@ const NodeflowNode: Component<NodeProps> = (props) => {
     () => props.nodeflowData.nodes.get(props.nodeId)!,
   );
   const [isVisible, setIsVisible] = createSignal<boolean>(false);
+  const [_collisions, setCollisions] = createSignal<number>(0);
 
   // TODO: change this to an event that handles multiple nodes.
-  createEffect(() => {
+  createRenderEffect(() => {
     const lastSelection = props.nodeflowData.mouseData.selections.at(-1);
 
     if (
@@ -34,9 +36,30 @@ const NodeflowNode: Component<NodeProps> = (props) => {
       return;
     }
 
-    node().position = props.nodeflowData.mouseData.mousePosition
-      .divideBy(props.nodeflowData.zoomLevel)
-      .subtract(props.nodeflowData.mouseData.clickStartPosition ?? Vec2.zero());
+    // TODO: Fix the solid/reactivity warning.
+    node().updateWithPrevious((prev) => {
+      const newPosition = props.nodeflowData.mouseData.mousePosition
+        .divideBy(props.nodeflowData.zoomLevel)
+        .subtract(
+          props.nodeflowData.mouseData.clickStartPosition ?? Vec2.zero(),
+        );
+
+      props.nodeflowData.chunking.updateNodeInChunk(
+        props.nodeId,
+        prev.position,
+        newPosition,
+      );
+
+      createEffect(() => {
+        setCollisions(
+          props.nodeflowData.chunking.checkForCollisions(prev.id).length,
+        );
+      });
+
+      return {
+        position: newPosition,
+      };
+    });
   });
 
   onCleanup(() => {

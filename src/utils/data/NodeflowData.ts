@@ -26,6 +26,7 @@ import CurveFunctions from "./CurveFunctions";
 import NodeflowLib from "../NodeflowLib";
 import { KeyboardKeyCode, MOUSE_BUTTONS } from "../constants";
 import KeyboardData from "./KeyboardData";
+import { NodeflowChunking } from "./index";
 
 /**
  * NodeflowData is a class that manages the state of a Nodeflow canvas.
@@ -42,6 +43,7 @@ export default class NodeflowData {
   public readonly nodes;
   /** An instance of the NodeflowEventRecord class that handles various event subscriptions and publishing. */
   public readonly eventStore: NodeflowEventRecord;
+  public readonly chunking;
   public readonly id;
   public static readonly DEFAULT_SETTINGS: NodeflowSettings = {
     canAddNodes: true,
@@ -93,6 +95,7 @@ export default class NodeflowData {
     this.mouseData = new MouseData(this);
     this.keyboardData = new KeyboardData(this);
     this.nodes = new ReactiveMap<string, NodeflowNodeData>();
+    this.chunking = new NodeflowChunking(this);
 
     this.eventStore = {
       onKeyDownInNodeflow: new NodeflowEventPublisher<"onKeyDownInNodeflow">(
