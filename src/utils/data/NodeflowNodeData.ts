@@ -24,6 +24,7 @@ export default class NodeflowNodeData {
   constructor(nodeflowData: NodeflowData, data: NodeflowNodeType) {
     this.nodeflowData = nodeflowData;
     this.store = createStore<NodeflowNodeType>(data);
+    this.nodeflowData.chunking.addNodeToChunk(this.id, this.getCenter());
   }
 
   public get nodeflow() {
@@ -116,6 +117,10 @@ export default class NodeflowNodeData {
 
   public set size(value) {
     this.store[1]({ size: value });
+  }
+
+  public get sizeWithOffset() {
+    return this.size.add(this.offset);
   }
 
   public update(data: Partial<NodeflowNodeType>) {
@@ -450,7 +455,7 @@ export default class NodeflowNodeData {
   }
 
   public getCenter(): Vec2 {
-    return this.position.add(this.offset).add(this.size.divideBy(2));
+    return this.position.add(this.offset, this.size.divideBy(2));
   }
 
   public select(position?: Vec2) {
@@ -461,8 +466,15 @@ export default class NodeflowNodeData {
     return Rect.of(this.position, this.size);
   }
 
+  public get rectWithOffset() {
+    return Rect.of(
+      this.position.subtract(this.offset),
+      this.size.add(this.offset.multiplyBy(2)),
+    );
+  }
+
   public getCollidingNodes() {
-    // TODO: This gets called every time the node's position changes.
+    // TODO: This gets called every time the node's position changes. Look into optimizing this.
     return this.nodeflowData.chunking.checkForCollisions(this.id);
   }
 

@@ -103,7 +103,7 @@ export default class NodeflowChunking {
     for (let i = -1; i < 2; ++i) {
       for (let j = -1; j < 2; ++j) {
         const chunk = this.getChunk(
-          node.rect.position.add(
+          node.rectWithOffset.position.add(
             Vec2.of(i * this.chunkSize, j * this.chunkSize),
           ),
         );
@@ -123,7 +123,7 @@ export default class NodeflowChunking {
       return (
         checkNode &&
         checkNode.id != node.id &&
-        checkNode.rect.isCollidingWith(node.rect)
+        checkNode.rectWithOffset.isCollidingWith(node.rectWithOffset)
       );
     });
   }

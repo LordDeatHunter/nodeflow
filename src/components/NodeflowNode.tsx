@@ -1,5 +1,6 @@
 import {
   type Component,
+  createEffect,
   createMemo,
   createRenderEffect,
   createSignal,
@@ -54,7 +55,16 @@ const NodeflowNode: Component<NodeProps> = (props) => {
     });
   });
 
+  createEffect(() => {
+    console.log(node().id, node().getCollidingNodes());
+  });
+
   onCleanup(() => {
+    props.nodeflowData.chunking.removeNodeFromChunk(
+      props.nodeId,
+      node().position,
+    );
+
     if (!node().resizeObserver) return;
 
     node().resizeObserver!.disconnect();
