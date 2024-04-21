@@ -16,6 +16,7 @@ import { NodeflowData } from "./index";
 import Changes from "./Changes";
 import NodeflowLib from "../NodeflowLib";
 import Rect from "./Rect";
+import { createEffect } from "solid-js";
 
 export default class NodeflowNodeData {
   private readonly store;
@@ -25,6 +26,32 @@ export default class NodeflowNodeData {
     this.nodeflowData = nodeflowData;
     this.store = createStore<NodeflowNodeType>(data);
     this.nodeflowData.chunking.addNodeToChunk(this.id, this.getCenter());
+
+    createEffect(() => {
+      const collidingNodes = this.getCollidingNodes();
+      if (collidingNodes.length > 0) {
+        createEffect(() => {
+          collidingNodes.forEach((nodeId) => {
+            const node = this.nodeflowData.nodes.get(nodeId);
+            if (node) {
+              const nodeRect = node.rectWithOffset;
+              const thisRect = this.rectWithOffset;
+              if (nodeRect.intersects(thisRect)) {
+                const distance = nodeRect.center.subtract(
+                  thisRect.center,
+                ).magnitude;
+                const direction = nodeRect.center
+                  .subtract(thisRect.center)
+                  .normalize();
+                this.position = this.position.subtract(
+                  direction.multiplyBy(distance),
+                );
+              }
+            }
+          });
+        });
+      }
+    });
   }
 
   public get nodeflow() {

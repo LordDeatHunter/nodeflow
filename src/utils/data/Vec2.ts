@@ -126,4 +126,13 @@ export default class Vec2 {
   public hashCode(): `${number}:${number}` {
     return `${this.x}:${this.y}`;
   }
+
+  public get magnitude(): number {
+    return Math.hypot(this.x, this.y);
+  }
+
+  public normalize(): Vec2 {
+    const magnitude = this.magnitude;
+    return new Vec2(this.x / magnitude, this.y / magnitude);
+  }
 }

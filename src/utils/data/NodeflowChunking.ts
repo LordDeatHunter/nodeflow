@@ -123,7 +123,7 @@ export default class NodeflowChunking {
       return (
         checkNode &&
         checkNode.id != node.id &&
-        checkNode.rectWithOffset.isCollidingWith(node.rectWithOffset)
+        checkNode.rectWithOffset.intersects(node.rectWithOffset)
       );
     });
   }

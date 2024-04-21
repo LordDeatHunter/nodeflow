@@ -21,11 +21,11 @@ export default class Rect {
     return Rect.fromRect(this);
   }
 
-  public center(): Vec2 {
+  public get center(): Vec2 {
     return this.position.add(this.size.divideBy(2));
   }
 
-  public isCollidingWith(other: Rect): boolean {
+  public intersects(other: Rect): boolean {
     return (
       this.position.x < other.position.x + other.size.x &&
       this.position.x + this.size.x > other.position.x &&
