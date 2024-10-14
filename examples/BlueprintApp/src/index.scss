@@ -1,5 +1,18 @@
 @use "styles/colors";
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap");
+
+@layer nodeflow, blueprint;
+
+@layer blueprint {
+  .nodeflowConnectorSection {
+    position: absolute;
+    flex-direction: column;
+    justify-content: space-evenly;
+    width: 0;
+    top: 0;
+    height: 100%;
+  }
+}
 
 body {
   min-width: 100vw;
@@ -8,7 +21,7 @@ body {
   height: 100vh;
   padding: 0;
   margin: 0;
-  font-family: 'Roboto Mono', monospace;
+  font-family: "Roboto Mono", monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: auto;

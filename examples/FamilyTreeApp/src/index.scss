@@ -1,5 +1,18 @@
 @use "styles/colors";
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap");
+
+@layer nodeflow, famtree;
+
+@layer famtree {
+  .nodeflowConnectorSection {
+    position: unset;
+    display: unset;
+    justify-content: unset;
+    width: unset;
+    top: unset;
+    left: unset;
+  }
+}
 
 body {
   min-width: 100vw;
@@ -8,7 +21,7 @@ body {
   height: 100vh;
   padding: 0;
   margin: 0;
-  font-family: 'Roboto Mono', monospace;
+  font-family: "Roboto Mono", monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: auto;
@@ -85,7 +98,8 @@ input[type="radio"] {
     margin: 0.375rem;
   }
 
-  &:hover, &:focus {
+  &:hover,
+  &:focus {
     filter: drop-shadow(0 0 2px darken(colors.$border-color, 10%));
   }
 
@@ -109,7 +123,8 @@ input[type="text"] {
 
   font-size: 1rem;
 
-  &:hover, &:focus {
+  &:hover,
+  &:focus {
     background-color: darken(colors.$background-color, 5%);
     border-color: darken(colors.$border-color, 10%);
     color: darken(colors.$font-color, 5%);

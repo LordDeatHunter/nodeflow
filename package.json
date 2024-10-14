@@ -9,7 +9,7 @@
   "version": "0.0.6",
   "description": "Library for creating node/graph-based applications",
   "scripts": {
-    "build": "rollup -c rollup.config.js",
+    "build": "vite build && tsc --emitDeclarationOnly",
     "build-examples": "node scripts/build-examples.cjs",
     "deploy-examples": "run-s build-examples && gh-pages -d examples-build",
     "dev:blueprint": "pnpm --prefix ./examples/BlueprintApp start",
@@ -24,16 +24,16 @@
   "files": [
     "dist"
   ],
-  "main": "./dist/index/index.common.js",
-  "module": "./dist/index/index.module.js",
-  "types": "./dist/index/index.d.ts",
+  "main": "./dist/nodeflow.cjs.js",
+  "module": "./dist/nodeflow.es.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index/index.d.ts",
-      "import": "./dist/index/index.module.js",
-      "browser": "./dist/index/index.module.js",
-      "require": "./dist/index/index.common.js",
-      "node": "./dist/index/index.common.js"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/nodeflow.es.js",
+      "browser": "./dist/nodeflow.es.js",
+      "require": "./dist/nodeflow.cjs.js",
+      "node": "./dist/nodeflow.cjs.js"
     }
   },
   "devDependencies": {
@@ -50,15 +50,16 @@
     "rollup-plugin-typescript2": "^0.36.0",
     "rollup-preset-solid": "^2.0.1",
     "sass": "^1.66.0",
-    "solid-devtools": "^0.27.3",
+    "solid-devtools": "^0.27.9",
     "typescript": "^5.1.3",
-    "vite": "^4.3.9",
+    "vite": "^4.5.2",
     "vite-plugin-eslint": "1.8.1",
     "vite-plugin-solid": "2.7.0",
     "vite-plugin-terminal": "^1.1.0"
   },
   "dependencies": {
-    "@solid-primitives/map": "^0.4.8"
+    "@solid-primitives/map": "^0.4.9",
+    "vite-plugin-css-injected-by-js": "^3.5.2"
   },
   "peerDependencies": {
     "solid-js": "^1.7.6",

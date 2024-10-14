@@ -10,7 +10,6 @@
     "jsxImportSource": "solid-js",
     "module": "ESNext",
     "moduleResolution": "node",
-    "noEmit": true,
     "outDir": "dist",
     "strict": true,
     "strictNullChecks": true,
