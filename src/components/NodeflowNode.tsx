@@ -1,6 +1,5 @@
 import {
   type Component,
-  createEffect,
   createMemo,
   createRenderEffect,
   createSignal,
@@ -36,6 +35,7 @@ const NodeflowNode: Component<NodeProps> = (props) => {
     }
 
     // TODO: Fix the solid/reactivity warning.
+    // eslint-disable-next-line solid/reactivity
     node().updateWithPrevious((prev) => {
       const newPosition = props.nodeflowData.mouseData.mousePosition
         .divideBy(props.nodeflowData.zoomLevel)
