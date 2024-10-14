@@ -15,6 +15,8 @@ import { deepCopy } from "../misc-utils";
 import { NodeflowData } from "./index";
 import Changes from "./Changes";
 import NodeflowLib from "../NodeflowLib";
+import Rect from "./Rect";
+import { createEffect } from "solid-js";
 
 export default class NodeflowNodeData {
   private readonly store;
@@ -23,6 +25,33 @@ export default class NodeflowNodeData {
   constructor(nodeflowData: NodeflowData, data: NodeflowNodeType) {
     this.nodeflowData = nodeflowData;
     this.store = createStore<NodeflowNodeType>(data);
+    this.nodeflowData.chunking.addNodeToChunk(this.id, this.getCenter());
+
+    createEffect(() => {
+      const collidingNodes = this.getCollidingNodes();
+      if (collidingNodes.length > 0) {
+        createEffect(() => {
+          collidingNodes.forEach((nodeId) => {
+            const node = this.nodeflowData.nodes.get(nodeId);
+            if (node) {
+              const nodeRect = node.rectWithOffset;
+              const thisRect = this.rectWithOffset;
+              if (nodeRect.intersects(thisRect)) {
+                const distance = nodeRect.center.subtract(
+                  thisRect.center,
+                ).magnitude;
+                const direction = nodeRect.center
+                  .subtract(thisRect.center)
+                  .normalize();
+                this.position = this.position.subtract(
+                  direction.multiplyBy(distance),
+                );
+              }
+            }
+          });
+        });
+      }
+    });
   }
 
   public get nodeflow() {
@@ -115,6 +144,10 @@ export default class NodeflowNodeData {
 
   public set size(value) {
     this.store[1]({ size: value });
+  }
+
+  public get sizeWithOffset() {
+    return this.size.add(this.offset);
   }
 
   public update(data: Partial<NodeflowNodeType>) {
@@ -449,10 +482,30 @@ export default class NodeflowNodeData {
   }
 
   public getCenter(): Vec2 {
-    return this.position.add(this.offset).add(this.size.divideBy(2));
+    return this.position.add(this.offset, this.size.divideBy(2));
   }
 
   public select(position?: Vec2) {
     this.nodeflowData.selectNode(this.id, position);
+  }
+
+  public get rect() {
+    return Rect.of(this.position, this.size);
+  }
+
+  public get rectWithOffset() {
+    return Rect.of(
+      this.position.subtract(this.offset),
+      this.size.add(this.offset.multiplyBy(2)),
+    );
+  }
+
+  public getCollidingNodes() {
+    // TODO: This gets called every time the node's position changes. Look into optimizing this.
+    return this.nodeflowData.chunking.checkForCollisions(this.id);
+  }
+
+  public isColliding() {
+    return this.getCollidingNodes().length > 0;
   }
 }

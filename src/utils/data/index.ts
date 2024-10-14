@@ -8,6 +8,7 @@ export * from "./EventPublishers";
 export { default as KeyboardData } from "./KeyboardData";
 export { default as MouseData } from "./MouseData";
 export { default as NodeConnector } from "./NodeConnector";
+export { default as NodeflowChunking } from "./NodeflowChunking";
 export { default as NodeflowData } from "./NodeflowData";
 export { default as NodeflowNodeData } from "./NodeflowNodeData";
 export { default as Vec2 } from "./Vec2";

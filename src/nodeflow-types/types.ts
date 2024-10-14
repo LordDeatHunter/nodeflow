@@ -155,6 +155,6 @@ export type NodeflowSettings = {
   maxZoom: number;
   minZoom: number;
   movementAcceleration: number;
-  movementSlowdown: number;
+  movementDeceleration: number;
   zoomMultiplier: number;
 };

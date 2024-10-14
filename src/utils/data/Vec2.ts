@@ -1,5 +1,7 @@
 import { SerializedVec2 } from "../../nodeflow-types";
 
+export type Vec2Hash = `${number}:${number}`;
+
 /**
  * A data structure containing an x and y numerical value.
  */
@@ -31,7 +33,7 @@ export default class Vec2 {
   }
 
   public copy(): Vec2 {
-    return new Vec2(this.x, this.y);
+    return Vec2.fromVec2(this);
   }
 
   public serialize(): SerializedVec2 {
@@ -115,5 +117,22 @@ export default class Vec2 {
 
   public abs(): Vec2 {
     return Vec2.of(Math.abs(this.x), Math.abs(this.y));
+  }
+
+  public equals(position: Vec2): boolean {
+    return this.x === position.x && this.y === position.y;
+  }
+
+  public hashCode(): `${number}:${number}` {
+    return `${this.x}:${this.y}`;
+  }
+
+  public get magnitude(): number {
+    return Math.hypot(this.x, this.y);
+  }
+
+  public normalize(): Vec2 {
+    const magnitude = this.magnitude;
+    return new Vec2(this.x / magnitude, this.y / magnitude);
   }
 }
