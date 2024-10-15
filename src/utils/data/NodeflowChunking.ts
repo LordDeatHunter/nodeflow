@@ -92,6 +92,11 @@ export default class NodeflowChunking {
   }
 
   public checkForCollisions(id: string): string[] {
+    // TODO: Make this check per-node instead of only checking global settings
+    if (!this.nodeflowData.settings.allowCollision) {
+      return [];
+    }
+
     const node = this.nodeflowData.nodes.get(id);
 
     const chunks = [] as string[];

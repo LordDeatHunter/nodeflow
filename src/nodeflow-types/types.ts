@@ -142,6 +142,7 @@ export type Change = {
 };
 
 export type NodeflowSettings = {
+  allowCollision: boolean;
   canAddNodes: boolean;
   canCreateConnections: boolean;
   canDeleteConnections: boolean;

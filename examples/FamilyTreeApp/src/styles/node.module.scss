@@ -4,19 +4,18 @@ $connector-height: 1rem;
 $connector-border: 6px;
 
 @mixin baseNode {
-  z-index: 1;
   width: max-content;
   min-width: 300px;
   min-height: 100px;
   padding: 10px;
-  position: absolute;
-  user-select: none;
   border-radius: 8px;
   outline: 6px solid colors.$node-border-color;
   outline-offset: -3px;
 
-  cursor: grab;
-  transition: background-color 0.2s ease-in-out 0s, opacity 0.8s ease-in-out, border-color 0.2s ease-in-out 0s;
+  transition:
+    background-color 0.2s ease-in-out 0s,
+    opacity 0.8s ease-in-out,
+    border-color 0.2s ease-in-out 0s;
 
   background-color: colors.$node-background-color;
 
@@ -69,7 +68,11 @@ $connector-border: 6px;
   @include baseNode;
 
   &:hover {
-    background-color: mix(colors.$node-background-color, colors.$female-color, 80%);
+    background-color: mix(
+      colors.$node-background-color,
+      colors.$female-color,
+      80%
+    );
     z-index: 3;
   }
 }
@@ -78,7 +81,11 @@ $connector-border: 6px;
   @include baseNode;
 
   &:hover {
-    background-color: mix(colors.$node-background-color, colors.$male-color, 80%);
+    background-color: mix(
+      colors.$node-background-color,
+      colors.$male-color,
+      80%
+    );
     z-index: 3;
   }
 }
@@ -107,7 +114,7 @@ $connector-border: 6px;
 
 .inputsSection {
   @include connectorSection;
-  top: calc(($connector-height + $connector-border) / -2)
+  top: calc(($connector-height + $connector-border) / -2);
 }
 
 .outputsSection {

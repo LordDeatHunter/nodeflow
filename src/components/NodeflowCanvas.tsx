@@ -25,6 +25,7 @@ const NodeflowCanvas =
         });
         resizeObserver.observe(el);
       }}
+      id={`nodeflow-${nodeflowData.id}`}
       tabIndex="0"
       class={props?.css?.nodeflow}
       style={{

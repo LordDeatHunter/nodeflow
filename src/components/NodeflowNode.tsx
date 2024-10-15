@@ -1,6 +1,5 @@
 import {
   type Component,
-  createEffect,
   createMemo,
   createRenderEffect,
   createSignal,
@@ -36,6 +35,7 @@ const NodeflowNode: Component<NodeProps> = (props) => {
     }
 
     // TODO: Fix the solid/reactivity warning.
+    // eslint-disable-next-line solid/reactivity
     node().updateWithPrevious((prev) => {
       const newPosition = props.nodeflowData.mouseData.mousePosition
         .divideBy(props.nodeflowData.zoomLevel)
@@ -122,6 +122,8 @@ const NodeflowNode: Component<NodeProps> = (props) => {
         top: `${node().position.y}px`,
         opacity: isVisible() ? 1 : 0,
       }}
+      id={`node-${props.nodeId}`}
+      class="nodeflowNode"
       classList={{
         [node()?.css?.normal ?? ""]: true,
         [node()?.css?.selected ?? ""]:
@@ -149,7 +151,13 @@ const NodeflowNode: Component<NodeProps> = (props) => {
       {node().display({ node: node() })}
       <For each={Array.from(node().connectorSections.entries())}>
         {([sectionId, section]) => (
-          <div class={section?.css}>
+          <div
+            classList={{
+              [section?.css ?? ""]: true,
+              nodeflowConnectorSection: true,
+            }}
+            id={`section-${sectionId}`}
+          >
             <For each={Array.from(section.connectors.entries())}>
               {([connectorId, connector]) => (
                 <Connector
