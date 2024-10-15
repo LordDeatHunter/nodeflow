@@ -11,24 +11,23 @@
   },
   "types": "src/types.d.ts",
   "dependencies": {
-    "nodeflow-lib": "0.0.6",
-    "solid-js": "^1.7.8",
+    "nodeflow-lib": "0.0.7",
+    "solid-js": "^1.9.2",
     "solid-styled-components": "^0.28.5"
   },
   "devDependencies": {
-    "@types/node": "^20.11.5",
-    "@typescript-eslint/eslint-plugin": "^6.6.0",
-    "@typescript-eslint/parser": "^6.6.0",
+    "@types/node": "^20.16.11",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
     "eslint": "8.48.0",
     "eslint-plugin-jsx-a11y": "6.7.1",
     "eslint-plugin-solid": "0.13.0",
     "prettier": "3.0.3",
-    "sass": "^1.66.0",
-    "solid-devtools": "^0.27.3",
-    "typescript": "^5.1.3",
-    "vite": "^4.4.5",
-    "vite-plugin-eslint": "1.8.1",
-    "vite-plugin-solid": "^2.7.0",
-    "vite-plugin-terminal": "^1.1.0"
+    "sass": "^1.79.5",
+    "solid-devtools": "^0.27.9",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.9",
+    "vite-plugin-solid": "^2.10.2",
+    "vite-plugin-terminal": "^1.2.0"
   }
 }

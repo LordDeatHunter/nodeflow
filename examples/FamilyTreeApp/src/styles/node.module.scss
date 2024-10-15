@@ -49,7 +49,7 @@ $connector-border: 6px;
   background-color: $bg-color;
 
   &:hover {
-    background-color: lighten($bg-color, 10%);
+    background-color: adjust-color($bg-color, $lightness: 10%);
   }
 
   outline: $connector-border solid colors.$node-border-color;

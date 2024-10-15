@@ -1,5 +1,4 @@
 @use "colors";
-@use "utils";
 
 @mixin baseDisplay {
   display: flex;
@@ -59,11 +58,13 @@
 
 @mixin hovered($base-color, $lighten, $amount) {
   + svg {
-    filter: drop-shadow(0 0 2px darken(colors.$border-color, $amount));
+    filter: drop-shadow(
+      0 0 2px adjust-color(colors.$border-color, $lightness: -$amount)
+    );
     @if $lighten {
-      fill: lighten($base-color, $amount);
+      fill: adjust-color($base-color, $lightness: $amount);
     } @else {
-      fill: darken($base-color, $amount);
+      fill: adjust-color($base-color, $lightness: -$amount);
     }
     height: 1.5rem;
     width: 1.5rem;
@@ -71,9 +72,9 @@
 
     + label {
       @if $lighten {
-        color: lighten($base-color, $amount);
+        color: adjust-color($base-color, $lightness: $amount);
       } @else {
-        color: darken($base-color, $amount);
+        color: adjust-color($base-color, $lightness: -$amount);
       }
     }
   }
@@ -87,13 +88,13 @@
     width: 1rem;
     height: 1rem;
     margin: 0.25rem;
-    fill: darken(desaturate($base-color, 75%), 25%);
+    fill: adjust-color($base-color, $saturation: -75%, $lightness: -25%);
     cursor: pointer;
 
     + label {
       cursor: pointer;
       margin: 0;
-      color: darken(desaturate($base-color, 75%), 25%);
+      color: adjust-color($base-color, $saturation: -75%, $lightness: -25%);
     }
   }
 
@@ -101,7 +102,8 @@
     @include hovered($base-color, true, 10%);
   }
 
-  &:focus, &:active {
+  &:focus,
+  &:active {
     @include hovered($base-color, false, 10%);
   }
 
@@ -115,7 +117,8 @@
     }
   }
 
-  &:checked:focus, &:checked:active {
+  &:checked:focus,
+  &:checked:active {
     @include hovered($base-color, true, 25%);
   }
 }
@@ -160,21 +163,23 @@
   color: $color;
 
   &:hover {
-    stroke: utils.darkenAndSaturate($color, 10%, $darkness: 30%);
-    filter: drop-shadow(0 0px 4px utils.lightenAndDesaturate($color, 15%, $lightness: 30%));
+    stroke: adjust-color($color, $saturation: 10%, $lightness: -30%);
+    filter: drop-shadow(
+      0 0px 4px adjust-color($color, $saturation: -15%, $lightness: 30%)
+    );
   }
 }
 
 .invalidParent {
-  fill: darken(colors.$border-color, 10%);
+  fill: adjust-color(colors.$border-color, $lightness: -10%);
 }
 
 .validMother {
-  @include validParent(colors.$female-dark-color)
+  @include validParent(colors.$female-dark-color);
 }
 
 .validFather {
-  @include validParent(colors.$male-dark-color)
+  @include validParent(colors.$male-dark-color);
 }
 
 .childrenDisplayContainer {
@@ -210,6 +215,6 @@
   margin: 0;
 
   &:hover {
-    color: darken(colors.$border-color, 20%);
+    color: adjust-color(colors.$border-color, $lightness: -20%);
   }
 }

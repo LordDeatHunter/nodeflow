@@ -1,15 +1,16 @@
 @use "colors";
-@use "utils";
 
 @mixin baseCurve($strokeColor) {
   stroke-width: 12px;
-  transition: stroke 100ms ease-in-out, filter 100ms ease-in-out;
+  transition:
+    stroke 100ms ease-in-out,
+    filter 100ms ease-in-out;
   stroke: $strokeColor;
 }
 
 @mixin hoverHighlight($strokeColor) {
   &:hover {
-    stroke: utils.darkenAndSaturate($strokeColor, 10%, $darkness: 30%);
+    stroke: adjust-color($strokeColor, $saturation: 10%, $lightness: -30%);
     filter: drop-shadow(0 0 2px $strokeColor);
   }
 }
@@ -28,21 +29,39 @@
 }
 
 .selectedFatherCurve {
-  @include baseCurve(utils.darkenAndSaturate(colors.$male-color));
-  filter: drop-shadow(0 0 2px utils.darkenAndSaturate(colors.$male-color));
+  @include baseCurve(
+    adjust-color(colors.$male-color, $saturation: 25%, $lightness: -15%)
+  );
+  filter: drop-shadow(
+    0 0 2px adjust-color(colors.$male-color, $saturation: 25%, $lightness: -15%)
+  );
 }
 
 .selectedMotherCurve {
-  @include baseCurve(utils.darkenAndSaturate(colors.$female-color));
-  filter: drop-shadow(0 0 2px utils.darkenAndSaturate(colors.$female-color));
+  @include baseCurve(
+    adjust-color(colors.$female-color, $saturation: 25%, $lightness: -15%)
+  );
+  filter: drop-shadow(
+    0 0 2px
+      adjust-color(colors.$female-color, $saturation: 25%, $lightness: -15%)
+  );
 }
 
 .newFatherCurve {
-  @include baseCurve(utils.lightenAndDesaturate(colors.$male-color));
-  filter: drop-shadow(0 0 2px utils.darkenAndSaturate(colors.$male-color));
+  @include baseCurve(
+    adjust-color(colors.$male-color, $saturation: -25%, $lightness: 15%)
+  );
+  filter: drop-shadow(
+    0 0 2px adjust-color(colors.$male-color, $saturation: 25%, $lightness: -15%)
+  );
 }
 
 .newMotherCurve {
-  @include baseCurve(utils.lightenAndDesaturate(colors.$female-color));
-  filter: drop-shadow(0 0 2px utils.darkenAndSaturate(colors.$female-color));
+  @include baseCurve(
+    adjust-color(colors.$female-color, $saturation: -25%, $lightness: 15%)
+  );
+  filter: drop-shadow(
+    0 0 2px
+      adjust-color(colors.$female-color, $saturation: 25%, $lightness: -15%)
+  );
 }

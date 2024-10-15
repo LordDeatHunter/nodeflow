@@ -58,22 +58,24 @@ button {
   outline: none;
 
   &:hover {
-    background-color: lighten(colors.$background-color, 15%);
-    border-color: darken(colors.$border-color, 15%);
-    color: lighten(colors.$font-color, 10%);
+    background-color: adjust-color(colors.$background-color, $lightness: 15%);
+    border-color: adjust-color(colors.$border-color, $lightness: -15%);
+    color: adjust-color(colors.$font-color, $lightness: 10%);
   }
 
   &:focus {
-    background-color: darken(colors.$background-color, 5%);
-    border-color: darken(colors.$border-color, 10%);
-    color: darken(colors.$font-color, 5%);
-    filter: drop-shadow(0 0 2px darken(colors.$border-color, 10%));
+    background-color: adjust-color(colors.$background-color, $lightness: -5%);
+    border-color: adjust-color(colors.$border-color, $lightness: -10%);
+    color: adjust-color(colors.$font-color, $lightness: -5%);
+    filter: drop-shadow(
+      0 0 2px adjust-color(colors.$border-color, $lightness: -10%)
+    );
   }
 
   &:active {
-    background-color: darken(colors.$background-color, 10%);
-    border-color: darken(colors.$border-color, 20%);
-    color: darken(colors.$font-color, 10%);
+    background-color: adjust-color(colors.$background-color, $lightness: -10%);
+    border-color: adjust-color(colors.$border-color, $lightness: -20%);
+    color: adjust-color(colors.$font-color, $lightness: -10%);
   }
 }
 
@@ -100,7 +102,9 @@ input[type="radio"] {
 
   &:hover,
   &:focus {
-    filter: drop-shadow(0 0 2px darken(colors.$border-color, 10%));
+    filter: drop-shadow(
+      0 0 2px adjust-color(colors.$border-color, $lightness: -10%)
+    );
   }
 
   &:disabled {
@@ -125,10 +129,12 @@ input[type="text"] {
 
   &:hover,
   &:focus {
-    background-color: darken(colors.$background-color, 5%);
-    border-color: darken(colors.$border-color, 10%);
-    color: darken(colors.$font-color, 5%);
-    filter: drop-shadow(0 0 2px darken(colors.$border-color, 10%));
+    background-color: adjust-color(colors.$background-color, $lightness: -5%);
+    border-color: adjust-color(colors.$border-color, $lightness: -10%);
+    color: adjust-color(colors.$font-color, $lightness: -5%);
+    filter: drop-shadow(
+      0 0 2px adjust-color(colors.$border-color, $lightness: -10%)
+    );
   }
 
   &:disabled {
