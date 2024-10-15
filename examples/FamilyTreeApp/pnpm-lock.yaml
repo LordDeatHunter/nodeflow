@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       nodeflow-lib:
-        specifier: 0.0.7
-        version: 0.0.7(solid-js@1.9.2)(solid-styled-components@0.28.5(solid-js@1.9.2))(vite@5.4.9(@types/node@20.16.11)(sass@1.79.5))
+        specifier: 0.0.8
+        version: 0.0.8(solid-js@1.9.2)(solid-styled-components@0.28.5(solid-js@1.9.2))(vite@5.4.9(@types/node@20.16.11)(sass@1.79.5))
       solid-js:
         specifier: ^1.9.2
         version: 1.9.2
@@ -1402,8 +1402,8 @@ packages:
   node-releases@2.0.18:
     resolution: {integrity: sha512-d9VeXT4SJ7ZeOqGX6R5EM022wpL+eWPooLI+5UpWn2jCT1aosUQEhQP214x33Wkwx3JQMvIm+tIoVOdodFS40g==}
 
-  nodeflow-lib@0.0.7:
-    resolution: {integrity: sha512-kPXYx7fetOyRGAzfWXtU/O6rCp7tBcOV6gK7/38rh7OSdvmCfntLOVi9e8MVgiu2bFqXhSycw+cbbNcAohIyTQ==}
+  nodeflow-lib@0.0.8:
+    resolution: {integrity: sha512-TvWt/EQIIPp+r9t1/0ctQnh4rroDEveSQkd4konXGOvRVdZa9wtMWtKlmGDhjf+fvNl/TSWEVx38rkAqRxalMw==}
     peerDependencies:
       solid-js: ^1.7.6
       solid-styled-components: ^0.28.5
@@ -3241,7 +3241,7 @@ snapshots:
 
   node-releases@2.0.18: {}
 
-  nodeflow-lib@0.0.7(solid-js@1.9.2)(solid-styled-components@0.28.5(solid-js@1.9.2))(vite@5.4.9(@types/node@20.16.11)(sass@1.79.5)):
+  nodeflow-lib@0.0.8(solid-js@1.9.2)(solid-styled-components@0.28.5(solid-js@1.9.2))(vite@5.4.9(@types/node@20.16.11)(sass@1.79.5)):
     dependencies:
       '@solid-primitives/map': 0.4.13(solid-js@1.9.2)
       solid-js: 1.9.2
