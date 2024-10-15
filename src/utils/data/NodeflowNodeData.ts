@@ -500,7 +500,7 @@ export default class NodeflowNodeData {
     );
   }
 
-  public getCollidingNodes() {
+  public getCollidingNodes(): string[] {
     // TODO: This gets called every time the node's position changes. Look into optimizing this.
     return this.nodeflowData.chunking.checkForCollisions(this.id);
   }
