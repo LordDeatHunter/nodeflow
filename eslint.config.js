@@ -12,14 +12,13 @@ export default [
     ...solid,
     languageOptions: {
       parser: tsParser,
-      parserOptions: {
-        project: "tsconfig.json",
-      },
       globals: {
         ...globals.browser,
         ...globals.node,
       },
     },
+  },
+  {
     rules: {
       "@typescript-eslint/no-unused-vars": [
         "error",
@@ -46,5 +45,8 @@ export default [
         },
       ],
     },
+  },
+  {
+    ignores: ["**/node_modules/", "**/dist/", "examples-build/", "scripts/"],
   },
 ];
