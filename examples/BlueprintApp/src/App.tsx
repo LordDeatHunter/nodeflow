@@ -68,7 +68,7 @@ const App: Component = () => {
     >
       <Nodeflow
         css={{
-          newCurve: curveCss.newConnection,
+          getNewCurveCss: () => curveCss.newConnection,
           nodeflow: nodeflowCss.nodeflow,
         }}
         height="100%"

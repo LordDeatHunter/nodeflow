@@ -98,7 +98,7 @@ export interface SelectableElementCSS {
 }
 
 export interface NodeflowCss {
-  newCurve?: string;
+  getNewCurveCss?: (heldConnector?: SelectableConnector) => string | undefined;
   nodeflow?: string;
 }
 
