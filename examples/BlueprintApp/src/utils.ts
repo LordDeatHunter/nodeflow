@@ -62,7 +62,7 @@ export const createDummyNode = (
 export const setupEvents = () => {
   // Override the default create-connection subscription to prevent connecting to the same node, and set custom css when creating a connection
   nodeflowData.eventStore.onNodeConnected.subscribe(
-    "create-connection",
+    "nodeflow:create-connection",
     (data) => {
       if (data.outputNodeId === data.inputNodeId) {
         return;
