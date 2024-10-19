@@ -24,7 +24,11 @@ import { deepCopy, intersectionOfSets, isSetEmpty } from "../misc-utils";
 import { NodeflowEventPublisher } from "./EventPublishers";
 import CurveFunctions from "./CurveFunctions";
 import NodeflowLib from "../NodeflowLib";
-import { KeyboardKeyCode, MOUSE_BUTTONS } from "../constants";
+import {
+  KEYBOARD_KEY_CODES,
+  KeyboardKeyCode,
+  MOUSE_BUTTONS,
+} from "../constants";
 import KeyboardData from "./KeyboardData";
 import { NodeflowChunking } from "./index";
 
@@ -1038,7 +1042,7 @@ export default class NodeflowData {
         event: ({ event }) => {
           // TODO: change to map or event system
           switch (event.code) {
-            case "Delete":
+            case KEYBOARD_KEY_CODES.DELETE:
               if (
                 this.mouseData.heldNodes.length > 0 &&
                 this.settings.canDeleteNodes
@@ -1064,10 +1068,10 @@ export default class NodeflowData {
                 );
               }
               break;
-            case "Escape":
+            case KEYBOARD_KEY_CODES.ESCAPE:
               this.mouseData.clearSelections();
               break;
-            case "Space":
+            case KEYBOARD_KEY_CODES.SPACE:
               if (this.settings.debugMode) {
                 if (this.mouseData.selections.length > 0) {
                   console.log(this.mouseData.selections);
@@ -1076,19 +1080,19 @@ export default class NodeflowData {
                 }
               }
               break;
-            case "Equal":
-            case "Minus":
+            case KEYBOARD_KEY_CODES.EQUAL:
+            case KEYBOARD_KEY_CODES.MINUS:
               if (event.ctrlKey) {
                 if (!this.settings.canZoom) return;
                 event.preventDefault();
                 this.updateZoom(
                   this.settings.keyboardZoomMultiplier *
-                    (event.code === "Equal" ? 1 : -1),
+                    (event.code === KEYBOARD_KEY_CODES.EQUAL ? 1 : -1),
                   windowSize().divideBy(2),
                 );
               }
               break;
-            case "KeyZ":
+            case KEYBOARD_KEY_CODES.KEY_Z:
               if (!event.ctrlKey) {
                 break;
               }

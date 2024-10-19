@@ -111,6 +111,7 @@ export const KEYBOARD_KEY_CODES = {
   SHIFT_LEFT: "ShiftLeft",
   SHIFT_RIGHT: "ShiftRight",
   SLASH: "Slash",
+  SPACE: "Space",
   TAB: "Tab",
 } as const;
 export type KeyboardKeyCode =
