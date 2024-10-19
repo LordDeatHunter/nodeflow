@@ -69,11 +69,23 @@ export default class NodeflowData {
   } as const;
 
   public readonly keymap: Record<string, Set<KeyboardKeyCode>> = {
-    MOVE_DOWN: new Set(["ArrowDown", "KeyS"]),
-    MOVE_LEFT: new Set(["ArrowLeft", "KeyA"]),
-    MOVE_RIGHT: new Set(["ArrowRight", "KeyD"]),
-    MOVE_UP: new Set(["ArrowUp", "KeyW"]),
-    SELECT_MULTIPLE: new Set(["ShiftLeft", "ShiftRight"]),
+    MOVE_DOWN: new Set([
+      KEYBOARD_KEY_CODES.ARROW_DOWN,
+      KEYBOARD_KEY_CODES.KEY_S,
+    ]),
+    MOVE_LEFT: new Set([
+      KEYBOARD_KEY_CODES.ARROW_LEFT,
+      KEYBOARD_KEY_CODES.KEY_A,
+    ]),
+    MOVE_RIGHT: new Set([
+      KEYBOARD_KEY_CODES.ARROW_RIGHT,
+      KEYBOARD_KEY_CODES.KEY_D,
+    ]),
+    MOVE_UP: new Set([KEYBOARD_KEY_CODES.ARROW_UP, KEYBOARD_KEY_CODES.KEY_W]),
+    SELECT_MULTIPLE: new Set([
+      KEYBOARD_KEY_CODES.SHIFT_LEFT,
+      KEYBOARD_KEY_CODES.SHIFT_RIGHT,
+    ]),
   } as const;
 
   public constructor(
