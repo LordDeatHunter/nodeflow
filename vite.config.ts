@@ -18,6 +18,13 @@ export default defineConfig({
     cssInjectedByJsPlugin(),
     // Terminal({ console: "terminal" }),
   ],
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: "modern",
+      },
+    },
+  },
   build: {
     lib: {
       entry: "src/index.ts",
