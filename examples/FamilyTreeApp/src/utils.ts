@@ -161,10 +161,10 @@ export const setupEvents = () => {
   nodeflowData.eventStore.onNodeConnected.subscribe(
     "nodeflow:create-connection",
     ({ outputNodeId, inputNodeId }) => {
+      if (outputNodeId === inputNodeId) return;
+
       const outputNode = nodeflowData.nodes.get(outputNodeId)!;
       const inputNode = nodeflowData.nodes.get(inputNodeId)!;
-
-      if (outputNodeId === inputNodeId) return;
 
       const connector = inputNode.getConnector("I")?.sources;
 
