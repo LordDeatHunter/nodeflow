@@ -116,10 +116,10 @@ const NodeflowCanvas =
             nodeflowData={nodeflowData}
           />
         </Show>
-        <Show when={nodeflowData.mouseData.selectionBox}>
-          <SelectionBox nodeflowData={nodeflowData} />
-        </Show>
       </div>
+      <Show when={nodeflowData.mouseData.selectionBox}>
+        <SelectionBox nodeflowData={nodeflowData} />
+      </Show>
     </div>
   );
 

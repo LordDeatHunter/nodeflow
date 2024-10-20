@@ -30,7 +30,8 @@ const SelectionBox = (props: { nodeflowData: NodeflowData }) => {
           props.nodeflowData.mouseData.selectionBox!.size.y,
         )}px`,
         "background-color": "rgba(0, 0, 0, 0.1)",
-        border: "1px solid rgba(0, 0, 0, 0.3)",
+        border: "2px solid rgba(0, 0, 0, 0.3)",
+        "border-radius": "4px",
         "pointer-events": "none",
         "z-index": 10,
       }}

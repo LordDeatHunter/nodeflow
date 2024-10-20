@@ -941,12 +941,7 @@ export default class NodeflowData {
           this.mouseData.selectionBox = Rect.of(
             this.mouseData.selectionBox.position,
             this.mouseData.selectionBox.position
-              .subtract(
-                Vec2.fromEvent(event)
-                  .subtract(this.startPosition)
-                  .divideBy(this.zoomLevel)
-                  .subtract(this.position),
-              )
+              .subtract(Vec2.fromEvent(event))
               .negate(),
           );
         },
@@ -1202,13 +1197,7 @@ export default class NodeflowData {
           }
 
           this.mouseData.update({
-            selectionBox: Rect.of(
-              Vec2.fromEvent(event)
-                .subtract(this.startPosition)
-                .divideBy(this.zoomLevel)
-                .subtract(this.position),
-              Vec2.zero(),
-            ),
+            selectionBox: Rect.of(Vec2.fromEvent(event), Vec2.zero()),
           });
         },
       },
