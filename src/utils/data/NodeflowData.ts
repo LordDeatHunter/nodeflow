@@ -10,7 +10,6 @@ import {
   SerializedNodeflowData,
   SerializedNodeflowNode,
 } from "../../nodeflow-types";
-import { windowSize } from "../screen-utils";
 import { clamp } from "../math-utils";
 import Changes from "./Changes";
 import MouseData from "./MouseData";
@@ -362,8 +361,7 @@ export default class NodeflowData {
    * @returns the position of the center of the Nodeflow canvas.
    */
   public center() {
-    const windowDimensions = windowSize();
-    const windowCenter = windowDimensions.divideBy(2);
+    const windowCenter = this.size.divideBy(2);
 
     return this.startPosition
       .add(windowCenter)
@@ -1130,7 +1128,7 @@ export default class NodeflowData {
                 this.updateZoom(
                   this.settings.keyboardZoomMultiplier *
                     (event.code === KEYBOARD_KEY_CODES.EQUAL ? 1 : -1),
-                  windowSize().divideBy(2),
+                  this.size.divideBy(2),
                 );
               }
               break;
