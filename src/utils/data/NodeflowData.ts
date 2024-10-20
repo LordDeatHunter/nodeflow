@@ -31,6 +31,7 @@ import {
 } from "../constants";
 import KeyboardData from "./KeyboardData";
 import { NodeflowChunking } from "./index";
+import Rect from "./Rect";
 
 /**
  * NodeflowData is a class that manages the state of a Nodeflow canvas.
@@ -83,6 +84,10 @@ export default class NodeflowData {
     ]),
     MOVE_UP: new Set([KEYBOARD_KEY_CODES.ARROW_UP, KEYBOARD_KEY_CODES.KEY_W]),
     SELECT_MULTIPLE: new Set([
+      KEYBOARD_KEY_CODES.CONTROL_LEFT,
+      KEYBOARD_KEY_CODES.CONTROL_RIGHT,
+    ]),
+    CREATE_SELECTION_BOX: new Set([
       KEYBOARD_KEY_CODES.SHIFT_LEFT,
       KEYBOARD_KEY_CODES.SHIFT_RIGHT,
     ]),
@@ -919,8 +924,32 @@ export default class NodeflowData {
       {
         name: "nodeflow:update-background-position",
         event: ({ event }) => {
+          if (this.mouseData.selectionBox) {
+            return;
+          }
+
           this.updateBackgroundPosition(
             Vec2.of(event.movementX, event.movementY),
+          );
+        },
+      },
+      {
+        name: "nodeflow:expand-selection-box",
+        event: ({ event }) => {
+          if (!this.mouseData.selectionBox) {
+            return;
+          }
+
+          this.mouseData.selectionBox = Rect.of(
+            this.mouseData.selectionBox.position,
+            this.mouseData.selectionBox.position
+              .subtract(
+                Vec2.fromEvent(event)
+                  .subtract(this.startPosition)
+                  .divideBy(this.zoomLevel)
+                  .subtract(this.position),
+              )
+              .negate(),
           );
         },
       },
@@ -938,6 +967,7 @@ export default class NodeflowData {
         name: "nodeflow:reset-mouse-data",
         event: () => {
           this.mouseData.pointerDown = false;
+          this.mouseData.selectionBox = undefined;
 
           if (this.mouseData.heldConnectors.length === 1) {
             this.mouseData.clearSelectedByType("node");
@@ -1160,6 +1190,27 @@ export default class NodeflowData {
             ),
             pointerDown: this.settings.canPan,
             mousePosition: Vec2.fromEvent(event),
+          });
+        },
+      },
+      {
+        name: "nodeflow:create-selection-box",
+        event: ({ event }) => {
+          if (
+            event.button !== MOUSE_BUTTONS.LEFT ||
+            !this.keyboardData.isActionPressed(this.keymap.CREATE_SELECTION_BOX)
+          ) {
+            return;
+          }
+
+          this.mouseData.update({
+            selectionBox: Rect.of(
+              Vec2.fromEvent(event)
+                .subtract(this.startPosition)
+                .divideBy(this.zoomLevel)
+                .subtract(this.position),
+              Vec2.zero(),
+            ),
           });
         },
       },

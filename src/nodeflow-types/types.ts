@@ -8,6 +8,7 @@ import ConnectorSource from "../utils/data/ConnectorSource";
 import { ReactiveMap } from "@solid-primitives/map";
 import ArrayWrapper from "../utils/data/ArrayWrapper";
 import { KeyboardKeyCode } from "../utils/constants";
+import Rect from "../utils/data/Rect";
 
 export type Optional<T> = T | undefined;
 
@@ -22,6 +23,7 @@ export interface MouseDataType {
   mousePosition: Vec2;
   pointerDown: boolean;
   selections: ArrayWrapper<SelectableElement>;
+  selectionBox?: Rect;
 }
 
 export interface KeyboardDataType {

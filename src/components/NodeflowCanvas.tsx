@@ -5,6 +5,7 @@ import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
 import { NodeflowCss } from "../nodeflow-types";
 import Vec2 from "../utils/data/Vec2";
+import SelectionBox from "./SelectionBox";
 
 interface NodeflowProps {
   css?: NodeflowCss;
@@ -114,6 +115,9 @@ const NodeflowCanvas =
             )}
             nodeflowData={nodeflowData}
           />
+        </Show>
+        <Show when={nodeflowData.mouseData.selectionBox}>
+          <SelectionBox nodeflowData={nodeflowData} />
         </Show>
       </div>
     </div>

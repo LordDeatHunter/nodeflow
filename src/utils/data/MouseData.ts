@@ -29,6 +29,7 @@ export default class MouseData {
       mousePosition: Vec2.zero(),
       pointerDown: false,
       selections: new ArrayWrapper<SelectableElement>(),
+      selectionBox: undefined,
     });
   }
 
@@ -137,6 +138,10 @@ export default class MouseData {
     return this.store[0].selections;
   }
 
+  get selectionBox() {
+    return this.store[0].selectionBox;
+  }
+
   get heldConnections(): Array<SelectableConnection> {
     return this.store[0].selections.filter(
       (selection) => selection.type === "connection",
@@ -175,6 +180,10 @@ export default class MouseData {
 
   set mousePosition(value) {
     this.store[1]({ mousePosition: value });
+  }
+
+  set selectionBox(value) {
+    this.store[1]({ selectionBox: value });
   }
 
   set pointerDown(value: boolean) {
