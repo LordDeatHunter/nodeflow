@@ -20,7 +20,6 @@ const SelectionBox = (props: { nodeflowData: NodeflowData }) => {
   return (
     <div
       style={{
-        position: "absolute",
         left: `${startPosition().x}px`,
         top: `${startPosition().y}px`,
         width: `${Math.abs(
@@ -29,12 +28,8 @@ const SelectionBox = (props: { nodeflowData: NodeflowData }) => {
         height: `${Math.abs(
           props.nodeflowData.mouseData.selectionBox!.size.y,
         )}px`,
-        "background-color": "rgba(0, 0, 0, 0.1)",
-        border: "2px solid rgba(0, 0, 0, 0.3)",
-        "border-radius": "4px",
-        "pointer-events": "none",
-        "z-index": 10,
       }}
+      class="nodeflowSelectionBox"
     />
   );
 };
