@@ -1,20 +1,13 @@
-import { NodeflowData, Vec2 } from "../utils";
+import { NodeflowData } from "../utils";
 import { createMemo } from "solid-js";
 
 const SelectionBox = (props: { nodeflowData: NodeflowData }) => {
   const startPosition = createMemo(() =>
-    Vec2.of(
-      Math.min(
-        props.nodeflowData.mouseData.selectionBox!.position!.x,
-        props.nodeflowData.mouseData.selectionBox!.position!.x +
-          props.nodeflowData.mouseData.selectionBox!.size.x,
-      ),
-      Math.min(
-        props.nodeflowData.mouseData.selectionBox!.position!.y,
-        props.nodeflowData.mouseData.selectionBox!.position!.y +
-          props.nodeflowData.mouseData.selectionBox!.size.y,
-      ),
-    ),
+    props.nodeflowData.mouseData.selectionBox!.startPosition(),
+  );
+
+  const size = createMemo(() =>
+    props.nodeflowData.mouseData.selectionBox!.size.abs(),
   );
 
   return (
@@ -22,12 +15,8 @@ const SelectionBox = (props: { nodeflowData: NodeflowData }) => {
       style={{
         left: `${startPosition().x}px`,
         top: `${startPosition().y}px`,
-        width: `${Math.abs(
-          props.nodeflowData.mouseData.selectionBox!.size.x,
-        )}px`,
-        height: `${Math.abs(
-          props.nodeflowData.mouseData.selectionBox!.size.y,
-        )}px`,
+        width: `${size().x}px`,
+        height: `${size().y}px`,
       }}
       class="nodeflowSelectionBox"
     />

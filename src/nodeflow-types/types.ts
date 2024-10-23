@@ -160,4 +160,5 @@ export type NodeflowSettings = {
   movementAcceleration: number;
   movementDeceleration: number;
   zoomMultiplier: number;
+  intervalId: Optional<number>;
 };

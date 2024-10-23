@@ -11,6 +11,7 @@ import {
 } from "../../nodeflow-types";
 import { NodeflowData } from "./index";
 import ArrayWrapper from "./ArrayWrapper";
+import Rect from "./Rect";
 
 /**
  * Represents additional mouse data used in the nodeflow canvas, such held objects and mouse position.
@@ -184,6 +185,24 @@ export default class MouseData {
 
   set selectionBox(value) {
     this.store[1]({ selectionBox: value });
+
+    if (!value) {
+      return;
+    }
+
+    const rect = Rect.of(value.position, value.size);
+
+    const transformedRect = Rect.fromPositions(
+      this.nodeflowData.transformVec2ToCanvas(rect.startPosition()),
+      this.nodeflowData.transformVec2ToCanvas(rect.endPosition()),
+    );
+
+    // TODO: this whole thing needs to be replaced with a map
+    this.nodeflowData.chunking
+      .getNodesInRect(transformedRect)
+      .forEach((node) => {
+        this.selections.push({ node, type: "node" });
+      });
   }
 
   set pointerDown(value: boolean) {
@@ -321,15 +340,8 @@ export default class MouseData {
   }
 
   /**
-   * Calculates the global mouse position, relative to the canvas.
-   *
-   * 1. Subtracts the starting position of the canvas from the mouse position, this makes the cursor relative to the start of the canvas
-   * 2. Divides by the zoom level, this zooms the working area to the relevant size
-   * 3. Subtracts the canvas offset to get the final position
+   * Returns the global mouse position, relative to the canvas.
    */
   public globalMousePosition = () =>
-    this.mousePosition
-      .subtract(this.nodeflowData.startPosition)
-      .divideBy(this.nodeflowData.zoomLevel)
-      .subtract(this.nodeflowData.position);
+    this.nodeflowData.transformVec2ToCanvas(this.mousePosition);
 }

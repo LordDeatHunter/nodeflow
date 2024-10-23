@@ -66,6 +66,7 @@ export default class NodeflowData {
     movementAcceleration: 1.5,
     movementDeceleration: 0.85,
     zoomMultiplier: 0.005,
+    intervalId: undefined,
   } as const;
 
   public readonly keymap: Record<string, Set<KeyboardKeyCode>> = {
@@ -151,53 +152,67 @@ export default class NodeflowData {
       onWheelInNodeflow: new NodeflowEventPublisher<"onWheelInNodeflow">(this),
     };
     this.setupDefaultEventHandlers();
+  }
 
-    // TODO: Simplify this using events
-    setInterval(() => {
-      const movingLeft = !isSetEmpty(
-        intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_LEFT),
-      );
-      const movingRight = !isSetEmpty(
-        intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_RIGHT),
-      );
-      const movingUp = !isSetEmpty(
-        intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_UP),
-      );
-      const movingDown = !isSetEmpty(
-        intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_DOWN),
-      );
+  public handleMovement(nodeflow: NodeflowData): void {
+    const movingLeft = !isSetEmpty(
+      intersectionOfSets(
+        nodeflow.keyboardData.heldKeys,
+        nodeflow.keymap.MOVE_LEFT,
+      ),
+    );
+    const movingRight = !isSetEmpty(
+      intersectionOfSets(
+        nodeflow.keyboardData.heldKeys,
+        nodeflow.keymap.MOVE_RIGHT,
+      ),
+    );
+    const movingUp = !isSetEmpty(
+      intersectionOfSets(
+        nodeflow.keyboardData.heldKeys,
+        nodeflow.keymap.MOVE_UP,
+      ),
+    );
+    const movingDown = !isSetEmpty(
+      intersectionOfSets(
+        nodeflow.keyboardData.heldKeys,
+        nodeflow.keymap.MOVE_DOWN,
+      ),
+    );
 
-      const hasSelectedNodes = this.mouseData.heldNodes.length > 0;
+    const hasSelectedNodes = nodeflow.mouseData.heldNodes.length > 0;
 
-      this.currentMoveSpeed = Vec2.of(
-        this.calculateDirectionalMovementAmount(
-          movingLeft || movingRight,
-          this.currentMoveSpeed.x,
-          movingRight,
-          movingLeft,
-          !hasSelectedNodes,
-        ),
-        this.calculateDirectionalMovementAmount(
-          movingUp || movingDown,
-          this.currentMoveSpeed.y,
-          movingDown,
-          movingUp,
-          !hasSelectedNodes,
-        ),
+    nodeflow.currentMoveSpeed = Vec2.of(
+      nodeflow.calculateDirectionalMovementAmount(
+        movingLeft || movingRight,
+        nodeflow.currentMoveSpeed.x,
+        movingRight,
+        movingLeft,
+        !hasSelectedNodes,
+      ),
+      nodeflow.calculateDirectionalMovementAmount(
+        movingUp || movingDown,
+        nodeflow.currentMoveSpeed.y,
+        movingDown,
+        movingUp,
+        !hasSelectedNodes,
+      ),
+    );
+
+    if (
+      nodeflow.currentMoveSpeed.x === 0 &&
+      nodeflow.currentMoveSpeed.y === 0
+    ) {
+      return;
+    }
+
+    if (nodeflow.settings.canPan && !hasSelectedNodes) {
+      nodeflow.updateBackgroundPosition(nodeflow.currentMoveSpeed, true);
+    } else if (hasSelectedNodes && nodeflow.settings.canMoveNodes) {
+      nodeflow.updateHeldNodePosition(
+        nodeflow.currentMoveSpeed.divideBy(nodeflow.zoomLevel),
       );
-
-      if (this.currentMoveSpeed.x === 0 && this.currentMoveSpeed.y === 0) {
-        return;
-      }
-
-      if (this.settings.canPan && !hasSelectedNodes) {
-        this.updateBackgroundPosition(this.currentMoveSpeed, true);
-      } else if (hasSelectedNodes && this.settings.canMoveNodes) {
-        this.updateHeldNodePosition(
-          this.currentMoveSpeed.divideBy(this.zoomLevel),
-        );
-      }
-    }, 10);
+    }
   }
 
   public serialize(): SerializedNodeflowData {
@@ -403,7 +418,8 @@ export default class NodeflowData {
         this.settings.maxMovementSpeed,
       );
     }
-    if (speed <= 0.1 && speed >= -0.1) speed = 0;
+    if (Math.abs(speed) < 0.1) speed = 0;
+
     return speed;
   }
 
@@ -893,10 +909,20 @@ export default class NodeflowData {
    * @param moveSpeed - the distance to move the node by
    */
   public updateHeldNodePosition(moveSpeed: Vec2) {
-    this.mouseData.heldNodes.forEach((element) =>
-      element.node.updateWithPrevious((prev) => ({
-        position: prev.position.add(moveSpeed),
-      })),
+    this.mouseData.heldNodes.forEach(
+      (element) =>
+        (element.node.position = element.node.position.add(moveSpeed)),
+    );
+  }
+
+  /**
+   * Updates the position of the held node based on the mouse movement.
+   *
+   * @param position - the position to set the node to
+   */
+  public setHeldNodePosition(position: Vec2) {
+    this.mouseData.heldNodes.forEach(
+      (element) => (element.node.position = position),
     );
   }
 
@@ -919,6 +945,24 @@ export default class NodeflowData {
     ]);
 
     this.eventStore.onMouseMoveInNodeflow.subscribeMultiple([
+      {
+        name: "nodeflow:drag-node",
+        event: ({ event }) => {
+          if (
+            this.mouseData.heldNodes.length === 0 ||
+            !this.mouseData.pointerDown ||
+            this.mouseData.selectionBox
+          ) {
+            return;
+          }
+
+          this.setHeldNodePosition(
+            Vec2.of(event.movementX, event.movementY)
+              .divideBy(this.zoomLevel)
+              .subtract(this.mouseData.clickStartPosition ?? Vec2.zero()),
+          );
+        },
+      },
       {
         name: "nodeflow:update-background-position",
         event: ({ event }) => {
@@ -1059,11 +1103,28 @@ export default class NodeflowData {
       },
     ]);
 
-    this.eventStore.onKeyUpInNodeflow.subscribe(
-      "nodeflow:remove-held-key",
-      ({ event }) =>
-        this.keyboardData.releaseKey(event.code as KeyboardKeyCode),
-    );
+    this.eventStore.onKeyUpInNodeflow.subscribeMultiple([
+      {
+        name: "nodeflow:remove-held-key",
+        event: ({ event }) =>
+          this.keyboardData.releaseKey(event.code as KeyboardKeyCode),
+      },
+      {
+        name: "nodeflow:handle-controls",
+        event: () => {
+          const noMovement =
+            !this.keyboardData.isActionPressed(this.keymap.MOVE_LEFT) &&
+            !this.keyboardData.isActionPressed(this.keymap.MOVE_RIGHT) &&
+            !this.keyboardData.isActionPressed(this.keymap.MOVE_UP) &&
+            !this.keyboardData.isActionPressed(this.keymap.MOVE_DOWN);
+
+          if (noMovement && this.settings.intervalId) {
+            clearInterval(this.settings.intervalId);
+            this.settings.intervalId = undefined;
+          }
+        },
+      },
+    ]);
 
     this.eventStore.onKeyDownInNodeflow.subscribeMultiple([
       {
@@ -1138,6 +1199,20 @@ export default class NodeflowData {
                 this.changes.undo();
               }
               break;
+            case KEYBOARD_KEY_CODES.KEY_A:
+            case KEYBOARD_KEY_CODES.KEY_S:
+            case KEYBOARD_KEY_CODES.KEY_D:
+            case KEYBOARD_KEY_CODES.KEY_W:
+            case KEYBOARD_KEY_CODES.ARROW_UP:
+            case KEYBOARD_KEY_CODES.ARROW_DOWN:
+            case KEYBOARD_KEY_CODES.ARROW_LEFT:
+            case KEYBOARD_KEY_CODES.ARROW_RIGHT:
+              if (!this.settings.intervalId) {
+                this.settings.intervalId = setInterval(
+                  () => this.handleMovement(this),
+                  10,
+                );
+              }
           }
         },
       },
@@ -1397,5 +1472,21 @@ export default class NodeflowData {
 
   public selectNode(nodeId: string, position?: Vec2) {
     this.mouseData.selectNode(nodeId, position ?? Vec2.zero(), false);
+  }
+
+  /**
+   * Transforms a global position to a position relative to the canvas.
+   *
+   * 1. Subtracts the starting position of the canvas from the global position, this makes the position relative to the start of the canvas
+   * 2. Divides by the zoom level, this zooms the working area to the relevant size
+   * 3. Subtracts the canvas offset to get the final position
+   *
+   * @param position
+   */
+  public transformVec2ToCanvas(position: Vec2) {
+    return position
+      .subtract(this.startPosition)
+      .divideBy(this.zoomLevel)
+      .subtract(this.position);
   }
 }

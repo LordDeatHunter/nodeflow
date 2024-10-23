@@ -133,6 +133,11 @@ export default class Vec2 {
 
   public normalize(): Vec2 {
     const magnitude = this.magnitude;
+
+    if (magnitude === 0) {
+      return Vec2.zero();
+    }
+
     return new Vec2(this.x / magnitude, this.y / magnitude);
   }
 }

@@ -131,7 +131,10 @@ export default class NodeflowNodeData {
   }
 
   public set position(value) {
+    const oldPos = this.position;
     this.store[1]({ position: value });
+
+    this.nodeflowData.chunking.updateNodeInChunk(this.id, oldPos, value);
   }
 
   public set ref(value) {
