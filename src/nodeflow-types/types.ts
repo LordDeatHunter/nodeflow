@@ -9,6 +9,7 @@ import { ReactiveMap } from "@solid-primitives/map";
 import ArrayWrapper from "../utils/data/ArrayWrapper";
 import { KeyboardKeyCode } from "../utils/constants";
 import Rect from "../utils/data/Rect";
+import SelectionMap from "../utils/SelectionMap";
 
 export type Optional<T> = T | undefined;
 
@@ -22,7 +23,7 @@ export interface MouseDataType {
   clickStartPosition?: Vec2;
   mousePosition: Vec2;
   pointerDown: boolean;
-  selections: ArrayWrapper<SelectableElement>;
+  selections: SelectionMap;
   selectionBox?: Rect;
 }
 
@@ -35,23 +36,30 @@ export interface ConnectionType {
   destinationConnector: NodeConnector;
 }
 
+export enum SelectableElementType {
+  Connector = "connector",
+  Node = "node",
+  Nodeflow = "nodeflow",
+  Connection = "connection",
+}
+
 export interface SelectableConnector {
   connector: NodeConnector;
-  type: "connector";
+  type: SelectableElementType.Connector;
 }
 
 export interface SelectableNode {
   node: NodeflowNodeData;
-  type: "node";
+  type: SelectableElementType.Node;
 }
 
 export interface SelectableNodeflow {
-  type: "nodeflow";
+  type: SelectableElementType.Nodeflow;
 }
 
 export interface SelectableConnection {
   connection: ConnectionType;
-  type: "connection";
+  type: SelectableElementType.Connection;
 }
 
 export type SelectableElement =
@@ -100,7 +108,7 @@ export interface SelectableElementCSS {
 }
 
 export interface NodeflowCss {
-  getNewCurveCss?: (heldConnector?: SelectableConnector) => string | undefined;
+  getNewCurveCss?: (heldConnector?: NodeConnector) => string | undefined;
   nodeflow?: string;
 }
 

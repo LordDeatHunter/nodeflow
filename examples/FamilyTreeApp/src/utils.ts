@@ -134,7 +134,7 @@ export const setupEvents = () => {
 
       if (heldConnectors.length !== 1) return;
 
-      const heldNode = heldConnectors[0].connector.parentNode;
+      const heldNode = heldConnectors[0].parentNode;
 
       const position = nodeflowData.mouseData.globalMousePosition();
 
@@ -204,8 +204,7 @@ export const setupEvents = () => {
         return;
 
       const sourceNode =
-        nodeflowData.mouseData.heldConnectors[0].connector.parentSection
-          .parentNode;
+        nodeflowData.mouseData.heldConnectors[0].parentSection.parentNode;
 
       if (nodeId === sourceNode.id) return;
 

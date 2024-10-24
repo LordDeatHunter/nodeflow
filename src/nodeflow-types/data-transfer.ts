@@ -1,4 +1,9 @@
-import { Change, DisplayFunc, SelectableElementCSS } from "./types";
+import {
+  Change,
+  DisplayFunc,
+  SelectableElementCSS,
+  SelectableElementType,
+} from "./types";
 
 export interface SerializedVec2 {
   x: number;
@@ -26,25 +31,25 @@ export interface SerializedNodeflowData {
 
 export interface SerializedMouseData {
   clickStartPosition?: SerializedVec2;
-  selections: Array<SerializedSelectableElement>;
+  selections: Record<string, SerializedSelectableElement>;
 }
 
 export type SerializedSelectableElement =
   | {
       connectorId: string;
       nodeId: string;
-      type: "connector";
+      type: SelectableElementType.Connector;
     }
   | {
       nodeId: string;
-      type: "node";
+      type: SelectableElementType.Node;
     }
   | {
-      type: "nodeflow";
+      type: SelectableElementType.Nodeflow;
     }
   | {
       connection: SerializedConnection;
-      type: "connection";
+      type: SelectableElementType.Connection;
     };
 
 export interface SerializedNodeflowNode {

@@ -6,6 +6,7 @@ import {
   NodeflowEventRecord,
   NodeflowNodeType,
   NodeflowSettings,
+  SelectableElementType,
   SerializedConnection,
   SerializedNodeflowData,
   SerializedNodeflowNode,
@@ -591,9 +592,7 @@ export default class NodeflowData {
   public removeNode(nodeId: string, hasHistoryGroup: string | boolean = true) {
     if (!this.nodes.has(nodeId)) return;
 
-    this.mouseData.filterSelections(
-      (selection) => selection.type !== "node" || selection.node.id !== nodeId,
-    );
+    this.mouseData.selections.deleteNodes((node) => node.id === nodeId);
 
     const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
 
@@ -910,8 +909,7 @@ export default class NodeflowData {
    */
   public updateHeldNodePosition(moveSpeed: Vec2) {
     this.mouseData.heldNodes.forEach(
-      (element) =>
-        (element.node.position = element.node.position.add(moveSpeed)),
+      (element) => (element.position = element.position.add(moveSpeed)),
     );
   }
 
@@ -922,7 +920,7 @@ export default class NodeflowData {
    */
   public setHeldNodePosition(position: Vec2) {
     this.mouseData.heldNodes.forEach(
-      (element) => (element.node.position = position),
+      (element) => (element.position = position),
     );
   }
 
@@ -957,7 +955,7 @@ export default class NodeflowData {
           }
 
           this.setHeldNodePosition(
-            Vec2.of(event.movementX, event.movementY)
+            Vec2.of(event.clientX, event.clientY)
               .divideBy(this.zoomLevel)
               .subtract(this.mouseData.clickStartPosition ?? Vec2.zero()),
           );
@@ -1007,10 +1005,10 @@ export default class NodeflowData {
           this.mouseData.selectionBox = undefined;
 
           if (this.mouseData.heldConnectors.length === 1) {
-            this.mouseData.clearSelectedByType("node");
+            this.mouseData.selections.clearNodes();
           }
 
-          this.mouseData.clearSelectedByType("connector");
+          this.mouseData.selections.clearConnectors();
         },
       },
     ]);
@@ -1052,7 +1050,7 @@ export default class NodeflowData {
           const touch = touches[0];
           const mousePosition = Vec2.fromEvent(touch);
 
-          this.mouseData.clearSelectedByType("node");
+          this.mouseData.selections.clearNodes();
           this.mouseData.update({
             pointerDown: true,
             mousePosition,
@@ -1145,7 +1143,7 @@ export default class NodeflowData {
               ) {
                 const changeGroup = Changes.evaluateHistoryGroup();
                 this.mouseData.heldNodes.forEach((element) =>
-                  this.removeNode(element.node.id, changeGroup),
+                  this.removeNode(element.id, changeGroup),
                 );
               } else if (
                 this.mouseData.heldConnections.length > 0 &&
@@ -1169,7 +1167,7 @@ export default class NodeflowData {
               break;
             case KEYBOARD_KEY_CODES.SPACE:
               if (this.settings.debugMode) {
-                if (this.mouseData.selections.length > 0) {
+                if (this.mouseData.selections.size > 0) {
                   console.log(this.mouseData.selections);
                 } else {
                   console.log(this.nodes);
@@ -1335,9 +1333,13 @@ export default class NodeflowData {
       {
         name: "nodeflow:connect-held-nodes",
         event: ({ event, nodeId, connectorId }) => {
-          if (!this.settings.canCreateConnections) return;
-
-          const heldConnector = this.mouseData.heldConnectors.at(-1)?.connector;
+          if (
+            !this.settings.canCreateConnections ||
+            this.mouseData.heldConnectors.length !== 1
+          ) {
+            return;
+          }
+          const heldConnector = this.mouseData.heldConnectors[0];
           const heldNode = heldConnector?.parentNode;
 
           if (!heldConnector || !heldNode) return;
@@ -1436,8 +1438,8 @@ export default class NodeflowData {
             this.mouseData.clearSelections();
           }
 
-          this.mouseData.selections.push({
-            type: "connection",
+          this.mouseData.selections.add({
+            type: SelectableElementType.Connection,
             connection: {
               sourceConnector,
               destinationConnector,
@@ -1454,10 +1456,10 @@ export default class NodeflowData {
           this.mouseData.pointerDown = false;
 
           if (this.mouseData.heldConnectors.length === 1) {
-            this.mouseData.clearSelectedByType("node");
+            this.mouseData.selections.clearNodes();
           }
 
-          this.mouseData.clearSelectedByType("connector");
+          this.mouseData.selections.clearConnectors();
         },
       },
       {

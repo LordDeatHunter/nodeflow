@@ -1,8 +1,8 @@
 import { type Component, onMount } from "solid-js";
 import {
+  NodeConnector,
   NodeflowData,
   NodeflowLib,
-  SelectableConnector,
   windowSize,
 } from "nodeflow-lib";
 import curveCss from "./styles/curve.module.scss";
@@ -25,12 +25,12 @@ const App: Component = () => {
     setupDummyNodes().then(() => setupDummyConnections());
   });
 
-  const getNewCurveCss = (heldConnector?: SelectableConnector) => {
+  const getNewCurveCss = (heldConnector?: NodeConnector) => {
     if (!heldConnector) {
       return undefined;
     }
 
-    return heldConnector.connector.parentNode.customData.gender === "M"
+    return heldConnector.parentNode.customData.gender === "M"
       ? curveCss.newFatherCurve
       : curveCss.newMotherCurve;
   };
