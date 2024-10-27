@@ -96,10 +96,11 @@ export type ConnectorSectionType = {
 
 export interface NodeflowDataType {
   currentMoveSpeed: Vec2;
+  intervalId: Optional<number>;
   pinchDistance: number;
   position: Vec2;
-  startPosition: Vec2;
   size: Vec2;
+  startPosition: Vec2;
   zoomLevel: number;
 }
 
@@ -169,5 +170,4 @@ export type NodeflowSettings = {
   movementAcceleration: number;
   movementDeceleration: number;
   zoomMultiplier: number;
-  intervalId: Optional<number>;
 };

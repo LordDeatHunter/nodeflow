@@ -6,6 +6,7 @@ import {
   NodeflowEventRecord,
   NodeflowNodeType,
   NodeflowSettings,
+  Optional,
   SelectableElementType,
   SerializedConnection,
   SerializedNodeflowData,
@@ -67,7 +68,6 @@ export default class NodeflowData {
     movementAcceleration: 1.5,
     movementDeceleration: 0.85,
     zoomMultiplier: 0.005,
-    intervalId: undefined,
   } as const;
 
   public readonly keymap: Record<string, Set<KeyboardKeyCode>> = {
@@ -112,6 +112,7 @@ export default class NodeflowData {
       size: Vec2.zero(),
       zoomLevel: 1,
       pinchDistance: 0,
+      intervalId: undefined,
     });
 
     this.changes = new Changes();
@@ -155,63 +156,48 @@ export default class NodeflowData {
     this.setupDefaultEventHandlers();
   }
 
-  public handleMovement(nodeflow: NodeflowData): void {
+  public handleMovement(): void {
     const movingLeft = !isSetEmpty(
-      intersectionOfSets(
-        nodeflow.keyboardData.heldKeys,
-        nodeflow.keymap.MOVE_LEFT,
-      ),
+      intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_LEFT),
     );
     const movingRight = !isSetEmpty(
-      intersectionOfSets(
-        nodeflow.keyboardData.heldKeys,
-        nodeflow.keymap.MOVE_RIGHT,
-      ),
+      intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_RIGHT),
     );
     const movingUp = !isSetEmpty(
-      intersectionOfSets(
-        nodeflow.keyboardData.heldKeys,
-        nodeflow.keymap.MOVE_UP,
-      ),
+      intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_UP),
     );
     const movingDown = !isSetEmpty(
-      intersectionOfSets(
-        nodeflow.keyboardData.heldKeys,
-        nodeflow.keymap.MOVE_DOWN,
-      ),
+      intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_DOWN),
     );
 
-    const hasSelectedNodes = nodeflow.mouseData.heldNodes.length > 0;
+    const hasSelectedNodes = this.mouseData.heldNodes.length > 0;
 
-    nodeflow.currentMoveSpeed = Vec2.of(
-      nodeflow.calculateDirectionalMovementAmount(
+    this.currentMoveSpeed = Vec2.of(
+      this.calculateDirectionalMovementAmount(
         movingLeft || movingRight,
-        nodeflow.currentMoveSpeed.x,
+        this.currentMoveSpeed.x,
         movingRight,
         movingLeft,
         !hasSelectedNodes,
       ),
-      nodeflow.calculateDirectionalMovementAmount(
+      this.calculateDirectionalMovementAmount(
         movingUp || movingDown,
-        nodeflow.currentMoveSpeed.y,
+        this.currentMoveSpeed.y,
         movingDown,
         movingUp,
         !hasSelectedNodes,
       ),
     );
 
-    if (
-      nodeflow.currentMoveSpeed.x === 0 &&
-      nodeflow.currentMoveSpeed.y === 0
-    ) {
+    if (this.currentMoveSpeed.x === 0 && this.currentMoveSpeed.y === 0) {
       return;
     }
 
-    if (nodeflow.settings.canPan && !hasSelectedNodes) {
-      nodeflow.updateBackgroundPosition(nodeflow.currentMoveSpeed, true);
-    } else if (hasSelectedNodes && nodeflow.settings.canMoveNodes) {
-      nodeflow.updateHeldNodePosition(
-        nodeflow.currentMoveSpeed.divideBy(nodeflow.zoomLevel),
+    if (this.settings.canPan && !hasSelectedNodes) {
+      this.updateBackgroundPosition(this.currentMoveSpeed, true);
+    } else if (hasSelectedNodes && this.settings.canMoveNodes) {
+      this.updateHeldNodePosition(
+        this.currentMoveSpeed.divideBy(this.zoomLevel),
       );
     }
   }
@@ -321,6 +307,10 @@ export default class NodeflowData {
     return this.store[0].pinchDistance;
   }
 
+  get intervalId() {
+    return this.store[0].intervalId;
+  }
+
   set currentMoveSpeed(value) {
     this.store[1]({ currentMoveSpeed: value });
   }
@@ -343,6 +333,10 @@ export default class NodeflowData {
 
   set pinchDistance(value) {
     this.store[1]({ pinchDistance: value });
+  }
+
+  set intervalId(value: Optional<number>) {
+    this.store[1]({ intervalId: value });
   }
 
   /**
@@ -1121,9 +1115,9 @@ export default class NodeflowData {
             !this.keyboardData.isActionPressed(this.keymap.MOVE_UP) &&
             !this.keyboardData.isActionPressed(this.keymap.MOVE_DOWN);
 
-          if (noMovement && this.settings.intervalId) {
-            clearInterval(this.settings.intervalId);
-            this.settings.intervalId = undefined;
+          if (noMovement && this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = undefined;
           }
         },
       },
@@ -1210,11 +1204,8 @@ export default class NodeflowData {
             case KEYBOARD_KEY_CODES.ARROW_DOWN:
             case KEYBOARD_KEY_CODES.ARROW_LEFT:
             case KEYBOARD_KEY_CODES.ARROW_RIGHT:
-              if (!this.settings.intervalId) {
-                this.settings.intervalId = setInterval(
-                  () => this.handleMovement(this),
-                  10,
-                );
+              if (!this.intervalId) {
+                this.intervalId = setInterval(() => this.handleMovement(), 10);
               }
           }
         },
