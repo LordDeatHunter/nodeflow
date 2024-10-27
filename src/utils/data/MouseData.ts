@@ -126,7 +126,6 @@ export default class MouseData {
       this.nodeflowData.transformVec2ToCanvas(rect.endPosition()),
     );
 
-    // TODO: this whole thing needs to be replaced with a map
     this.nodeflowData.chunking
       .getNodesInRect(transformedRect)
       .forEach((node) => {
