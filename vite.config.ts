@@ -3,6 +3,7 @@ import solidPlugin from "vite-plugin-solid";
 import * as fs from "fs";
 import { resolve } from "path";
 import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
+import dts from "vite-plugin-dts";
 
 // import devtools from 'solid-devtools/vite';
 const packageJson = JSON.parse(
@@ -16,6 +17,9 @@ export default defineConfig({
     // devtools(),
     solidPlugin(),
     cssInjectedByJsPlugin(),
+    dts({
+      insertTypesEntry: true,
+    }),
     // Terminal({ console: "terminal" }),
   ],
   css: {
@@ -33,8 +37,14 @@ export default defineConfig({
       formats: ["es", "cjs"],
     },
     rollupOptions: {
+      external: ["solid-js", "solid-js/web", "solid-js/store"],
       output: {
         exports: "named",
+        globals: {
+          "solid-js": "solid",
+          "solid-js/web": "solidWeb",
+          "solid-js/store": "solidStore",
+        }
       },
     },
   },
