@@ -13,12 +13,15 @@ const SidebarContent = () => {
     createSignal<Optional<FormDataType>>(undefined);
 
   const node = createMemo<Optional<NodeflowNodeData>>(
-    () => nodeflowData.mouseData.heldNodes.at(-1)?.node,
+    () =>
+      nodeflowData.mouseData.selections.selectedNodesMap.values().next().value,
   );
 
   const nodeData = createMemo<Optional<FormDataType>>(() => {
     const nodeData = node();
-    if (!nodeData) return undefined;
+    if (!nodeData) {
+      return undefined;
+    }
 
     return {
       ...nodeData.customData,

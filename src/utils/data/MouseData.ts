@@ -11,6 +11,7 @@ import Rect from "./Rect";
 import SelectionMap from "../SelectionMap";
 import NodeflowNodeData from "./NodeflowNodeData";
 import NodeConnector from "./NodeConnector";
+import { MOUSE_BUTTONS } from "../constants";
 
 /**
  * Represents additional mouse data used in the nodeflow canvas, such held objects and mouse position.
@@ -27,6 +28,7 @@ export default class MouseData {
     this.store = createStore<MouseDataType>({
       clickStartPosition: undefined,
       mousePosition: Vec2.zero(),
+      heldMouseButtons: new Set<MOUSE_BUTTONS>(),
       pointerDown: false,
       selections: new SelectionMap(this.nodeflowData),
       selectionBox: undefined,
@@ -56,8 +58,8 @@ export default class MouseData {
     return this.store[0].clickStartPosition;
   }
 
-  get isDraggingObject() {
-    return this.store[0].pointerDown;
+  get heldMouseButtons() {
+    return this.store[0].heldMouseButtons;
   }
 
   get selections() {
@@ -72,10 +74,6 @@ export default class MouseData {
     return this.store[0].mousePosition;
   }
 
-  get pointerDown() {
-    return this.store[0].pointerDown;
-  }
-
   get heldConnections(): Array<SelectableConnection> {
     return this.selections.selectedConnections;
   }
@@ -86,6 +84,10 @@ export default class MouseData {
 
   get heldNodes(): Array<NodeflowNodeData> {
     return this.selections.selectedNodes;
+  }
+
+  public isHoldingButton(button: MOUSE_BUTTONS) {
+    return this.heldMouseButtons.has(button);
   }
 
   public deleteNodes(callback: (node: NodeflowNodeData) => boolean) {
@@ -146,10 +148,11 @@ export default class MouseData {
     this.store[1](updater);
   }
 
-  public reset(pointerDown = false) {
+  public reset() {
     this.update({
       clickStartPosition: undefined,
-      pointerDown,
+      pointerDown: false,
+      heldMouseButtons: new Set<MOUSE_BUTTONS>(),
       selections: new SelectionMap(this.nodeflowData),
     });
   }

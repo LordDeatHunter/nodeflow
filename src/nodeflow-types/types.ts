@@ -7,7 +7,7 @@ import ConnectorDestination from "../utils/data/ConnectorDestination";
 import ConnectorSource from "../utils/data/ConnectorSource";
 import { ReactiveMap } from "@solid-primitives/map";
 import ArrayWrapper from "../utils/data/ArrayWrapper";
-import { KeyboardKeyCode } from "../utils/constants";
+import { KeyboardKeyCode, MOUSE_BUTTONS } from "../utils/constants";
 import Rect from "../utils/data/Rect";
 import SelectionMap from "../utils/SelectionMap";
 
@@ -22,6 +22,7 @@ export type DeepPartial<T> = T extends object
 export interface MouseDataType {
   clickStartPosition?: Vec2;
   mousePosition: Vec2;
+  heldMouseButtons: Set<MOUSE_BUTTONS>;
   pointerDown: boolean;
   selections: SelectionMap;
   selectionBox?: Rect;

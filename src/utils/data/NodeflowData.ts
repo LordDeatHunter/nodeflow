@@ -127,9 +127,9 @@ export default class NodeflowData {
       onKeyUpInNodeflow: new NodeflowEventPublisher<"onKeyUpInNodeflow">(this),
       onMouseDownInConnector:
         new NodeflowEventPublisher<"onMouseDownInConnector">(this),
+      onMouseDownInNode: new NodeflowEventPublisher<"onMouseDownInNode">(this),
       onMouseDownInNodeflow:
         new NodeflowEventPublisher<"onMouseDownInNodeflow">(this),
-      onMouseDownInNode: new NodeflowEventPublisher<"onMouseDownInNode">(this),
       onMouseMoveInNodeflow:
         new NodeflowEventPublisher<"onMouseMoveInNodeflow">(this),
       onNodeConnected: new NodeflowEventPublisher<"onNodeConnected">(this),
@@ -138,18 +138,18 @@ export default class NodeflowData {
         new NodeflowEventPublisher<"onPointerDownInNodeCurve">(this),
       onPointerUpInConnector:
         new NodeflowEventPublisher<"onPointerUpInConnector">(this),
+      onPointerUpInNode: new NodeflowEventPublisher<"onPointerUpInNode">(this),
       onPointerUpInNodeflow:
         new NodeflowEventPublisher<"onPointerUpInNodeflow">(this),
-      onPointerUpInNode: new NodeflowEventPublisher<"onPointerUpInNode">(this),
       onTouchMoveInNodeflow:
         new NodeflowEventPublisher<"onTouchMoveInNodeflow">(this),
       onTouchStartInConnector:
         new NodeflowEventPublisher<"onTouchStartInConnector">(this),
-      onTouchStartInNodeflow:
-        new NodeflowEventPublisher<"onTouchStartInNodeflow">(this),
       onTouchStartInNode: new NodeflowEventPublisher<"onTouchStartInNode">(
         this,
       ),
+      onTouchStartInNodeflow:
+        new NodeflowEventPublisher<"onTouchStartInNodeflow">(this),
       onWheelInNodeflow: new NodeflowEventPublisher<"onWheelInNodeflow">(this),
     };
     this.setupDefaultEventHandlers();
@@ -471,7 +471,9 @@ export default class NodeflowData {
   public updateBackgroundPosition(moveDistance: Vec2, keyboard = false) {
     if (
       !this.mouseData.hasSelectedNodeflow() ||
-      keyboard === this.mouseData.isDraggingObject
+      keyboard ===
+        (this.mouseData.isHoldingButton(MOUSE_BUTTONS.MIDDLE) ||
+          this.mouseData.isHoldingButton(MOUSE_BUTTONS.LEFT))
     ) {
       return;
     }
@@ -948,7 +950,8 @@ export default class NodeflowData {
         event: ({ event }) => {
           if (
             this.mouseData.heldNodes.length === 0 ||
-            !this.mouseData.pointerDown ||
+            (!this.mouseData.pointerDown &&
+              !this.mouseData.isHoldingButton(MOUSE_BUTTONS.LEFT)) ||
             this.mouseData.selectionBox
           ) {
             return;
@@ -1000,9 +1003,10 @@ export default class NodeflowData {
       },
       {
         name: "nodeflow:reset-mouse-data",
-        event: () => {
+        event: ({ event }) => {
           this.mouseData.pointerDown = false;
           this.mouseData.selectionBox = undefined;
+          this.mouseData.heldMouseButtons.delete(event.button);
 
           if (this.mouseData.heldConnectors.length === 1) {
             this.mouseData.selections.clearNodes();
@@ -1051,6 +1055,7 @@ export default class NodeflowData {
           const mousePosition = Vec2.fromEvent(touch);
 
           this.mouseData.selections.clearNodes();
+
           this.mouseData.update({
             pointerDown: true,
             mousePosition,
@@ -1248,13 +1253,13 @@ export default class NodeflowData {
           }
 
           this.mouseData.selectNodeflow();
+          this.mouseData.heldMouseButtons.add(event.button);
 
           this.mouseData.update({
             clickStartPosition: Vec2.of(
               event.clientX / this.zoomLevel - this.position.x,
               event.clientY / this.zoomLevel - this.position.y,
             ),
-            pointerDown: this.settings.canPan,
             mousePosition: Vec2.fromEvent(event),
           });
         },
@@ -1290,6 +1295,12 @@ export default class NodeflowData {
       {
         name: "nodeflow:stop-propagation",
         event: ({ event }) => event.stopPropagation(),
+      },
+      {
+        name: "nodeflow:handle-click",
+        event: ({ event }) => {
+          this.mouseData.heldMouseButtons.add(event.button);
+        },
       },
       {
         name: "nodeflow:start-creating-connection",
@@ -1385,6 +1396,12 @@ export default class NodeflowData {
         },
       },
       {
+        name: "nodeflow:handle-click",
+        event: ({ event }) => {
+          this.mouseData.heldMouseButtons.add(event.button);
+        },
+      },
+      {
         name: "nodeflow:stop-propagation",
         event: ({ event }) => event.stopPropagation(),
       },
@@ -1429,6 +1446,12 @@ export default class NodeflowData {
         priority: 1,
       },
       {
+        name: "nodeflow:handle-click",
+        event: ({ event }) => {
+          this.mouseData.heldMouseButtons.add(event.button);
+        },
+      },
+      {
         name: "nodeflow:update-mouse-data",
         event: ({ event, sourceConnector, destinationConnector }) => {
           this.mouseData.pointerDown = true;
@@ -1460,13 +1483,6 @@ export default class NodeflowData {
           }
 
           this.mouseData.selections.clearConnectors();
-        },
-      },
-      {
-        name: "nodeflow:stop-propagation",
-        event: ({ event }) => {
-          event.stopPropagation();
-          event.preventDefault();
         },
       },
     ]);

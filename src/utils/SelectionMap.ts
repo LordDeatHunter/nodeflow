@@ -260,6 +260,10 @@ export default class SelectionMap {
     return Array.from(this.nodesMap.values());
   }
 
+  public get selectedNodesMap(): ReactiveMap<string, NodeflowNodeData> {
+    return this.nodesMap;
+  }
+
   public get selectedConnections(): SelectableConnection[] {
     return Array.from(this.connectionsMap.values());
   }
