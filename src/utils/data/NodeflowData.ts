@@ -1106,21 +1106,6 @@ export default class NodeflowData {
         event: ({ event }) =>
           this.keyboardData.releaseKey(event.code as KeyboardKeyCode),
       },
-      {
-        name: "nodeflow:handle-controls",
-        event: () => {
-          const noMovement =
-            !this.keyboardData.isActionPressed(this.keymap.MOVE_LEFT) &&
-            !this.keyboardData.isActionPressed(this.keymap.MOVE_RIGHT) &&
-            !this.keyboardData.isActionPressed(this.keymap.MOVE_UP) &&
-            !this.keyboardData.isActionPressed(this.keymap.MOVE_DOWN);
-
-          if (noMovement && this.intervalId) {
-            clearInterval(this.intervalId);
-            this.intervalId = undefined;
-          }
-        },
-      },
     ]);
 
     this.eventStore.onKeyDownInNodeflow.subscribeMultiple([
