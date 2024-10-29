@@ -967,17 +967,20 @@ export default class NodeflowData {
             return;
           }
 
-          this.setHeldNodePosition(
-            Vec2.of(event.clientX, event.clientY)
-              .divideBy(this.zoomLevel)
-              .subtract(this.mouseData.clickStartPosition ?? Vec2.zero()),
+          this.updateHeldNodePosition(
+            Vec2.of(event.movementX, event.movementY).divideBy(this.zoomLevel),
           );
         },
       },
       {
         name: "nodeflow:update-background-position",
         event: ({ event }) => {
-          if (this.mouseData.selectionBox.boundingBox) {
+          const isDraggingNode =
+            this.mouseData.heldNodes.length > 0 &&
+            (this.mouseData.pointerDown ||
+              this.mouseData.isHoldingButton(MOUSE_BUTTONS.LEFT));
+
+          if (this.mouseData.selectionBox.boundingBox || isDraggingNode) {
             return;
           }
 
