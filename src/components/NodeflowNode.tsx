@@ -93,7 +93,10 @@ const NodeflowNode: Component<NodeProps> = (props) => {
       classList={{
         [node()?.css?.normal ?? ""]: true,
         [node()?.css?.selected ?? ""]:
-          props.nodeflowData.mouseData.hasSelectedNode(props.nodeId),
+          props.nodeflowData.mouseData.hasSelectedNode(props.nodeId) ||
+          props.nodeflowData.mouseData.selectionBox.selections.isNodeSelected(
+            props.nodeId,
+          ),
       }}
       onMouseDown={(event) =>
         props.nodeflowData.eventStore.onMouseDownInNode.publish({

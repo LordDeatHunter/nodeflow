@@ -117,7 +117,7 @@ const NodeflowCanvas =
           />
         </Show>
       </div>
-      <Show when={nodeflowData.mouseData.selectionBox}>
+      <Show when={nodeflowData.mouseData.selectionBox.boundingBox}>
         <SelectionBox nodeflowData={nodeflowData} />
       </Show>
     </div>

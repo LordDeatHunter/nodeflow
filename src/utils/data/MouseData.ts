@@ -7,11 +7,11 @@ import {
   SerializedMouseData,
 } from "../../nodeflow-types";
 import { NodeflowData } from "./index";
-import Rect from "./Rect";
 import SelectionMap from "../SelectionMap";
 import NodeflowNodeData from "./NodeflowNodeData";
 import NodeConnector from "./NodeConnector";
 import { MOUSE_BUTTONS } from "../constants";
+import SelectionBoxData from "./SelectionBoxData";
 
 /**
  * Represents additional mouse data used in the nodeflow canvas, such held objects and mouse position.
@@ -31,7 +31,7 @@ export default class MouseData {
       heldMouseButtons: new Set<MOUSE_BUTTONS>(),
       pointerDown: false,
       selections: new SelectionMap(this.nodeflowData),
-      selectionBox: undefined,
+      selectionBox: new SelectionBoxData(this.nodeflowData),
     });
   }
 
@@ -66,7 +66,7 @@ export default class MouseData {
     return this.store[0].selections;
   }
 
-  get selectionBox() {
+  get selectionBox(): SelectionBoxData {
     return this.store[0].selectionBox;
   }
 
@@ -112,27 +112,6 @@ export default class MouseData {
     this.store[1]({ mousePosition: value });
   }
 
-  set selectionBox(value) {
-    this.store[1]({ selectionBox: value });
-
-    if (!value) {
-      return;
-    }
-
-    const rect = Rect.of(value.position, value.size);
-
-    const transformedRect = Rect.fromPositions(
-      this.nodeflowData.transformVec2ToCanvas(rect.startPosition()),
-      this.nodeflowData.transformVec2ToCanvas(rect.endPosition()),
-    );
-
-    this.nodeflowData.chunking
-      .getNodesInRect(transformedRect)
-      .forEach((node) => {
-        this.selections.add({ type: SelectableElementType.Node, node });
-      });
-  }
-
   set pointerDown(value: boolean) {
     this.store[1]({ pointerDown: value });
   }
@@ -153,6 +132,7 @@ export default class MouseData {
       pointerDown: false,
       heldMouseButtons: new Set<MOUSE_BUTTONS>(),
       selections: new SelectionMap(this.nodeflowData),
+      selectionBox: new SelectionBoxData(this.nodeflowData),
     });
   }
 

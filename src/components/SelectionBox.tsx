@@ -3,11 +3,11 @@ import { createMemo } from "solid-js";
 
 const SelectionBox = (props: { nodeflowData: NodeflowData }) => {
   const startPosition = createMemo(() =>
-    props.nodeflowData.mouseData.selectionBox!.startPosition(),
+    props.nodeflowData.mouseData.selectionBox.boundingBox!.startPosition(),
   );
 
   const size = createMemo(() =>
-    props.nodeflowData.mouseData.selectionBox!.size.abs(),
+    props.nodeflowData.mouseData.selectionBox.boundingBox!.size.abs(),
   );
 
   return (

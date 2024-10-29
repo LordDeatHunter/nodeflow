@@ -946,7 +946,7 @@ export default class NodeflowData {
             this.mouseData.heldNodes.length === 0 ||
             (!this.mouseData.pointerDown &&
               !this.mouseData.isHoldingButton(MOUSE_BUTTONS.LEFT)) ||
-            this.mouseData.selectionBox
+            this.mouseData.selectionBox.boundingBox
           ) {
             return;
           }
@@ -961,7 +961,7 @@ export default class NodeflowData {
       {
         name: "nodeflow:update-background-position",
         event: ({ event }) => {
-          if (this.mouseData.selectionBox) {
+          if (this.mouseData.selectionBox.boundingBox) {
             return;
           }
 
@@ -973,13 +973,13 @@ export default class NodeflowData {
       {
         name: "nodeflow:expand-selection-box",
         event: ({ event }) => {
-          if (!this.mouseData.selectionBox) {
+          if (!this.mouseData.selectionBox.boundingBox) {
             return;
           }
 
-          this.mouseData.selectionBox = Rect.of(
-            this.mouseData.selectionBox.position,
-            this.mouseData.selectionBox.position
+          this.mouseData.selectionBox.boundingBox = Rect.of(
+            this.mouseData.selectionBox.boundingBox.position,
+            this.mouseData.selectionBox.boundingBox.position
               .subtract(Vec2.fromEvent(event))
               .negate(),
           );
@@ -999,7 +999,7 @@ export default class NodeflowData {
         name: "nodeflow:reset-mouse-data",
         event: ({ event }) => {
           this.mouseData.pointerDown = false;
-          this.mouseData.selectionBox = undefined;
+          this.mouseData.selectionBox.boundingBox = undefined;
           this.mouseData.heldMouseButtons.delete(event.button);
 
           if (this.mouseData.heldConnectors.length === 1) {
@@ -1265,9 +1265,10 @@ export default class NodeflowData {
             return;
           }
 
-          this.mouseData.update({
-            selectionBox: Rect.of(Vec2.fromEvent(event), Vec2.zero()),
-          });
+          this.mouseData.selectionBox.boundingBox = Rect.of(
+            Vec2.fromEvent(event),
+            Vec2.zero(),
+          );
         },
       },
       {

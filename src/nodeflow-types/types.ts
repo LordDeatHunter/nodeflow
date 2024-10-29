@@ -10,6 +10,7 @@ import ArrayWrapper from "../utils/data/ArrayWrapper";
 import { KeyboardKeyCode, MOUSE_BUTTONS } from "../utils/constants";
 import Rect from "../utils/data/Rect";
 import SelectionMap from "../utils/SelectionMap";
+import SelectionBoxData from "../utils/data/SelectionBoxData";
 
 export type Optional<T> = T | undefined;
 
@@ -19,13 +20,18 @@ export type DeepPartial<T> = T extends object
     }
   : T;
 
+export interface SelectionBoxDataType {
+  boundingBox?: Rect;
+  selections: SelectionMap;
+}
+
 export interface MouseDataType {
   clickStartPosition?: Vec2;
   mousePosition: Vec2;
   heldMouseButtons: Set<MOUSE_BUTTONS>;
   pointerDown: boolean;
   selections: SelectionMap;
-  selectionBox?: Rect;
+  selectionBox: SelectionBoxData;
 }
 
 export interface KeyboardDataType {
