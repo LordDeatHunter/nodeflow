@@ -193,9 +193,9 @@ export default class NodeflowData {
       return;
     }
 
-    if (this.settings.canPan && !hasSelectedNodes) {
+    if (!hasSelectedNodes) {
       this.updateBackgroundPosition(this.currentMoveSpeed, true);
-    } else if (hasSelectedNodes && this.settings.canMoveNodes) {
+    } else {
       this.updateHeldNodePosition(
         this.currentMoveSpeed.divideBy(this.zoomLevel),
       );
@@ -464,10 +464,12 @@ export default class NodeflowData {
    */
   public updateBackgroundPosition(moveDistance: Vec2, keyboard = false) {
     if (
+      !this.settings.canPan ||
       !this.mouseData.hasSelectedNodeflow() ||
       keyboard ===
         (this.mouseData.isHoldingButton(MOUSE_BUTTONS.MIDDLE) ||
-          this.mouseData.isHoldingButton(MOUSE_BUTTONS.LEFT))
+          this.mouseData.isHoldingButton(MOUSE_BUTTONS.LEFT)) ||
+      this.mouseData.selectionBox.boundingBox
     ) {
       return;
     }
@@ -904,6 +906,13 @@ export default class NodeflowData {
    * @param moveSpeed - the distance to move the node by
    */
   public updateHeldNodePosition(moveSpeed: Vec2) {
+    if (
+      !this.settings.canMoveNodes ||
+      this.mouseData.selectionBox.boundingBox
+    ) {
+      return;
+    }
+
     this.mouseData.heldNodes.forEach(
       (element) => (element.position = element.position.add(moveSpeed)),
     );
@@ -915,6 +924,13 @@ export default class NodeflowData {
    * @param position - the position to set the node to
    */
   public setHeldNodePosition(position: Vec2) {
+    if (
+      !this.settings.canMoveNodes ||
+      this.mouseData.selectionBox.boundingBox
+    ) {
+      return;
+    }
+
     this.mouseData.heldNodes.forEach(
       (element) => (element.position = position),
     );
