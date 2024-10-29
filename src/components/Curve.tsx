@@ -13,7 +13,7 @@ const Curve: Component<CurveProps> = (props) => {
 
     if (mouseData.heldConnectors.length !== 1) return undefined;
 
-    const output = mouseData.heldConnectors[0].connector;
+    const output = mouseData.heldConnectors[0];
     const node = output.parentNode;
 
     const start = output.getCenter();

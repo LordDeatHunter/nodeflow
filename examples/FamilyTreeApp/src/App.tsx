@@ -1,5 +1,10 @@
-import { type Component, createMemo, onMount } from "solid-js";
-import { NodeflowData, NodeflowLib, windowSize } from "nodeflow-lib";
+import { type Component, onMount } from "solid-js";
+import {
+  NodeConnector,
+  NodeflowData,
+  NodeflowLib,
+  windowSize,
+} from "nodeflow-lib";
 import curveCss from "./styles/curve.module.scss";
 import nodeflowCss from "./styles/nodeflow.module.scss";
 import { setupDummyConnections, setupDummyNodes, setupEvents } from "./utils";
@@ -20,22 +25,20 @@ const App: Component = () => {
     setupDummyNodes().then(() => setupDummyConnections());
   });
 
-  const newCurveCss = createMemo(() => {
-    const connector = nodeflowData.mouseData.heldConnectors.at(-1);
-
-    if (!connector) {
+  const getNewCurveCss = (heldConnector?: NodeConnector) => {
+    if (!heldConnector) {
       return undefined;
     }
 
-    return connector.connector.parentNode.customData.gender === "M"
+    return heldConnector.parentNode.customData.gender === "M"
       ? curveCss.newFatherCurve
       : curveCss.newMotherCurve;
-  });
+  };
 
   return (
     <>
       <Nodeflow
-        css={{ newCurve: newCurveCss(), nodeflow: nodeflowCss.nodeflow }}
+        css={{ getNewCurveCss, nodeflow: nodeflowCss.nodeflow }}
         width={`${windowSize().x}px`}
         height={`${windowSize().y}px`}
       />

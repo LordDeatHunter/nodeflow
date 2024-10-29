@@ -17,6 +17,10 @@ export default class Rect {
     return new Rect(rect.position.x, rect.position.y, rect.size.x, rect.size.y);
   }
 
+  public static fromPositions(start: Vec2, end: Vec2): Rect {
+    return Rect.of(start, end.subtract(start));
+  }
+
   public copy(): Rect {
     return Rect.fromRect(this);
   }
@@ -31,6 +35,20 @@ export default class Rect {
       this.position.x + this.size.x > other.position.x &&
       this.position.y < other.position.y + other.size.y &&
       this.position.y + this.size.y > other.position.y
+    );
+  }
+
+  public startPosition(): Vec2 {
+    return Vec2.of(
+      Math.min(this.position.x, this.position.x + this.size.x),
+      Math.min(this.position.y, this.position.y + this.size.y),
+    );
+  }
+
+  public endPosition(): Vec2 {
+    return Vec2.of(
+      Math.max(this.position.x, this.position.x + this.size.x),
+      Math.max(this.position.y, this.position.y + this.size.y),
     );
   }
 }

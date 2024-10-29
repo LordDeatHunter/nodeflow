@@ -68,7 +68,7 @@ const App: Component = () => {
     >
       <Nodeflow
         css={{
-          newCurve: curveCss.newConnection,
+          getNewCurveCss: () => curveCss.newConnection,
           nodeflow: nodeflowCss.nodeflow,
         }}
         height="100%"
@@ -83,6 +83,7 @@ const App: Component = () => {
           display: "flex",
           "align-items": "center",
           "justify-content": "center",
+          gap: "20px",
         }}
       >
         <div
@@ -93,6 +94,8 @@ const App: Component = () => {
             display: "flex",
             "align-items": "center",
             "justify-content": "center",
+            "user-select": "none",
+            cursor: "grab",
           }}
           onPointerDown={() => {
             setNodePreview("Generic node");
@@ -113,6 +116,8 @@ const App: Component = () => {
             "align-items": "center",
             "justify-content": "center",
             "z-index": 1000,
+            "user-select": "none",
+            cursor: "grabbing",
           }}
           class={nodeCss.node}
         >

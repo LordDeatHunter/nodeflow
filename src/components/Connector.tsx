@@ -15,7 +15,7 @@ const Connector: Component<ConnectorProps> = (props) => (
   <div
     ref={(el) =>
       setTimeout(() => {
-        if (!el) return;
+        if (!el || !props.nodeflowData.nodes.has(props.nodeId)) return;
 
         const connector = props.nodeflowData.nodes
           .get(props.nodeId)!

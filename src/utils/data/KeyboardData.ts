@@ -38,6 +38,10 @@ export default class KeyboardData {
     this.store[1](produce((state) => state.heldKeys.add(key)));
   }
 
+  public hasKeyPressed(key: KeyboardKeyCode): boolean {
+    return this.heldKeys.has(key);
+  }
+
   public isActionPressed(keymap: Set<KeyboardKeyCode>) {
     return !isSetEmpty(intersectionOfSets(this.heldKeys, keymap));
   }

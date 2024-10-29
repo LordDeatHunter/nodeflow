@@ -7,7 +7,10 @@ import ConnectorDestination from "../utils/data/ConnectorDestination";
 import ConnectorSource from "../utils/data/ConnectorSource";
 import { ReactiveMap } from "@solid-primitives/map";
 import ArrayWrapper from "../utils/data/ArrayWrapper";
-import { KeyboardKeyCode } from "../utils/constants";
+import { KeyboardKeyCode, MOUSE_BUTTONS } from "../utils/constants";
+import Rect from "../utils/data/Rect";
+import SelectionMap from "../utils/SelectionMap";
+import SelectionBoxData from "../utils/data/SelectionBoxData";
 
 export type Optional<T> = T | undefined;
 
@@ -17,11 +20,18 @@ export type DeepPartial<T> = T extends object
     }
   : T;
 
+export interface SelectionBoxDataType {
+  boundingBox?: Rect;
+  selections: SelectionMap;
+}
+
 export interface MouseDataType {
   clickStartPosition?: Vec2;
   mousePosition: Vec2;
+  heldMouseButtons: Set<MOUSE_BUTTONS>;
   pointerDown: boolean;
-  selections: ArrayWrapper<SelectableElement>;
+  selections: SelectionMap;
+  selectionBox: SelectionBoxData;
 }
 
 export interface KeyboardDataType {
@@ -33,23 +43,30 @@ export interface ConnectionType {
   destinationConnector: NodeConnector;
 }
 
+export enum SelectableElementType {
+  Connector = "connector",
+  Node = "node",
+  Nodeflow = "nodeflow",
+  Connection = "connection",
+}
+
 export interface SelectableConnector {
   connector: NodeConnector;
-  type: "connector";
+  type: SelectableElementType.Connector;
 }
 
 export interface SelectableNode {
   node: NodeflowNodeData;
-  type: "node";
+  type: SelectableElementType.Node;
 }
 
 export interface SelectableNodeflow {
-  type: "nodeflow";
+  type: SelectableElementType.Nodeflow;
 }
 
 export interface SelectableConnection {
   connection: ConnectionType;
-  type: "connection";
+  type: SelectableElementType.Connection;
 }
 
 export type SelectableElement =
@@ -85,10 +102,11 @@ export type ConnectorSectionType = {
 
 export interface NodeflowDataType {
   currentMoveSpeed: Vec2;
+  intervalId: Optional<number>;
   pinchDistance: number;
   position: Vec2;
-  startPosition: Vec2;
   size: Vec2;
+  startPosition: Vec2;
   zoomLevel: number;
 }
 
@@ -98,7 +116,7 @@ export interface SelectableElementCSS {
 }
 
 export interface NodeflowCss {
-  newCurve?: string;
+  getNewCurveCss?: (heldConnector?: NodeConnector) => string | undefined;
   nodeflow?: string;
 }
 

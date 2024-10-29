@@ -134,7 +134,7 @@ export const setupEvents = () => {
 
       if (heldConnectors.length !== 1) return;
 
-      const heldNode = heldConnectors[0].connector.parentNode;
+      const heldNode = heldConnectors[0].parentNode;
 
       const position = nodeflowData.mouseData.globalMousePosition();
 
@@ -161,10 +161,10 @@ export const setupEvents = () => {
   nodeflowData.eventStore.onNodeConnected.subscribe(
     "nodeflow:create-connection",
     ({ outputNodeId, inputNodeId }) => {
+      if (outputNodeId === inputNodeId) return;
+
       const outputNode = nodeflowData.nodes.get(outputNodeId)!;
       const inputNode = nodeflowData.nodes.get(inputNodeId)!;
-
-      if (outputNodeId === inputNodeId) return;
 
       const connector = inputNode.getConnector("I")?.sources;
 
@@ -204,8 +204,7 @@ export const setupEvents = () => {
         return;
 
       const sourceNode =
-        nodeflowData.mouseData.heldConnectors[0].connector.parentSection
-          .parentNode;
+        nodeflowData.mouseData.heldConnectors[0].parentSection.parentNode;
 
       if (nodeId === sourceNode.id) return;
 

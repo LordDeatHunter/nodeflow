@@ -6,7 +6,7 @@ import { nodeflowData } from "./App";
 
 export const createDummyNode = (
   position: Vec2,
-  center = false,
+  centered = false,
 ): NodeflowNodeData => {
   const historyGroup = crypto.randomUUID();
 
@@ -18,7 +18,7 @@ export const createDummyNode = (
       },
       position,
       display: NodeDisplay,
-      centered: center,
+      centered,
     },
     historyGroup,
   );
@@ -62,16 +62,33 @@ export const createDummyNode = (
 export const setupEvents = () => {
   // Override the default create-connection subscription to prevent connecting to the same node, and set custom css when creating a connection
   nodeflowData.eventStore.onNodeConnected.subscribe(
-    "create-connection",
-    (data) => {
-      if (data.outputNodeId === data.inputNodeId) {
+    "nodeflow:create-connection",
+    ({ outputNodeId, inputNodeId, outputId, inputId }) => {
+      if (outputNodeId === inputNodeId) {
         return;
       }
+
+      const inputNode = nodeflowData.nodes.get(inputNodeId)!;
+      const outputNode = nodeflowData.nodes.get(outputNodeId)!;
+
+      const inputs = inputNode.connectorSections.get("inputs")!.connectors;
+      const outputs = outputNode.connectorSections.get("outputs")!.connectors;
+
+      if (!inputs.has(inputId) || !outputs.has(outputId)) {
+        return;
+      }
+
+      const inputConnector = inputs.get(inputId)!;
+
+      if (inputConnector.sources.length > 0) {
+        return;
+      }
+
       nodeflowData.addConnection({
-        sourceNodeId: data.outputNodeId,
-        sourceConnectorId: data.outputId,
-        destinationNodeId: data.inputNodeId,
-        destinationConnectorId: data.inputId,
+        sourceNodeId: outputNodeId,
+        sourceConnectorId: outputId,
+        destinationNodeId: inputNodeId,
+        destinationConnectorId: inputId,
         css: {
           normal: curveCss.connection,
           selected: curveCss.selectedConnection,

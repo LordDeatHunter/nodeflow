@@ -1,9 +1,9 @@
-import { NodeflowData, Vec2 } from "./index";
+import { NodeflowData, NodeflowNodeData, Vec2 } from "./index";
 import { createStore } from "solid-js/store";
 import { ReactiveMap } from "@solid-primitives/map";
-import { createEffect } from "solid-js";
 import { isSetEmpty } from "../misc-utils";
 import { Vec2Hash } from "./Vec2";
+import Rect from "./Rect";
 
 export default class NodeflowChunking {
   private readonly store;
@@ -34,14 +34,14 @@ export default class NodeflowChunking {
   }
 
   public addNodeToChunk(nodeId: string, position: Vec2): void {
-    const chunkPosition = this.calculateChunkPosition(position);
+    const chunkPosition = this.calculateChunkPosition(position).hashCode();
     const chunk = this.chunks.get(chunkPosition) || new Set();
     chunk.add(nodeId);
     this.chunks.set(chunkPosition, chunk);
   }
 
   public removeNodeFromChunk(nodeId: string, position: Vec2): void {
-    const chunkPosition = this.calculateChunkPosition(position);
+    const chunkPosition = this.calculateChunkPosition(position).hashCode();
     const chunk = this.chunks.get(chunkPosition);
     if (chunk) {
       chunk.delete(nodeId);
@@ -54,41 +54,44 @@ export default class NodeflowChunking {
     oldPosition: Vec2,
     newPosition: Vec2,
   ): void {
-    const oldChunkPosition = this.calculateChunkPosition(oldPosition);
-    const newChunkPosition = this.calculateChunkPosition(newPosition);
+    const oldChunkPosition =
+      this.calculateChunkPosition(oldPosition).hashCode();
+    const newChunkPosition =
+      this.calculateChunkPosition(newPosition).hashCode();
 
     if (oldChunkPosition == newChunkPosition) {
       return;
     }
 
-    createEffect(() => {
-      const oldChunk = this.chunks.get(oldChunkPosition);
-      const newChunk = this.chunks.get(newChunkPosition) || new Set();
+    const oldChunk = this.chunks.get(oldChunkPosition);
+    const newChunk = this.chunks.get(newChunkPosition) || new Set();
 
-      if (oldChunk) {
-        oldChunk.delete(nodeId);
-        this.chunks.set(oldChunkPosition, oldChunk);
-        if (isSetEmpty(oldChunk)) {
-          this.chunks.delete(oldChunkPosition);
-        }
+    if (oldChunk) {
+      oldChunk.delete(nodeId);
+      this.chunks.set(oldChunkPosition, oldChunk);
+      if (isSetEmpty(oldChunk)) {
+        this.chunks.delete(oldChunkPosition);
       }
+    }
 
-      if (newChunk) {
-        newChunk.add(nodeId);
-        this.chunks.set(newChunkPosition, newChunk);
-      }
-    });
+    if (newChunk) {
+      newChunk.add(nodeId);
+      this.chunks.set(newChunkPosition, newChunk);
+    }
   }
 
   public getChunk(position: Vec2): Set<string> {
-    return this.chunks.get(this.calculateChunkPosition(position)) || new Set();
+    return (
+      this.chunks.get(this.calculateChunkPosition(position).hashCode()) ||
+      new Set()
+    );
   }
 
-  private calculateChunkPosition(position: Vec2): Vec2Hash {
+  private calculateChunkPosition(position: Vec2): Vec2 {
     return Vec2.of(
       Math.floor(position.x / this.chunkSize),
       Math.floor(position.y / this.chunkSize),
-    ).hashCode();
+    );
   }
 
   public checkForCollisions(id: string): string[] {
@@ -131,5 +134,32 @@ export default class NodeflowChunking {
         checkNode.rectWithOffset.intersects(node.rectWithOffset)
       );
     });
+  }
+
+  public getNodesInRect(rect: Rect): NodeflowNodeData[] {
+    const nodes = [] as NodeflowNodeData[];
+
+    const startPosition = rect.startPosition();
+    const endPosition = rect.endPosition();
+
+    const startChunk = this.calculateChunkPosition(startPosition);
+    const endChunk = this.calculateChunkPosition(endPosition);
+
+    for (let x = startChunk.x; x <= endChunk.x; ++x) {
+      for (let y = startChunk.y; y <= endChunk.y; ++y) {
+        const chunk = this.chunks.get(Vec2.of(x, y).hashCode());
+        if (!chunk) {
+          continue;
+        }
+        chunk.forEach((nodeId) => {
+          const node = this.nodeflowData.nodes.get(nodeId);
+          if (node && rect.intersects(node.rectWithOffset)) {
+            nodes.push(node);
+          }
+        });
+      }
+    }
+
+    return nodes;
   }
 }

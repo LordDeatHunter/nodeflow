@@ -5,6 +5,7 @@ import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
 import { NodeflowCss } from "../nodeflow-types";
 import Vec2 from "../utils/data/Vec2";
+import SelectionBox from "./SelectionBox";
 
 interface NodeflowProps {
   css?: NodeflowCss;
@@ -108,9 +109,17 @@ const NodeflowCanvas =
           </For>
         </svg>
         <Show when={nodeflowData.mouseData.heldConnectors.length === 1}>
-          <Curve css={props?.css?.newCurve} nodeflowData={nodeflowData} />
+          <Curve
+            css={props?.css?.getNewCurveCss?.(
+              nodeflowData.mouseData.heldConnectors.at(0),
+            )}
+            nodeflowData={nodeflowData}
+          />
         </Show>
       </div>
+      <Show when={nodeflowData.mouseData.selectionBox.boundingBox}>
+        <SelectionBox nodeflowData={nodeflowData} />
+      </Show>
     </div>
   );
 

@@ -6,11 +6,12 @@ import {
   NodeflowEventRecord,
   NodeflowNodeType,
   NodeflowSettings,
+  Optional,
+  SelectableElementType,
   SerializedConnection,
   SerializedNodeflowData,
   SerializedNodeflowNode,
 } from "../../nodeflow-types";
-import { windowSize } from "../screen-utils";
 import { clamp } from "../math-utils";
 import Changes from "./Changes";
 import MouseData from "./MouseData";
@@ -24,9 +25,14 @@ import { deepCopy, intersectionOfSets, isSetEmpty } from "../misc-utils";
 import { NodeflowEventPublisher } from "./EventPublishers";
 import CurveFunctions from "./CurveFunctions";
 import NodeflowLib from "../NodeflowLib";
-import { KeyboardKeyCode, MOUSE_BUTTONS } from "../constants";
+import {
+  KEYBOARD_KEY_CODES,
+  KeyboardKeyCode,
+  MOUSE_BUTTONS,
+} from "../constants";
 import KeyboardData from "./KeyboardData";
 import { NodeflowChunking } from "./index";
+import Rect from "./Rect";
 
 /**
  * NodeflowData is a class that manages the state of a Nodeflow canvas.
@@ -65,11 +71,27 @@ export default class NodeflowData {
   } as const;
 
   public readonly keymap: Record<string, Set<KeyboardKeyCode>> = {
-    MOVE_DOWN: new Set(["ArrowDown", "KeyS"]),
-    MOVE_LEFT: new Set(["ArrowLeft", "KeyA"]),
-    MOVE_RIGHT: new Set(["ArrowRight", "KeyD"]),
-    MOVE_UP: new Set(["ArrowUp", "KeyW"]),
-    SELECT_MULTIPLE: new Set(["ShiftLeft", "ShiftRight"]),
+    MOVE_DOWN: new Set([
+      KEYBOARD_KEY_CODES.ARROW_DOWN,
+      KEYBOARD_KEY_CODES.KEY_S,
+    ]),
+    MOVE_LEFT: new Set([
+      KEYBOARD_KEY_CODES.ARROW_LEFT,
+      KEYBOARD_KEY_CODES.KEY_A,
+    ]),
+    MOVE_RIGHT: new Set([
+      KEYBOARD_KEY_CODES.ARROW_RIGHT,
+      KEYBOARD_KEY_CODES.KEY_D,
+    ]),
+    MOVE_UP: new Set([KEYBOARD_KEY_CODES.ARROW_UP, KEYBOARD_KEY_CODES.KEY_W]),
+    SELECT_MULTIPLE: new Set([
+      KEYBOARD_KEY_CODES.CONTROL_LEFT,
+      KEYBOARD_KEY_CODES.CONTROL_RIGHT,
+    ]),
+    CREATE_SELECTION_BOX: new Set([
+      KEYBOARD_KEY_CODES.SHIFT_LEFT,
+      KEYBOARD_KEY_CODES.SHIFT_RIGHT,
+    ]),
   } as const;
 
   public constructor(
@@ -90,6 +112,7 @@ export default class NodeflowData {
       size: Vec2.zero(),
       zoomLevel: 1,
       pinchDistance: 0,
+      intervalId: undefined,
     });
 
     this.changes = new Changes();
@@ -105,9 +128,9 @@ export default class NodeflowData {
       onKeyUpInNodeflow: new NodeflowEventPublisher<"onKeyUpInNodeflow">(this),
       onMouseDownInConnector:
         new NodeflowEventPublisher<"onMouseDownInConnector">(this),
+      onMouseDownInNode: new NodeflowEventPublisher<"onMouseDownInNode">(this),
       onMouseDownInNodeflow:
         new NodeflowEventPublisher<"onMouseDownInNodeflow">(this),
-      onMouseDownInNode: new NodeflowEventPublisher<"onMouseDownInNode">(this),
       onMouseMoveInNodeflow:
         new NodeflowEventPublisher<"onMouseMoveInNodeflow">(this),
       onNodeConnected: new NodeflowEventPublisher<"onNodeConnected">(this),
@@ -116,68 +139,67 @@ export default class NodeflowData {
         new NodeflowEventPublisher<"onPointerDownInNodeCurve">(this),
       onPointerUpInConnector:
         new NodeflowEventPublisher<"onPointerUpInConnector">(this),
+      onPointerUpInNode: new NodeflowEventPublisher<"onPointerUpInNode">(this),
       onPointerUpInNodeflow:
         new NodeflowEventPublisher<"onPointerUpInNodeflow">(this),
-      onPointerUpInNode: new NodeflowEventPublisher<"onPointerUpInNode">(this),
       onTouchMoveInNodeflow:
         new NodeflowEventPublisher<"onTouchMoveInNodeflow">(this),
       onTouchStartInConnector:
         new NodeflowEventPublisher<"onTouchStartInConnector">(this),
-      onTouchStartInNodeflow:
-        new NodeflowEventPublisher<"onTouchStartInNodeflow">(this),
       onTouchStartInNode: new NodeflowEventPublisher<"onTouchStartInNode">(
         this,
       ),
+      onTouchStartInNodeflow:
+        new NodeflowEventPublisher<"onTouchStartInNodeflow">(this),
       onWheelInNodeflow: new NodeflowEventPublisher<"onWheelInNodeflow">(this),
     };
     this.setupDefaultEventHandlers();
+  }
 
-    // TODO: Simplify this using events
-    setInterval(() => {
-      const movingLeft = !isSetEmpty(
-        intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_LEFT),
-      );
-      const movingRight = !isSetEmpty(
-        intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_RIGHT),
-      );
-      const movingUp = !isSetEmpty(
-        intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_UP),
-      );
-      const movingDown = !isSetEmpty(
-        intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_DOWN),
-      );
+  public handleMovement(): void {
+    const movingLeft = !isSetEmpty(
+      intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_LEFT),
+    );
+    const movingRight = !isSetEmpty(
+      intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_RIGHT),
+    );
+    const movingUp = !isSetEmpty(
+      intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_UP),
+    );
+    const movingDown = !isSetEmpty(
+      intersectionOfSets(this.keyboardData.heldKeys, this.keymap.MOVE_DOWN),
+    );
 
-      const hasSelectedNodes = this.mouseData.heldNodes.length > 0;
+    const hasSelectedNodes = this.mouseData.heldNodes.length > 0;
 
-      this.currentMoveSpeed = Vec2.of(
-        this.calculateDirectionalMovementAmount(
-          movingLeft || movingRight,
-          this.currentMoveSpeed.x,
-          movingRight,
-          movingLeft,
-          !hasSelectedNodes,
-        ),
-        this.calculateDirectionalMovementAmount(
-          movingUp || movingDown,
-          this.currentMoveSpeed.y,
-          movingDown,
-          movingUp,
-          !hasSelectedNodes,
-        ),
+    this.currentMoveSpeed = Vec2.of(
+      this.calculateDirectionalMovementAmount(
+        movingLeft || movingRight,
+        this.currentMoveSpeed.x,
+        movingRight,
+        movingLeft,
+        !hasSelectedNodes,
+      ),
+      this.calculateDirectionalMovementAmount(
+        movingUp || movingDown,
+        this.currentMoveSpeed.y,
+        movingDown,
+        movingUp,
+        !hasSelectedNodes,
+      ),
+    );
+
+    if (this.currentMoveSpeed.x === 0 && this.currentMoveSpeed.y === 0) {
+      return;
+    }
+
+    if (!hasSelectedNodes) {
+      this.updateBackgroundPosition(this.currentMoveSpeed, true);
+    } else {
+      this.updateHeldNodePosition(
+        this.currentMoveSpeed.divideBy(this.zoomLevel),
       );
-
-      if (this.currentMoveSpeed.x === 0 && this.currentMoveSpeed.y === 0) {
-        return;
-      }
-
-      if (this.settings.canPan && !hasSelectedNodes) {
-        this.updateBackgroundPosition(this.currentMoveSpeed, true);
-      } else if (hasSelectedNodes && this.settings.canMoveNodes) {
-        this.updateHeldNodePosition(
-          this.currentMoveSpeed.divideBy(this.zoomLevel),
-        );
-      }
-    }, 10);
+    }
   }
 
   public serialize(): SerializedNodeflowData {
@@ -285,6 +307,10 @@ export default class NodeflowData {
     return this.store[0].pinchDistance;
   }
 
+  get intervalId() {
+    return this.store[0].intervalId;
+  }
+
   set currentMoveSpeed(value) {
     this.store[1]({ currentMoveSpeed: value });
   }
@@ -307,6 +333,10 @@ export default class NodeflowData {
 
   set pinchDistance(value) {
     this.store[1]({ pinchDistance: value });
+  }
+
+  set intervalId(value: Optional<number>) {
+    this.store[1]({ intervalId: value });
   }
 
   /**
@@ -341,8 +371,7 @@ export default class NodeflowData {
    * @returns the position of the center of the Nodeflow canvas.
    */
   public center() {
-    const windowDimensions = windowSize();
-    const windowCenter = windowDimensions.divideBy(2);
+    const windowCenter = this.size.divideBy(2);
 
     return this.startPosition
       .add(windowCenter)
@@ -384,7 +413,8 @@ export default class NodeflowData {
         this.settings.maxMovementSpeed,
       );
     }
-    if (speed <= 0.1 && speed >= -0.1) speed = 0;
+    if (Math.abs(speed) < 0.1) speed = 0;
+
     return speed;
   }
 
@@ -434,8 +464,12 @@ export default class NodeflowData {
    */
   public updateBackgroundPosition(moveDistance: Vec2, keyboard = false) {
     if (
+      !this.settings.canPan ||
       !this.mouseData.hasSelectedNodeflow() ||
-      keyboard === this.mouseData.isDraggingObject
+      keyboard ===
+        (this.mouseData.isHoldingButton(MOUSE_BUTTONS.MIDDLE) ||
+          this.mouseData.isHoldingButton(MOUSE_BUTTONS.LEFT)) ||
+      this.mouseData.selectionBox.boundingBox
     ) {
       return;
     }
@@ -556,9 +590,7 @@ export default class NodeflowData {
   public removeNode(nodeId: string, hasHistoryGroup: string | boolean = true) {
     if (!this.nodes.has(nodeId)) return;
 
-    this.mouseData.filterSelections(
-      (selection) => selection.type !== "node" || selection.node.id !== nodeId,
-    );
+    this.mouseData.selections.deleteNodes((node) => node.id === nodeId);
 
     const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
 
@@ -874,10 +906,33 @@ export default class NodeflowData {
    * @param moveSpeed - the distance to move the node by
    */
   public updateHeldNodePosition(moveSpeed: Vec2) {
-    this.mouseData.heldNodes.forEach((element) =>
-      element.node.updateWithPrevious((prev) => ({
-        position: prev.position.add(moveSpeed),
-      })),
+    if (
+      !this.settings.canMoveNodes ||
+      this.mouseData.selectionBox.boundingBox
+    ) {
+      return;
+    }
+
+    this.mouseData.heldNodes.forEach(
+      (element) => (element.position = element.position.add(moveSpeed)),
+    );
+  }
+
+  /**
+   * Updates the position of the held node based on the mouse movement.
+   *
+   * @param position - the position to set the node to
+   */
+  public setHeldNodePosition(position: Vec2) {
+    if (
+      !this.settings.canMoveNodes ||
+      this.mouseData.selectionBox.boundingBox
+    ) {
+      return;
+    }
+
+    this.mouseData.heldNodes.forEach(
+      (element) => (element.position = position),
     );
   }
 
@@ -901,10 +956,51 @@ export default class NodeflowData {
 
     this.eventStore.onMouseMoveInNodeflow.subscribeMultiple([
       {
+        name: "nodeflow:drag-node",
+        event: ({ event }) => {
+          if (
+            this.mouseData.heldNodes.length === 0 ||
+            (!this.mouseData.pointerDown &&
+              !this.mouseData.isHoldingButton(MOUSE_BUTTONS.LEFT)) ||
+            this.mouseData.selectionBox.boundingBox
+          ) {
+            return;
+          }
+
+          this.updateHeldNodePosition(
+            Vec2.of(event.movementX, event.movementY).divideBy(this.zoomLevel),
+          );
+        },
+      },
+      {
         name: "nodeflow:update-background-position",
         event: ({ event }) => {
+          const isDraggingNode =
+            this.mouseData.heldNodes.length > 0 &&
+            (this.mouseData.pointerDown ||
+              this.mouseData.isHoldingButton(MOUSE_BUTTONS.LEFT));
+
+          if (this.mouseData.selectionBox.boundingBox || isDraggingNode) {
+            return;
+          }
+
           this.updateBackgroundPosition(
             Vec2.of(event.movementX, event.movementY),
+          );
+        },
+      },
+      {
+        name: "nodeflow:expand-selection-box",
+        event: ({ event }) => {
+          if (!this.mouseData.selectionBox.boundingBox) {
+            return;
+          }
+
+          this.mouseData.selectionBox.boundingBox = Rect.of(
+            this.mouseData.selectionBox.boundingBox.position,
+            this.mouseData.selectionBox.boundingBox.position
+              .subtract(Vec2.fromEvent(event))
+              .negate(),
           );
         },
       },
@@ -920,14 +1016,16 @@ export default class NodeflowData {
       },
       {
         name: "nodeflow:reset-mouse-data",
-        event: () => {
+        event: ({ event }) => {
           this.mouseData.pointerDown = false;
+          this.mouseData.selectionBox.boundingBox = undefined;
+          this.mouseData.heldMouseButtons.delete(event.button);
 
           if (this.mouseData.heldConnectors.length === 1) {
-            this.mouseData.clearSelectedByType("node");
+            this.mouseData.selections.clearNodes();
           }
 
-          this.mouseData.clearSelectedByType("connector");
+          this.mouseData.selections.clearConnectors();
         },
       },
     ]);
@@ -969,7 +1067,8 @@ export default class NodeflowData {
           const touch = touches[0];
           const mousePosition = Vec2.fromEvent(touch);
 
-          this.mouseData.clearSelectedByType("node");
+          this.mouseData.selections.clearNodes();
+
           this.mouseData.update({
             pointerDown: true,
             mousePosition,
@@ -1020,11 +1119,13 @@ export default class NodeflowData {
       },
     ]);
 
-    this.eventStore.onKeyUpInNodeflow.subscribe(
-      "nodeflow:remove-held-key",
-      ({ event }) =>
-        this.keyboardData.releaseKey(event.code as KeyboardKeyCode),
-    );
+    this.eventStore.onKeyUpInNodeflow.subscribeMultiple([
+      {
+        name: "nodeflow:remove-held-key",
+        event: ({ event }) =>
+          this.keyboardData.releaseKey(event.code as KeyboardKeyCode),
+      },
+    ]);
 
     this.eventStore.onKeyDownInNodeflow.subscribeMultiple([
       {
@@ -1038,14 +1139,14 @@ export default class NodeflowData {
         event: ({ event }) => {
           // TODO: change to map or event system
           switch (event.code) {
-            case "Delete":
+            case KEYBOARD_KEY_CODES.DELETE:
               if (
                 this.mouseData.heldNodes.length > 0 &&
                 this.settings.canDeleteNodes
               ) {
                 const changeGroup = Changes.evaluateHistoryGroup();
                 this.mouseData.heldNodes.forEach((element) =>
-                  this.removeNode(element.node.id, changeGroup),
+                  this.removeNode(element.id, changeGroup),
                 );
               } else if (
                 this.mouseData.heldConnections.length > 0 &&
@@ -1064,31 +1165,31 @@ export default class NodeflowData {
                 );
               }
               break;
-            case "Escape":
+            case KEYBOARD_KEY_CODES.ESCAPE:
               this.mouseData.clearSelections();
               break;
-            case "Space":
+            case KEYBOARD_KEY_CODES.SPACE:
               if (this.settings.debugMode) {
-                if (this.mouseData.selections.length > 0) {
+                if (this.mouseData.selections.size > 0) {
                   console.log(this.mouseData.selections);
                 } else {
                   console.log(this.nodes);
                 }
               }
               break;
-            case "Equal":
-            case "Minus":
+            case KEYBOARD_KEY_CODES.EQUAL:
+            case KEYBOARD_KEY_CODES.MINUS:
               if (event.ctrlKey) {
                 if (!this.settings.canZoom) return;
                 event.preventDefault();
                 this.updateZoom(
                   this.settings.keyboardZoomMultiplier *
-                    (event.code === "Equal" ? 1 : -1),
-                  windowSize().divideBy(2),
+                    (event.code === KEYBOARD_KEY_CODES.EQUAL ? 1 : -1),
+                  this.size.divideBy(2),
                 );
               }
               break;
-            case "KeyZ":
+            case KEYBOARD_KEY_CODES.KEY_Z:
               if (!event.ctrlKey) {
                 break;
               }
@@ -1099,6 +1200,17 @@ export default class NodeflowData {
                 this.changes.undo();
               }
               break;
+            case KEYBOARD_KEY_CODES.KEY_A:
+            case KEYBOARD_KEY_CODES.KEY_S:
+            case KEYBOARD_KEY_CODES.KEY_D:
+            case KEYBOARD_KEY_CODES.KEY_W:
+            case KEYBOARD_KEY_CODES.ARROW_UP:
+            case KEYBOARD_KEY_CODES.ARROW_DOWN:
+            case KEYBOARD_KEY_CODES.ARROW_LEFT:
+            case KEYBOARD_KEY_CODES.ARROW_RIGHT:
+              if (!this.intervalId) {
+                this.intervalId = setInterval(() => this.handleMovement(), 10);
+              }
           }
         },
       },
@@ -1136,15 +1248,31 @@ export default class NodeflowData {
           }
 
           this.mouseData.selectNodeflow();
+          this.mouseData.heldMouseButtons.add(event.button);
 
           this.mouseData.update({
             clickStartPosition: Vec2.of(
               event.clientX / this.zoomLevel - this.position.x,
               event.clientY / this.zoomLevel - this.position.y,
             ),
-            pointerDown: this.settings.canPan,
             mousePosition: Vec2.fromEvent(event),
           });
+        },
+      },
+      {
+        name: "nodeflow:create-selection-box",
+        event: ({ event }) => {
+          if (
+            event.button !== MOUSE_BUTTONS.LEFT ||
+            !this.keyboardData.isActionPressed(this.keymap.CREATE_SELECTION_BOX)
+          ) {
+            return;
+          }
+
+          this.mouseData.selectionBox.boundingBox = Rect.of(
+            Vec2.fromEvent(event),
+            Vec2.zero(),
+          );
         },
       },
       {
@@ -1163,6 +1291,12 @@ export default class NodeflowData {
       {
         name: "nodeflow:stop-propagation",
         event: ({ event }) => event.stopPropagation(),
+      },
+      {
+        name: "nodeflow:handle-click",
+        event: ({ event }) => {
+          this.mouseData.heldMouseButtons.add(event.button);
+        },
       },
       {
         name: "nodeflow:start-creating-connection",
@@ -1206,9 +1340,13 @@ export default class NodeflowData {
       {
         name: "nodeflow:connect-held-nodes",
         event: ({ event, nodeId, connectorId }) => {
-          if (!this.settings.canCreateConnections) return;
-
-          const heldConnector = this.mouseData.heldConnectors.at(-1)?.connector;
+          if (
+            !this.settings.canCreateConnections ||
+            this.mouseData.heldConnectors.length !== 1
+          ) {
+            return;
+          }
+          const heldConnector = this.mouseData.heldConnectors[0];
           const heldNode = heldConnector?.parentNode;
 
           if (!heldConnector || !heldNode) return;
@@ -1251,6 +1389,12 @@ export default class NodeflowData {
             Vec2.fromEvent(event),
             this.settings.canMoveNodes,
           );
+        },
+      },
+      {
+        name: "nodeflow:handle-click",
+        event: ({ event }) => {
+          this.mouseData.heldMouseButtons.add(event.button);
         },
       },
       {
@@ -1298,6 +1442,12 @@ export default class NodeflowData {
         priority: 1,
       },
       {
+        name: "nodeflow:handle-click",
+        event: ({ event }) => {
+          this.mouseData.heldMouseButtons.add(event.button);
+        },
+      },
+      {
         name: "nodeflow:update-mouse-data",
         event: ({ event, sourceConnector, destinationConnector }) => {
           this.mouseData.pointerDown = true;
@@ -1307,8 +1457,8 @@ export default class NodeflowData {
             this.mouseData.clearSelections();
           }
 
-          this.mouseData.selections.push({
-            type: "connection",
+          this.mouseData.selections.add({
+            type: SelectableElementType.Connection,
             connection: {
               sourceConnector,
               destinationConnector,
@@ -1325,17 +1475,10 @@ export default class NodeflowData {
           this.mouseData.pointerDown = false;
 
           if (this.mouseData.heldConnectors.length === 1) {
-            this.mouseData.clearSelectedByType("node");
+            this.mouseData.selections.clearNodes();
           }
 
-          this.mouseData.clearSelectedByType("connector");
-        },
-      },
-      {
-        name: "nodeflow:stop-propagation",
-        event: ({ event }) => {
-          event.stopPropagation();
-          event.preventDefault();
+          this.mouseData.selections.clearConnectors();
         },
       },
     ]);
@@ -1343,5 +1486,21 @@ export default class NodeflowData {
 
   public selectNode(nodeId: string, position?: Vec2) {
     this.mouseData.selectNode(nodeId, position ?? Vec2.zero(), false);
+  }
+
+  /**
+   * Transforms a global position to a position relative to the canvas.
+   *
+   * 1. Subtracts the starting position of the canvas from the global position, this makes the position relative to the start of the canvas
+   * 2. Divides by the zoom level, this zooms the working area to the relevant size
+   * 3. Subtracts the canvas offset to get the final position
+   *
+   * @param position
+   */
+  public transformVec2ToCanvas(position: Vec2) {
+    return position
+      .subtract(this.startPosition)
+      .divideBy(this.zoomLevel)
+      .subtract(this.position);
   }
 }

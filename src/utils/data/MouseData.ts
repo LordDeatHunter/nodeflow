@@ -3,14 +3,15 @@ import Vec2 from "./Vec2";
 import {
   MouseDataType,
   SelectableConnection,
-  SelectableConnector,
-  SelectableElement,
-  SelectableNode,
+  SelectableElementType,
   SerializedMouseData,
-  SerializedSelectableElement,
 } from "../../nodeflow-types";
 import { NodeflowData } from "./index";
-import ArrayWrapper from "./ArrayWrapper";
+import SelectionMap from "../SelectionMap";
+import NodeflowNodeData from "./NodeflowNodeData";
+import NodeConnector from "./NodeConnector";
+import { MOUSE_BUTTONS } from "../constants";
+import SelectionBoxData from "./SelectionBoxData";
 
 /**
  * Represents additional mouse data used in the nodeflow canvas, such held objects and mouse position.
@@ -27,101 +28,29 @@ export default class MouseData {
     this.store = createStore<MouseDataType>({
       clickStartPosition: undefined,
       mousePosition: Vec2.zero(),
+      heldMouseButtons: new Set<MOUSE_BUTTONS>(),
       pointerDown: false,
-      selections: new ArrayWrapper<SelectableElement>(),
+      selections: new SelectionMap(this.nodeflowData),
+      selectionBox: new SelectionBoxData(this.nodeflowData),
     });
   }
 
   public serialize(): SerializedMouseData {
-    const serializedSelections: SerializedSelectableElement[] =
-      this.store[0].selections.map((selection) => {
-        switch (selection.type) {
-          case "connector":
-            return {
-              connectorId: selection.connector.id,
-              nodeId: selection.connector.parentNode.id,
-              type: "connector",
-            };
-          case "node":
-            return {
-              nodeId: selection.node.id,
-              type: "node",
-            };
-          case "connection":
-            return {
-              connection: {
-                destinationConnectorId:
-                  selection.connection.destinationConnector.id,
-                destinationNodeId:
-                  selection.connection.destinationConnector.parentSection
-                    .parentNode.id,
-                sourceConnectorId: selection.connection.sourceConnector.id,
-                sourceNodeId:
-                  selection.connection.sourceConnector.parentNode.id,
-              },
-              type: "connection",
-            };
-          default:
-            return {
-              type: "nodeflow",
-            };
-        }
-      });
-
     return {
       clickStartPosition: this.clickStartPosition?.serialize(),
-      selections: serializedSelections,
+      selections: this.selections.toObject(),
     };
   }
 
   public deserialize(serialized: SerializedMouseData) {
-    const selections = serialized.selections
-      .map((selection) => {
-        if (selection.type === "connector") {
-          const node = this.nodeflowData.nodes.get(selection.nodeId);
-          if (!node) return;
-          const connector = node.getConnector(selection.connectorId);
-          if (!connector) return;
-          return { connector, type: "connector" };
-        } else if (selection.type === "node") {
-          const nodeData = this.nodeflowData.nodes.get(selection.nodeId);
-          if (!nodeData) return;
-          return { node: nodeData, type: "node" };
-        } else if (selection.type === "connection") {
-          const sourceNode = this.nodeflowData.nodes.get(
-            selection.connection.sourceNodeId,
-          );
-          if (!sourceNode) return;
-          const sourceConnector = sourceNode.getConnector(
-            selection.connection.sourceConnectorId,
-          );
-          if (!sourceConnector) return;
-          const destinationNode = this.nodeflowData.nodes.get(
-            selection.connection.destinationNodeId,
-          );
-          if (!destinationNode) return;
-          const destinationConnector = destinationNode.getConnector(
-            selection.connection.destinationConnectorId,
-          );
-          if (!destinationConnector) return;
-          return {
-            connection: {
-              destinationConnector,
-              sourceConnector,
-            },
-            type: "connection",
-          };
-        } else {
-          return { type: "nodeflow" };
-        }
-      })
-      .filter(Boolean) as SelectableElement[];
-
     this.update({
       clickStartPosition: Vec2.deserializeOrDefault(
         serialized.clickStartPosition,
       ),
-      selections: new ArrayWrapper<SelectableElement>(selections),
+      selections: SelectionMap.fromObject(
+        serialized.selections,
+        this.nodeflowData,
+      ),
     });
   }
 
@@ -129,44 +58,50 @@ export default class MouseData {
     return this.store[0].clickStartPosition;
   }
 
-  get isDraggingObject() {
-    return this.store[0].pointerDown;
+  get heldMouseButtons() {
+    return this.store[0].heldMouseButtons;
   }
 
   get selections() {
     return this.store[0].selections;
   }
 
-  get heldConnections(): Array<SelectableConnection> {
-    return this.store[0].selections.filter(
-      (selection) => selection.type === "connection",
-    ) as Array<SelectableConnection>;
-  }
-
-  get heldConnectors(): Array<SelectableConnector> {
-    return this.store[0].selections.filter(
-      (selection) => selection.type === "connector",
-    ) as Array<SelectableConnector>;
-  }
-
-  get heldNodes(): Array<SelectableNode> {
-    return this.store[0].selections.filter(
-      (selection) => selection.type === "node",
-    ) as Array<SelectableNode>;
-  }
-
-  public filterSelections(
-    predicate: (selection: SelectableElement) => boolean,
-  ) {
-    this.selections.filterInPlace(predicate);
+  get selectionBox(): SelectionBoxData {
+    return this.store[0].selectionBox;
   }
 
   get mousePosition() {
     return this.store[0].mousePosition;
   }
 
-  get pointerDown() {
-    return this.store[0].pointerDown;
+  get heldConnections(): Array<SelectableConnection> {
+    return this.selections.selectedConnections;
+  }
+
+  get heldConnectors(): Array<NodeConnector> {
+    return this.selections.selectedConnectors;
+  }
+
+  get heldNodes(): Array<NodeflowNodeData> {
+    return this.selections.selectedNodes;
+  }
+
+  public isHoldingButton(button: MOUSE_BUTTONS) {
+    return this.heldMouseButtons.has(button);
+  }
+
+  public deleteNodes(callback: (node: NodeflowNodeData) => boolean) {
+    this.selections.deleteNodes(callback);
+  }
+
+  public deleteConnectors(callback: (connector: NodeConnector) => boolean) {
+    this.selections.deleteConnectors(callback);
+  }
+
+  public deleteConnections(
+    callback: (connection: SelectableConnection) => boolean,
+  ) {
+    this.selections.deleteConnections(callback);
   }
 
   set clickStartPosition(value) {
@@ -191,22 +126,22 @@ export default class MouseData {
     this.store[1](updater);
   }
 
-  public reset(pointerDown = false) {
+  public reset() {
     this.update({
       clickStartPosition: undefined,
-      pointerDown,
-      selections: new ArrayWrapper<SelectableElement>(),
+      pointerDown: false,
+      heldMouseButtons: new Set<MOUSE_BUTTONS>(),
+      selections: new SelectionMap(this.nodeflowData),
+      selectionBox: new SelectionBoxData(this.nodeflowData),
     });
   }
 
   public selectNodeflow() {
     if (this.hasSelectedNodeflow()) {
-      this.selections.filterInPlace(
-        (selection) => selection.type !== "nodeflow",
-      );
+      this.selections.clearNodeflow();
     }
 
-    this.selections.push({ type: "nodeflow" });
+    this.selections.addNodeflow();
   }
 
   public selectNode = (nodeId: string, position: Vec2, dragging = true) => {
@@ -214,16 +149,10 @@ export default class MouseData {
     const node = this.nodeflowData.nodes.get(nodeId)!;
 
     if (this.hasSelectedNode(nodeId)) {
-      this.selections.filterInPlace(
-        (selection) =>
-          selection.type !== "node" || selection.node.id !== nodeId,
-      );
+      this.selections.delete({ type: SelectableElementType.Node, node });
     }
 
-    this.selections.push({
-      node,
-      type: "node",
-    });
+    this.selections.addNode(node);
 
     this.update({
       pointerDown: dragging,
@@ -238,7 +167,7 @@ export default class MouseData {
    * Deselects the currently selected node, connector and connection.
    */
   public clearSelections = () => {
-    this.store[1]("selections", new ArrayWrapper<SelectableElement>());
+    this.selections.clear();
     this.nodeflowData.resetMovement();
   };
 
@@ -255,11 +184,15 @@ export default class MouseData {
     const connector = node.getConnector(outputId);
     if (!connector) return;
 
+    const selections = new SelectionMap(this.nodeflowData);
+    selections.add({
+      connector,
+      type: SelectableElementType.Connector,
+    });
+
     this.update({
       pointerDown: true,
-      selections: new ArrayWrapper<SelectableElement>([
-        { connector, type: "connector" },
-      ]),
+      selections,
       mousePosition: position,
       clickStartPosition: position
         .divideBy(this.nodeflowData.zoomLevel)
@@ -267,30 +200,16 @@ export default class MouseData {
     });
   };
 
-  public clearSelectedByType(type: SelectableElement["type"]) {
-    this.store[0].selections.filterInPlace(
-      (selection) => selection.type !== type,
-    );
-  }
-
-  public hasSelectedNodeflow() {
-    return this.store[0].selections.some(
-      (selection) => selection.type === "nodeflow",
-    );
+  public hasSelectedNodeflow(): boolean {
+    return this.selections.hasSelectedNodeflow();
   }
 
   public hasSelectedNode(nodeId: string) {
-    return this.store[0].selections.some(
-      (selection) => selection.type === "node" && selection.node.id === nodeId,
-    );
+    return this.selections.isNodeSelected(nodeId);
   }
 
-  public hasSelectedConnector(connectorId: string) {
-    return this.store[0].selections.some(
-      (selection) =>
-        selection.type === "connector" &&
-        selection.connector.id === connectorId,
-    );
+  public hasSelectedConnector(nodeId: string, connectorId: string) {
+    return this.selections.isConnectorSelected(nodeId, connectorId);
   }
 
   public hasSelectedConnection(
@@ -299,28 +218,17 @@ export default class MouseData {
     destinationNodeId: string,
     destinationConnectorId: string,
   ) {
-    return this.store[0].selections.some(
-      (selection) =>
-        selection.type === "connection" &&
-        selection.connection.sourceConnector.id === sourceConnectorId &&
-        selection.connection.sourceConnector.parentNode.id === sourceNodeId &&
-        selection.connection.destinationConnector.id ===
-          destinationConnectorId &&
-        selection.connection.destinationConnector.parentNode.id ===
-          destinationNodeId,
+    return this.selections.isConnectionSelected(
+      sourceNodeId,
+      sourceConnectorId,
+      destinationNodeId,
+      destinationConnectorId,
     );
   }
 
   /**
-   * Calculates the global mouse position, relative to the canvas.
-   *
-   * 1. Subtracts the starting position of the canvas from the mouse position, this makes the cursor relative to the start of the canvas
-   * 2. Divides by the zoom level, this zooms the working area to the relevant size
-   * 3. Subtracts the canvas offset to get the final position
+   * Returns the global mouse position, relative to the canvas.
    */
   public globalMousePosition = () =>
-    this.mousePosition
-      .subtract(this.nodeflowData.startPosition)
-      .divideBy(this.nodeflowData.zoomLevel)
-      .subtract(this.nodeflowData.position);
+    this.nodeflowData.transformVec2ToCanvas(this.mousePosition);
 }

@@ -1,7 +1,6 @@
 import {
   type Component,
   createMemo,
-  createRenderEffect,
   createSignal,
   For,
   onCleanup,
@@ -21,39 +20,6 @@ const NodeflowNode: Component<NodeProps> = (props) => {
     () => props.nodeflowData.nodes.get(props.nodeId)!,
   );
   const [isVisible, setIsVisible] = createSignal<boolean>(false);
-
-  // TODO: change this to an event that handles multiple nodes.
-  createRenderEffect(() => {
-    const lastSelection = props.nodeflowData.mouseData.selections.at(-1);
-
-    if (
-      lastSelection?.type !== "node" ||
-      lastSelection.node.id !== props.nodeId ||
-      !props.nodeflowData.mouseData.pointerDown
-    ) {
-      return;
-    }
-
-    // TODO: Fix the solid/reactivity warning.
-    // eslint-disable-next-line solid/reactivity
-    node().updateWithPrevious((prev) => {
-      const newPosition = props.nodeflowData.mouseData.mousePosition
-        .divideBy(props.nodeflowData.zoomLevel)
-        .subtract(
-          props.nodeflowData.mouseData.clickStartPosition ?? Vec2.zero(),
-        );
-
-      props.nodeflowData.chunking.updateNodeInChunk(
-        props.nodeId,
-        prev.position,
-        newPosition,
-      );
-
-      return {
-        position: newPosition,
-      };
-    });
-  });
 
   onCleanup(() => {
     props.nodeflowData.chunking.removeNodeFromChunk(
@@ -127,7 +93,10 @@ const NodeflowNode: Component<NodeProps> = (props) => {
       classList={{
         [node()?.css?.normal ?? ""]: true,
         [node()?.css?.selected ?? ""]:
-          props.nodeflowData.mouseData.hasSelectedNode(props.nodeId),
+          props.nodeflowData.mouseData.hasSelectedNode(props.nodeId) ||
+          props.nodeflowData.mouseData.selectionBox.selections.isNodeSelected(
+            props.nodeId,
+          ),
       }}
       onMouseDown={(event) =>
         props.nodeflowData.eventStore.onMouseDownInNode.publish({
