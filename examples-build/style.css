@@ -29,6 +29,14 @@ body {
   gap: 32px;
 }
 
+.example-box a {
+  transition: all 0.3s ease-in-out;
+}
+
+.example-box a:hover {
+  transform: scale(1.1);
+}
+
 .container-box {
   display: flex;
   flex-direction: row;
