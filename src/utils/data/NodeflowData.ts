@@ -52,6 +52,7 @@ export default class NodeflowData {
   public readonly chunking;
   public readonly id;
   public static readonly DEFAULT_SETTINGS: NodeflowSettings = {
+    createConnectorData: () => undefined,
     allowCollision: false,
     canAddNodes: true,
     canCreateConnections: true,

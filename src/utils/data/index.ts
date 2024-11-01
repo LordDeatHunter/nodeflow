@@ -12,3 +12,4 @@ export { default as NodeflowChunking } from "./NodeflowChunking";
 export { default as NodeflowData } from "./NodeflowData";
 export { default as NodeflowNodeData } from "./NodeflowNodeData";
 export { default as Vec2 } from "./Vec2";
+export { default as CustomConnectorData } from "./CustomConnectorData";

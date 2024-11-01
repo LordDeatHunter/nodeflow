@@ -70,6 +70,7 @@ export interface SerializedConnectorSection {
 
 export interface SerializedNodeConnector {
   css?: string;
+  customData?: CustomNodeConnectorDataType;
   hovered: boolean;
   id: string;
   position: SerializedVec2;

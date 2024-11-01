@@ -1,12 +1,14 @@
-import { NodeflowNodeData, Vec2 } from "nodeflow-lib";
+import { DisplayFunc, NodeflowNodeData, Vec2 } from "nodeflow-lib";
 import nodeCss from "./styles/node.module.scss";
 import curveCss from "./styles/curve.module.scss";
-import NodeDisplay from "./NodeDisplay";
 import { nodeflowData } from "./App";
 
-export const createDummyNode = (
+export const createNewNode = (
   position: Vec2,
   centered = false,
+  display: DisplayFunc,
+  inputs: number,
+  outputs: number,
 ): NodeflowNodeData => {
   const historyGroup = crypto.randomUUID();
 
@@ -17,11 +19,12 @@ export const createDummyNode = (
         selected: nodeCss.selectedNode,
       },
       position,
-      display: NodeDisplay,
+      display,
       centered,
     },
     historyGroup,
   );
+
   const inputSection = newNode.addConnectorSection(
     {
       id: "inputs",
@@ -29,6 +32,7 @@ export const createDummyNode = (
     },
     historyGroup,
   );
+
   const outputSection = newNode.addConnectorSection(
     {
       id: "outputs",
@@ -37,20 +41,29 @@ export const createDummyNode = (
     historyGroup,
   );
 
-  const outputs = Math.random() * 6;
-  for (let j = 0; j < outputs; j++) {
+  for (let i = 0; i < outputs; i++) {
     outputSection.addConnector(
       {
+        id: `output-${i}`,
         css: nodeCss.outputConnector,
+        customData: {
+          origin: "output",
+          storedData: undefined,
+        },
       },
       historyGroup,
     );
   }
-  const inputs = Math.random() * 6;
-  for (let j = 0; j < inputs; j++) {
+
+  for (let i = 0; i < inputs; i++) {
     inputSection.addConnector(
       {
+        id: `input-${i}`,
         css: nodeCss.inputConnector,
+        customData: {
+          origin: "input",
+          storedData: undefined,
+        },
       },
       historyGroup,
     );
@@ -96,64 +109,4 @@ export const setupEvents = () => {
       });
     },
   );
-};
-
-export const setupDummyNodes = (count: number = 50) => {
-  for (let i = 0; i < count; i++) {
-    createDummyNode(Vec2.of(Math.random() * 2000, Math.random() * 2000));
-  }
-};
-
-export const setupDummyConnections = () => {
-  const totalNodes = nodeflowData.nodes.size;
-
-  for (let i = 0; i < totalNodes; i++) {
-    const from = Math.floor(Math.random() * totalNodes);
-    const to = Math.floor(Math.random() * totalNodes);
-
-    if (
-      !nodeflowData.nodes.has(from.toString()) ||
-      !nodeflowData.nodes.has(to.toString())
-    ) {
-      continue;
-    }
-    const fromNode = nodeflowData.nodes.get(from.toString())!;
-    const toNode = nodeflowData.nodes.get(to.toString())!;
-
-    const fromConnectors =
-      fromNode.connectorSections.get("outputs")!.connectors;
-    const toConnectors = toNode.connectorSections.get("inputs")!.connectors;
-
-    const fromConnectorValues = Array.from(fromConnectors.values());
-    const toConnectorValues = Array.from(toConnectors.values());
-
-    if (fromConnectorValues.length === 0 || toConnectorValues.length === 0) {
-      continue;
-    }
-
-    const fromConnector =
-      fromConnectorValues[
-        Math.floor(Math.random() * fromConnectorValues.length)
-      ];
-    const toConnector =
-      toConnectorValues[Math.floor(Math.random() * toConnectorValues.length)];
-
-    if (
-      from === to ||
-      toNode.getTotalConnectedInputs(toConnector.toString()) > 0
-    ) {
-      continue;
-    }
-
-    nodeflowData.addConnection({
-      sourceNodeId: from.toString(),
-      sourceConnectorId: fromConnector.id,
-      destinationNodeId: to.toString(),
-      destinationConnectorId: toConnector.id,
-      css: {
-        normal: curveCss.connection,
-        selected: curveCss.selectedConnection,
-      },
-    });
-  }
 };

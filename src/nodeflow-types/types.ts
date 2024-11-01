@@ -11,6 +11,8 @@ import { KeyboardKeyCode, MOUSE_BUTTONS } from "../utils/constants";
 import Rect from "../utils/data/Rect";
 import SelectionMap from "../utils/SelectionMap";
 import SelectionBoxData from "../utils/data/SelectionBoxData";
+import { CustomConnectorData } from "../utils";
+import {SerializedNodeConnector} from "./data-transfer";
 
 export type Optional<T> = T | undefined;
 
@@ -122,6 +124,7 @@ export interface NodeflowCss {
 
 export interface NodeConnectorType {
   css?: string;
+  customData?: CustomConnectorData;
   destinations: ArrayWrapper<ConnectorDestination>;
   hovered: boolean;
   id: string;
@@ -160,6 +163,7 @@ export type Change = {
 };
 
 export type NodeflowSettings = {
+  createConnectorData: (data: Partial<SerializedNodeConnector>) => Optional<CustomConnectorData>;
   allowCollision: boolean;
   canAddNodes: boolean;
   canCreateConnections: boolean;

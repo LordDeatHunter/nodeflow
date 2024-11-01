@@ -9,17 +9,24 @@ import {
 import curveCss from "./styles/curve.module.scss";
 import nodeCss from "./styles/node.module.scss";
 import nodeflowCss from "./styles/nodeflow.module.scss";
-import {
-  createDummyNode,
-  setupDummyConnections,
-  setupDummyNodes,
-  setupEvents,
-} from "./utils";
+import { createNewNode, setupEvents } from "./utils";
 import { BPCurveFunctions } from "./BPCurveFunctions";
+import DisplayNode from "./DisplayNode";
+import NumberNode from "./NumberNode";
+import SumNode from "./SumNode";
+import NewNodeSlot from "./components/NewNodeSlot";
+import OutputData from "./OutputData";
 
 const [nodeflowData, Nodeflow] = NodeflowLib.get().createCanvas(
   "main",
-  {},
+  {
+    createConnectorData: (data) => {
+      const origin = data.customData?.origin;
+      return !origin
+        ? undefined
+        : new OutputData(origin, data.customData?.storedData?.value);
+    },
+  },
   (nodeflow: NodeflowData) => new BPCurveFunctions(nodeflow),
 );
 
@@ -30,6 +37,7 @@ const App: Component = () => {
   const createNode = (data: { event: PointerEvent }) => {
     if (!nodePreview()) return;
 
+    const type = nodePreview();
     setNodePreview(undefined);
 
     const clickPos = Vec2.fromEvent(data.event);
@@ -43,13 +51,21 @@ const App: Component = () => {
       .divideBy(nodeflowData.zoomLevel)
       .subtract(nodeflowData.position);
 
-    createDummyNode(nodePosition, true);
+    switch (type) {
+      case "display":
+        createNewNode(nodePosition, true, DisplayNode, 1, 0);
+        break;
+      case "number":
+        createNewNode(nodePosition, true, NumberNode, 0, 1);
+        break;
+      case "operation":
+        createNewNode(nodePosition, true, SumNode, 2, 1);
+        break;
+    }
   };
 
   onMount(() => {
     setupEvents();
-    setupDummyNodes();
-    setupDummyConnections();
 
     NodeflowLib.get().globalEventStore.onPointerUpInDocument.subscribe(
       "create-node",
@@ -76,33 +92,25 @@ const App: Component = () => {
       />
       <div
         style={{
+          "z-index": 10,
           width: "100%",
           "min-height": "300px",
-          "background-color": "gray",
-          opacity: "0.5",
+          "background-color": "#38485C61",
           display: "flex",
           "align-items": "center",
           "justify-content": "center",
           gap: "20px",
         }}
       >
-        <div
-          class={nodeCss.node}
-          style={{
-            width: "150px",
-            height: "90px",
-            display: "flex",
-            "align-items": "center",
-            "justify-content": "center",
-            "user-select": "none",
-            cursor: "grab",
-          }}
-          onPointerDown={() => {
-            setNodePreview("Generic node");
-          }}
-        >
-          Generic node
-        </div>
+        <NewNodeSlot onClick={() => setNodePreview("display")}>
+          Display node
+        </NewNodeSlot>
+        <NewNodeSlot onClick={() => setNodePreview("number")}>
+          Number node
+        </NewNodeSlot>
+        <NewNodeSlot onClick={() => setNodePreview("operation")}>
+          Sum node
+        </NewNodeSlot>
       </div>
       <Show when={nodePreview()}>
         <div

@@ -24,6 +24,7 @@ export default class NodeConnector {
   public serialize(): SerializedNodeConnector {
     return {
       css: this.css,
+      customData: this.customData?.serialize(),
       hovered: this.hovered,
       id: this.id,
       position: this.position.serialize(),
@@ -66,6 +67,8 @@ export default class NodeConnector {
 
     return new NodeConnector({
       css: data.css,
+      customData:
+        parentSection.parentNode.nodeflow.settings.createConnectorData(data),
       destinations: new ArrayWrapper<ConnectorDestination>(),
       hovered: data.hovered ?? false,
       id: connectorId,
@@ -126,6 +129,10 @@ export default class NodeConnector {
     return this.store[0].sources;
   }
 
+  public get customData() {
+    return this.store[0].customData;
+  }
+
   public set css(value) {
     this.store[1]({ css: value });
   }
@@ -164,6 +171,10 @@ export default class NodeConnector {
 
   public set sources(value) {
     this.store[1]({ sources: value });
+  }
+
+  public set customData(value) {
+    this.store[1]({ customData: value });
   }
 
   public update(data: Partial<NodeConnectorType>) {
