@@ -1,12 +1,20 @@
 import { Component, createMemo, Show } from "solid-js";
-import { NodeflowNodeData, Optional } from "nodeflow-lib";
-import OutputData from "./OutputData";
+import { CustomNodeData, NodeflowNodeData, Optional } from "nodeflow-lib";
+import NumberConnector from "./data/NumberConnector";
+
+export class DisplayNodeData extends CustomNodeData {
+  public serialize(): CustomNodeflowDataType {
+    return {
+      type: "display",
+    };
+  }
+}
 
 const DisplayNode: Component<{ node: NodeflowNodeData }> = (props) => {
   const connectorData = createMemo(
     () =>
       props.node.getConnector("input-0")?.sources.get(0)?.sourceConnector
-        .customData as Optional<OutputData<unknown>>,
+        .customData as Optional<NumberConnector>,
   );
 
   return (
@@ -18,8 +26,10 @@ const DisplayNode: Component<{ node: NodeflowNodeData }> = (props) => {
     >
       <Show when={connectorData()} fallback={<h2>No Node Data</h2>}>
         <div>
-          <h2>Node Data</h2>
-          <p>Node Type: {JSON.stringify(connectorData()!.value)}</p>
+          <h2>Node value</h2>
+          <p style={{ "font-size": "2rem", "margin-top": "1rem" }}>
+            {JSON.stringify(Number(connectorData()!.value!.toFixed(2)))}
+          </p>
         </div>
       </Show>
     </div>

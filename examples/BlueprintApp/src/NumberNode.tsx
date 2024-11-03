@@ -1,9 +1,38 @@
-import { Component, createEffect, createSignal } from "solid-js";
-import { NodeflowNodeData } from "nodeflow-lib";
-import OutputData from "./OutputData";
+import { Component, createMemo, onMount } from "solid-js";
+import { CustomNodeData, NodeflowNodeData } from "nodeflow-lib";
+import NumberConnector from "./data/NumberConnector";
+
+export class NumberNodeData extends CustomNodeData {
+  public readonly value: number;
+
+  constructor(value: number) {
+    super();
+    this.value = value;
+  }
+
+  public serialize(): CustomNodeflowDataType {
+    return {
+      value: this.value,
+      type: "number",
+    };
+  }
+}
 
 const NumberNode: Component<{ node: NodeflowNodeData }> = (props) => {
-  const [number, setNumber] = createSignal(0);
+  const number = createMemo(
+    () => (props.node.customData as NumberNodeData).value,
+  );
+  const setNumber = (value: number) => {
+    props.node.customData = new NumberNodeData(value);
+    const output = props.node.getConnector("output-0");
+    if (output) {
+      output.customData = new NumberConnector(value);
+    }
+  };
+
+  onMount(() => {
+    setNumber(number() ?? 0);
+  });
 
   const updateValue = (
     event: InputEvent & { currentTarget: HTMLInputElement },
@@ -17,13 +46,6 @@ const NumberNode: Component<{ node: NodeflowNodeData }> = (props) => {
       event.currentTarget.value = number.toString();
     }
   };
-
-  createEffect(() => {
-    const output = props.node.getConnector("output-0");
-    if (output) {
-      output.customData = new OutputData("number", number());
-    }
-  });
 
   return (
     <div

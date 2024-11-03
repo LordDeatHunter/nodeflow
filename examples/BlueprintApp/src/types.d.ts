@@ -1,10 +1,12 @@
 export {};
 
 declare global {
+  interface CustomNodeflowDataType {
+    value?: unknown;
+    type: "operation" | "number" | "display";
+  }
   interface CustomNodeConnectorDataType {
-    origin: "input" | "output";
-    storedData?: {
-      value: unknown;
-    };
+    type: "number" | "any";
+    value?: unknown;
   }
 }

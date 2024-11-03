@@ -11,20 +11,35 @@ import nodeCss from "./styles/node.module.scss";
 import nodeflowCss from "./styles/nodeflow.module.scss";
 import { createNewNode, setupEvents } from "./utils";
 import { BPCurveFunctions } from "./BPCurveFunctions";
-import DisplayNode from "./DisplayNode";
-import NumberNode from "./NumberNode";
-import SumNode from "./SumNode";
+import DisplayNode, { DisplayNodeData } from "./DisplayNode";
+import NumberNode, { NumberNodeData } from "./NumberNode";
+import OperationNode, { OperationNodeData, Operator } from "./OperationNode";
 import NewNodeSlot from "./components/NewNodeSlot";
-import OutputData from "./OutputData";
+import NumberConnector from "./data/NumberConnector";
+import AnyConnector from "./data/AnyConnector";
 
 const [nodeflowData, Nodeflow] = NodeflowLib.get().createCanvas(
   "main",
   {
+    createNodeData: (data) => {
+      switch (data.customData?.type) {
+        case "number":
+          return new NumberNodeData(data.customData!.value as number);
+        case "operation":
+          return new OperationNodeData(data.customData!.value as Operator);
+        default:
+          return new DisplayNodeData();
+      }
+    },
     createConnectorData: (data) => {
-      const origin = data.customData?.origin;
-      return !origin
-        ? undefined
-        : new OutputData(origin, data.customData?.storedData?.value);
+      switch (data.customData?.type) {
+        case "number":
+          return new NumberConnector(
+            data.customData?.value as Optional<number>,
+          );
+        default:
+          return new AnyConnector();
+      }
     },
   },
   (nodeflow: NodeflowData) => new BPCurveFunctions(nodeflow),
@@ -59,7 +74,7 @@ const App: Component = () => {
         createNewNode(nodePosition, true, NumberNode, 0, 1);
         break;
       case "operation":
-        createNewNode(nodePosition, true, SumNode, 2, 1);
+        createNewNode(nodePosition, true, OperationNode, 2, 1);
         break;
     }
   };

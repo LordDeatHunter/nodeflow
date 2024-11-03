@@ -11,8 +11,11 @@ import { KeyboardKeyCode, MOUSE_BUTTONS } from "../utils/constants";
 import Rect from "../utils/data/Rect";
 import SelectionMap from "../utils/SelectionMap";
 import SelectionBoxData from "../utils/data/SelectionBoxData";
-import { CustomConnectorData } from "../utils";
-import {SerializedNodeConnector} from "./data-transfer";
+import { CustomConnectorData, CustomNodeData } from "../utils";
+import {
+  SerializedNodeConnector,
+  SerializedNodeflowNode,
+} from "./data-transfer";
 
 export type Optional<T> = T | undefined;
 
@@ -85,7 +88,7 @@ export type NodeflowNodeType = {
   centered: boolean;
   connectorSections: ReactiveMap<string, ConnectorSection>;
   css: SelectableElementCSS;
-  customData: CustomNodeflowDataType;
+  customData?: CustomNodeData;
   readonly display: DisplayFunc;
   id: string;
   offset: Vec2;
@@ -163,7 +166,6 @@ export type Change = {
 };
 
 export type NodeflowSettings = {
-  createConnectorData: (data: Partial<SerializedNodeConnector>) => Optional<CustomConnectorData>;
   allowCollision: boolean;
   canAddNodes: boolean;
   canCreateConnections: boolean;
@@ -172,6 +174,12 @@ export type NodeflowSettings = {
   canMoveNodes: boolean;
   canPan: boolean;
   canZoom: boolean;
+  createConnectorData: (
+    data: Partial<SerializedNodeConnector>,
+  ) => Optional<CustomConnectorData>;
+  createNodeData: (
+    data: Partial<SerializedNodeflowNode>,
+  ) => Optional<CustomNodeData>;
   debugMode: boolean;
   keyboardZoomMultiplier: number;
   maxMovementSpeed: number;

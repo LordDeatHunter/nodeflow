@@ -47,8 +47,9 @@ export const createNewNode = (
         id: `output-${i}`,
         css: nodeCss.outputConnector,
         customData: {
-          origin: "output",
-          storedData: undefined,
+          // TODO: unhardcode the type
+          type: "number",
+          value: 0,
         },
       },
       historyGroup,
@@ -61,8 +62,7 @@ export const createNewNode = (
         id: `input-${i}`,
         css: nodeCss.inputConnector,
         customData: {
-          origin: "input",
-          storedData: undefined,
+          type: "number",
         },
       },
       historyGroup,

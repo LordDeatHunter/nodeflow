@@ -56,7 +56,7 @@ export interface SerializedNodeflowNode {
   centered: boolean;
   connectorSections: Record<string, SerializedConnectorSection>;
   css: SelectableElementCSS;
-  customData: CustomNodeflowDataType;
+  customData?: CustomNodeflowDataType;
   display: DisplayFunc; // TODO: find a way to serialize this
   id: string;
   position: SerializedVec2;
