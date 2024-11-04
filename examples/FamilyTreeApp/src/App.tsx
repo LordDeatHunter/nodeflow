@@ -12,10 +12,14 @@ import Sidebar from "./components/Sidebar";
 import SidebarContent from "./components/SidebarContent";
 import { FamilyTreeConstants } from "./Constants";
 import { FTCurveFunctions } from "./FTCurveFunctions";
+import FamilyMember from "../FamilyMember";
 
 const [nodeflowData, Nodeflow] = NodeflowLib.get().createCanvas(
   FamilyTreeConstants.MAIN_NODEFLOW,
-  {},
+  {
+    createNodeData: (data) =>
+      new FamilyMember(data.customData!.gender, data.customData!.name),
+  },
   (nf: NodeflowData) => new FTCurveFunctions(nf),
 );
 
@@ -30,7 +34,7 @@ const App: Component = () => {
       return undefined;
     }
 
-    return heldConnector.parentNode.customData.gender === "M"
+    return (heldConnector.parentNode.customData as FamilyMember).gender === "M"
       ? curveCss.newFatherCurve
       : curveCss.newMotherCurve;
   };

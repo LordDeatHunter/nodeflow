@@ -3,6 +3,7 @@ import nodeCss from "./styles/node.module.scss";
 import curveCss from "./styles/curve.module.scss";
 import NodeBody from "./components/NodeBody";
 import { nodeflowData } from "./App";
+import FamilyMember from "../FamilyMember";
 
 export const fetchRandomData = async (
   amount: number,
@@ -150,7 +151,7 @@ export const setupEvents = () => {
           sourceConnectorId: "O",
           destinationNodeId: newNode.id,
           destinationConnectorId: "I",
-          css: getConnectionCSS(heldNode.customData.gender),
+          css: getConnectionCSS((heldNode.customData as FamilyMember).gender),
         });
       });
     },
@@ -175,8 +176,8 @@ export const setupEvents = () => {
         connector?.length === 2 ||
         connector?.some(
           (source) =>
-            source.sourceConnector.parentNode.customData.gender ===
-            outputNode.customData.gender,
+            (source.sourceConnector.parentNode.customData as FamilyMember)
+              .gender === (outputNode.customData as FamilyMember).gender,
         )
       ) {
         return;
@@ -187,7 +188,7 @@ export const setupEvents = () => {
         sourceConnectorId: "O",
         destinationNodeId: inputNodeId,
         destinationConnectorId: "I",
-        css: getConnectionCSS(outputNode.customData.gender),
+        css: getConnectionCSS((outputNode.customData as FamilyMember).gender),
       });
     },
   );
@@ -216,8 +217,8 @@ export const setupEvents = () => {
         connector?.length === 2 ||
         connector?.some(
           (source) =>
-            source.sourceConnector.parentNode.customData.gender ===
-            sourceNode.customData.gender,
+            (source.sourceConnector.parentNode.customData as FamilyMember)
+              .gender === (sourceNode.customData as FamilyMember).gender,
         )
       )
         return;
@@ -227,7 +228,7 @@ export const setupEvents = () => {
         sourceConnectorId: "O",
         destinationNodeId: nodeId,
         destinationConnectorId: "I",
-        css: getConnectionCSS(sourceNode.customData.gender),
+        css: getConnectionCSS((sourceNode.customData as FamilyMember).gender),
       });
     },
     2,
@@ -250,7 +251,7 @@ export const setupDummyConnections = () => {
     const fromNode = nodeflowData.nodes.get(from.toString())!;
     const toNode = nodeflowData.nodes.get(to.toString())!;
 
-    const sourceGender = fromNode.customData.gender;
+    const sourceGender = (fromNode.customData as FamilyMember).gender;
 
     const connector = toNode.getConnector("I")?.sources;
     // Continue if:
@@ -261,7 +262,8 @@ export const setupDummyConnections = () => {
       connector?.length === 2 ||
       connector?.some(
         (source) =>
-          source.sourceConnector.parentNode.customData.gender === sourceGender,
+          (source.sourceConnector.parentNode.customData as FamilyMember)
+            .gender === sourceGender,
       )
     ) {
       continue;
@@ -272,7 +274,7 @@ export const setupDummyConnections = () => {
       sourceConnectorId: "O",
       destinationNodeId: to.toString(),
       destinationConnectorId: "I",
-      css: getConnectionCSS(fromNode.customData.gender),
+      css: getConnectionCSS((fromNode.customData as FamilyMember).gender),
     });
   }
 };

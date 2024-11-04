@@ -117,14 +117,14 @@ const App: Component = () => {
           gap: "20px",
         }}
       >
-        <NewNodeSlot onClick={() => setNodePreview("display")}>
-          Display node
-        </NewNodeSlot>
         <NewNodeSlot onClick={() => setNodePreview("number")}>
           Number node
         </NewNodeSlot>
         <NewNodeSlot onClick={() => setNodePreview("operation")}>
           Sum node
+        </NewNodeSlot>
+        <NewNodeSlot onClick={() => setNodePreview("display")}>
+          Display node
         </NewNodeSlot>
       </div>
       <Show when={nodePreview()}>

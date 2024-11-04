@@ -5,13 +5,6 @@ import "./index.scss";
 import App from "./App";
 import "nodeflow-lib";
 
-declare global {
-  export interface CustomNodeflowDataType {
-    gender: "M" | "F";
-    name: string;
-  }
-}
-
 const root = document.getElementById("root");
 
 if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
