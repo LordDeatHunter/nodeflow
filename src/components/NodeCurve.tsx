@@ -1,4 +1,3 @@
-import { Component, createEffect, createMemo, Show } from "solid-js";
 import { NodeflowData } from "../utils";
 import { Optional, SelectableElementCSS } from "../nodeflow-types";
 import NodeConnector from "../utils/data/NodeConnector";

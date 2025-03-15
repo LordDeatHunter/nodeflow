@@ -1,7 +1,7 @@
-import { createStore } from "solid-js/store";
 import Vec2 from "./Vec2";
 import {
   MouseDataType,
+  Optional,
   SelectableConnection,
   SelectableElementType,
   SerializedMouseData,
@@ -12,12 +12,13 @@ import NodeflowNodeData from "./NodeflowNodeData";
 import NodeConnector from "./NodeConnector";
 import { MOUSE_BUTTONS } from "../constants";
 import SelectionBoxData from "./SelectionBoxData";
+import { createDeepObservable, DeepObservable } from "../reactive/Observable";
 
 /**
  * Represents additional mouse data used in the nodeflow canvas, such held objects and mouse position.
  */
 export default class MouseData {
-  private readonly store;
+  private readonly store: DeepObservable<MouseDataType>;
   private readonly nodeflowData: NodeflowData;
 
   /**
@@ -25,7 +26,7 @@ export default class MouseData {
    */
   public constructor(nodeflowData: NodeflowData) {
     this.nodeflowData = nodeflowData;
-    this.store = createStore<MouseDataType>({
+    this.store = createDeepObservable<MouseDataType>({
       clickStartPosition: undefined,
       mousePosition: Vec2.zero(),
       heldMouseButtons: new Set<MOUSE_BUTTONS>(),
@@ -54,24 +55,24 @@ export default class MouseData {
     });
   }
 
-  get clickStartPosition() {
-    return this.store[0].clickStartPosition;
+  get clickStartPosition(): Optional<Vec2> {
+    return this.store.clickStartPosition.unwrap();
   }
 
-  get heldMouseButtons() {
-    return this.store[0].heldMouseButtons;
+  get heldMouseButtons(): Set<MOUSE_BUTTONS> {
+    return this.store.heldMouseButtons.unwrap();
   }
 
-  get selections() {
-    return this.store[0].selections;
+  get selections(): SelectionMap {
+    return this.store.selections;
   }
 
   get selectionBox(): SelectionBoxData {
-    return this.store[0].selectionBox;
+    return this.store.selectionBox;
   }
 
-  get mousePosition() {
-    return this.store[0].mousePosition;
+  get mousePosition(): Vec2 {
+    return this.store.mousePosition.unwrap();
   }
 
   get heldConnections(): Array<SelectableConnection> {
@@ -104,16 +105,16 @@ export default class MouseData {
     this.selections.deleteConnections(callback);
   }
 
-  set clickStartPosition(value) {
-    this.store[1]({ clickStartPosition: value });
+  set clickStartPosition(value: Optional<Vec2>) {
+    this.store.clickStartPosition.wrap(value);
   }
 
-  set mousePosition(value) {
-    this.store[1]({ mousePosition: value });
+  set mousePosition(value: Vec2) {
+    this.store.mousePosition.wrap(value);
   }
 
   set pointerDown(value: boolean) {
-    this.store[1]({ pointerDown: value });
+    this.store.pointerDown.wrap(value);
   }
 
   public update(data: Partial<MouseDataType>) {

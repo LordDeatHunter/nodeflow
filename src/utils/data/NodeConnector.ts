@@ -1,4 +1,3 @@
-import { createStore } from "solid-js/store";
 import {
   NodeConnectorType,
   SerializedConnection,
@@ -10,15 +9,16 @@ import ConnectorDestination from "./ConnectorDestination";
 import Vec2 from "./Vec2";
 import ConnectorSection from "./ConnectorSection";
 import { deepCopy } from "../misc-utils";
+import {createDeepObservable, DeepObservable} from "../reactive/Observable";
 
 /**
  * Represents a connector on a node, that can be connected to other connectors.
  */
 export default class NodeConnector {
-  private readonly store;
+  private readonly store: DeepObservable<NodeConnectorType>;
 
   constructor(data: NodeConnectorType) {
-    this.store = createStore<NodeConnectorType>(data);
+    this.store = createDeepObservable<NodeConnectorType>(data);
   }
 
   public serialize(): SerializedNodeConnector {
@@ -74,7 +74,6 @@ export default class NodeConnector {
       id: connectorId,
       parentSection,
       position: Vec2.deserializeOrDefault(data.position),
-      ref: undefined,
       resizeObserver: undefined,
       size: Vec2.zero(),
       sources: new ArrayWrapper<ConnectorSource>(),
@@ -82,7 +81,7 @@ export default class NodeConnector {
   }
 
   public get css() {
-    return this.store[0].css;
+    return this.store.css.value;
   }
 
   public values() {
@@ -90,19 +89,19 @@ export default class NodeConnector {
   }
 
   public get destinations() {
-    return this.store[0].destinations;
+    return this.store.destinations.value;
   }
 
   public get hovered() {
-    return this.store[0].hovered;
+    return this.store.hovered.value;
   }
 
   public get id() {
-    return this.store[0].id;
+    return this.store.id.value;
   }
 
   public get parentSection() {
-    return this.store[0].parentSection;
+    return this.store.parentSection.value;
   }
 
   public get parentNode() {
@@ -110,27 +109,27 @@ export default class NodeConnector {
   }
 
   public get position() {
-    return this.store[0].position;
+    return this.store.position.value;
   }
 
   public get ref() {
-    return this.store[0].ref;
+    return this.store.ref.value;
   }
 
   public get resizeObserver() {
-    return this.store[0].resizeObserver;
+    return this.store.resizeObserver.value;
   }
 
   public get size() {
-    return this.store[0].size;
+    return this.store.size.value;
   }
 
   public get sources() {
-    return this.store[0].sources;
+    return this.store.sources.value;
   }
 
   public get customData() {
-    return this.store[0].customData;
+    return this.store.customData.value;
   }
 
   public set css(value) {
@@ -155,10 +154,6 @@ export default class NodeConnector {
 
   public set position(value) {
     this.store[1]({ position: value });
-  }
-
-  public set ref(value) {
-    this.store[1]({ ref: value });
   }
 
   public set resizeObserver(value) {

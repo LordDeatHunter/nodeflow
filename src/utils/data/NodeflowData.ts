@@ -1,5 +1,4 @@
 import Vec2 from "./Vec2";
-import { createStore, produce } from "solid-js/store";
 import {
   DeepPartial,
   NodeflowDataType,
@@ -15,11 +14,9 @@ import {
 import { clamp } from "../math-utils";
 import Changes from "./Changes";
 import MouseData from "./MouseData";
-import { ReactiveMap } from "@solid-primitives/map";
 import NodeflowNodeData from "./NodeflowNodeData";
 import NodeConnector from "./NodeConnector";
 import ConnectorSource from "./ConnectorSource";
-import ArrayWrapper from "./ArrayWrapper";
 import ConnectorDestination from "./ConnectorDestination";
 import { deepCopy, intersectionOfSets, isSetEmpty } from "../misc-utils";
 import { NodeflowEventPublisher } from "./EventPublishers";
@@ -33,24 +30,25 @@ import {
 import KeyboardData from "./KeyboardData";
 import { NodeflowChunking } from "./index";
 import Rect from "./Rect";
+import { createDeepObservable, DeepObservable } from "../reactive/Observable";
 
 /**
  * NodeflowData is a class that manages the state of a Nodeflow canvas.
  * It uses the createStore function from solid-js/store to create a reactive store for the state.
  */
 export default class NodeflowData {
-  private readonly store;
-  public readonly changes;
-  public readonly mouseData;
-  public readonly keyboardData;
-  public readonly curveFunctions;
-  public readonly settingsStore;
+  private readonly store: DeepObservable<NodeflowDataType>;
+  public readonly changes: Changes;
+  public readonly mouseData: MouseData;
+  public readonly keyboardData: KeyboardData;
+  public readonly curveFunctions: CurveFunctions;
+  public readonly settings: DeepObservable<NodeflowSettings>;
   /** A ReactiveMap that stores all the nodes on the Nodeflow canvas. */
-  public readonly nodes;
+  public readonly nodes: Map<string, NodeflowNodeData>;
   /** An instance of the NodeflowEventRecord class that handles various event subscriptions and publishing. */
   public readonly eventStore: NodeflowEventRecord;
-  public readonly chunking;
-  public readonly id;
+  public readonly chunking: NodeflowChunking;
+  public readonly id: string;
   public static readonly DEFAULT_SETTINGS: NodeflowSettings = {
     createConnectorData: () => undefined,
     createNodeData: () => undefined,
@@ -102,12 +100,12 @@ export default class NodeflowData {
     curveFunctions?: (nodeflow: NodeflowData) => CurveFunctions,
   ) {
     this.id = id;
-    this.settingsStore = createStore<NodeflowSettings>({
+    this.settings = createDeepObservable({
       ...NodeflowData.DEFAULT_SETTINGS,
       ...settings,
     });
     this.curveFunctions = curveFunctions?.(this) ?? new CurveFunctions(this);
-    this.store = createStore<NodeflowDataType>({
+    this.store = createDeepObservable({
       currentMoveSpeed: Vec2.zero(),
       position: Vec2.zero(),
       startPosition: Vec2.zero(),
@@ -120,7 +118,7 @@ export default class NodeflowData {
     this.changes = new Changes();
     this.mouseData = new MouseData(this);
     this.keyboardData = new KeyboardData(this);
-    this.nodes = new ReactiveMap<string, NodeflowNodeData>();
+    this.nodes = new Map<string, NodeflowNodeData>();
     this.chunking = new NodeflowChunking(this);
 
     this.eventStore = {
@@ -174,24 +172,26 @@ export default class NodeflowData {
 
     const hasSelectedNodes = this.mouseData.heldNodes.length > 0;
 
+    const { x: oldX, y: oldY } = this.currentMoveSpeed;
+
     this.currentMoveSpeed = Vec2.of(
       this.calculateDirectionalMovementAmount(
         movingLeft || movingRight,
-        this.currentMoveSpeed.x,
+        oldX,
         movingRight,
         movingLeft,
         !hasSelectedNodes,
       ),
       this.calculateDirectionalMovementAmount(
         movingUp || movingDown,
-        this.currentMoveSpeed.y,
+        oldY,
         movingDown,
         movingUp,
         !hasSelectedNodes,
       ),
     );
 
-    if (this.currentMoveSpeed.x === 0 && this.currentMoveSpeed.y === 0) {
+    if (oldX === 0 && oldY === 0) {
       return;
     }
 
@@ -262,18 +262,6 @@ export default class NodeflowData {
     );
   }
 
-  public get settings() {
-    return this.settingsStore[0];
-  }
-
-  public updateSettings(
-    settings:
-      | Partial<NodeflowSettings>
-      | ((prev: NodeflowSettings) => Partial<NodeflowSettings>),
-  ) {
-    this.settingsStore[1](settings);
-  }
-
   /**
    * Resets the currentMoveSpeed to zero and clears the held keys.
    */
@@ -286,87 +274,59 @@ export default class NodeflowData {
   };
 
   get currentMoveSpeed() {
-    return this.store[0].currentMoveSpeed;
+    return this.store.currentMoveSpeed.unwrap();
   }
 
   get position() {
-    return this.store[0].position;
+    return this.store.position.unwrap();
   }
 
   get startPosition() {
-    return this.store[0].startPosition;
+    return this.store.startPosition.unwrap();
   }
 
   get size() {
-    return this.store[0].size;
+    return this.store.size.unwrap();
   }
 
   get zoomLevel() {
-    return this.store[0].zoomLevel;
+    return this.store.zoomLevel.unwrap();
   }
 
   get pinchDistance() {
-    return this.store[0].pinchDistance;
+    return this.store.pinchDistance.unwrap();
   }
 
   get intervalId() {
-    return this.store[0].intervalId;
+    return this.store.intervalId.unwrap();
   }
 
-  set currentMoveSpeed(value) {
-    this.store[1]({ currentMoveSpeed: value });
+  set currentMoveSpeed(value: Vec2) {
+    this.store.currentMoveSpeed.wrap(value);
   }
 
-  set position(value) {
-    this.store[1]({ position: value });
+  set position(value: Vec2) {
+    this.store.position.wrap(value);
   }
 
-  set startPosition(value) {
-    this.store[1]({ startPosition: value });
+  set startPosition(value: Vec2) {
+    this.store.startPosition.wrap(value);
   }
 
-  set size(value) {
-    this.store[1]({ size: value });
+  set size(value: Vec2) {
+    this.store.size.wrap(value);
   }
 
-  set zoomLevel(value) {
-    this.store[1]({ zoomLevel: value });
+  set zoomLevel(value: number) {
+    this.store.zoomLevel.wrap(value);
   }
 
-  set pinchDistance(value) {
-    this.store[1]({ pinchDistance: value });
+  set pinchDistance(value: number) {
+    this.store.pinchDistance.wrap(value);
   }
 
   set intervalId(value: Optional<number>) {
-    this.store[1]({ intervalId: value });
-  }
-
-  /**
-   * Updates the NodeflowData instance with the provided data.
-   *
-   * @example
-   * nodeflowData.update({
-   *   position: Vec2.of(100, 100),
-   *   zoomLevel: 2,
-   * });
-   */
-  public update(data: Partial<NodeflowDataType>) {
-    this.store[1](data);
-  }
-
-  /**
-   * Updates the NodeflowData instance with the provided data using the current data as a base.
-   *
-   * @example
-   * nodeflowData.updateWithPrevious((prev) => ({
-   *   position: prev.position.add(Vec2.of(100, 100)),
-   *   zoomLevel: prev.zoomLevel * 2,
-   * }));
-   */
-  public updateWithPrevious(
-    updater: (data: NodeflowDataType) => Partial<NodeflowDataType>,
-  ) {
-    this.store[1](updater);
+    this.store.intervalId.wrap(value);
   }
 
   /**
@@ -399,20 +359,23 @@ export default class NodeflowData {
     inverse = false,
   ) {
     let speed = initialSpeed;
+    const maxMovementSpeed = this.settings.maxMovementSpeed.unwrap();
+
     if (isMoving) {
-      const change = this.settings.movementAcceleration * (inverse ? -1 : 1);
+      const change =
+        this.settings.movementAcceleration.unwrap() * (inverse ? -1 : 1);
       speed = clamp(
         speed +
           (positiveMovement ? change : 0) -
           (negativeMovement ? change : 0),
-        -this.settings.maxMovementSpeed,
-        this.settings.maxMovementSpeed,
+        -maxMovementSpeed,
+        maxMovementSpeed,
       );
     } else {
       speed = clamp(
-        speed * this.settings.movementDeceleration,
-        -this.settings.maxMovementSpeed,
-        this.settings.maxMovementSpeed,
+        speed * this.settings.movementDeceleration.unwrap(),
+        -maxMovementSpeed,
+        maxMovementSpeed,
       );
     }
     if (Math.abs(speed) < 0.1) speed = 0;
@@ -423,15 +386,21 @@ export default class NodeflowData {
   public updateZoom = (distance: number, location: Vec2) => {
     const oldZoom = this.zoomLevel;
 
-    if (distance === 0) return;
+    if (distance === 0) {
+      return;
+    }
+
+    const zoomMultiplier = this.settings.zoomMultiplier.unwrap();
+    const minZoom = this.settings.minZoom.unwrap();
+    const maxZoom = this.settings.maxZoom.unwrap();
 
     const newZoom = Number(
       clamp(
         distance > 0
-          ? oldZoom + oldZoom * distance * this.settings.zoomMultiplier
-          : oldZoom / (1 - distance * this.settings.zoomMultiplier),
-        this.settings.minZoom,
-        this.settings.maxZoom,
+          ? oldZoom + oldZoom * distance * zoomMultiplier
+          : oldZoom / (1 - distance * zoomMultiplier),
+        minZoom,
+        maxZoom,
       ).toFixed(4),
     );
 
@@ -451,10 +420,8 @@ export default class NodeflowData {
       .subtract(newScreenSize.divideBy(2))
       .divideBy(newZoom);
 
-    this.updateWithPrevious((prev) => ({
-      position: prev.position.subtract(oldOffset).add(newOffset),
-      zoomLevel: newZoom,
-    }));
+    this.position = this.position.subtract(oldOffset).add(newOffset);
+    this.zoomLevel = newZoom;
   };
 
   /**
@@ -476,9 +443,7 @@ export default class NodeflowData {
       return;
     }
 
-    this.updateWithPrevious((prev) => ({
-      position: prev.position.add(moveDistance.divideBy(this.zoomLevel)),
-    }));
+    this.position = this.position.add(moveDistance.divideBy(this.zoomLevel));
   }
 
   /**
@@ -643,7 +608,7 @@ export default class NodeflowData {
               destinationConnector.parentNode.id !== nodeId,
           );
         });
-        connector.sources = new ArrayWrapper<ConnectorSource>();
+        connector.sources = new Array<ConnectorSource>();
       });
     });
   }
@@ -665,7 +630,7 @@ export default class NodeflowData {
             ({ sourceConnector }) => sourceConnector.parentNode.id !== nodeId,
           );
         });
-        connector.destinations = new ArrayWrapper<ConnectorDestination>();
+        connector.destinations = new Array<ConnectorDestination>();
       });
     });
   }
@@ -1185,7 +1150,7 @@ export default class NodeflowData {
                 if (!this.settings.canZoom) return;
                 event.preventDefault();
                 this.updateZoom(
-                  this.settings.keyboardZoomMultiplier *
+                  this.settings.keyboardZoomMultiplier.unwrap() *
                     (event.code === KEYBOARD_KEY_CODES.EQUAL ? 1 : -1),
                   this.size.divideBy(2),
                 );
@@ -1389,7 +1354,7 @@ export default class NodeflowData {
           this.mouseData.selectNode(
             nodeId,
             Vec2.fromEvent(event),
-            this.settings.canMoveNodes,
+            this.settings.canMoveNodes.unwrap(),
           );
         },
       },
@@ -1417,7 +1382,7 @@ export default class NodeflowData {
           this.mouseData.selectNode(
             nodeId,
             Vec2.of(x, y),
-            this.settings.canMoveNodes,
+            this.settings.canMoveNodes.unwrap(),
           );
         },
       },

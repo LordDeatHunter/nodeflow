@@ -6,25 +6,23 @@ import {
   SerializedNodeConnector,
   SerializedNodeflowNode,
 } from "../../nodeflow-types";
-import { createStore } from "solid-js/store";
 import Vec2 from "./Vec2";
 import ConnectorSection from "./ConnectorSection";
-import { ReactiveMap } from "@solid-primitives/map";
 import NodeConnector from "./NodeConnector";
 import { deepCopy } from "../misc-utils";
 import { NodeflowData } from "./index";
 import Changes from "./Changes";
 import NodeflowLib from "../NodeflowLib";
 import Rect from "./Rect";
-import { createEffect } from "solid-js";
+import { createDeepObservable, DeepObservable } from "../reactive/Observable";
 
 export default class NodeflowNodeData {
-  private readonly store;
+  private readonly store: DeepObservable<NodeflowNodeType>;
   private readonly nodeflowData;
 
   constructor(nodeflowData: NodeflowData, data: NodeflowNodeType) {
     this.nodeflowData = nodeflowData;
-    this.store = createStore<NodeflowNodeType>(data);
+    this.store = createDeepObservable<NodeflowNodeType>(data);
     this.nodeflowData.chunking.addNodeToChunk(this.id, this.getCenter());
 
     createEffect(() => {
@@ -59,94 +57,90 @@ export default class NodeflowNodeData {
   }
 
   public get centered() {
-    return this.store[0].centered;
+    return this.store.centered.unwrap();
   }
 
   public get connectorSections() {
-    return this.store[0].connectorSections;
+    return this.store.connectorSections.unwrap();
   }
 
   public get css() {
-    return this.store[0].css;
+    return this.store.css.unwrap();
   }
 
   public get customData() {
-    return this.store[0].customData;
+    return this.store.customData.unwrap();
   }
 
   public get display() {
-    return this.store[0].display;
+    return this.store.display.unwrap();
   }
 
   public get id() {
-    return this.store[0].id;
+    return this.store.id.unwrap();
   }
 
   public get offset() {
-    return this.store[0].offset;
+    return this.store.offset.unwrap();
   }
 
   public get position() {
-    return this.store[0].position;
+    return this.store.position.unwrap();
   }
 
   public get ref() {
-    return this.store[0].ref;
+    return this.store.ref.unwrap();
   }
 
   public get resizeObserver() {
-    return this.store[0].resizeObserver;
+    return this.store.resizeObserver.unwrap();
   }
 
   public get size() {
-    return this.store[0].size;
+    return this.store.size.unwrap();
   }
 
   public set centered(value) {
-    this.store[1]({ centered: value });
+    this.store.centered.wrap(value);
   }
 
   public set connectorSections(value) {
-    this.store[1]({ connectorSections: value });
+    this.store.connectorSections.wrap(value);
   }
 
   public set css(value) {
-    this.store[1]({ css: value });
+    this.store.css.wrap(value);
   }
 
   public set customData(value) {
-    this.store[1]({ customData: value });
+    this.store.customData.wrap(value);
   }
 
   public set display(value) {
-    this.store[1]({ display: value });
+    this.store.display.wrap(value);
   }
 
   public set id(value) {
-    this.store[1]({ id: value });
+    this.store.id.wrap(value);
   }
 
   public set offset(value) {
-    this.store[1]({ offset: value });
+    this.store.offset.wrap(value);
   }
 
   public set position(value) {
     const oldPos = this.position;
-    this.store[1]({ position: value });
+    this.store.position.wrap(value);
 
     this.nodeflowData.chunking.updateNodeInChunk(this.id, oldPos, value);
   }
 
-  public set ref(value) {
-    this.store[1]({ ref: value });
-  }
-
   public set resizeObserver(value) {
-    this.store[1]({ resizeObserver: value });
+    this.store.resizeObserver.wrap(value);
   }
 
   public set size(value) {
-    this.store[1]({ size: value });
+    this.store.size.wrap(value);
   }
 
   public get sizeWithOffset() {
@@ -195,7 +189,6 @@ export default class NodeflowNodeData {
       id,
       offset: Vec2.zero(),
       position: Vec2.deserializeOrDefault(data.position),
-      ref: undefined,
       resizeObserver: undefined,
       size: Vec2.zero(),
     });

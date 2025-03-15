@@ -1,7 +1,7 @@
 import { DocumentEventPublisher, NodeflowData } from "./data";
 import { DocumentEventRecord } from "../nodeflow-types";
 import Vec2 from "./data/Vec2";
-import NodeflowCanvas from "../components/NodeflowCanvas";
+import createNodeflowCanvas from "../components/nodeflowCanvas";
 
 export default class NodeflowLib {
   private readonly nodeflows;
@@ -30,11 +30,11 @@ export default class NodeflowLib {
 
   public createCanvas(
     ...params: ConstructorParameters<typeof NodeflowData>
-  ): [NodeflowData, ReturnType<typeof NodeflowCanvas>] {
+  ): [NodeflowData, ReturnType<typeof createNodeflowCanvas>] {
     const nodeflowData = new NodeflowData(...params);
     this.nodeflows.set(params[0], nodeflowData);
 
-    return [nodeflowData, NodeflowCanvas(nodeflowData)];
+    return [nodeflowData, createNodeflowCanvas(nodeflowData)];
   }
 
   public getNodeflow(id: string) {

@@ -5,12 +5,12 @@ import {
   SerializedSelectableElement,
 } from "../nodeflow-types";
 import { NodeConnector, NodeflowData, NodeflowNodeData } from "./data";
-import { ReactiveMap } from "@solid-primitives/map";
+import ObservableMap from "./reactive/ObservableMap";
 
 export default class SelectionMap {
-  private readonly connectorsMap = new ReactiveMap<string, NodeConnector>();
-  private readonly nodesMap = new ReactiveMap<string, NodeflowNodeData>();
-  private readonly connectionsMap = new ReactiveMap<
+  private readonly connectorsMap = new ObservableMap<string, NodeConnector>();
+  private readonly nodesMap = new ObservableMap<string, NodeflowNodeData>();
+  private readonly connectionsMap = new ObservableMap<
     string,
     SelectableConnection
   >();
@@ -39,6 +39,7 @@ export default class SelectionMap {
       node,
       type: SelectableElementType.Node,
     });
+
     return this.nodesMap.set(hash, node);
   }
 
@@ -47,6 +48,7 @@ export default class SelectionMap {
       connector,
       type: SelectableElementType.Connector,
     });
+
     return this.connectorsMap.set(hash, connector);
   }
 
@@ -198,6 +200,7 @@ export default class SelectionMap {
 
   public toObject(): Record<string, SerializedSelectableElement> {
     const obj: Record<string, SerializedSelectableElement> = {};
+
     this.connectorsMap.forEach((value) => {
       obj[
         SelectionMap.createHash({
@@ -209,6 +212,7 @@ export default class SelectionMap {
         type: SelectableElementType.Connector,
       });
     });
+
     this.nodesMap.forEach((value) => {
       obj[
         SelectionMap.createHash({
@@ -220,14 +224,17 @@ export default class SelectionMap {
         type: SelectableElementType.Node,
       });
     });
+
     this.connectionsMap.forEach((value) => {
       obj[SelectionMap.createHash(value)] = SelectionMap.serialize(value);
     });
+
     if (this._hasSelectedNodeflow) {
       obj[SelectableElementType.Nodeflow] = {
         type: SelectableElementType.Nodeflow,
       };
     }
+
     return obj;
   }
 
@@ -260,7 +267,7 @@ export default class SelectionMap {
     return Array.from(this.nodesMap.values());
   }
 
-  public get selectedNodesMap(): ReactiveMap<string, NodeflowNodeData> {
+  public get selectedNodesMap(): ObservableMap<string, NodeflowNodeData> {
     return this.nodesMap;
   }
 

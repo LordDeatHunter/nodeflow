@@ -58,6 +58,14 @@ export const deepCopy = <T>(obj: T): T => {
   if (Array.isArray(obj)) {
     return obj.map(deepCopy) as unknown as T;
   }
+  if (obj instanceof Set) {
+    return new Set([...obj].map(deepCopy)) as unknown as T;
+  }
+  if (obj instanceof Map) {
+    return new Map(
+      [...obj].map(([key, value]) => [deepCopy(key), deepCopy(value)]),
+    ) as unknown as T;
+  }
   if (typeof obj === "object") {
     return Object.fromEntries(
       Object.entries(obj).map(([key, value]) => [key, deepCopy(value)]),

@@ -1,19 +1,14 @@
-import { createEffect, createSignal } from "solid-js";
 import Vec2 from "./data/Vec2";
+import Observable from "./reactive/Observable";
 
 /**
  * A Solid signal that contains the current window size.
  */
-export const [windowSize, setWindowSize] = createSignal<Vec2>(
+export const windowSize = new Observable<Vec2>(
   Vec2.of(window.innerWidth, window.innerHeight),
 );
 
-/**
- * A Solid effect that updates the window size signal when the window is resized.
- */
-createEffect(() => {
-  const onResize = () =>
-    setWindowSize(Vec2.of(window.innerWidth, window.innerHeight));
-  window.addEventListener("resize", onResize);
-  return () => window.removeEventListener("resize", onResize);
-});
+window.addEventListener(
+  "resize",
+  () => (windowSize.value = Vec2.of(window.innerWidth, window.innerHeight)),
+);

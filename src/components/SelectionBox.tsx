@@ -1,5 +1,4 @@
 import { NodeflowData } from "../utils";
-import { createMemo } from "solid-js";
 
 const SelectionBox = (props: { nodeflowData: NodeflowData }) => {
   const startPosition = createMemo(() =>

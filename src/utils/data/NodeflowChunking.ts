@@ -1,36 +1,36 @@
 import { NodeflowData, NodeflowNodeData, Vec2 } from "./index";
-import { createStore } from "solid-js/store";
-import { ReactiveMap } from "@solid-primitives/map";
 import { isSetEmpty } from "../misc-utils";
 import { Vec2Hash } from "./Vec2";
 import Rect from "./Rect";
+import { createDeepObservable, DeepObservable } from "../reactive/Observable";
+import { ChunkingData } from "../../nodeflow-types";
 
 export default class NodeflowChunking {
-  private readonly store;
-  private readonly nodeflowData;
+  private readonly store: DeepObservable<ChunkingData>;
+  private readonly nodeflowData: NodeflowData;
 
   public constructor(nodeflowData: NodeflowData, chunkSize: number = 2048) {
     this.nodeflowData = nodeflowData;
-    this.store = createStore({
+    this.store = createDeepObservable<ChunkingData>({
       chunkSize,
-      chunks: new ReactiveMap<Vec2Hash, Set<string>>(),
+      chunks: new Map<Vec2Hash, Set<string>>(),
     });
   }
 
   public get chunkSize(): number {
-    return this.store[0].chunkSize;
+    return this.store.chunkSize.unwrap();
   }
 
   public set chunkSize(size: number) {
-    this.store[1]({ chunkSize: size });
+    this.store.chunkSize.wrap(size);
   }
 
-  public get chunks(): ReactiveMap<Vec2Hash, Set<string>> {
-    return this.store[0].chunks;
+  public get chunks(): Map<Vec2Hash, Set<string>> {
+    return this.store.chunks.unwrap();
   }
 
-  public set chunks(chunks: ReactiveMap<Vec2Hash, Set<string>>) {
-    this.store[1]({ chunks });
+  public set chunks(chunks: Map<Vec2Hash, Set<string>>) {
+    this.store.chunks.wrap(chunks);
   }
 
   public addNodeToChunk(nodeId: string, position: Vec2): void {
@@ -43,6 +43,7 @@ export default class NodeflowChunking {
   public removeNodeFromChunk(nodeId: string, position: Vec2): void {
     const chunkPosition = this.calculateChunkPosition(position).hashCode();
     const chunk = this.chunks.get(chunkPosition);
+
     if (chunk) {
       chunk.delete(nodeId);
       this.chunks.set(chunkPosition, chunk);
@@ -148,9 +149,11 @@ export default class NodeflowChunking {
     for (let x = startChunk.x; x <= endChunk.x; ++x) {
       for (let y = startChunk.y; y <= endChunk.y; ++y) {
         const chunk = this.chunks.get(Vec2.of(x, y).hashCode());
+
         if (!chunk) {
           continue;
         }
+
         chunk.forEach((nodeId) => {
           const node = this.nodeflowData.nodes.get(nodeId);
           if (node && rect.intersects(node.rectWithOffset)) {

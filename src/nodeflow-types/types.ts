@@ -1,13 +1,10 @@
-import { JSX } from "solid-js";
 import Vec2 from "../utils/data/Vec2";
 import ConnectorSection from "../utils/data/ConnectorSection";
 import NodeflowNodeData from "../utils/data/NodeflowNodeData";
 import NodeConnector from "../utils/data/NodeConnector";
 import ConnectorDestination from "../utils/data/ConnectorDestination";
 import ConnectorSource from "../utils/data/ConnectorSource";
-import { ReactiveMap } from "@solid-primitives/map";
-import ArrayWrapper from "../utils/data/ArrayWrapper";
-import { KeyboardKeyCode, MOUSE_BUTTONS } from "../utils/constants";
+import { MOUSE_BUTTONS } from "../utils/constants";
 import Rect from "../utils/data/Rect";
 import SelectionMap from "../utils/SelectionMap";
 import SelectionBoxData from "../utils/data/SelectionBoxData";
@@ -31,16 +28,12 @@ export interface SelectionBoxDataType {
 }
 
 export interface MouseDataType {
-  clickStartPosition?: Vec2;
+  clickStartPosition: Optional<Vec2>;
   mousePosition: Vec2;
   heldMouseButtons: Set<MOUSE_BUTTONS>;
   pointerDown: boolean;
   selections: SelectionMap;
   selectionBox: SelectionBoxData;
-}
-
-export interface KeyboardDataType {
-  heldKeys: Set<KeyboardKeyCode>;
 }
 
 export interface ConnectionType {
@@ -82,24 +75,24 @@ export type SelectableElement =
 
 export type DisplayFunc = (props: {
   node: NodeflowNodeData;
-}) => Optional<JSX.Element>;
+}) => Optional<HTMLElement>;
 
 export type NodeflowNodeType = {
   centered: boolean;
-  connectorSections: ReactiveMap<string, ConnectorSection>;
+  connectorSections: Map<string, ConnectorSection>;
   css: SelectableElementCSS;
-  customData?: CustomNodeData;
+  customData: Optional<CustomNodeData>;
   readonly display: DisplayFunc;
   id: string;
   offset: Vec2;
   position: Vec2;
-  ref?: HTMLDivElement;
-  resizeObserver?: ResizeObserver;
+  ref: Optional<HTMLDivElement>;
+  resizeObserver: Optional<ResizeObserver>;
   size: Vec2;
 };
 
 export type ConnectorSectionType = {
-  connectors: ReactiveMap<string, NodeConnector>;
+  connectors: Map<string, NodeConnector>;
   css?: string;
   id: string;
   parentNode: NodeflowNodeData;
@@ -128,15 +121,14 @@ export interface NodeflowCss {
 export interface NodeConnectorType {
   css?: string;
   customData?: CustomConnectorData;
-  destinations: ArrayWrapper<ConnectorDestination>;
+  destinations: Array<ConnectorDestination>;
   hovered: boolean;
   id: string;
   parentSection: ConnectorSectionType;
   position: Vec2;
-  ref?: HTMLDivElement;
   resizeObserver?: ResizeObserver;
   size: Vec2;
-  sources: ArrayWrapper<ConnectorSource>;
+  sources: Array<ConnectorSource>;
 }
 
 export interface ConnectorSourceType {
@@ -189,3 +181,8 @@ export type NodeflowSettings = {
   movementDeceleration: number;
   zoomMultiplier: number;
 };
+
+export interface ChunkingData {
+  chunkSize: number;
+  chunks: Map<string, Set<string>>;
+}

@@ -1,4 +1,3 @@
-import { ReactiveMap } from "@solid-primitives/map";
 import { NodeflowData } from "./index";
 import {
   DocumentEvent,
