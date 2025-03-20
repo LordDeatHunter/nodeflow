@@ -31,6 +31,7 @@ import KeyboardData from "./KeyboardData";
 import { NodeflowChunking } from "./index";
 import Rect from "./Rect";
 import { createDeepObservable, DeepObservable } from "../reactive/Observable";
+import ObservableMap from "../reactive/ObservableMap";
 
 /**
  * NodeflowData is a class that manages the state of a Nodeflow canvas.
@@ -44,7 +45,7 @@ export default class NodeflowData {
   public readonly curveFunctions: CurveFunctions;
   public readonly settings: DeepObservable<NodeflowSettings>;
   /** A ReactiveMap that stores all the nodes on the Nodeflow canvas. */
-  public readonly nodes: Map<string, NodeflowNodeData>;
+  public readonly nodes: ObservableMap<string, NodeflowNodeData>;
   /** An instance of the NodeflowEventRecord class that handles various event subscriptions and publishing. */
   public readonly eventStore: NodeflowEventRecord;
   public readonly chunking: NodeflowChunking;
@@ -118,7 +119,7 @@ export default class NodeflowData {
     this.changes = new Changes();
     this.mouseData = new MouseData(this);
     this.keyboardData = new KeyboardData(this);
-    this.nodes = new Map<string, NodeflowNodeData>();
+    this.nodes = new ObservableMap<string, NodeflowNodeData>();
     this.chunking = new NodeflowChunking(this);
 
     this.eventStore = {

@@ -1,46 +1,62 @@
-import { deepCopy } from "../misc-utils";
+import { createDeepObservable, DeepObservable, Subscriber } from "./Observable";
 
-export type MapObserver<K, V> = (map: Map<K, V>) => void;
+export type MapObserver<K, V> = Subscriber<ObservableMap<K, V>>;
 
 export default class ObservableMap<K, V> {
-  private readonly map;
-  private readonly _subscribers;
+  private map: Map<DeepObservable<K>, DeepObservable<V>>;
+  private readonly _subscribers = new Set<MapObserver<K, V>>();
 
-  constructor(map?: Map<K, V>) {
-    this.map = map || new Map();
-    this._subscribers = new Set<MapObserver<K, V>>();
+  constructor(initial?: Map<K, V>) {
+    initial ??= new Map();
+    this.map = new Map(
+      Array.from(initial.entries()).map(([k, v]) => [
+        createDeepObservable(k),
+        createDeepObservable(v),
+      ]),
+    );
   }
 
   public wrap(map: Map<K, V>) {
-    this.map.clear();
-    map.forEach((value, key) => this.map.set(key, value));
+    this.map = new Map(
+      Array.from(map.entries()).map(([k, v]) => [
+        createDeepObservable(k),
+        createDeepObservable(v),
+      ]),
+    );
     this.notifySubscribers();
   }
 
-  public unwrap() {
-    return deepCopy(this.map);
+  public unwrap(): Map<K, V> {
+    return new Map(
+      Array.from(this.map.entries()).map(
+        ([k, v]) => [k.unwrap(), v.unwrap()] as [K, V],
+      ),
+    );
   }
 
   public get(key: K) {
-    return deepCopy(this.map.get(key));
+    const wrappedKey = createDeepObservable(key);
+    return this.map.get(wrappedKey);
   }
 
   public set(key: K, value: V) {
-    this.map.set(key, value);
+    const wrappedKey = createDeepObservable(key);
+    const wrappedValue = createDeepObservable(value);
+    this.map.set(wrappedKey, wrappedValue);
     this.notifySubscribers();
+    return this;
   }
 
   public delete(key: K) {
-    this.map.delete(key);
-    this.notifySubscribers();
+    const wrappedKey = createDeepObservable(key);
+    const result = this.map.delete(wrappedKey);
+    if (result) this.notifySubscribers();
+    return result;
   }
 
   public subscribe(subscriber: MapObserver<K, V>) {
     this._subscribers.add(subscriber);
-
-    return () => {
-      this.unsubscribe(subscriber);
-    };
+    return () => this.unsubscribe(subscriber);
   }
 
   public unsubscribe(subscriber: MapObserver<K, V>) {
@@ -48,7 +64,7 @@ export default class ObservableMap<K, V> {
   }
 
   private notifySubscribers() {
-    this._subscribers.forEach((subscriber) => subscriber(this.map));
+    this._subscribers.forEach((subscriber) => subscriber(this));
   }
 
   public get size() {
@@ -73,11 +89,14 @@ export default class ObservableMap<K, V> {
   }
 
   public forEach(callbackfn: (value: V, key: K, map: Map<K, V>) => void) {
-    this.map.forEach(callbackfn);
+    this.map.forEach((value, key) =>
+      callbackfn(value.unwrap() as V, key.unwrap() as K, this.unwrap()),
+    );
   }
 
   public has(key: K) {
-    return this.map.has(key);
+    const wrappedKey = createDeepObservable(key);
+    return this.map.has(wrappedKey);
   }
 
   public [Symbol.iterator]() {

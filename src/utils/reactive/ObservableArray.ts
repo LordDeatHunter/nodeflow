@@ -1,58 +1,75 @@
-import { createDeepObservable, DeepObservable } from "./Observable";
-import { deepCopy } from "../misc-utils";
+import { createDeepObservable, DeepObservable, Subscriber } from "./Observable";
+import { Optional } from "../../nodeflow-types";
 
-export type ArrayObserver<T> = (array: DeepObservable<T>[]) => void;
+export type ArrayObserver<T> = Subscriber<ObservableArray<T>>;
 
 export default class ObservableArray<T> {
   private array: DeepObservable<T>[];
-  private readonly _subscribers: Set<ArrayObserver<T>>;
+  private readonly _subscribers = new Set<ArrayObserver<T>>();
 
-  constructor(array: T[] = []) {
-    this.array = array.map(createDeepObservable);
-    this._subscribers = new Set();
+  constructor(initial?: T[]) {
+    initial ??= [];
+    this.array = initial.map(createDeepObservable);
   }
 
   public get length() {
     return this.array.length;
   }
 
-  public unwrap(index: number) {
-    return deepCopy(this.array[index]);
+  public unwrap(): T[] {
+    return this.array.map((item) => item.unwrap() as T);
   }
 
-  public wrap(index: number, value: T) {
-    this.array[index] = createDeepObservable(value);
+  public wrap(value: T[]) {
+    this.array = value.map(createDeepObservable);
     this.notifySubscribers();
   }
 
-  public push(value: T) {
-    this.array.push(createDeepObservable(value));
+  public push(...values: T[]) {
+    const wrapped = values.map(createDeepObservable);
+    this.array.push(...wrapped);
     this.notifySubscribers();
   }
 
-  public pop() {
-    this.array.pop();
+  public pop(): Optional<DeepObservable<T>> {
+    const item = this.array.pop();
     this.notifySubscribers();
+    return item;
   }
 
-  public shift() {
-    this.array.shift();
-    this.notifySubscribers();
+  public at(index: number): Optional<DeepObservable<T>> {
+    return this.array.at(index);
   }
 
-  public unshift(value: T, notify = true) {
-    this.array.unshift(createDeepObservable(value));
+  public shift(): Optional<DeepObservable<T>> {
+    const item = this.array.shift();
     this.notifySubscribers();
+    return item;
   }
 
-  public splice(start: number, deleteCount: number, ...items: T[]) {
-    this.array.splice(start, deleteCount, ...items.map(createDeepObservable));
+  public unshift(value: T): number {
+    const len = this.array.unshift(createDeepObservable(value));
     this.notifySubscribers();
+    return len;
+  }
+
+  public splice(
+    start: number,
+    deleteCount: number,
+    ...items: T[]
+  ): DeepObservable<T>[] {
+    const spliced = this.array.splice(
+      start,
+      deleteCount,
+      ...items.map(createDeepObservable),
+    );
+    this.notifySubscribers();
+    return spliced;
   }
 
   public filterInPlace(predicate: (value: T) => boolean) {
     this.array = this.array.filter((value: DeepObservable<T>) =>
-      predicate(value.unwrap()),
+      predicate(value.unwrap() as T),
     );
     this.notifySubscribers();
   }
@@ -70,6 +87,6 @@ export default class ObservableArray<T> {
   }
 
   private notifySubscribers() {
-    this._subscribers.forEach((subscriber) => subscriber(this.array));
+    this._subscribers.forEach((subscriber) => subscriber(this));
   }
 }

@@ -106,7 +106,9 @@ export default class Changes {
    * @param historyGroup
    * @returns {string} the history group, if generated, otherwise false.
    */
-  public static evaluateHistoryGroup(historyGroup: string | boolean = true) {
+  public static evaluateHistoryGroup(
+    historyGroup: string | boolean = true,
+  ): string | false {
     // If historyGroup is a boolean, generate a random UUID if true, otherwise set it to undefined
     if (typeof historyGroup === "boolean") {
       return historyGroup ? crypto.randomUUID() : false;

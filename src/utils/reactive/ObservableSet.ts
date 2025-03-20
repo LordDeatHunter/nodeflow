@@ -1,24 +1,23 @@
-import { deepCopy } from "../misc-utils";
+import { createDeepObservable, DeepObservable, Subscriber } from "./Observable";
 
-export type SetObserver<K> = (set: Set<K>) => void;
+export type SetObserver<T> = Subscriber<ObservableSet<T>>;
 
-export default class ObservableSet<K> {
-  private readonly set;
-  private readonly _subscribers;
+export default class ObservableSet<T> {
+  private set: Set<DeepObservable<T>>;
+  private readonly _subscribers = new Set<SetObserver<T>>();
 
-  constructor(set?: Set<K>) {
-    this.set = set || new Set();
-    this._subscribers = new Set<SetObserver<K>>();
+  constructor(initial?: Set<T>) {
+    initial ??= new Set();
+    this.set = new Set(Array.from(initial).map(createDeepObservable));
   }
 
-  public wrap(set: Set<K>) {
-    this.set.clear();
-    set.forEach((value) => this.set.add(value));
+  public wrap(set: Set<T>) {
+    this.set = new Set(Array.from(set).map(createDeepObservable));
     this.notifySubscribers();
   }
 
-  public unwrap() {
-    return deepCopy(this.set);
+  public unwrap(): Set<T> {
+    return new Set(Array.from(this.set).map((item) => item.unwrap() as T));
   }
 
   public get size() {
@@ -37,18 +36,25 @@ export default class ObservableSet<K> {
     return this.set.keys();
   }
 
-  public add(value: K) {
-    this.set.add(value);
-    this.notifySubscribers();
+  public add(value: T) {
+    const wrapped = createDeepObservable(value);
+    if (!this.set.has(wrapped)) {
+      this.set.add(wrapped);
+      this.notifySubscribers();
+    }
+    return this;
   }
 
-  public delete(value: K) {
-    this.set.delete(value);
-    this.notifySubscribers();
+  public delete(value: T) {
+    const wrapped = createDeepObservable(value);
+    const result = this.set.delete(wrapped);
+    if (result) this.notifySubscribers();
+    return result;
   }
 
-  public has(value: K) {
-    return this.set.has(value);
+  public has(value: T) {
+    const wrapped = createDeepObservable(value);
+    return this.set.has(wrapped);
   }
 
   public clear() {
@@ -56,15 +62,16 @@ export default class ObservableSet<K> {
     this.notifySubscribers();
   }
 
-  public subscribe(subscriber: SetObserver<K>) {
+  public subscribe(subscriber: SetObserver<T>): () => void {
     this._subscribers.add(subscriber);
+    return () => this.unsubscribe(subscriber);
   }
 
-  public unsubscribe(subscriber: SetObserver<K>) {
+  public unsubscribe(subscriber: SetObserver<T>) {
     this._subscribers.delete(subscriber);
   }
 
   private notifySubscribers() {
-    this._subscribers.forEach((subscriber) => subscriber(this.set));
+    this._subscribers.forEach((subscriber) => subscriber(this));
   }
 }
