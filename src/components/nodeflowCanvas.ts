@@ -1,10 +1,8 @@
 import { NodeflowData } from "../utils";
 import NodeflowNode from "./NodeflowNode";
 import NodeCurve from "./NodeCurve";
-import Curve from "./Curve";
 import { NodeflowCss } from "../nodeflow-types";
 import Vec2 from "../utils/data/Vec2";
-import SelectionBox from "./SelectionBox";
 
 interface NodeflowProps {
   css?: NodeflowCss;
@@ -12,60 +10,22 @@ interface NodeflowProps {
   width: string;
 }
 
-// const NodeflowCanvas =
-//   (nodeflowData: NodeflowData): Component<NodeflowProps> =>
-//   (props) => (
-//     <div>
-//       <div>
-//         <For each={Array.from(nodeflowData.nodes.keys())}>
-//           {(nodeId) => (
-//             <NodeflowNode nodeId={nodeId} nodeflowData={nodeflowData} />
-//           )}
-//         </For>
-//         <svg>
-//           <For each={Array.from(nodeflowData.nodes.entries())}>
-//             {([nodeId, node]) => (
-//               <For each={node.getAllConnectors()}>
-//                 {(connector) => (
-//                   <For each={connector.destinations.array}>
-//                     {(outputConnection) => (
-//                       <NodeCurve
-//                         nodeflowData={nodeflowData}
-//                         sourceNodeId={nodeId}
-//                         sourceConnectorId={connector.id}
-//                         destinationNodeId={
-//                           outputConnection.destinationConnector.parentSection
-//                             .parentNode.id
-//                         }
-//                         destinationConnectorId={
-//                           outputConnection.destinationConnector.id
-//                         }
-//                         css={outputConnection.css}
-//                       />
-//                     )}
-//                   </For>
-//                 )}
-//               </For>
-//             )}
-//           </For>
-//         </svg>
-//         <Show when={nodeflowData.mouseData.heldConnectors.length === 1}>
-//           <Curve
-//             css={props?.css?.getNewCurveCss?.(nodeflowData.mouseData.heldConnectors.at(0))}
-//             nodeflowData={nodeflowData}
-//           />
-//         </Show>
-//       </div>
-//       <Show when={nodeflowData.mouseData.selectionBox.boundingBox}>
-//         <SelectionBox nodeflowData={nodeflowData} />
-//       </Show>
-//     </div>
-//   );
-
-const createNodeflowCanvas =
+const NodeflowCanvas =
   (nodeflowData: NodeflowData) =>
   (props: NodeflowProps): HTMLDivElement => {
     const mainDiv = document.createElement("div");
+
+    // TODO: REACTIVITY
+    mainDiv.addEventListener("load", () => {
+      const resizeObserver = new ResizeObserver(() => {
+        nodeflowData.update({
+          size: Vec2.of(mainDiv.clientWidth, mainDiv.clientHeight),
+          startPosition: Vec2.of(mainDiv.offsetLeft, mainDiv.offsetTop),
+        });
+      });
+      resizeObserver.observe(mainDiv);
+    });
+
     mainDiv.id = `nodeflow-${nodeflowData.id}`;
     mainDiv.tabIndex = 0;
 
@@ -108,8 +68,10 @@ const createNodeflowCanvas =
     nodeflowDiv.style.transformOrigin = "center";
     nodeflowDiv.style.transition = "scale 0.1s ease-out";
 
-    // nodes go here
-    // WIP
+    nodeflowData.nodes.forEach((node) => {
+      const nodeDiv = NodeflowNode({ nodeId: node.id, nodeflowData });
+      nodeflowDiv.appendChild(nodeDiv);
+    });
 
     const svg = document.createElement("svg");
     svg.style.zIndex = "2";
@@ -118,19 +80,34 @@ const createNodeflowCanvas =
     svg.style.height = "1px";
     svg.style.pointerEvents = "none";
     svg.style.overflow = "visible";
+    nodeflowDiv.appendChild(svg);
 
-    // node curves and connectors go here
-    // WIP
-
-    const resizeObserver = new ResizeObserver(() => {
-      nodeflowData.update({
-        size: Vec2.of(mainDiv.clientWidth, mainDiv.clientHeight),
-        startPosition: Vec2.of(mainDiv.offsetLeft, mainDiv.offsetTop),
+    nodeflowData.nodes.entries().forEach(([nodeId, node]) => {
+      node.getAllConnectors().forEach((connector) => {
+        connector.destinations.forEach((outputConnection) => {
+          const curve = NodeCurve({
+            nodeflowData,
+            sourceNodeId: nodeId,
+            sourceConnectorId: connector.id,
+            destinationNodeId:
+              outputConnection.destinationConnector.parentSection.parentNode.id,
+            destinationConnectorId: outputConnection.destinationConnector.id,
+            css: outputConnection.css,
+          });
+          svg.appendChild(curve);
+        });
       });
     });
-    resizeObserver.observe(mainDiv);
+
+    nodeflowDiv.appendChild(svg);
+
+    // const selectionBox = SelectionBox({ nodeflowData });
+    // TODO: REACTIVITY
+    // nodeflowDiv.appendChild(selectionBox);
+
+    mainDiv.appendChild(nodeflowDiv);
 
     return mainDiv;
   };
 
-export default createNodeflowCanvas;
+export default NodeflowCanvas;

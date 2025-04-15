@@ -1,7 +1,6 @@
-import { NodeflowData, NodeflowNodeData } from "../utils";
+import { NodeflowData } from "../utils";
 import Vec2 from "../utils/data/Vec2";
 import Connector from "./Connector";
-import Observable from "../utils/reactive/Observable";
 
 // TODO: Probably better to pass the node data directly instead of the id.
 interface NodeProps {
@@ -10,24 +9,11 @@ interface NodeProps {
 }
 
 const NodeflowNode = (props: NodeProps): HTMLDivElement => {
-  const node = createMemo<NodeflowNodeData>(
-    () => props.nodeflowData.nodes.get(props.nodeId)!,
-  );
-  const isVisible = new Observable<boolean>(false);
+  // TODO: REACTIVITY
+  const node = props.nodeflowData.nodes.get(props.nodeId)!;
+  // let isVisible = false;
 
-  const div = document.createElement("div");
-  div.id = `node-${props.nodeId}`;
-  div.classList.add("nodeflowNode");
-
-  //     classList={{
-  //       [node()?.css?.normal ?? ""]: true,
-  //       [node()?.css?.selected ?? ""]:
-  //         props.nodeflowData.mouseData.hasSelectedNode(props.nodeId) ||
-  //         props.nodeflowData.mouseData.selectionBox.selections.isNodeSelected(
-  //           props.nodeId,
-  //         ),
-  //     }}
-
+  // TODO: REACTIVITY
   // onCleanup(() => {
   //   props.nodeflowData.chunking.removeNodeFromChunk(
   //     props.nodeId,
@@ -46,109 +32,116 @@ const NodeflowNode = (props: NodeProps): HTMLDivElement => {
   //   });
   // });
 
-  // return (
-  //   <div
-  //     ref={(el) =>
-  //       setTimeout(() => {
-  //         if (!el) return;
-  //
-  //         const resizeObserver = new ResizeObserver(() => {
-  //           node().update({
-  //             // update the size of the node
-  //             size: Vec2.of(el.clientWidth, el.clientHeight),
-  //           });
-  //
-  //           // update the position of the connectors
-  //           Array.from(node().connectorSections.values()).forEach((section) =>
-  //             Array.from(section.connectors.values()).forEach((connector) => {
-  //               const connectorEl = connector.ref;
-  //               if (!connectorEl) return;
-  //
-  //               connector.position = Vec2.of(
-  //                 (connectorEl?.parentElement?.offsetLeft ?? 0) +
-  //                   connectorEl.offsetLeft,
-  //                 (connectorEl?.parentElement?.offsetTop ?? 0) +
-  //                   connectorEl.offsetTop,
-  //               );
-  //             }),
-  //           );
-  //         });
-  //         resizeObserver.observe(el);
-  //
-  //         const positionOffset = node().centered
-  //           ? Vec2.of(el.clientWidth, el.clientHeight).divideBy(2)
-  //           : Vec2.zero();
-  //
-  //         node().update({
-  //           offset: Vec2.of(el.clientLeft, el.clientTop),
-  //           resizeObserver,
-  //           position: node().position.subtract(positionOffset),
-  //           size: Vec2.of(el.clientWidth, el.clientHeight),
-  //         });
-  //
-  //         setIsVisible(true);
-  //       })
-  //     }
-  //     style={{
-  //       left: `${node().position.x}px`,
-  //       top: `${node().position.y}px`,
-  //       opacity: isVisible() ? 1 : 0,
-  //     }}
-  //     id={`node-${props.nodeId}`}
-  //     class="nodeflowNode"
-  //     classList={{
-  //       [node()?.css?.normal ?? ""]: true,
-  //       [node()?.css?.selected ?? ""]:
-  //         props.nodeflowData.mouseData.hasSelectedNode(props.nodeId) ||
-  //         props.nodeflowData.mouseData.selectionBox.selections.isNodeSelected(
-  //           props.nodeId,
-  //         ),
-  //     }}
-  //     onMouseDown={(event) =>
-  //       props.nodeflowData.eventStore.onMouseDownInNode.publish({
-  //         event,
-  //         nodeId: props.nodeId,
-  //       })
-  //     }
-  //     onTouchStart={(event) =>
-  //       props.nodeflowData.eventStore.onTouchStartInNode.publish({
-  //         event,
-  //         nodeId: props.nodeId,
-  //       })
-  //     }
-  //     onPointerUp={(event) =>
-  //       props.nodeflowData.eventStore.onPointerUpInNode.publish({
-  //         event,
-  //         nodeId: props.nodeId,
-  //       })
-  //     }
-  //   >
-  //     {node().display({ node: node() })}
-  //     <For each={Array.from(node().connectorSections.entries())}>
-  //       {([sectionId, section]) => (
-  //         <div
-  //           classList={{
-  //             [section?.css ?? ""]: true,
-  //             nodeflowConnectorSection: true,
-  //           }}
-  //           id={`section-${sectionId}`}
-  //         >
-  //           <For each={Array.from(section.connectors.entries())}>
-  //             {([connectorId, connector]) => (
-  //               <Connector
-  //                 connector={connector}
-  //                 connectorId={connectorId}
-  //                 nodeId={props.nodeId}
-  //                 sectionId={sectionId}
-  //                 nodeflowData={props.nodeflowData}
-  //               />
-  //             )}
-  //           </For>
-  //         </div>
-  //       )}
-  //     </For>
-  //   </div>
-  // );
+  const div = document.createElement("div");
+
+  // when the element is loaded
+  div.addEventListener("load", () => {
+    const resizeObserver = new ResizeObserver(() => {
+      node.update({
+        // update the size of the node
+        size: Vec2.of(div.clientWidth, div.clientHeight),
+      });
+
+      // update the position of the connectors
+      Array.from(node.connectorSections.values()).forEach((section) =>
+        Array.from(section.connectors.values()).forEach((connector) => {
+          const connectorEl = connector.ref;
+          if (!connectorEl) return;
+
+          connector.position = Vec2.of(
+            (connectorEl?.parentElement?.offsetLeft ?? 0) +
+              connectorEl.offsetLeft,
+            (connectorEl?.parentElement?.offsetTop ?? 0) +
+              connectorEl.offsetTop,
+          );
+        }),
+      );
+    });
+    resizeObserver.observe(div);
+
+    const positionOffset = node.centered
+      ? Vec2.of(div.clientWidth, div.clientHeight).divideBy(2)
+      : Vec2.zero();
+
+    node.update({
+      offset: Vec2.of(div.clientLeft, div.clientTop),
+      resizeObserver,
+      position: node.position.subtract(positionOffset),
+      size: Vec2.of(div.clientWidth, div.clientHeight),
+    });
+
+    // isVisible = true;
+  });
+
+  div.id = `node-${props.nodeId}`;
+  div.classList.add("nodeflowNode");
+
+  // TODO: REACTIVITY
+  const normalCss = node?.css?.normal;
+  if (normalCss) {
+    div.classList.add(normalCss);
+  }
+
+  // TODO: REACTIVITY
+  const selectedCss = node?.css?.selected;
+  if (
+    selectedCss &&
+    (props.nodeflowData.mouseData.hasSelectedNode(props.nodeId) ||
+      props.nodeflowData.mouseData.selectionBox.selections.isNodeSelected(
+        props.nodeId,
+      ))
+  ) {
+    div.classList.add(selectedCss);
+  }
+
+  div.addEventListener("mousedown", (event) => {
+    props.nodeflowData.eventStore.onMouseDownInNode.publish({
+      event,
+      nodeId: props.nodeId,
+    });
+  });
+
+  div.addEventListener("touchstart", (event) => {
+    props.nodeflowData.eventStore.onTouchStartInNode.publish({
+      event,
+      nodeId: props.nodeId,
+    });
+  });
+
+  div.addEventListener("pointerup", (event) => {
+    props.nodeflowData.eventStore.onPointerUpInNode.publish({
+      event,
+      nodeId: props.nodeId,
+    });
+  });
+
+  const nodeDisplay = node.display({ node });
+  if (nodeDisplay) {
+    div.appendChild(nodeDisplay);
+  }
+
+  node.connectorSections.entries().forEach(([sectionId, section]) => {
+    const sectionDiv = document.createElement("div");
+    sectionDiv.classList.add(section?.css ?? "nodeflowConnectorSection");
+    sectionDiv.id = `section-${sectionId}`;
+
+    if (section?.css) {
+      sectionDiv.classList.add(section.css);
+    }
+
+    section.connectors.entries().forEach(([connectorId, connector]) => {
+      const connectorEl = Connector({
+        connector,
+        connectorId,
+        nodeId: props.nodeId,
+        sectionId,
+        nodeflowData: props.nodeflowData,
+      });
+      sectionDiv.appendChild(connectorEl);
+    });
+
+    div.appendChild(sectionDiv);
+  });
 
   return div;
 };

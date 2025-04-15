@@ -1,4 +1,4 @@
-import Vec2 from "../utils/data/Vec2";
+import Vec2, {Vec2Hash} from "../utils/data/Vec2";
 import ConnectorSection from "../utils/data/ConnectorSection";
 import NodeflowNodeData from "../utils/data/NodeflowNodeData";
 import NodeConnector from "../utils/data/NodeConnector";
@@ -82,7 +82,7 @@ export type NodeflowNodeType = {
   connectorSections: Map<string, ConnectorSection>;
   css: SelectableElementCSS;
   customData: Optional<CustomNodeData>;
-  readonly display: DisplayFunc;
+  display: DisplayFunc;
   id: string;
   offset: Vec2;
   position: Vec2;
@@ -124,6 +124,7 @@ export interface NodeConnectorType {
   destinations: Array<ConnectorDestination>;
   hovered: boolean;
   id: string;
+  ref: Optional<HTMLDivElement>;
   parentSection: ConnectorSectionType;
   position: Vec2;
   resizeObserver?: ResizeObserver;
@@ -184,5 +185,5 @@ export type NodeflowSettings = {
 
 export interface ChunkingData {
   chunkSize: number;
-  chunks: Map<string, Set<string>>;
+  chunks: Map<Vec2Hash, Set<string>>;
 }

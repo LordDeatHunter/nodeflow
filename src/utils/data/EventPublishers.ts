@@ -19,11 +19,11 @@ export class BaseEventPublisher<
    * If two events have the same priority, the order is not guaranteed.\
    * The default priority is 0.
    */
-  private subscriptions = new ReactiveMap<
+  private subscriptions = new Map<
     string,
     { event: EventCallback; name: string; priority: number }
   >();
-  private blacklistFilters = new ReactiveMap<
+  private blacklistFilters = new Map<
     string,
     (data: EventData, eventName: string, priority: number) => boolean
   >();

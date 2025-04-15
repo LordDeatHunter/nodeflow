@@ -30,19 +30,18 @@ import {
 import KeyboardData from "./KeyboardData";
 import { NodeflowChunking } from "./index";
 import Rect from "./Rect";
-import { createDeepObservable, DeepObservable } from "../reactive/Observable";
 
 /**
  * NodeflowData is a class that manages the state of a Nodeflow canvas.
  * It uses the createStore function from solid-js/store to create a reactive store for the state.
  */
 export default class NodeflowData {
-  private readonly store: DeepObservable<NodeflowDataType>;
+  private store: NodeflowDataType;
   public readonly changes: Changes;
   public readonly mouseData: MouseData;
   public readonly keyboardData: KeyboardData;
   public readonly curveFunctions: CurveFunctions;
-  public readonly settings: DeepObservable<NodeflowSettings>;
+  public readonly settings: NodeflowSettings;
   /** A ReactiveMap that stores all the nodes on the Nodeflow canvas. */
   public readonly nodes: Map<string, NodeflowNodeData>;
   /** An instance of the NodeflowEventRecord class that handles various event subscriptions and publishing. */
@@ -100,12 +99,12 @@ export default class NodeflowData {
     curveFunctions?: (nodeflow: NodeflowData) => CurveFunctions,
   ) {
     this.id = id;
-    this.settings = createDeepObservable({
+    this.settings = {
       ...NodeflowData.DEFAULT_SETTINGS,
       ...settings,
-    });
+    };
     this.curveFunctions = curveFunctions?.(this) ?? new CurveFunctions(this);
-    this.store = createDeepObservable({
+    this.store = {
       currentMoveSpeed: Vec2.zero(),
       position: Vec2.zero(),
       startPosition: Vec2.zero(),
@@ -113,7 +112,7 @@ export default class NodeflowData {
       zoomLevel: 1,
       pinchDistance: 0,
       intervalId: undefined,
-    });
+    };
 
     this.changes = new Changes();
     this.mouseData = new MouseData(this);
@@ -228,14 +227,15 @@ export default class NodeflowData {
     data: SerializedNodeflowData,
     hasHistoryGroup: string | boolean = false,
   ) {
-    this.update({
+    this.store = {
+      ...this.store,
       currentMoveSpeed: Vec2.deserializeOrDefault(data.currentMoveSpeed),
       pinchDistance: data.pinchDistance,
       position: Vec2.deserializeOrDefault(data.position),
       size: Vec2.deserializeOrDefault(data.size),
       startPosition: Vec2.deserializeOrDefault(data.startPosition),
       zoomLevel: data.zoomLevel,
-    });
+    };
 
     const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
 
@@ -274,59 +274,91 @@ export default class NodeflowData {
   };
 
   get currentMoveSpeed() {
-    return this.store.currentMoveSpeed.unwrap();
+    return this.store.currentMoveSpeed;
   }
 
   get position() {
-    return this.store.position.unwrap();
+    return this.store.position;
   }
 
   get startPosition() {
-    return this.store.startPosition.unwrap();
+    return this.store.startPosition;
   }
 
   get size() {
-    return this.store.size.unwrap();
+    return this.store.size;
   }
 
   get zoomLevel() {
-    return this.store.zoomLevel.unwrap();
+    return this.store.zoomLevel;
   }
 
   get pinchDistance() {
-    return this.store.pinchDistance.unwrap();
+    return this.store.pinchDistance;
   }
 
   get intervalId() {
-    return this.store.intervalId.unwrap();
+    return this.store.intervalId;
   }
 
   set currentMoveSpeed(value: Vec2) {
-    this.store.currentMoveSpeed.wrap(value);
+    this.store.currentMoveSpeed = value;
   }
 
   set position(value: Vec2) {
-    this.store.position.wrap(value);
+    this.store.position = value;
   }
 
   set startPosition(value: Vec2) {
-    this.store.startPosition.wrap(value);
+    this.store.startPosition = value;
   }
 
   set size(value: Vec2) {
-    this.store.size.wrap(value);
+    this.store.size = value;
   }
 
   set zoomLevel(value: number) {
-    this.store.zoomLevel.wrap(value);
+    this.store.zoomLevel = value;
   }
 
   set pinchDistance(value: number) {
-    this.store.pinchDistance.wrap(value);
+    this.store.pinchDistance = value;
   }
 
   set intervalId(value: Optional<number>) {
-    this.store.intervalId.wrap(value);
+    this.store.intervalId = value;
+  }
+
+  /**
+   * Updates the NodeflowData instance with the provided data.
+   *
+   * @example
+   * nodeflowData.update({
+   *   position: Vec2.of(100, 100),
+   *   zoomLevel: 2,
+   * });
+   */
+  public update(data: Partial<NodeflowDataType>) {
+    this.store = {
+      ...this.store,
+      ...data,
+    };
+  }
+
+  /**
+   * Updates the NodeflowData instance with the provided data using the current data as a base.
+   *
+   * @example
+   * nodeflowData.updateWithPrevious((prev) => ({
+   *   position: prev.position.add(Vec2.of(100, 100)),
+   *   zoomLevel: prev.zoomLevel * 2,
+   * }));
+   */
+  public updateWithPrevious(data: Partial<NodeflowDataType>) {
+    this.store = {
+      ...this.store,
+      ...data,
+    };
   }
 
   /**
@@ -359,11 +391,10 @@ export default class NodeflowData {
     inverse = false,
   ) {
     let speed = initialSpeed;
-    const maxMovementSpeed = this.settings.maxMovementSpeed.unwrap();
+    const maxMovementSpeed = this.settings.maxMovementSpeed;
 
     if (isMoving) {
-      const change =
-        this.settings.movementAcceleration.unwrap() * (inverse ? -1 : 1);
+      const change = this.settings.movementAcceleration * (inverse ? -1 : 1);
       speed = clamp(
         speed +
           (positiveMovement ? change : 0) -
@@ -373,7 +404,7 @@ export default class NodeflowData {
       );
     } else {
       speed = clamp(
-        speed * this.settings.movementDeceleration.unwrap(),
+        speed * this.settings.movementDeceleration,
         -maxMovementSpeed,
         maxMovementSpeed,
       );
@@ -390,9 +421,9 @@ export default class NodeflowData {
       return;
     }
 
-    const zoomMultiplier = this.settings.zoomMultiplier.unwrap();
-    const minZoom = this.settings.minZoom.unwrap();
-    const maxZoom = this.settings.maxZoom.unwrap();
+    const zoomMultiplier = this.settings.zoomMultiplier;
+    const minZoom = this.settings.minZoom;
+    const maxZoom = this.settings.maxZoom;
 
     const newZoom = Number(
       clamp(
@@ -543,7 +574,7 @@ export default class NodeflowData {
       });
     }
 
-    node.updateWithPrevious(produce((prev) => Object.assign(prev, data)));
+    node.updateWithPrevious((prev) => Object.assign(prev, data));
 
     this.eventStore.onNodeDataChanged.publish({ nodeId, data });
   }
@@ -603,7 +634,7 @@ export default class NodeflowData {
     this.nodes.get(nodeId)!.connectorSections.forEach((section) => {
       section.connectors.forEach((connector) => {
         connector.sources.forEach(({ sourceConnector }) => {
-          sourceConnector.destinations.filterInPlace(
+          sourceConnector.destinations = sourceConnector.destinations.filter(
             ({ destinationConnector }) =>
               destinationConnector.parentNode.id !== nodeId,
           );
@@ -626,7 +657,7 @@ export default class NodeflowData {
     this.nodes.get(nodeId)!.connectorSections.forEach((section) => {
       section.connectors.forEach((connector) => {
         connector.destinations.forEach(({ destinationConnector }) => {
-          destinationConnector.sources.filterInPlace(
+          destinationConnector.sources = destinationConnector.sources.filter(
             ({ sourceConnector }) => sourceConnector.parentNode.id !== nodeId,
           );
         });
@@ -857,12 +888,12 @@ export default class NodeflowData {
       });
     }
 
-    sourceConnector.destinations.filterInPlace(
+    sourceConnector.destinations = sourceConnector.destinations.filter(
       (destination) =>
         destination.destinationConnector.parentNode.id !== destinationNodeId,
     );
 
-    destinationConnector.sources.filterInPlace(
+    destinationConnector.sources = destinationConnector.sources.filter(
       (source) => source.sourceConnector.parentNode.id !== sourceNodeId,
     );
   }
@@ -1150,7 +1181,7 @@ export default class NodeflowData {
                 if (!this.settings.canZoom) return;
                 event.preventDefault();
                 this.updateZoom(
-                  this.settings.keyboardZoomMultiplier.unwrap() *
+                  this.settings.keyboardZoomMultiplier *
                     (event.code === KEYBOARD_KEY_CODES.EQUAL ? 1 : -1),
                   this.size.divideBy(2),
                 );
@@ -1354,7 +1385,7 @@ export default class NodeflowData {
           this.mouseData.selectNode(
             nodeId,
             Vec2.fromEvent(event),
-            this.settings.canMoveNodes.unwrap(),
+            this.settings.canMoveNodes,
           );
         },
       },
@@ -1382,7 +1413,7 @@ export default class NodeflowData {
           this.mouseData.selectNode(
             nodeId,
             Vec2.of(x, y),
-            this.settings.canMoveNodes.unwrap(),
+            this.settings.canMoveNodes,
           );
         },
       },

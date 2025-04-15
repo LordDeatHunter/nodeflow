@@ -2,35 +2,34 @@ import { NodeflowData, NodeflowNodeData, Vec2 } from "./index";
 import { isSetEmpty } from "../misc-utils";
 import { Vec2Hash } from "./Vec2";
 import Rect from "./Rect";
-import { createDeepObservable, DeepObservable } from "../reactive/Observable";
 import { ChunkingData } from "../../nodeflow-types";
 
 export default class NodeflowChunking {
-  private readonly store: DeepObservable<ChunkingData>;
+  private store: ChunkingData;
   private readonly nodeflowData: NodeflowData;
 
   public constructor(nodeflowData: NodeflowData, chunkSize: number = 2048) {
     this.nodeflowData = nodeflowData;
-    this.store = createDeepObservable<ChunkingData>({
+    this.store = {
       chunkSize,
       chunks: new Map<Vec2Hash, Set<string>>(),
-    });
+    };
   }
 
   public get chunkSize(): number {
-    return this.store.chunkSize.unwrap();
+    return this.store.chunkSize;
   }
 
   public set chunkSize(size: number) {
-    this.store.chunkSize.wrap(size);
+    this.store.chunkSize = size;
   }
 
   public get chunks(): Map<Vec2Hash, Set<string>> {
-    return this.store.chunks.unwrap();
+    return this.store.chunks;
   }
 
   public set chunks(chunks: Map<Vec2Hash, Set<string>>) {
-    this.store.chunks.wrap(chunks);
+    this.store.chunks = chunks;
   }
 
   public addNodeToChunk(nodeId: string, position: Vec2): void {

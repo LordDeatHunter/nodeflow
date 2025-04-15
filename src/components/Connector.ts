@@ -12,7 +12,9 @@ interface ConnectorProps {
 
 const createConnector = (props: ConnectorProps) => {
   const div = document.createElement("div");
-  div.classList.add(props.connector.css);
+  if (props.connector.css) {
+    div.classList.add(props.connector.css);
+  }
   div.id = `connector-${props.connectorId}`;
 
   setTimeout(() => {

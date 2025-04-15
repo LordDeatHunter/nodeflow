@@ -1,10 +1,9 @@
 import { NodeflowData } from "./index";
 import { KeyboardKeyCode } from "../constants";
 import { intersectionOfSets, isSetEmpty } from "../misc-utils";
-import ObservableSet from "../reactive/ObservableSet";
 
 export default class KeyboardData {
-  private readonly _heldKeys: ObservableSet<KeyboardKeyCode>;
+  private _heldKeys: Set<KeyboardKeyCode>;
   private readonly nodeflowData: NodeflowData;
 
   /**
@@ -12,17 +11,17 @@ export default class KeyboardData {
    */
   public constructor(nodeflowData: NodeflowData) {
     this.nodeflowData = nodeflowData;
-    this._heldKeys = new ObservableSet<KeyboardKeyCode>();
+    this._heldKeys = new Set<KeyboardKeyCode>();
   }
 
   public get heldKeys(): Set<KeyboardKeyCode> {
-    return this._heldKeys.unwrap();
+    return this._heldKeys;
   }
 
   public set heldKeys(keys: Set<KeyboardKeyCode>) {
-    const heldKeys = this._heldKeys.unwrap();
+    const heldKeys = this._heldKeys;
     keys.forEach((key) => heldKeys.add(key));
-    this._heldKeys.wrap(heldKeys);
+    this._heldKeys = heldKeys;
   }
 
   public releaseKey(key: KeyboardKeyCode): void {
@@ -42,6 +41,6 @@ export default class KeyboardData {
   }
 
   public isActionPressed(keymap: Set<KeyboardKeyCode>) {
-    return !isSetEmpty(intersectionOfSets(this._heldKeys.unwrap(), keymap));
+    return !isSetEmpty(intersectionOfSets(this._heldKeys, keymap));
   }
 }

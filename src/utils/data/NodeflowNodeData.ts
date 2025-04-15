@@ -14,42 +14,41 @@ import { NodeflowData } from "./index";
 import Changes from "./Changes";
 import NodeflowLib from "../NodeflowLib";
 import Rect from "./Rect";
-import { createDeepObservable, DeepObservable } from "../reactive/Observable";
 
 export default class NodeflowNodeData {
-  private readonly store: DeepObservable<NodeflowNodeType>;
+  private store: NodeflowNodeType;
   private readonly nodeflowData;
 
   constructor(nodeflowData: NodeflowData, data: NodeflowNodeType) {
     this.nodeflowData = nodeflowData;
-    this.store = createDeepObservable<NodeflowNodeType>(data);
+    this.store = data;
     this.nodeflowData.chunking.addNodeToChunk(this.id, this.getCenter());
 
-    createEffect(() => {
-      const collidingNodes = this.getCollidingNodes();
-      if (collidingNodes.length > 0) {
-        createEffect(() => {
-          collidingNodes.forEach((nodeId) => {
-            const node = this.nodeflowData.nodes.get(nodeId);
-            if (node) {
-              const nodeRect = node.rectWithOffset;
-              const thisRect = this.rectWithOffset;
-              if (nodeRect.intersects(thisRect)) {
-                const distance = nodeRect.center.subtract(
-                  thisRect.center,
-                ).magnitude;
-                const direction = nodeRect.center
-                  .subtract(thisRect.center)
-                  .normalize();
-                this.position = this.position.subtract(
-                  direction.multiplyBy(distance),
-                );
-              }
-            }
-          });
-        });
-      }
-    });
+    // createEffect(() => {
+    //   const collidingNodes = this.getCollidingNodes();
+    //   if (collidingNodes.length > 0) {
+    //     createEffect(() => {
+    //       collidingNodes.forEach((nodeId) => {
+    //         const node = this.nodeflowData.nodes.get(nodeId);
+    //         if (node) {
+    //           const nodeRect = node.rectWithOffset;
+    //           const thisRect = this.rectWithOffset;
+    //           if (nodeRect.intersects(thisRect)) {
+    //             const distance = nodeRect.center.subtract(
+    //               thisRect.center,
+    //             ).magnitude;
+    //             const direction = nodeRect.center
+    //               .subtract(thisRect.center)
+    //               .normalize();
+    //             this.position = this.position.subtract(
+    //               direction.multiplyBy(distance),
+    //             );
+    //           }
+    //         }
+    //       });
+    //     });
+    //   }
+    // });
   }
 
   public get nodeflow() {
@@ -57,90 +56,90 @@ export default class NodeflowNodeData {
   }
 
   public get centered() {
-    return this.store.centered.unwrap();
+    return this.store.centered;
   }
 
   public get connectorSections() {
-    return this.store.connectorSections.unwrap();
+    return this.store.connectorSections;
   }
 
   public get css() {
-    return this.store.css.unwrap();
+    return this.store.css;
   }
 
   public get customData() {
-    return this.store.customData.unwrap();
+    return this.store.customData;
   }
 
   public get display() {
-    return this.store.display.unwrap();
+    return this.store.display;
   }
 
   public get id() {
-    return this.store.id.unwrap();
+    return this.store.id;
   }
 
   public get offset() {
-    return this.store.offset.unwrap();
+    return this.store.offset;
   }
 
   public get position() {
-    return this.store.position.unwrap();
+    return this.store.position;
   }
 
   public get ref() {
-    return this.store.ref.unwrap();
+    return this.store.ref;
   }
 
   public get resizeObserver() {
-    return this.store.resizeObserver.unwrap();
+    return this.store.resizeObserver;
   }
 
   public get size() {
-    return this.store.size.unwrap();
+    return this.store.size;
   }
 
   public set centered(value) {
-    this.store.centered.wrap(value);
+    this.store.centered = value;
   }
 
   public set connectorSections(value) {
-    this.store.connectorSections.wrap(value);
+    this.store.connectorSections = value;
   }
 
   public set css(value) {
-    this.store.css.wrap(value);
+    this.store.css = value;
   }
 
   public set customData(value) {
-    this.store.customData.wrap(value);
+    this.store.customData = value;
   }
 
   public set display(value) {
-    this.store.display.wrap(value);
+    this.store.display = value;
   }
 
   public set id(value) {
-    this.store.id.wrap(value);
+    this.store.id = value;
   }
 
   public set offset(value) {
-    this.store.offset.wrap(value);
+    this.store.offset = value;
   }
 
   public set position(value) {
     const oldPos = this.position;
-    this.store.position.wrap(value);
+    this.store.position = value;
 
     this.nodeflowData.chunking.updateNodeInChunk(this.id, oldPos, value);
   }
 
   public set resizeObserver(value) {
-    this.store.resizeObserver.wrap(value);
+    this.store.resizeObserver = value;
   }
 
   public set size(value) {
-    this.store.size.wrap(value);
+    this.store.size = value;
   }
 
   public get sizeWithOffset() {
@@ -148,7 +147,10 @@ export default class NodeflowNodeData {
   }
 
   public update(data: Partial<NodeflowNodeType>) {
-    this.store[1](data);
+    this.store = {
+      ...this.store,
+      ...data,
+    };
   }
 
   public serialize(): SerializedNodeflowNode {
@@ -182,11 +184,12 @@ export default class NodeflowNodeData {
 
     const node = new NodeflowNodeData(nodeflowData, {
       centered: data.centered ?? false,
-      connectorSections: new ReactiveMap<string, ConnectorSection>(),
+      connectorSections: new Map<string, ConnectorSection>(),
       css: deepCopy(data.css) ?? {},
       customData: nodeflowData.settings.createNodeData(data),
       display: data.display ?? (() => undefined),
       id,
+      ref: undefined,
       offset: Vec2.zero(),
       position: Vec2.deserializeOrDefault(data.position),
       resizeObserver: undefined,
@@ -222,7 +225,7 @@ export default class NodeflowNodeData {
   public updateWithPrevious(
     updater: (data: NodeflowNodeType) => Partial<NodeflowNodeType>,
   ) {
-    this.store[1](updater);
+    this.update(updater(this.store));
   }
 
   public addConnectorSection(

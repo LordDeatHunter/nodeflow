@@ -1,5 +1,4 @@
 import { NodeflowData } from "./index";
-import { createStore } from "solid-js/store";
 import {
   SelectableElementType,
   SelectionBoxDataType,
@@ -8,23 +7,23 @@ import SelectionMap from "../SelectionMap";
 import Rect from "./Rect";
 
 export default class SelectionBoxData {
-  private readonly store;
+  private store: SelectionBoxDataType;
   private readonly nodeflowData: NodeflowData;
 
   public constructor(nodeflowData: NodeflowData) {
     this.nodeflowData = nodeflowData;
-    this.store = createStore<SelectionBoxDataType>({
+    this.store = {
       boundingBox: undefined,
       selections: new SelectionMap(this.nodeflowData),
-    });
+    };
   }
 
   public get boundingBox() {
-    return this.store[0].boundingBox;
+    return this.store.boundingBox;
   }
 
   public set boundingBox(value: Rect | undefined) {
-    this.store[1]({ boundingBox: value });
+    this.store.boundingBox = value;
 
     if (!value) {
       this.selections.selectedNodes.forEach((node) => {
@@ -59,6 +58,6 @@ export default class SelectionBoxData {
   }
 
   public get selections() {
-    return this.store[0].selections;
+    return this.store.selections;
   }
 }

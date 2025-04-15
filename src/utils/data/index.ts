@@ -1,4 +1,3 @@
-export { default as ArrayWrapper } from "./ArrayWrapper";
 export { default as Changes } from "./Changes";
 export { default as CurveFunctions } from "./CurveFunctions";
 export { default as ConnectorDestination } from "./ConnectorDestination";

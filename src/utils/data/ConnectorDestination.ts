@@ -1,42 +1,41 @@
-import { createStore } from "solid-js/store";
 import { ConnectorDestinationType } from "../../nodeflow-types";
 
 /**
  * Represents a connector's destination data, such as the destination connector and the curve data between the two.
  */
 export default class ConnectorDestination {
-  private readonly store;
+  private store: ConnectorDestinationType;
 
   constructor(data: ConnectorDestinationType) {
-    this.store = createStore<ConnectorDestinationType>(data);
+    this.store = data;
   }
 
   public get css() {
-    return this.store[0].css;
+    return this.store.css;
   }
 
   public get destinationConnector() {
-    return this.store[0].destinationConnector;
+    return this.store.destinationConnector;
   }
 
   public get path() {
-    return this.store[0].path;
+    return this.store.path;
   }
 
   public set css(value) {
-    this.store[1]({ css: value });
+    this.store.css = value;
   }
 
   public set path(value) {
-    this.store[1]({ path: value });
+    this.store.path = value;
   }
 
   public set destinationConnector(value) {
-    this.store[1]({ destinationConnector: value });
+    this.store.destinationConnector = value;
   }
 
   public update(data: Partial<ConnectorDestinationType>) {
-    this.store[1](data);
+    this.store = { ...this.store, ...data };
   }
 
   /**
@@ -52,6 +51,6 @@ export default class ConnectorDestination {
   public updateWithPrevious(
     updater: (data: ConnectorDestinationType) => ConnectorDestinationType,
   ) {
-    this.store[1](updater);
+    this.update(updater(this.store));
   }
 }

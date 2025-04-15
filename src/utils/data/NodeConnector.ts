@@ -3,22 +3,20 @@ import {
   SerializedConnection,
   SerializedNodeConnector,
 } from "../../nodeflow-types";
-import ArrayWrapper from "./ArrayWrapper";
 import ConnectorSource from "./ConnectorSource";
 import ConnectorDestination from "./ConnectorDestination";
 import Vec2 from "./Vec2";
 import ConnectorSection from "./ConnectorSection";
 import { deepCopy } from "../misc-utils";
-import {createDeepObservable, DeepObservable} from "../reactive/Observable";
 
 /**
  * Represents a connector on a node, that can be connected to other connectors.
  */
 export default class NodeConnector {
-  private readonly store: DeepObservable<NodeConnectorType>;
+  private store: NodeConnectorType;
 
   constructor(data: NodeConnectorType) {
-    this.store = createDeepObservable<NodeConnectorType>(data);
+    this.store = data;
   }
 
   public serialize(): SerializedNodeConnector {
@@ -69,117 +67,120 @@ export default class NodeConnector {
       css: data.css,
       customData:
         parentSection.parentNode.nodeflow.settings.createConnectorData(data),
-      destinations: new ArrayWrapper<ConnectorDestination>(),
+      destinations: new Array<ConnectorDestination>(),
       hovered: data.hovered ?? false,
       id: connectorId,
       parentSection,
+      ref: undefined,
       position: Vec2.deserializeOrDefault(data.position),
       resizeObserver: undefined,
       size: Vec2.zero(),
-      sources: new ArrayWrapper<ConnectorSource>(),
+      sources: new Array<ConnectorSource>(),
     });
   }
 
   public get css() {
-    return this.store.css.value;
-  }
-
-  public values() {
-    return this.store[0];
+    return this.store.css;
   }
 
   public get destinations() {
-    return this.store.destinations.value;
+    return this.store.destinations;
   }
 
   public get hovered() {
-    return this.store.hovered.value;
+    return this.store.hovered;
   }
 
   public get id() {
-    return this.store.id.value;
+    return this.store.id;
   }
 
   public get parentSection() {
-    return this.store.parentSection.value;
+    return this.store.parentSection;
   }
 
   public get parentNode() {
-    return this.store[0].parentSection.parentNode;
+    return this.store.parentSection.parentNode;
   }
 
   public get position() {
-    return this.store.position.value;
+    return this.store.position;
   }
 
   public get ref() {
-    return this.store.ref.value;
+    return this.store.ref;
   }
 
   public get resizeObserver() {
-    return this.store.resizeObserver.value;
+    return this.store.resizeObserver;
   }
 
   public get size() {
-    return this.store.size.value;
+    return this.store.size;
   }
 
   public get sources() {
-    return this.store.sources.value;
+    return this.store.sources;
   }
 
   public get customData() {
-    return this.store.customData.value;
+    return this.store.customData;
   }
 
   public set css(value) {
-    this.store[1]({ css: value });
+    this.store.css = value;
   }
 
   public set destinations(value) {
-    this.store[1]({ destinations: value });
+    this.store.destinations = value;
   }
 
   public set hovered(value) {
-    this.store[1]({ hovered: value });
+    this.store.hovered = value;
   }
 
   public set id(value) {
-    this.store[1]({ id: value });
+    this.store.id = value;
   }
 
   public set parentSection(value) {
-    this.store[1]({ parentSection: value });
+    this.store.parentSection = value;
   }
 
   public set position(value) {
-    this.store[1]({ position: value });
+    this.store.position = value;
   }
 
   public set resizeObserver(value) {
-    this.store[1]({ resizeObserver: value });
+    this.store.resizeObserver = value;
   }
 
   public set size(value) {
-    this.store[1]({ size: value });
+    this.store.size = value;
   }
 
   public set sources(value) {
-    this.store[1]({ sources: value });
+    this.store.sources = value;
   }
 
   public set customData(value) {
-    this.store[1]({ customData: value });
+    this.store.customData = value;
   }
 
   public update(data: Partial<NodeConnectorType>) {
-    this.store[1](data);
+    this.store = {
+      ...this.store,
+      ...data,
+    };
   }
 
   public updateWithPrevious(
     updater: (data: NodeConnectorType) => Partial<NodeConnectorType>,
   ) {
-    this.store[1](updater);
+    this.store = {
+      ...this.store,
+      ...updater(this.store),
+    };
   }
 
   /**
@@ -187,12 +188,12 @@ export default class NodeConnector {
    */
   public removeIncomingConnections() {
     this.sources.forEach(({ sourceConnector }) => {
-      sourceConnector.destinations.filterInPlace(
+      sourceConnector.destinations = sourceConnector.destinations.filter(
         ({ destinationConnector }) =>
           destinationConnector.parentNode.id !== this.id,
       );
     });
-    this.sources = new ArrayWrapper<ConnectorSource>();
+    this.sources = new Array<ConnectorSource>();
   }
 
   /**
@@ -200,11 +201,11 @@ export default class NodeConnector {
    */
   public removeOutgoingConnections() {
     this.destinations.forEach(({ destinationConnector }) => {
-      destinationConnector.sources.filterInPlace(
+      destinationConnector.sources = destinationConnector.sources.filter(
         ({ sourceConnector }) => sourceConnector.parentNode.id !== this.id,
       );
     });
-    this.destinations = new ArrayWrapper<ConnectorDestination>();
+    this.destinations = new Array<ConnectorDestination>();
   }
 
   public getCenter(): Vec2 {

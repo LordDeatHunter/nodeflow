@@ -5,15 +5,11 @@ import {
   SerializedSelectableElement,
 } from "../nodeflow-types";
 import { NodeConnector, NodeflowData, NodeflowNodeData } from "./data";
-import ObservableMap from "./reactive/ObservableMap";
 
 export default class SelectionMap {
-  private readonly connectorsMap = new ObservableMap<string, NodeConnector>();
-  private readonly nodesMap = new ObservableMap<string, NodeflowNodeData>();
-  private readonly connectionsMap = new ObservableMap<
-    string,
-    SelectableConnection
-  >();
+  private readonly connectorsMap = new Map<string, NodeConnector>();
+  private readonly nodesMap = new Map<string, NodeflowNodeData>();
+  private readonly connectionsMap = new Map<string, SelectableConnection>();
   private readonly nodeflowData: NodeflowData;
   private _hasSelectedNodeflow: boolean = false;
 
@@ -267,7 +263,7 @@ export default class SelectionMap {
     return Array.from(this.nodesMap.values());
   }
 
-  public get selectedNodesMap(): ObservableMap<string, NodeflowNodeData> {
+  public get selectedNodesMap(): Map<string, NodeflowNodeData> {
     return this.nodesMap;
   }
 

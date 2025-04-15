@@ -12,13 +12,12 @@ import NodeflowNodeData from "./NodeflowNodeData";
 import NodeConnector from "./NodeConnector";
 import { MOUSE_BUTTONS } from "../constants";
 import SelectionBoxData from "./SelectionBoxData";
-import { createDeepObservable, DeepObservable } from "../reactive/Observable";
 
 /**
  * Represents additional mouse data used in the nodeflow canvas, such held objects and mouse position.
  */
 export default class MouseData {
-  private readonly store: DeepObservable<MouseDataType>;
+  private store: MouseDataType;
   private readonly nodeflowData: NodeflowData;
 
   /**
@@ -26,14 +25,14 @@ export default class MouseData {
    */
   public constructor(nodeflowData: NodeflowData) {
     this.nodeflowData = nodeflowData;
-    this.store = createDeepObservable<MouseDataType>({
+    this.store = {
       clickStartPosition: undefined,
       mousePosition: Vec2.zero(),
       heldMouseButtons: new Set<MOUSE_BUTTONS>(),
       pointerDown: false,
       selections: new SelectionMap(this.nodeflowData),
       selectionBox: new SelectionBoxData(this.nodeflowData),
-    });
+    };
   }
 
   public serialize(): SerializedMouseData {
@@ -56,11 +55,11 @@ export default class MouseData {
   }
 
   get clickStartPosition(): Optional<Vec2> {
-    return this.store.clickStartPosition.unwrap();
+    return this.store.clickStartPosition;
   }
 
   get heldMouseButtons(): Set<MOUSE_BUTTONS> {
-    return this.store.heldMouseButtons.unwrap();
+    return this.store.heldMouseButtons;
   }
 
   get selections(): SelectionMap {
@@ -72,7 +71,7 @@ export default class MouseData {
   }
 
   get mousePosition(): Vec2 {
-    return this.store.mousePosition.unwrap();
+    return this.store.mousePosition;
   }
 
   get heldConnections(): Array<SelectableConnection> {
@@ -106,25 +105,25 @@ export default class MouseData {
   }
 
   set clickStartPosition(value: Optional<Vec2>) {
-    this.store.clickStartPosition.wrap(value);
+    this.store.clickStartPosition = value;
   }
 
   set mousePosition(value: Vec2) {
-    this.store.mousePosition.wrap(value);
+    this.store.mousePosition = value;
   }
 
   set pointerDown(value: boolean) {
-    this.store.pointerDown.wrap(value);
+    this.store.pointerDown = value;
   }
 
   public update(data: Partial<MouseDataType>) {
-    this.store[1](data);
+    this.store = { ...this.store, ...data };
   }
 
   public updateWithPrevious(
     updater: (data: MouseDataType) => Partial<MouseDataType>,
   ) {
-    this.store[1](updater);
+    this.store = { ...this.store, ...updater(this.store) };
   }
 
   public reset() {

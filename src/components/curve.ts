@@ -1,9 +1,5 @@
 import { NodeflowData } from "../utils";
-import { DeepPartial, Optional, PathData } from "../nodeflow-types";
-import {
-  createDeepObservable,
-  DeepObservable,
-} from "../utils/reactive/Observable";
+import { PathData } from "../nodeflow-types";
 
 interface CurveProps {
   css?: string;
@@ -24,12 +20,9 @@ interface CurveProps {
 //   );
 // };
 
-const createDebugCircles = (
-  props: CurveProps,
-  data: DeepObservable<Optional<PathData>>,
-) => {
-  if (!data) {
-    return;
+const createDebugCircles = (props: CurveProps, data: Partial<PathData>) => {
+  if (!data.anchorStart || !data.anchorEnd) {
+    return [];
   }
 
   return [data.anchorStart, data.anchorEnd].map((anchor) => {
@@ -44,7 +37,7 @@ const createDebugCircles = (
   });
 };
 
-const createCurveData = (props: CurveProps): DeepPartial<PathData> => {
+const createCurveData = (props: CurveProps): Partial<PathData> => {
   const { mouseData, curveFunctions } = props.nodeflowData;
 
   if (mouseData.heldConnectors.length !== 1) {
@@ -84,9 +77,7 @@ const createCurveData = (props: CurveProps): DeepPartial<PathData> => {
 };
 
 const createCurve = (props: CurveProps) => {
-  let curveData = createDeepObservable<DeepPartial<PathData>>(
-    createCurveData(props),
-  );
+  const curveData = createCurveData(props);
 
   const svg = document.createElement("svg") as unknown as SVGSVGElement;
   svg.style.zIndex = "2";
@@ -97,13 +88,14 @@ const createCurve = (props: CurveProps) => {
   svg.style.overflow = "visible";
 
   const path = document.createElement("path") as unknown as SVGPathElement;
-  curveData.path?.subscribe((curvePath) => {
-    if (!curvePath) {
-      return;
-    }
-
-    path.setAttribute("d", curvePath);
-  });
+  // TODO: REACTIVITY
+  // curveData.path?.subscribe((curvePath) => {
+  //   if (!curvePath) {
+  //     return;
+  //   }
+  //
+  //   path.setAttribute("d", curvePath);
+  // });
 
   path.setAttribute("stroke", "black");
   path.setAttribute("stroke-width", "1");
@@ -114,18 +106,19 @@ const createCurve = (props: CurveProps) => {
 
   const circles = createDebugCircles(props, curveData);
   circles.forEach((circle) => svg.appendChild(circle));
-};
 
-props.nodeflowData.settings.debugMode.subscribe((debugMode) => {
-  if (debugMode) {
-    document
-      .querySelectorAll(".debug")
-      .forEach((el) => el.removeAttribute("hidden"));
-  } else {
-    document
-      .querySelectorAll(".debug")
-      .forEach((el) => el.setAttribute("hidden", ""));
-  }
-});
+  // TODO: REACTIVITY
+  // props.nodeflowData.settings.debugMode.subscribe((debugMode) => {
+  //   if (debugMode) {
+  //     document
+  //       .querySelectorAll(".debug")
+  //       .forEach((el) => el.removeAttribute("hidden"));
+  //   } else {
+  //     document
+  //       .querySelectorAll(".debug")
+  //       .forEach((el) => el.setAttribute("hidden", ""));
+  //   }
+  // });
+};
 
 export default createCurve;

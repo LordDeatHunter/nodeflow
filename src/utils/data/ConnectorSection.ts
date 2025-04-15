@@ -1,4 +1,3 @@
-import { createStore } from "solid-js/store";
 import {
   ConnectorSectionType,
   SerializedConnectorSection,
@@ -8,18 +7,17 @@ import NodeConnector from "./NodeConnector";
 import { NodeflowData, NodeflowNodeData } from "./index";
 import Changes from "./Changes";
 import NodeflowLib from "../NodeflowLib";
-import { ReactiveMap } from "@solid-primitives/map";
 
 /**
  * Represents a section containing connectors on a node. Used for grouping connectors together.
  */
 export default class ConnectorSection {
-  private readonly store;
+  private store;
   private readonly nodeflowData;
 
   constructor(nodeflowData: NodeflowData, data: ConnectorSectionType) {
     this.nodeflowData = nodeflowData;
-    this.store = createStore<ConnectorSectionType>(data);
+    this.store = data;
   }
 
   public serialize(): SerializedConnectorSection {
@@ -48,7 +46,7 @@ export default class ConnectorSection {
         : data.id;
 
     const connectorSection = new ConnectorSection(node.nodeflow, {
-      connectors: new ReactiveMap(),
+      connectors: new Map<string, NodeConnector>(),
       css: data.css,
       id: sectionId,
       parentNode: node,
@@ -159,45 +157,45 @@ export default class ConnectorSection {
   }
 
   public get connectors() {
-    return this.store[0].connectors;
+    return this.store.connectors;
   }
 
   public get css() {
-    return this.store[0].css;
+    return this.store.css;
   }
 
   public get id() {
-    return this.store[0].id;
+    return this.store.id;
   }
 
   public get parentNode() {
-    return this.store[0].parentNode;
+    return this.store.parentNode;
   }
 
   public set connectors(value) {
-    this.store[1]({ connectors: value });
+    this.store.connectors = value;
   }
 
   public set css(value) {
-    this.store[1]({ css: value });
+    this.store.css = value;
   }
 
   public set id(value) {
-    this.store[1]({ id: value });
+    this.store.id = value;
   }
 
   public set parentNode(value) {
-    this.store[1]({ parentNode: value });
+    this.store.parentNode = value;
   }
 
   public update(data: Partial<ConnectorSectionType>) {
-    this.store[1](data);
+    this.store = { ...this.store, ...data };
   }
 
   public updateWithPrevious(
     updater: (data: ConnectorSectionType) => Partial<ConnectorSectionType>,
   ) {
-    this.store[1](updater);
+    this.update(updater(this.store));
   }
 
   /**
