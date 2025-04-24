@@ -8,12 +8,73 @@ interface NodeProps {
   nodeflowData: NodeflowData;
 }
 
+const addConnector = (
+  sectionDiv: HTMLDivElement,
+  nodeflowData: NodeflowData,
+  nodeId: string,
+  sectionId: string,
+  connectorId: string,
+) => {
+  const node = nodeflowData.nodes.get(nodeId);
+  if (!node) return;
+
+  const section = node.connectorSections.get(sectionId);
+  if (!section) return;
+
+  const connector = section.connectors.get(connectorId);
+  if (!connector) return;
+
+  const connectorEl = Connector({
+    connector,
+    connectorId,
+    nodeId,
+    sectionId,
+    nodeflowData,
+  });
+
+  if (!connectorEl) return;
+
+  sectionDiv.appendChild(connectorEl);
+
+  return connectorEl;
+};
+
+const addConnectorSection = (
+  nodeDiv: HTMLDivElement,
+  nodeflowData: NodeflowData,
+  nodeId: string,
+  sectionId: string,
+) => {
+  const node = nodeflowData.nodes.get(nodeId);
+  if (!node) return;
+
+  const section = node.connectorSections.get(sectionId);
+  if (!section) return;
+
+  const sectionDiv = document.createElement("div");
+  sectionDiv.classList.add("nodeflowConnectorSection");
+  sectionDiv.id = `section-${sectionId}`;
+
+  if (section?.css) {
+    sectionDiv.classList.add(section.css);
+  }
+
+  Array.from(section.connectors.values()).forEach((connector) => {
+    addConnector(sectionDiv, nodeflowData, nodeId, sectionId, connector.id);
+  });
+
+  nodeDiv.appendChild(sectionDiv);
+
+  return sectionDiv;
+};
+
 const NodeflowNode = (props: NodeProps): HTMLDivElement => {
-  // TODO: REACTIVITY
   const node = props.nodeflowData.nodes.get(props.nodeId)!;
+
+  // TODO: REIMPLEMENT
   // let isVisible = false;
 
-  // TODO: REACTIVITY
+  // TODO: REIMPLEMENT
   // onCleanup(() => {
   //   props.nodeflowData.chunking.removeNodeFromChunk(
   //     props.nodeId,
@@ -34,43 +95,29 @@ const NodeflowNode = (props: NodeProps): HTMLDivElement => {
 
   const div = document.createElement("div");
 
-  // when the element is loaded
-  div.addEventListener("load", () => {
-    const resizeObserver = new ResizeObserver(() => {
-      node.update({
-        // update the size of the node
-        size: Vec2.of(div.clientWidth, div.clientHeight),
-      });
+  div.style.left = `${node.position.x}px`;
+  div.style.top = `${node.position.y}px`;
 
-      // update the position of the connectors
-      Array.from(node.connectorSections.values()).forEach((section) =>
-        Array.from(section.connectors.values()).forEach((connector) => {
-          const connectorEl = connector.ref;
-          if (!connectorEl) return;
-
-          connector.position = Vec2.of(
-            (connectorEl?.parentElement?.offsetLeft ?? 0) +
-              connectorEl.offsetLeft,
-            (connectorEl?.parentElement?.offsetTop ?? 0) +
-              connectorEl.offsetTop,
-          );
-        }),
-      );
-    });
-    resizeObserver.observe(div);
-
-    const positionOffset = node.centered
-      ? Vec2.of(div.clientWidth, div.clientHeight).divideBy(2)
-      : Vec2.zero();
-
+  const resizeObserver = new ResizeObserver(() => {
     node.update({
-      offset: Vec2.of(div.clientLeft, div.clientTop),
-      resizeObserver,
-      position: node.position.subtract(positionOffset),
       size: Vec2.of(div.clientWidth, div.clientHeight),
     });
+  });
 
-    // isVisible = true;
+  Array.from(node.connectorSections.values()).forEach((section) => {
+    addConnectorSection(div, props.nodeflowData, props.nodeId, section.id);
+  });
+  resizeObserver.observe(div);
+
+  const positionOffset = node.centered
+    ? Vec2.of(div.clientWidth, div.clientHeight).divideBy(2)
+    : Vec2.zero();
+
+  node.update({
+    offset: Vec2.of(div.clientLeft, div.clientTop),
+    resizeObserver,
+    position: node.position.subtract(positionOffset),
+    size: Vec2.of(div.clientWidth, div.clientHeight),
   });
 
   div.id = `node-${props.nodeId}`;
@@ -120,28 +167,44 @@ const NodeflowNode = (props: NodeProps): HTMLDivElement => {
     div.appendChild(nodeDisplay);
   }
 
-  node.connectorSections.entries().forEach(([sectionId, section]) => {
-    const sectionDiv = document.createElement("div");
-    sectionDiv.classList.add(section?.css ?? "nodeflowConnectorSection");
-    sectionDiv.id = `section-${sectionId}`;
+  props.nodeflowData.eventStore.onConnectorSectionAdded.subscribe(
+    `nodeflow-node-${props.nodeId}-section-added`,
+    ({ nodeId, sectionId }) => {
+      if (nodeId !== props.nodeId) return;
 
-    if (section?.css) {
-      sectionDiv.classList.add(section.css);
-    }
+      addConnectorSection(div, props.nodeflowData, nodeId, sectionId);
+    },
+  );
 
-    section.connectors.entries().forEach(([connectorId, connector]) => {
-      const connectorEl = Connector({
-        connector,
-        connectorId,
-        nodeId: props.nodeId,
+  props.nodeflowData.eventStore.onConnectorAdded.subscribe(
+    `nodeflow-node-${props.nodeId}`,
+    ({ nodeId, sectionId, connectorId }) => {
+      if (nodeId !== props.nodeId) return;
+
+      const sectionDiv = div.querySelector<HTMLDivElement>(
+        `#section-${sectionId}`,
+      );
+      if (!sectionDiv) return;
+
+      addConnector(
+        sectionDiv,
+        props.nodeflowData,
+        nodeId,
         sectionId,
-        nodeflowData: props.nodeflowData,
-      });
-      sectionDiv.appendChild(connectorEl);
-    });
+        connectorId,
+      );
+    },
+  );
 
-    div.appendChild(sectionDiv);
-  });
+  props.nodeflowData.eventStore.onNodeMoved.subscribe(
+    `nodeflow-node-${props.nodeId}`,
+    ({ nodeId, position }) => {
+      if (nodeId === props.nodeId) {
+        div.style.left = `${position.x}px`;
+        div.style.top = `${position.y}px`;
+      }
+    },
+  );
 
   return div;
 };

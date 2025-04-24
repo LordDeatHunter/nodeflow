@@ -64,16 +64,11 @@ const NodeflowCanvas =
 
     const nodeflowDiv = document.createElement("div");
     nodeflowDiv.style.position = "absolute";
-    nodeflowDiv.style.transform = `scale(${nodeflowData.zoomLevel}) translate(${nodeflowData.position.x}px, ${nodeflowData.position.y}px)`;
     nodeflowDiv.style.transformOrigin = "center";
     nodeflowDiv.style.transition = "scale 0.1s ease-out";
+    nodeflowDiv.style.transform = `scale(${nodeflowData.zoomLevel}) translate(${nodeflowData.position.x}px, ${nodeflowData.position.y}px)`;
 
-    nodeflowData.nodes.forEach((node) => {
-      const nodeDiv = NodeflowNode({ nodeId: node.id, nodeflowData });
-      nodeflowDiv.appendChild(nodeDiv);
-    });
-
-    const svg = document.createElement("svg");
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.style.zIndex = "2";
     svg.style.position = "absolute";
     svg.style.width = "1px";
@@ -82,27 +77,109 @@ const NodeflowCanvas =
     svg.style.overflow = "visible";
     nodeflowDiv.appendChild(svg);
 
-    nodeflowData.nodes.entries().forEach(([nodeId, node]) => {
-      node.getAllConnectors().forEach((connector) => {
-        connector.destinations.forEach((outputConnection) => {
-          const curve = NodeCurve({
-            nodeflowData,
-            sourceNodeId: nodeId,
-            sourceConnectorId: connector.id,
-            destinationNodeId:
-              outputConnection.destinationConnector.parentSection.parentNode.id,
-            destinationConnectorId: outputConnection.destinationConnector.id,
-            css: outputConnection.css,
-          });
-          svg.appendChild(curve);
+    nodeflowData.eventStore.onNodeAdded.subscribe(
+      "nodeflow-canvas",
+      ({ nodeId }) => {
+        const nodeDiv = NodeflowNode({ nodeId, nodeflowData });
+        nodeflowDiv.insertBefore(nodeDiv, svg);
+      },
+    );
+
+    nodeflowData.eventStore.onNodeRemoved.subscribe(
+      "nodeflow-canvas",
+      ({ nodeId }) => {
+        const nodeDiv = document.getElementById(`node-${nodeId}`);
+        if (nodeDiv) {
+          nodeflowDiv.removeChild(nodeDiv);
+        }
+
+        const curves = Array.from(svg.children).filter((child) =>
+          child.classList.contains("nodeflow-connection"),
+        );
+
+        curves.forEach((curve) => {
+          const sourceNodeId = curve.getAttribute("data-source-node-id");
+          const destinationNodeId = curve.getAttribute(
+            "data-destination-node-id",
+          );
+          if (sourceNodeId === nodeId || destinationNodeId === nodeId) {
+            svg.removeChild(curve);
+          }
         });
-      });
-    });
+      },
+    );
 
-    nodeflowDiv.appendChild(svg);
+    // nodeflowData.nodes.entries().forEach(([nodeId, node]) => {
+    //   node.getAllConnectors().forEach((connector) => {
+    //     connector.destinations.forEach((outputConnection) => {
+    //       const curve = NodeCurve({
+    //         nodeflowData,
+    //         sourceNodeId: nodeId,
+    //         sourceConnectorId: connector.id,
+    //         destinationNodeId:
+    //           outputConnection.destinationConnector.parentSection.parentNode.id,
+    //         destinationConnectorId: outputConnection.destinationConnector.id,
+    //         css: outputConnection.css,
+    //       });
+    //       svg.appendChild(curve);
+    //     });
+    //   });
+    // });
 
+    nodeflowData.eventStore.onConnectionAdded.subscribe(
+      "nodeflow-canvas",
+      ({
+        sourceNodeId,
+        sourceConnectorId,
+        destinationNodeId,
+        destinationConnectorId,
+      }) => {
+        const curve = NodeCurve({
+          nodeflowData,
+          sourceNodeId,
+          sourceConnectorId,
+          destinationNodeId,
+          destinationConnectorId,
+          // TODO: REIMPLEMENT
+          css: {
+            normal: "nodeflow-connection",
+            selected: "nodeflow-connection-selected",
+          },
+        });
+        svg.appendChild(curve);
+      },
+    );
+
+    nodeflowData.eventStore.onConnectionRemoved.subscribe(
+      "nodeflow-canvas",
+      ({ sourceNodeId, destinationNodeId }) => {
+        Array.from(svg.children)
+          .filter((child) => child.classList.contains("nodeflow-connection"))
+          .forEach((curve) => {
+            const sourceNodeIdAttr = curve.getAttribute("data-source-node-id");
+            const destinationNodeIdAttr = curve.getAttribute(
+              "data-destination-node-id",
+            );
+
+            if (
+              sourceNodeIdAttr === sourceNodeId &&
+              destinationNodeIdAttr === destinationNodeId
+            ) {
+              svg.removeChild(curve);
+            }
+          });
+      },
+    );
+
+    nodeflowData.eventStore.onNodeflowMoved.subscribe(
+      "nodeflow-canvas",
+      ({ position }) => {
+        nodeflowDiv.style.transform = `scale(${nodeflowData.zoomLevel}) translate(${position.x}px, ${position.y}px)`;
+      },
+    );
+
+    // TODO: REIMPLEMENT
     // const selectionBox = SelectionBox({ nodeflowData });
-    // TODO: REACTIVITY
     // nodeflowDiv.appendChild(selectionBox);
 
     mainDiv.appendChild(nodeflowDiv);

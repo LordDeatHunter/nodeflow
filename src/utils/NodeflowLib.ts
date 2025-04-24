@@ -54,14 +54,15 @@ export default class NodeflowLib {
   }
 
   private setupDefaultEventHandlers() {
-    document.onmousemove = (event) =>
-      this.globalEventStore.onMouseMoveInDocument.publish({ event });
-
-    document.onpointerleave = (event) =>
-      this.globalEventStore.onPointerLeaveFromDocument.publish({ event });
-
-    document.onpointerup = (event) =>
-      this.globalEventStore.onPointerUpInDocument.publish({ event });
+    document.addEventListener("mousemove", (event) =>
+      this.globalEventStore.onMouseMoveInDocument.publish({ event }),
+    );
+    document.addEventListener("pointerleave", (event) =>
+      this.globalEventStore.onPointerLeaveFromDocument.publish({ event }),
+    );
+    document.addEventListener("pointerup", (event) =>
+      this.globalEventStore.onPointerUpInDocument.publish({ event }),
+    );
 
     this.globalEventStore.onMouseMoveInDocument.subscribeMultiple([
       {

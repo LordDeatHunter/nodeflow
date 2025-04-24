@@ -1,5 +1,15 @@
-import { ConnectionType, DeepPartial, NodeflowDataType } from "./index";
-import { DocumentEventPublisher, NodeflowEventPublisher } from "../utils";
+import {
+  ConnectionType,
+  DeepPartial,
+  NodeflowDataType,
+  Optional,
+} from "./index";
+import {
+  CustomNodeData,
+  DocumentEventPublisher,
+  NodeflowEventPublisher,
+  Vec2,
+} from "../utils";
 
 export interface NodeConnectedEventData {
   outputNodeId: string;
@@ -56,6 +66,10 @@ export interface NodeflowEventsDataMap {
   onMouseMoveInNodeflow: { event: MouseEvent };
   onNodeConnected: NodeConnectedEventData;
   onNodeDataChanged: { nodeId: string; data: DeepPartial<NodeflowDataType> };
+  onNodeCustomDataChanged: {
+    nodeId: string;
+    customData: Optional<CustomNodeData>;
+  };
   onPointerDownInNodeCurve: NodeCurvePointerDownEventData;
   onPointerUpInConnector: NodeConnectorPointerUpEventData;
   onPointerUpInNode: { nodeId: string; event: PointerEvent };
@@ -65,6 +79,34 @@ export interface NodeflowEventsDataMap {
   onTouchStartInNode: NodeTouchStartEventData;
   onTouchStartInNodeflow: { event: TouchEvent };
   onWheelInNodeflow: { event: WheelEvent };
+  onNodeAdded: { nodeId: string };
+  onNodeRemoved: { nodeId: string };
+  onNodeflowMoved: { position: Vec2 };
+  onNodeMoved: { nodeId: string; position: Vec2 };
+  onConnectorSectionAdded: { nodeId: string; sectionId: string };
+  onConnectorSectionRemoved: { nodeId: string; sectionId: string };
+  onConnectorAdded: {
+    nodeId: string;
+    sectionId: string;
+    connectorId: string;
+  };
+  onConnectorRemoved: {
+    nodeId: string;
+    sectionId: string;
+    connectorId: string;
+  };
+  onConnectionAdded: {
+    sourceNodeId: string;
+    sourceConnectorId: string;
+    destinationNodeId: string;
+    destinationConnectorId: string;
+  };
+  onConnectionRemoved: {
+    sourceNodeId: string;
+    sourceConnectorId: string;
+    destinationNodeId: string;
+    destinationConnectorId: string;
+  };
 }
 
 export type NodeflowEvent<T extends keyof NodeflowEventsDataMap> = (

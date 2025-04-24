@@ -24,6 +24,7 @@ export default class NodeflowNodeData {
     this.store = data;
     this.nodeflowData.chunking.addNodeToChunk(this.id, this.getCenter());
 
+    // TODO: REACTIVITY
     // createEffect(() => {
     //   const collidingNodes = this.getCollidingNodes();
     //   if (collidingNodes.length > 0) {
@@ -113,6 +114,11 @@ export default class NodeflowNodeData {
 
   public set customData(value) {
     this.store.customData = value;
+
+    this.nodeflowData.eventStore.onNodeCustomDataChanged.publish({
+      nodeId: this.id,
+      customData: value,
+    });
   }
 
   public set display(value) {
@@ -130,6 +136,11 @@ export default class NodeflowNodeData {
   public set position(value) {
     const oldPos = this.position;
     this.store.position = value;
+
+    this.nodeflowData.eventStore.onNodeMoved.publish({
+      nodeId: this.id,
+      position: value,
+    });
 
     this.nodeflowData.chunking.updateNodeInChunk(this.id, oldPos, value);
   }
@@ -266,6 +277,11 @@ export default class NodeflowNodeData {
 
     this.connectorSections.set(section.id, section);
 
+    this.nodeflowData.eventStore.onConnectorSectionAdded.publish({
+      nodeId: this.id,
+      sectionId: section.id,
+    });
+
     return section;
   }
 
@@ -305,6 +321,11 @@ export default class NodeflowNodeData {
     }
 
     this.connectorSections.delete(sectionId);
+
+    this.nodeflowData.eventStore.onConnectorSectionRemoved.publish({
+      nodeId: this.id,
+      sectionId,
+    });
   }
 
   public getConnectorCount() {
@@ -340,6 +361,12 @@ export default class NodeflowNodeData {
     this.connectorSections
       .get(sectionId)!
       .removeConnector(connectorId, hasHistoryGroup);
+
+    this.nodeflowData.eventStore.onConnectorRemoved.publish({
+      nodeId: this.id,
+      sectionId,
+      connectorId,
+    });
   }
 
   public getConnector(connectorId: string): Optional<NodeConnector> {

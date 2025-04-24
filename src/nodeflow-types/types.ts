@@ -1,4 +1,4 @@
-import Vec2, {Vec2Hash} from "../utils/data/Vec2";
+import Vec2, { Vec2Hash } from "../utils/data/Vec2";
 import ConnectorSection from "../utils/data/ConnectorSection";
 import NodeflowNodeData from "../utils/data/NodeflowNodeData";
 import NodeConnector from "../utils/data/NodeConnector";
@@ -75,7 +75,7 @@ export type SelectableElement =
 
 export type DisplayFunc = (props: {
   node: NodeflowNodeData;
-}) => Optional<HTMLElement>;
+}) => Optional<HTMLElement> | null;
 
 export type NodeflowNodeType = {
   centered: boolean;

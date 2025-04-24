@@ -167,6 +167,10 @@ export default class NodeConnector {
     this.store.customData = value;
   }
 
+  public set ref(value) {
+    this.store.ref = value;
+  }
+
   public update(data: Partial<NodeConnectorType>) {
     this.store = {
       ...this.store,

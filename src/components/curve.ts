@@ -79,7 +79,7 @@ const createCurveData = (props: CurveProps): Partial<PathData> => {
 const createCurve = (props: CurveProps) => {
   const curveData = createCurveData(props);
 
-  const svg = document.createElement("svg") as unknown as SVGSVGElement;
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.style.zIndex = "2";
   svg.style.position = "absolute";
   svg.style.width = "1px";

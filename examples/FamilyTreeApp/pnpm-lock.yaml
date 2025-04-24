@@ -4,12 +4,15 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  nodeflow-lib: link:../..
+
 importers:
 
   .:
     dependencies:
       nodeflow-lib:
-        specifier: 0.0.9
+        specifier: link:../..
         version: link:../..
       solid-js:
         specifier: ^1.9.3

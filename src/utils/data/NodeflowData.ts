@@ -134,6 +134,8 @@ export default class NodeflowData {
         new NodeflowEventPublisher<"onMouseMoveInNodeflow">(this),
       onNodeConnected: new NodeflowEventPublisher<"onNodeConnected">(this),
       onNodeDataChanged: new NodeflowEventPublisher<"onNodeDataChanged">(this),
+      onNodeCustomDataChanged:
+        new NodeflowEventPublisher<"onNodeCustomDataChanged">(this),
       onPointerDownInNodeCurve:
         new NodeflowEventPublisher<"onPointerDownInNodeCurve">(this),
       onPointerUpInConnector:
@@ -151,6 +153,22 @@ export default class NodeflowData {
       onTouchStartInNodeflow:
         new NodeflowEventPublisher<"onTouchStartInNodeflow">(this),
       onWheelInNodeflow: new NodeflowEventPublisher<"onWheelInNodeflow">(this),
+      onNodeAdded: new NodeflowEventPublisher<"onNodeAdded">(this),
+      onNodeRemoved: new NodeflowEventPublisher<"onNodeRemoved">(this),
+      onNodeflowMoved: new NodeflowEventPublisher<"onNodeflowMoved">(this),
+      onNodeMoved: new NodeflowEventPublisher<"onNodeMoved">(this),
+      onConnectorAdded: new NodeflowEventPublisher<"onConnectorAdded">(this),
+      onConnectorRemoved: new NodeflowEventPublisher<"onConnectorRemoved">(
+        this,
+      ),
+      onConnectorSectionAdded:
+        new NodeflowEventPublisher<"onConnectorSectionAdded">(this),
+      onConnectorSectionRemoved:
+        new NodeflowEventPublisher<"onConnectorSectionRemoved">(this),
+      onConnectionAdded: new NodeflowEventPublisher<"onConnectionAdded">(this),
+      onConnectionRemoved: new NodeflowEventPublisher<"onConnectionRemoved">(
+        this,
+      ),
     };
     this.setupDefaultEventHandlers();
   }
@@ -307,6 +325,10 @@ export default class NodeflowData {
 
   set position(value: Vec2) {
     this.store.position = value;
+
+    this.eventStore.onNodeflowMoved.publish({
+      position: value,
+    });
   }
 
   set startPosition(value: Vec2) {
@@ -451,8 +473,8 @@ export default class NodeflowData {
       .subtract(newScreenSize.divideBy(2))
       .divideBy(newZoom);
 
-    this.position = this.position.subtract(oldOffset).add(newOffset);
     this.zoomLevel = newZoom;
+    this.position = this.position.subtract(oldOffset).add(newOffset);
   };
 
   /**
@@ -517,6 +539,8 @@ export default class NodeflowData {
         historyGroup: historyGroup as string,
       });
     }
+
+    this.eventStore.onNodeAdded.publish({ nodeId: node.id });
 
     return node;
   }
@@ -619,6 +643,8 @@ export default class NodeflowData {
     this.removeOutgoingConnections(nodeId);
 
     this.nodes.delete(nodeId);
+
+    this.eventStore.onNodeRemoved.publish({ nodeId });
   }
 
   /**
@@ -810,6 +836,13 @@ export default class NodeflowData {
         sourceConnector,
       }),
     );
+
+    this.eventStore.onConnectionAdded.publish({
+      sourceNodeId,
+      sourceConnectorId,
+      destinationNodeId,
+      destinationConnectorId,
+    });
   }
 
   /**
@@ -896,6 +929,13 @@ export default class NodeflowData {
     destinationConnector.sources = destinationConnector.sources.filter(
       (source) => source.sourceConnector.parentNode.id !== sourceNodeId,
     );
+
+    this.eventStore.onConnectionRemoved.publish({
+      sourceNodeId,
+      sourceConnectorId,
+      destinationNodeId,
+      destinationConnectorId,
+    });
   }
 
   /**

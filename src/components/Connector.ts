@@ -12,6 +12,7 @@ interface ConnectorProps {
 
 const createConnector = (props: ConnectorProps) => {
   const div = document.createElement("div");
+  div.classList.add("nodeflowConnector");
   if (props.connector.css) {
     div.classList.add(props.connector.css);
   }
@@ -37,6 +38,7 @@ const createConnector = (props: ConnectorProps) => {
       ),
       resizeObserver,
       size: Vec2.of(div.offsetWidth, div.offsetHeight),
+      ref: div,
     });
   });
 

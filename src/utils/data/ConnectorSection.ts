@@ -107,6 +107,12 @@ export default class ConnectorSection {
 
     this.connectors.set(connector.id, connector);
 
+    this.nodeflowData.eventStore.onConnectorAdded.publish({
+      nodeId: this.parentNode.id,
+      sectionId: this.id,
+      connectorId: connector.id,
+    });
+
     return connector;
   }
 

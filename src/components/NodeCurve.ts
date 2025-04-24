@@ -15,70 +15,75 @@ const NodeCurve = (props: NodeCurveProps) => {
   const startNode = () => props.nodeflowData.nodes.get(props.sourceNodeId)!;
   const endNode = () => props.nodeflowData.nodes.get(props.destinationNodeId)!;
 
-  const sourceConnector = () =>
+  const getSourceConnector = () =>
     startNode().getConnector(props.sourceConnectorId);
-  const destinationConnector = () =>
+  const getDestinationConnector = () =>
     endNode().getConnector(props.destinationConnectorId);
 
-  const destinationIndex = () =>
+  const getDestinationIndex = () =>
     !startNode() || !endNode()
       ? -1
-      : sourceConnector()?.destinations?.findIndex(
+      : getSourceConnector()?.destinations?.findIndex(
           (destination) =>
-            destination.destinationConnector === destinationConnector(),
+            destination.destinationConnector === getDestinationConnector(),
         ) ?? -1;
-
-  // TODO: REACTIVITY
-  // createEffect(() => {
-  //   if (destinationIndex() < 0) {
-  //     return;
-  //   }
-  //   const { curveFunctions } = props.nodeflowData;
-  //
-  //   const output = startNode().getConnector(props.sourceConnectorId)!;
-  //   const input = endNode().getConnector(props.destinationConnectorId)!;
-  //
-  //   const start = output.getCenter();
-  //   const end = input.getCenter();
-  //
-  //   const { anchorStart, anchorEnd } = curveFunctions.calculateCurveAnchors(
-  //     start,
-  //     end,
-  //     startNode().getCenter(),
-  //     endNode().getCenter(),
-  //   );
-  //
-  //   sourceConnector()!.destinations.get(destinationIndex()).path = {
-  //     start,
-  //     end,
-  //     anchorStart,
-  //     anchorEnd,
-  //     path: curveFunctions.createDefaultCurvePath(
-  //       start,
-  //       end,
-  //       anchorStart,
-  //       anchorEnd,
-  //     ),
-  //   };
-  // });
 
   const pathSvg = document.createElementNS(
     "http://www.w3.org/2000/svg",
     "path",
   );
 
-  const path = sourceConnector()!.destinations.at(destinationIndex())?.path
-    ?.path;
+  pathSvg.setAttribute("data-source-node-id", props.sourceNodeId);
+  pathSvg.setAttribute("data-source-connector-id", props.sourceConnectorId);
+  pathSvg.setAttribute("data-destination-node-id", props.destinationNodeId);
+  pathSvg.setAttribute(
+    "data-destination-connector-id",
+    props.destinationConnectorId,
+  );
 
+  const sourceConnector = getSourceConnector()!;
+  const destinationConnector = getDestinationConnector()!;
+
+  const destinationIndex = getDestinationIndex();
+  if (
+    destinationIndex < 0 ||
+    destinationIndex >= sourceConnector.destinations.length
+  ) {
+    return pathSvg;
+  }
+
+  const start = sourceConnector.getCenter();
+  const end = destinationConnector.getCenter();
+  const { anchorStart, anchorEnd } =
+    props.nodeflowData.curveFunctions.calculateCurveAnchors(
+      start,
+      end,
+      startNode().getCenter(),
+      endNode().getCenter(),
+    );
+  const path = props.nodeflowData.curveFunctions.createDefaultCurvePath(
+    start,
+    end,
+    anchorStart,
+    anchorEnd,
+  );
   if (path) {
+    sourceConnector.destinations[destinationIndex].path = {
+      start,
+      end,
+      anchorStart,
+      anchorEnd,
+      path,
+    };
     pathSvg.setAttribute("d", path);
   }
+
   pathSvg.setAttribute("stroke", "black");
   pathSvg.setAttribute("stroke-width", "1");
   pathSvg.setAttribute("fill", "none");
 
   pathSvg.style.cursor = "pointer";
-  pathSvg.style.pointerEvents = "visibleStroke";
+  pathSvg.style.pointerEvents = "visiblestroke";
 
   if (
     props.css?.selected &&
@@ -99,10 +104,49 @@ const NodeCurve = (props: NodeCurveProps) => {
   pathSvg.addEventListener("pointerdown", (event) => {
     props.nodeflowData.eventStore.onPointerDownInNodeCurve.publish({
       event,
-      sourceConnector: sourceConnector()!,
-      destinationConnector: destinationConnector()!,
+      sourceConnector,
+      destinationConnector,
     });
   });
+
+  props.nodeflowData.eventStore.onNodeMoved.subscribe(
+    `nodeflow-curve-${props.sourceNodeId}-${props.destinationNodeId}-${props.sourceConnectorId}-${props.destinationConnectorId}`,
+    ({ nodeId }) => {
+      if (nodeId !== props.sourceNodeId && nodeId !== props.destinationNodeId) {
+        return;
+      }
+
+      if (!sourceConnector || !destinationConnector) {
+        return;
+      }
+
+      const start = sourceConnector.getCenter();
+      const end = destinationConnector.getCenter();
+      const { anchorStart, anchorEnd } =
+        props.nodeflowData.curveFunctions.calculateCurveAnchors(
+          start,
+          end,
+          startNode().getCenter(),
+          endNode().getCenter(),
+        );
+      const path = props.nodeflowData.curveFunctions.createDefaultCurvePath(
+        start,
+        end,
+        anchorStart,
+        anchorEnd,
+      );
+
+      sourceConnector.destinations[destinationIndex].path = {
+        start,
+        end,
+        anchorStart,
+        anchorEnd,
+        path,
+      };
+
+      pathSvg.setAttribute("d", path);
+    },
+  );
 
   // return (
   //   <Show when={props.nodeflowData.settings.debugMode}>

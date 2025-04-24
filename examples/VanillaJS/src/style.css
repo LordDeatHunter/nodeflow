@@ -1,0 +1,106 @@
+:root {
+  background-color: #161616;
+  color: #aeaeae;
+}
+
+body {
+  min-width: 100vw;
+  min-height: 100vh;
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+  margin: 0;
+  font-family: monospace;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: fixed;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #161616;
+    background-color: #aeaeae;
+  }
+}
+
+.nodeflow-connection {
+  stroke: #d6d9da;
+  stroke-width: 2px;
+}
+
+.nodeflow-connection-selected {
+  stroke: #ffcc00;
+  stroke-width: 2px;
+}
+
+.nodeflowNode {
+  width: max-content;
+  min-width: 300px;
+  min-height: 100px;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #202528;
+  outline: 6px solid #aeaeae;
+  font-size: 24px;
+  outline-offset: -3px;
+
+  transition:
+    background-color 0.2s ease-in-out 0s,
+    opacity 0.8s ease-in-out,
+    border-color 0.2s ease-in-out 0s;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.nodeflowConnectorSection {
+  position: absolute;
+  display: flex;
+  justify-content: space-evenly;
+  width: 100%;
+  height: 0;
+  top: unset;
+  left: unset;
+}
+
+.nodeflowConnector {
+  position: relative;
+  width: 24px;
+  height: 24px;
+
+  outline: 2px solid #1c1c1c;
+  outline-offset: -3px;
+}
+
+.inputsSection {
+  top: calc((1rem + 6px) / -2);
+}
+
+.outputsSection {
+  bottom: calc((1rem + 6px) / -2);
+}
+
+.inputsSection .nodeflowConnector {
+  border-radius: 0.75rem 0.75rem 0 0;
+  bottom: 9px;
+
+  background-color: #ff4444;
+
+  &:hover {
+    background-color: #cc6666;
+  }
+}
+
+.outputsSection .nodeflowConnector {
+  border-radius: 0 0 0.75rem 0.75rem;
+  top: -9px;
+  cursor: crosshair;
+
+  background-color: #44ff44;
+
+  &:hover {
+    background-color: #66cc66;
+  }
+}
