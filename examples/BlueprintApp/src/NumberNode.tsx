@@ -1,5 +1,5 @@
-import { Component, createMemo, onMount } from "solid-js";
-import { CustomNodeData, NodeflowNodeData } from "nodeflow-lib";
+import { createMemo, onMount } from "solid-js";
+import { CustomNodeData, DisplayFunc, NodeflowNodeData } from "nodeflow-lib";
 import NumberConnector from "./data/NumberConnector";
 
 export class NumberNodeData extends CustomNodeData {
@@ -18,7 +18,7 @@ export class NumberNodeData extends CustomNodeData {
   }
 }
 
-const NumberNode: Component<{ node: NodeflowNodeData }> = (props) => {
+const NumberNode: DisplayFunc = (props: { node: NodeflowNodeData }) => {
   const number = createMemo(
     () => (props.node.customData as NumberNodeData).value,
   );
@@ -71,7 +71,7 @@ const NumberNode: Component<{ node: NodeflowNodeData }> = (props) => {
         onMouseDown={(e) => e.stopPropagation()}
       />
     </div>
-  );
+  ) as HTMLDivElement;
 };
 
 export default NumberNode;

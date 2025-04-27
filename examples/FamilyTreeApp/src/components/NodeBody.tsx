@@ -1,7 +1,6 @@
 import { NodeflowNodeData, type DisplayFunc } from "nodeflow-lib";
 import nodeCss from "../styles/node.module.scss";
 
-// return a "p" html element
 const NodeBody: DisplayFunc = (props: { node: NodeflowNodeData }) => {
   const p = document.createElement("p");
   p.classList.add(nodeCss.nodeFont);

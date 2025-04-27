@@ -1,5 +1,11 @@
-import { type Component, createSignal, onMount } from "solid-js";
-import { NodeConnector, NodeflowData, NodeflowLib } from "nodeflow-lib";
+import { type Component, onMount } from "solid-js";
+import {
+  getWindowSize,
+  NodeConnector,
+  NodeflowData,
+  NodeflowLib,
+  onWindowResize,
+} from "nodeflow-lib";
 import curveCss from "./styles/curve.module.scss";
 import nodeflowCss from "./styles/nodeflow.module.scss";
 import { setupDummyConnections, setupDummyNodes, setupEvents } from "./utils";
@@ -8,12 +14,6 @@ import SidebarContent from "./components/SidebarContent";
 import { FamilyTreeConstants } from "./Constants";
 import { FTCurveFunctions } from "./FTCurveFunctions";
 import FamilyMember from "../FamilyMember";
-import { getWindowSize, onWindowResize, Vec2 } from "../../../src";
-
-const [windowSize, setWindowSize] = createSignal<Vec2>(getWindowSize());
-onWindowResize(() => {
-  setWindowSize(getWindowSize());
-});
 
 const [nodeflowData, Nodeflow] = NodeflowLib.get().createCanvas(
   FamilyTreeConstants.MAIN_NODEFLOW,
@@ -40,13 +40,21 @@ const App: Component = () => {
       : curveCss.newMotherCurve;
   };
 
+  const nodeflowDivRef = Nodeflow({
+    css: { getNewCurveCss, nodeflow: nodeflowCss.nodeflow },
+    width: `${getWindowSize().x}px`,
+    height: `${getWindowSize().y}px`,
+  });
+
+  onWindowResize((size) => {
+    if (!nodeflowDivRef) return;
+    nodeflowDivRef.style.width = `${size.x}px`;
+    nodeflowDivRef.style.height = `${size.y}px`;
+  });
+
   return (
     <>
-      <Nodeflow
-        css={{ getNewCurveCss, nodeflow: nodeflowCss.nodeflow }}
-        width={`${windowSize().x}px`}
-        height={`${windowSize().y}px`}
-      />
+      {nodeflowDivRef}
       <Sidebar>
         <SidebarContent />
       </Sidebar>

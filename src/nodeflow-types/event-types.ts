@@ -107,6 +107,12 @@ export interface NodeflowEventsDataMap {
     destinationNodeId: string;
     destinationConnectorId: string;
   };
+  onMousePositionChanged: { position: Vec2 };
+  onConnectorCustomDataChanged: {
+    nodeId: string;
+    connectorId: string;
+    customData: Optional<CustomNodeData>;
+  };
 }
 
 export type NodeflowEvent<T extends keyof NodeflowEventsDataMap> = (

@@ -165,6 +165,12 @@ export default class NodeConnector {
 
   public set customData(value) {
     this.store.customData = value;
+
+    this.parentNode.nodeflow.eventStore.onConnectorCustomDataChanged.publish({
+      nodeId: this.parentNode.id,
+      connectorId: this.id,
+      customData: value,
+    });
   }
 
   public set ref(value) {

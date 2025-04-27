@@ -1,6 +1,11 @@
-import { Component, createMemo, Show } from "solid-js";
-import { CustomNodeData, NodeflowNodeData, Optional } from "nodeflow-lib";
-import NumberConnector from "./data/NumberConnector";
+import { createSignal, Show } from "solid-js";
+import {
+  CustomNodeData,
+  DisplayFunc,
+  NodeflowNodeData,
+  Optional,
+} from "nodeflow-lib";
+import { nodeflowData } from "./App";
 
 export class DisplayNodeData extends CustomNodeData {
   public serialize(): CustomNodeflowDataType {
@@ -10,11 +15,19 @@ export class DisplayNodeData extends CustomNodeData {
   }
 }
 
-const DisplayNode: Component<{ node: NodeflowNodeData }> = (props) => {
-  const connectorData = createMemo(
-    () =>
-      props.node.getConnector("input-0")?.sources.get(0)?.sourceConnector
-        .customData as Optional<NumberConnector>,
+const DisplayNode: DisplayFunc = (props: { node: NodeflowNodeData }) => {
+  const [connectorData, setConnectorData] = createSignal<Optional<number>>();
+  nodeflowData.eventStore.onConnectorCustomDataChanged.subscribe(
+    `display-node-${props.node.id}`,
+    (data) => {
+      console.log("data", props.node.id, data);
+      if (data.nodeId !== props.node.id || data.connectorId !== "input-0")
+        return;
+      const connector =
+        props.node.getConnector("input-0")?.sources[0]?.sourceConnector;
+      if (!connector) return;
+      setConnectorData(connector.customData as Optional<number>);
+    },
   );
 
   return (
@@ -33,7 +46,7 @@ const DisplayNode: Component<{ node: NodeflowNodeData }> = (props) => {
         </div>
       </Show>
     </div>
-  );
+  ) as HTMLDivElement;
 };
 
 export default DisplayNode;

@@ -15,16 +15,13 @@ const NodeflowCanvas =
   (props: NodeflowProps): HTMLDivElement => {
     const mainDiv = document.createElement("div");
 
-    // TODO: REACTIVITY
-    mainDiv.addEventListener("load", () => {
-      const resizeObserver = new ResizeObserver(() => {
-        nodeflowData.update({
-          size: Vec2.of(mainDiv.clientWidth, mainDiv.clientHeight),
-          startPosition: Vec2.of(mainDiv.offsetLeft, mainDiv.offsetTop),
-        });
+    const resizeObserver = new ResizeObserver(() => {
+      nodeflowData.update({
+        size: Vec2.of(mainDiv.clientWidth, mainDiv.clientHeight),
+        startPosition: Vec2.of(mainDiv.offsetLeft, mainDiv.offsetTop),
       });
-      resizeObserver.observe(mainDiv);
     });
+    resizeObserver.observe(mainDiv);
 
     mainDiv.id = `nodeflow-${nodeflowData.id}`;
     mainDiv.tabIndex = 0;
@@ -108,23 +105,6 @@ const NodeflowCanvas =
         });
       },
     );
-
-    // nodeflowData.nodes.entries().forEach(([nodeId, node]) => {
-    //   node.getAllConnectors().forEach((connector) => {
-    //     connector.destinations.forEach((outputConnection) => {
-    //       const curve = NodeCurve({
-    //         nodeflowData,
-    //         sourceNodeId: nodeId,
-    //         sourceConnectorId: connector.id,
-    //         destinationNodeId:
-    //           outputConnection.destinationConnector.parentSection.parentNode.id,
-    //         destinationConnectorId: outputConnection.destinationConnector.id,
-    //         css: outputConnection.css,
-    //       });
-    //       svg.appendChild(curve);
-    //     });
-    //   });
-    // });
 
     nodeflowData.eventStore.onConnectionAdded.subscribe(
       "nodeflow-canvas",

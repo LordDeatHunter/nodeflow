@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, onMount } from "solid-js";
+import { createEffect, createMemo, onMount } from "solid-js";
 import { CustomNodeData, NodeflowNodeData, Optional } from "nodeflow-lib";
 import NumberConnector from "./data/NumberConnector";
 
@@ -20,7 +20,7 @@ export class OperationNodeData extends CustomNodeData {
   }
 }
 
-const OperationNode: Component<{ node: NodeflowNodeData }> = (props) => {
+const OperationNode = (props: { node: NodeflowNodeData }) => {
   const operator = createMemo(
     () => (props.node.customData as OperationNodeData).operator,
   );
@@ -33,7 +33,7 @@ const OperationNode: Component<{ node: NodeflowNodeData }> = (props) => {
     const keys = props.node.connectorSections.get("inputs")?.connectors?.keys();
 
     for (const key of keys ?? []) {
-      const source = props.node.getConnector(key)?.sources.get(0);
+      const source = props.node.getConnector(key)?.sources[0];
 
       if (!source) {
         return;
@@ -109,7 +109,7 @@ const OperationNode: Component<{ node: NodeflowNodeData }> = (props) => {
         <option value="%">%</option>
       </select>
     </div>
-  );
+  ) as HTMLDivElement;
 };
 
 export default OperationNode;

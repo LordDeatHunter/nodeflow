@@ -1,7 +1,7 @@
 import { DocumentEventPublisher, NodeflowData } from "./data";
 import { DocumentEventRecord } from "../nodeflow-types";
 import Vec2 from "./data/Vec2";
-import NodeflowCanvas from "../components/NodeflowCanvas";
+import NodeflowCanvas from "../components/nodeflowCanvas";
 
 export default class NodeflowLib {
   private readonly nodeflows;
@@ -70,6 +70,9 @@ export default class NodeflowLib {
         event: ({ event }) => {
           this.nodeflows.forEach((nodeflow) => {
             nodeflow.mouseData.mousePosition = Vec2.fromEvent(event);
+            nodeflow.eventStore.onMousePositionChanged.publish({
+              position: nodeflow.mouseData.mousePosition,
+            });
           });
         },
       },

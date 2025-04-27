@@ -1,10 +1,11 @@
 import { type Component, createSignal, JSX, onMount, Show } from "solid-js";
 import {
+  getWindowSize,
   NodeflowData,
   NodeflowLib,
+  onWindowResize,
   Optional,
   Vec2,
-  windowSize,
 } from "nodeflow-lib";
 import curveCss from "./styles/curve.module.scss";
 import nodeCss from "./styles/node.module.scss";
@@ -59,6 +60,7 @@ const App: Component = () => {
     const nodeflowPosition = nodeflowData.startPosition;
     const nodeflowSize = nodeflowData.size;
 
+    console.log(clickPos, nodeflowPosition, nodeflowSize);
     if (!clickPos.isWithinRect(nodeflowPosition, nodeflowSize)) return;
 
     const nodePosition = clickPos
@@ -88,14 +90,33 @@ const App: Component = () => {
     );
   });
 
+  let nodeflowDivRef: HTMLDivElement | undefined;
+  let dragNodeRef: HTMLDivElement | undefined;
+
+  onWindowResize((size) => {
+    if (!nodeflowDivRef) return;
+    nodeflowDivRef.style.width = `${size.x}px`;
+    nodeflowDivRef.style.height = `${size.y}px`;
+  });
+
+  nodeflowData.eventStore.onMousePositionChanged.subscribe(
+    "nodeflow-mouse-move",
+    ({ position }) => {
+      if (!dragNodeRef) return;
+      dragNodeRef.style.left = `${position.x - 75}px`;
+      dragNodeRef.style.top = `${position.y - 45}px`;
+    },
+  );
+
   return (
     <div
       style={{
         display: "flex",
         "flex-direction": "column-reverse",
-        width: `${windowSize().x}px`,
-        height: `${windowSize().y}px`,
+        width: `${getWindowSize().x}px`,
+        height: `${getWindowSize().y}px`,
       }}
+      ref={nodeflowDivRef}
     >
       <Nodeflow
         css={{
@@ -143,6 +164,7 @@ const App: Component = () => {
             cursor: "grabbing",
           }}
           class={nodeCss.node}
+          ref={dragNodeRef}
         >
           {nodePreview()}
         </div>

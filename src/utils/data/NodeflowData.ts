@@ -169,6 +169,10 @@ export default class NodeflowData {
       onConnectionRemoved: new NodeflowEventPublisher<"onConnectionRemoved">(
         this,
       ),
+      onMousePositionChanged:
+        new NodeflowEventPublisher<"onMousePositionChanged">(this),
+      onConnectorCustomDataChanged:
+        new NodeflowEventPublisher<"onConnectorCustomDataChanged">(this),
     };
     this.setupDefaultEventHandlers();
   }
