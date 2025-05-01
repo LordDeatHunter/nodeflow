@@ -1,10 +1,5 @@
 import { createSignal, Show } from "solid-js";
-import {
-  CustomNodeData,
-  DisplayFunc,
-  NodeflowNodeData,
-  Optional,
-} from "nodeflow-lib";
+import { CustomNodeData, DisplayFunc, NodeflowNodeData } from "nodeflow-lib";
 import { nodeflowData } from "./App";
 
 export class DisplayNodeData extends CustomNodeData {
@@ -16,17 +11,70 @@ export class DisplayNodeData extends CustomNodeData {
 }
 
 const DisplayNode: DisplayFunc = (props: { node: NodeflowNodeData }) => {
-  const [connectorData, setConnectorData] = createSignal<Optional<number>>();
+  const [connectorData, setConnectorData] = createSignal(
+    props.node.getAllSourceConnectors()[0]?.customData?.value,
+  );
+
+  nodeflowData.eventStore.onConnectionAdded.subscribe(
+    `display-node-${props.node.id}`,
+    ({
+      sourceNodeId,
+      sourceConnectorId,
+      destinationNodeId,
+      destinationConnectorId,
+    }) => {
+      console.log(
+        "display-node",
+        props.node.id,
+        sourceNodeId,
+        sourceConnectorId,
+        destinationNodeId,
+        destinationConnectorId,
+      );
+
+      if (
+        destinationNodeId !== props.node.id ||
+        destinationConnectorId !== "input-0"
+      )
+        return;
+
+      const node = nodeflowData.nodes.get(sourceNodeId);
+      if (!node) return;
+      const connector = node.getConnector(sourceConnectorId);
+      if (!connector) return;
+
+      setConnectorData(connector.customData?.value);
+    },
+  );
+
+  nodeflowData.eventStore.onConnectionRemoved.subscribe(
+    `display-node-${props.node.id}`,
+    ({ destinationNodeId, destinationConnectorId }) => {
+      if (
+        destinationNodeId !== props.node.id ||
+        destinationConnectorId !== "input-0"
+      )
+        return;
+
+      setConnectorData(undefined);
+    },
+  );
+
   nodeflowData.eventStore.onConnectorCustomDataChanged.subscribe(
     `display-node-${props.node.id}`,
     (data) => {
       console.log("data", props.node.id, data);
-      if (data.nodeId !== props.node.id || data.connectorId !== "input-0")
-        return;
-      const connector =
-        props.node.getConnector("input-0")?.sources[0]?.sourceConnector;
+      const connector = props.node.getConnector("input-0");
       if (!connector) return;
-      setConnectorData(connector.customData as Optional<number>);
+      const source = connector.sources[0];
+      if (!source) return;
+      const sourceNode = source.sourceConnector.parentNode;
+      if (sourceNode.id !== data.nodeId) return;
+      if (source.sourceConnector.id !== data.connectorId) return;
+
+      const updatedConnector = source.sourceConnector;
+
+      setConnectorData(updatedConnector.customData?.value);
     },
   );
 
@@ -41,7 +89,7 @@ const DisplayNode: DisplayFunc = (props: { node: NodeflowNodeData }) => {
         <div>
           <h2>Node value</h2>
           <p style={{ "font-size": "2rem", "margin-top": "1rem" }}>
-            {JSON.stringify(Number(connectorData()!.value!.toFixed(2)))}
+            {JSON.stringify(Number(connectorData()!.toFixed(2)))}
           </p>
         </div>
       </Show>

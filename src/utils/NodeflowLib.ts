@@ -1,7 +1,7 @@
 import { DocumentEventPublisher, NodeflowData } from "./data";
 import { DocumentEventRecord } from "../nodeflow-types";
 import Vec2 from "./data/Vec2";
-import NodeflowCanvas from "../components/nodeflowCanvas";
+import NodeflowCanvas from "../components/NodeflowCanvas";
 
 export default class NodeflowLib {
   private readonly nodeflows;

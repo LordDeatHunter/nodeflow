@@ -1,4 +1,4 @@
-import { createMemo, onMount } from "solid-js";
+import { createSignal } from "solid-js";
 import { CustomNodeData, DisplayFunc, NodeflowNodeData } from "nodeflow-lib";
 import NumberConnector from "./data/NumberConnector";
 
@@ -19,20 +19,17 @@ export class NumberNodeData extends CustomNodeData {
 }
 
 const NumberNode: DisplayFunc = (props: { node: NodeflowNodeData }) => {
-  const number = createMemo(
-    () => (props.node.customData as NumberNodeData).value,
+  const [number, setNumber] = createSignal(
+    (props.node.customData as NumberNodeData).value,
   );
-  const setNumber = (value: number) => {
-    props.node.customData = new NumberNodeData(value);
-    const output = props.node.getConnector("output-0");
-    if (output) {
-      output.customData = new NumberConnector(value);
-    }
-  };
 
-  onMount(() => {
-    setNumber(number() ?? 0);
-  });
+  props.node.nodeflow.eventStore.onNodeCustomDataChanged.subscribe(
+    `number-node-${props.node.id}-data-changed`,
+    ({ nodeId, customData }) => {
+      if (nodeId !== props.node.id) return;
+      setNumber(customData?.value);
+    },
+  );
 
   const updateValue = (
     event: InputEvent & { currentTarget: HTMLInputElement },
@@ -40,7 +37,11 @@ const NumberNode: DisplayFunc = (props: { node: NodeflowNodeData }) => {
     const value = event.currentTarget.value;
     const number = Number(value.replaceAll(/[^0-9.]/g, ""));
 
-    setNumber(number);
+    props.node.customData = new NumberNodeData(number);
+    const output = props.node.getConnector("output-0");
+    if (output) {
+      output.customData = new NumberConnector(number);
+    }
 
     if (number.toString() !== value) {
       event.currentTarget.value = number.toString();
@@ -64,7 +65,7 @@ const NumberNode: DisplayFunc = (props: { node: NodeflowNodeData }) => {
           "background-color": "#819796",
           color: "#202E37",
         }}
-        value={number()}
+        value={number() ?? 0}
         onInput={updateValue}
         onKeyDown={(e) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
