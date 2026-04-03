@@ -1,0 +1,30 @@
+{
+  "name": "@nodeflow/solid",
+  "version": "0.0.1",
+  "description": "SolidJS adapter for @nodeflow/core",
+  "type": "module",
+  "main": "./dist/index.cjs.js",
+  "module": "./dist/index.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.cjs.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vite": "^4.5.5",
+    "vite-plugin-dts": "^4.3.0",
+    "vite-plugin-solid": "2.7.0"
+  },
+  "peerDependencies": {
+    "solid-js": "^1.9.3",
+    "@nodeflow/core": "workspace:*"
+  }
+}

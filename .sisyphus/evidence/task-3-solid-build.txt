@@ -1,0 +1,16 @@
+> bun run build
+$ vite build
+vite v4.5.14 building for production...
+transforming...
+✓ 1 modules transformed.
+Generated an empty chunk: "index".
+rendering chunks...
+
+[vite:dts] Start generate declaration files...
+computing gzip size...
+dist/index.es.js  0.00 kB │ gzip: 0.02 kB
+[vite:dts] Declaration files built in 2492ms.
+
+Generated an empty chunk: "index".
+dist/index.cjs.js  0.01 kB │ gzip: 0.03 kB
+✓ built in 2.68s

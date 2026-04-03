@@ -1,0 +1,3 @@
+- Core package scaffold should stay framework-free: only Vite + vite-plugin-dts + TypeScript in devDependencies.
+- Empty entrypoints still build cleanly to ESM/CJS plus declarations with vite-plugin-dts.
+- The core tsconfig must avoid both jsx settings and solid-specific type references.

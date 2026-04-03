@@ -1,0 +1,2 @@
+- TypeScript LSP diagnostics were unavailable in this environment because typescript-language-server is not installed.
+- Build verification succeeded via Bun/Vite, and the tsconfig grep check confirmed no Solid references.
