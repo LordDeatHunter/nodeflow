@@ -1,0 +1,26 @@
+{
+  "name": "@nodeflow/core",
+  "version": "0.0.1",
+  "description": "Framework-agnostic core for nodeflow",
+  "type": "module",
+  "main": "./dist/index.cjs.js",
+  "module": "./dist/index.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.cjs.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vite": "^4.5.5",
+    "vite-plugin-dts": "^4.3.0"
+  }
+}
