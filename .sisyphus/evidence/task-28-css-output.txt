@@ -1,0 +1,18 @@
+packages/core build output
+
+- bun run build in packages/core: exit 0
+- dist/style.css: generated
+- dist/index.es.js: generated
+- dist/index.cjs.js: generated
+
+Relevant build excerpt:
+
+dist/style.css    0.53 kB
+dist/index.es.js  77.47 kB
+dist/index.cjs.js 55.09 kB
+✓ built in 1.93s
+
+Test excerpt:
+
+216 pass
+0 fail

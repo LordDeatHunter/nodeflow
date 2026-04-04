@@ -137,3 +137,9 @@ when importing NodeflowData/NodeflowNodeData.
 - `screen-utils` fits in `@nodeflow/solid`; `Vec2` should come from `@nodeflow/core` there.
 - `packages/core/src/` has no `windowSize` consumers, so no core refactor was needed.
 - `bun test` stayed green at 216 pass / 0 fail after the move.
+
+## [2026-04-04] Task: T28
+
+- Vite library mode did emit `dist/style.css` once the core package had its own copied `src/style.css` and a small `generateBundle()` asset emitter.
+- Exposing `"style": "./dist/style.css"` plus `"./style.css"` in `exports` makes the adapter import path explicit for consumers.
+- `bun run build` in `packages/core/` completed and produced `dist/style.css`; `bun test` still passed 216/0.
