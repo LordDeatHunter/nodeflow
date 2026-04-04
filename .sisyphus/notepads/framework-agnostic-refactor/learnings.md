@@ -143,3 +143,41 @@ when importing NodeflowData/NodeflowNodeData.
 - Vite library mode did emit `dist/style.css` once the core package had its own copied `src/style.css` and a small `generateBundle()` asset emitter.
 - Exposing `"style": "./dist/style.css"` plus `"./style.css"` in `exports` makes the adapter import path explicit for consumers.
 - `bun run build` in `packages/core/` completed and produced `dist/style.css`; `bun test` still passed 216/0.
+
+## [2026-04-04] Task: T29
+
+- All 6 SolidJS components (NodeflowCanvas, NodeflowNode, Connector, NodeCurve, Curve, SelectionBox) copied to packages/solid/src/components/ with all imports updated from relative ../utils paths to @nodeflow/core.
+- NodeflowNode.tsx cleanup: removed node().resizeObserver disconnect, node().ref set, and connector.ref access from onCleanup/ref callbacks. Replaced node().update({ size, offset }) with node().updateMeasurements(size, offset).
+- Connector.tsx cleanup: replaced connector.update({ position, ref, resizeObserver, size }) with connector.updateMeasurements(position, size); kept connector.size direct setter for ResizeObserver callback.
+- NodeflowCanvas.tsx cleanup: replaced nodeflowData.update({ size }) with nodeflowData.updateCanvasSize(size); kept nodeflowData.update({ startPosition }) as that field still has a setter.
+- createSolidNodeflow adapter follows NodeflowRegistry.get().createCanvas() pattern (returns NodeflowData directly, not a tuple); adapter itself assembles the tuple and attaches document event handlers.
+- packages/solid vite.config.ts and tsconfig.json already existed with correct setup (vite-plugin-solid, jsxImportSource=solid-js, @nodeflow/core in rollupOptions externals).
+- Typecheck errors in packages/solid are all pre-existing: screen-utils.ts Vec2 namespace issue (T27) and stale core dist declaration files � not introduced by T29.
+- bun run build in packages/solid exits 0; bun test reports 216 pass, 0 fail.
+
+## [2026-04-04] Task: T30
+
+- createVanillaNodeflow(id, container, options) follows the same adapter pattern as Solid: call NodeflowRegistry.get().createCanvas(), attach document event handlers, then render into container.
+- DOM reactivity without a framework: use
+  equestAnimationFrame polling loop to sync innerDiv.style.transform on zoom/pan changes and node left/ op positions. Simple and effective for a POC.
+- The onNodeDataChanged event fires whenever a node's data changes, including additions — subscribe to it to auto-render newly added nodes into the DOM.
+- NodeflowEventPublisher's subscribeMultiple callback can lose type inference when the class uses ny internally — explicit parameter type annotation ({ nodeId }: { nodeId: string; data: unknown }) fixes implicit-any TS errors in DTS generation.
+- Curve rendering: maintain a Map<curveId, SVGPathElement> and diff it against current connections each RAF frame — create new paths, update existing d attributes, remove stale paths. Simple and avoids virtual DOM.
+- Connector position measurement: use getBoundingClientRect() relative to the node element to compute position; pass to connector.updateMeasurements(position, size).
+- Node measurement: use ResizeObserver on the node div, pass offsetWidth/offsetHeight as size and relative offset from parent to
+  ode.updateMeasurements(size, offset).
+- packages/vanilla/vite.config.ts was already present with correct
+  ollupOptions.external: ['@nodeflow/core'] — no modification needed.
+- Build exits 0 and produces dist/index.es.js + dist/index.cjs.js + dist/index.d.ts with no framework dependencies.
+
+## [2026-04-04] Task: T35
+
+- Source scan across `packages/**/*.ts(x)` and `examples/**/*.ts(x)` found no real usage of `solid-styled-components`; only `node_modules` references were present.
+- Removed `solid-styled-components` from root and example package.json files; `solid-js` stayed intact.
+- `bun test` still passes at 216/0.
+- `bun run build` currently fails on pre-existing ESLint issues in `packages/core/src` unrelated to this dependency cleanup.
+
+## [2026-04-04] Task: T33
+
+- Solid imports were not found in packages/core/src or packages/core/dist, and packages/core/package.json contains no solid dependencies.
+- The DOM-pattern grep produced 3 matches in packages/core/src/NodeflowRegistry.ts, but they are subscribeMultiple event names containing "Document." rather than DOM API calls; mark the DOM check as FAIL only because the literal regex matched, not because of actual browser API usage.
