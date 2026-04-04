@@ -1,0 +1,31 @@
+{
+  "name": "@nodeflow/svelte",
+  "version": "0.0.1",
+  "description": "Svelte 5 wrapper for @nodeflow/vanilla",
+  "type": "module",
+  "main": "./dist/index.cjs.js",
+  "module": "./dist/index.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.cjs.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^4.0.0",
+    "svelte": "^5.28.2",
+    "typescript": "^5.6.3",
+    "vite": "^4.5.5",
+    "vite-plugin-dts": "^4.3.0"
+  },
+  "peerDependencies": {
+    "@nodeflow/vanilla": "workspace:*",
+    "svelte": "^5.0.0"
+  }
+}

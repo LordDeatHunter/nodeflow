@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nodeflow React Example</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: sans-serif;
+        background: #1a1a2e;
+        color: #eee;
+      }
+      h1 {
+        padding: 12px 16px;
+        font-size: 1.2rem;
+        background: #16213e;
+        border-bottom: 1px solid #0f3460;
+      }
+      #root {
+        width: 100vw;
+        height: calc(100vh - 45px);
+        position: relative;
+        overflow: hidden;
+      }
+      .nodeflowNode {
+        border: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Nodeflow — React Example</h1>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
