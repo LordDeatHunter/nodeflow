@@ -15,6 +15,7 @@ export { default as SelectionMap } from "./SelectionMap";
 export { default as SelectionBoxData } from "./SelectionBoxData";
 export { default as MouseData } from "./MouseData";
 export { default as NodeConnector } from "./NodeConnector";
+export { default as ConnectorSection } from "./ConnectorSection";
 export { default as NodeflowChunking } from "./NodeflowChunking";
 export * from "./constants";
 export * from "./math-utils";

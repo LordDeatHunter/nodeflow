@@ -1,0 +1,9 @@
+bun test v1.3.11 (af24e281)
+
+ 15 pass
+ 0 fail
+ 31 expect() calls
+Ran 15 tests across 1 file. [69.00ms]
+
+Test file: packages/core/tests/ConnectorSection.test.ts
+All 15 tests passed (exceeds expected 13).

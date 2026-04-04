@@ -1,0 +1,11 @@
+Verification: packages/core/src/ConnectorSection.ts contains zero Solid imports.
+
+grep pattern: solid-js|@solid-primitives|ReactiveMap|createStore
+Result: No matches found
+
+Confirmed: File uses only plain TypeScript class properties and Map<K,V>.
+- _connectors: Map<string, NodeConnector> (was ReactiveMap)
+- _css?: string (was store[0].css)
+- _id: string (was store[0].id)
+- _parentNode: any (was store[0].parentNode)
+- nodeflowData: any (plain property, no Solid store)
