@@ -1,0 +1,7 @@
+﻿=== DOM CHECK (expect 0 matches) ===
+
+packages\core\src\NodeflowRegistry.ts:55:    this.globalEventStore.onMouseMoveInDocument.subscribeMultiple([
+packages\core\src\NodeflowRegistry.ts:66:    this.globalEventStore.onPointerLeaveFromDocument.subscribeMultiple([
+packages\core\src\NodeflowRegistry.ts:77:    this.globalEventStore.onPointerUpInDocument.subscribeMultiple([
+
+
