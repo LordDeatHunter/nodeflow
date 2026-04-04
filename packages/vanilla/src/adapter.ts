@@ -3,6 +3,7 @@ import {
   NodeflowData,
   NodeflowSettings,
 } from "@nodeflow/core";
+import "@nodeflow/core/style.css";
 import { renderCanvas } from "./components/canvas";
 
 export function createVanillaNodeflow(

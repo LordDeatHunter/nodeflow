@@ -32,6 +32,13 @@ export function renderNode(
     const sectionDiv = document.createElement("div");
     sectionDiv.id = `section-${section.id}`;
     sectionDiv.className = "nodeflowConnectorSection";
+    sectionDiv.style.position = "absolute";
+    sectionDiv.style.display = "flex";
+    sectionDiv.style.justifyContent = "space-evenly";
+    sectionDiv.style.width = "0";
+    sectionDiv.style.height = "0";
+    sectionDiv.style.top = "50%";
+    sectionDiv.style.left = "50%";
     if (section.css) {
       sectionDiv.classList.add(section.css);
     }
