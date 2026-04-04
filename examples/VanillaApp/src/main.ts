@@ -10,7 +10,7 @@ interface DisplayNode {
   position: { x: number; y: number };
 }
 
-function nodeDisplay({ node }: { node: DisplayNode }): HTMLElement {
+const nodeDisplay = ({ node }: { node: DisplayNode }): HTMLElement => {
   const wrapper = document.createElement("div");
   Object.assign(wrapper.style, {
     padding: "14px 18px",
@@ -37,17 +37,14 @@ function nodeDisplay({ node }: { node: DisplayNode }): HTMLElement {
   subtitle.textContent = `Position ${node.position.x.toFixed(
     0,
   )}, ${node.position.y.toFixed(0)}`;
-  Object.assign(subtitle.style, {
-    opacity: "0.5",
-    fontSize: "11px",
-  });
+  Object.assign(subtitle.style, { opacity: "0.5", fontSize: "11px" });
 
   wrapper.appendChild(title);
   wrapper.appendChild(subtitle);
   return wrapper;
-}
+};
 
-function addNode(x: number, y: number, inputs: number, outputs: number) {
+const addNode = (x: number, y: number, inputs: number, outputs: number) => {
   const node = nodeflowData.addNode({
     position: { x, y },
     display: nodeDisplay,
@@ -68,7 +65,7 @@ function addNode(x: number, y: number, inputs: number, outputs: number) {
   }
 
   return node;
-}
+};
 
 const start = addNode(80, 100, 0, 2);
 const config = addNode(80, 300, 0, 1);
@@ -80,19 +77,19 @@ const merge = addNode(380, 460, 1, 1);
 const output = addNode(700, 160, 2, 1);
 const logger = addNode(700, 400, 2, 0);
 
-function connect(
+const connect = (
   srcId: string,
   srcConnector: string,
   dstId: string,
   dstConnector: string,
-) {
+) => {
   nodeflowData.addConnection({
     sourceNodeId: srcId,
     sourceConnectorId: srcConnector,
     destinationNodeId: dstId,
     destinationConnectorId: dstConnector,
   });
-}
+};
 
 // start → transform, validate
 connect(start.id, "out-0", transform.id, "in-0");

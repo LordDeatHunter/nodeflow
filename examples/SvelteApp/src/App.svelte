@@ -1,49 +1,21 @@
 <script lang="ts">
   import { Nodeflow } from "@nodeflow/svelte";
   import type { NodeflowData } from "@nodeflow/svelte";
+  import { mount } from "svelte";
+  import NodeCard from "./NodeCard.svelte";
 
-  interface DisplayNode {
-    id: string;
-    position: { x: number; y: number };
-  }
-
-  function nodeDisplay({ node }: { node: DisplayNode }): HTMLElement {
-    const wrapper = document.createElement("div");
-    Object.assign(wrapper.style, {
-      padding: "14px 18px",
-      minWidth: "140px",
-      background: "#16213e",
-      borderRadius: "8px",
-      border: "1px solid #0f3460",
-      color: "#e2e2e2",
-      fontFamily: "'Segoe UI', system-ui, sans-serif",
-      fontSize: "13px",
-      lineHeight: "1.4",
+  const nodeDisplay = ({ node }: { node: { id: string; position: { x: number; y: number } } }): HTMLElement => {
+    const container = document.createElement("div");
+    mount(NodeCard, {
+      target: container,
+      props: { id: node.id, position: node.position },
     });
 
-    const title = document.createElement("strong");
-    title.textContent = `Node ${node.id}`;
-    Object.assign(title.style, {
-      display: "block",
-      marginBottom: "2px",
-      fontSize: "14px",
-      color: "#fff",
-    });
+    return container;
+  };
 
-    const subtitle = document.createElement("span");
-    subtitle.textContent = `Position ${node.position.x.toFixed(0)}, ${node.position.y.toFixed(0)}`;
-    Object.assign(subtitle.style, {
-      opacity: "0.5",
-      fontSize: "11px",
-    });
-
-    wrapper.appendChild(title);
-    wrapper.appendChild(subtitle);
-    return wrapper;
-  }
-
-  function handleReady(nodeflowData: NodeflowData) {
-    function addNode(x: number, y: number, inputs: number, outputs: number) {
+  const handleReady = (nodeflowData: NodeflowData) => {
+    const addNode = (x: number, y: number, inputs: number, outputs: number) => {
       const node = nodeflowData.addNode({
         position: { x, y },
         display: nodeDisplay,
@@ -64,7 +36,7 @@
       }
 
       return node;
-    }
+    };
 
     const start = addNode(80, 100, 0, 2);
     const config = addNode(80, 300, 0, 1);
@@ -76,19 +48,19 @@
     const output = addNode(700, 160, 2, 1);
     const logger = addNode(700, 400, 2, 0);
 
-    function connect(
+    const connect = (
       srcId: string,
       srcConnector: string,
       dstId: string,
       dstConnector: string,
-    ) {
+    ) => {
       nodeflowData.addConnection({
         sourceNodeId: srcId,
         sourceConnectorId: srcConnector,
         destinationNodeId: dstId,
         destinationConnectorId: dstConnector,
       });
-    }
+    };
 
     connect(start.id, "out-0", transform.id, "in-0");
     connect(start.id, "out-1", validate.id, "in-0");
@@ -97,7 +69,7 @@
     connect(validate.id, "out-0", output.id, "in-1");
     connect(merge.id, "out-0", logger.id, "in-0");
     connect(output.id, "out-0", logger.id, "in-1");
-  }
+  };
 </script>
 
 <Nodeflow id="main" onready={handleReady} />

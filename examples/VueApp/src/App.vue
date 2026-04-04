@@ -1,52 +1,29 @@
 <script setup lang="ts">
 import { Nodeflow } from "@nodeflow/vue";
 import type { NodeflowData } from "@nodeflow/vue";
+import { createApp } from "vue";
+import NodeCard from "./NodeCard.vue";
 
-function nodeDisplay({
+const nodeDisplay = ({
   node,
 }: {
   node: { id: string; position: { x: number; y: number } };
-}): HTMLElement {
+}): HTMLElement => {
   const wrapper = document.createElement("div");
-  Object.assign(wrapper.style, {
-    padding: "14px 18px",
-    minWidth: "140px",
-    background: "#16213e",
-    borderRadius: "8px",
-    border: "1px solid #0f3460",
-    color: "#e2e2e2",
-    fontFamily: "'Segoe UI', system-ui, sans-serif",
-    fontSize: "13px",
-    lineHeight: "1.4",
-  });
-  const title = document.createElement("strong");
-  title.textContent = `Node ${node.id}`;
-  Object.assign(title.style, {
-    display: "block",
-    marginBottom: "2px",
-    fontSize: "14px",
-    color: "#fff",
-  });
-  const subtitle = document.createElement("span");
-  subtitle.textContent = `Position ${node.position.x.toFixed(
-    0,
-  )}, ${node.position.y.toFixed(0)}`;
-  Object.assign(subtitle.style, {
-    opacity: "0.5",
-    fontSize: "11px",
-  });
-  wrapper.appendChild(title);
-  wrapper.appendChild(subtitle);
+  createApp(NodeCard, {
+    id: node.id,
+    position: node.position,
+  }).mount(wrapper);
   return wrapper;
-}
+};
 
-function addNode(
+const addNode = (
   data: NodeflowData,
   x: number,
   y: number,
   inputs: number,
   outputs: number,
-) {
+): ReturnType<NodeflowData["addNode"]> => {
   const node = data.addNode({ position: { x, y }, display: nodeDisplay });
   if (inputs > 0) {
     const section = node.addConnectorSection({ id: "inputs" });
@@ -57,9 +34,9 @@ function addNode(
     for (let i = 0; i < outputs; i++) section.addConnector({ id: `out-${i}` });
   }
   return node;
-}
+};
 
-function handleReady(data: NodeflowData) {
+const handleReady = (data: NodeflowData) => {
   const start = addNode(data, 80, 100, 0, 2);
   const config = addNode(data, 80, 300, 0, 1);
   const transform = addNode(data, 380, 60, 2, 1);
@@ -110,7 +87,7 @@ function handleReady(data: NodeflowData) {
     destinationNodeId: logger.id,
     destinationConnectorId: "in-1",
   });
-}
+};
 </script>
 
 <template>
