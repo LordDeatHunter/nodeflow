@@ -1,3 +1,4 @@
+@use "sass:color";
 @use "colors";
 
 @mixin baseCurve($strokeColor) {
@@ -14,9 +15,9 @@
 
 @mixin hoverHighlight($strokeColor) {
   &:hover {
-    stroke: adjust-color($strokeColor, $saturation: 15%, $lightness: -15%);
+    stroke: color.adjust($strokeColor, $saturation: 15%, $lightness: -15%);
     filter: drop-shadow(
-      0 0 2px adjust-color($strokeColor, $saturation: 15%, $lightness: -15%)
+      0 0 2px color.adjust($strokeColor, $saturation: 15%, $lightness: -15%)
     );
   }
 }
@@ -28,11 +29,11 @@
 
 .connection {
   @include curveWithHover(
-    adjust-color(colors.$connection-color, $saturation: -15%, $lightness: 15%)
+    color.adjust(colors.$connection-color, $saturation: -15%, $lightness: 15%)
   );
   filter: drop-shadow(
     0 0 2px
-      adjust-color(colors.$connection-color, $saturation: 15%, $lightness: -15%)
+      color.adjust(colors.$connection-color, $saturation: 15%, $lightness: -15%)
   );
 }
 
@@ -40,13 +41,13 @@
   @include baseCurve(colors.$connection-color);
   filter: drop-shadow(
     0 0 2px
-      adjust-color(colors.$connection-color, $saturation: 15%, $lightness: -15%)
+      color.adjust(colors.$connection-color, $saturation: 15%, $lightness: -15%)
   );
 }
 
 .newConnection {
   @include baseCurve(
-    adjust-color(
+    color.adjust(
       colors.$new-connection-color,
       $saturation: -20%,
       $lightness: 20%
@@ -54,7 +55,7 @@
   );
   filter: drop-shadow(
     0 0 2px
-      adjust-color(
+      color.adjust(
         colors.$new-connection-color,
         $saturation: 15%,
         $lightness: -15%

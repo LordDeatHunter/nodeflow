@@ -1,3 +1,4 @@
+@use "sass:color";
 @use "colors";
 
 $connector-size: 12px;
@@ -14,7 +15,7 @@ $connector-border: 4px;
   background-color: $bg-color;
 
   &:hover {
-    background-color: adjust-color($bg-color, $lightness: 10%);
+    background-color: color.adjust($bg-color, $lightness: 10%);
   }
 }
 

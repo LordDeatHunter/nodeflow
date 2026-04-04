@@ -1,3 +1,4 @@
+@use "sass:color";
 @use "colors";
 
 @mixin baseDisplay {
@@ -59,12 +60,12 @@
 @mixin hovered($base-color, $lighten, $amount) {
   + svg {
     filter: drop-shadow(
-      0 0 2px adjust-color(colors.$border-color, $lightness: -$amount)
+      0 0 2px color.adjust(colors.$border-color, $lightness: -$amount)
     );
     @if $lighten {
-      fill: adjust-color($base-color, $lightness: $amount);
+      fill: color.adjust($base-color, $lightness: $amount);
     } @else {
-      fill: adjust-color($base-color, $lightness: -$amount);
+      fill: color.adjust($base-color, $lightness: -$amount);
     }
     height: 1.5rem;
     width: 1.5rem;
@@ -72,9 +73,9 @@
 
     + label {
       @if $lighten {
-        color: adjust-color($base-color, $lightness: $amount);
+        color: color.adjust($base-color, $lightness: $amount);
       } @else {
-        color: adjust-color($base-color, $lightness: -$amount);
+        color: color.adjust($base-color, $lightness: -$amount);
       }
     }
   }
@@ -88,13 +89,13 @@
     width: 1rem;
     height: 1rem;
     margin: 0.25rem;
-    fill: adjust-color($base-color, $saturation: -75%, $lightness: -25%);
+    fill: color.adjust($base-color, $saturation: -75%, $lightness: -25%);
     cursor: pointer;
 
     + label {
       cursor: pointer;
       margin: 0;
-      color: adjust-color($base-color, $saturation: -75%, $lightness: -25%);
+      color: color.adjust($base-color, $saturation: -75%, $lightness: -25%);
     }
   }
 
@@ -163,15 +164,15 @@
   color: $color;
 
   &:hover {
-    stroke: adjust-color($color, $saturation: 10%, $lightness: -30%);
+    stroke: color.adjust($color, $saturation: 10%, $lightness: -30%);
     filter: drop-shadow(
-      0 0px 4px adjust-color($color, $saturation: -15%, $lightness: 30%)
+      0 0px 4px color.adjust($color, $saturation: -15%, $lightness: 30%)
     );
   }
 }
 
 .invalidParent {
-  fill: adjust-color(colors.$border-color, $lightness: -10%);
+  fill: color.adjust(colors.$border-color, $lightness: -10%);
 }
 
 .validMother {
@@ -215,6 +216,6 @@
   margin: 0;
 
   &:hover {
-    color: adjust-color(colors.$border-color, $lightness: -20%);
+    color: color.adjust(colors.$border-color, $lightness: -20%);
   }
 }

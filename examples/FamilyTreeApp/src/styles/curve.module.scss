@@ -1,3 +1,4 @@
+@use "sass:color";
 @use "colors";
 
 @mixin baseCurve($strokeColor) {
@@ -10,7 +11,7 @@
 
 @mixin hoverHighlight($strokeColor) {
   &:hover {
-    stroke: adjust-color($strokeColor, $saturation: 10%, $lightness: -30%);
+    stroke: color.adjust($strokeColor, $saturation: 10%, $lightness: -30%);
     filter: drop-shadow(0 0 2px $strokeColor);
   }
 }
@@ -30,38 +31,38 @@
 
 .selectedFatherCurve {
   @include baseCurve(
-    adjust-color(colors.$male-color, $saturation: 25%, $lightness: -15%)
+    color.adjust(colors.$male-color, $saturation: 25%, $lightness: -15%)
   );
   filter: drop-shadow(
-    0 0 2px adjust-color(colors.$male-color, $saturation: 25%, $lightness: -15%)
+    0 0 2px color.adjust(colors.$male-color, $saturation: 25%, $lightness: -15%)
   );
 }
 
 .selectedMotherCurve {
   @include baseCurve(
-    adjust-color(colors.$female-color, $saturation: 25%, $lightness: -15%)
+    color.adjust(colors.$female-color, $saturation: 25%, $lightness: -15%)
   );
   filter: drop-shadow(
     0 0 2px
-      adjust-color(colors.$female-color, $saturation: 25%, $lightness: -15%)
+      color.adjust(colors.$female-color, $saturation: 25%, $lightness: -15%)
   );
 }
 
 .newFatherCurve {
   @include baseCurve(
-    adjust-color(colors.$male-color, $saturation: -25%, $lightness: 15%)
+    color.adjust(colors.$male-color, $saturation: -25%, $lightness: 15%)
   );
   filter: drop-shadow(
-    0 0 2px adjust-color(colors.$male-color, $saturation: 25%, $lightness: -15%)
+    0 0 2px color.adjust(colors.$male-color, $saturation: 25%, $lightness: -15%)
   );
 }
 
 .newMotherCurve {
   @include baseCurve(
-    adjust-color(colors.$female-color, $saturation: -25%, $lightness: 15%)
+    color.adjust(colors.$female-color, $saturation: -25%, $lightness: 15%)
   );
   filter: drop-shadow(
     0 0 2px
-      adjust-color(colors.$female-color, $saturation: 25%, $lightness: -15%)
+      color.adjust(colors.$female-color, $saturation: 25%, $lightness: -15%)
   );
 }
