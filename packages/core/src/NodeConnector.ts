@@ -166,6 +166,11 @@ export default class NodeConnector {
     this._size = value;
   }
 
+  public updateMeasurements(position: Vec2, size: Vec2): void {
+    this._position = position;
+    this._size = size;
+  }
+
   public set sources(value) {
     this._sources = value;
   }

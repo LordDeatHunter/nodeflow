@@ -312,6 +312,10 @@ export default class NodeflowData {
     this._size = value;
   }
 
+  public updateCanvasSize(size: Vec2): void {
+    this._size = size;
+  }
+
   set zoomLevel(value) {
     this._zoomLevel = value;
   }

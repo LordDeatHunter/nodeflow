@@ -122,6 +122,11 @@ export default class NodeflowNodeData {
     this._size = value;
   }
 
+  public updateMeasurements(size: Vec2, offset: Vec2): void {
+    this._size = size;
+    this._offset = offset;
+  }
+
   public get sizeWithOffset(): Vec2 {
     return this._size.add(this._offset);
   }
