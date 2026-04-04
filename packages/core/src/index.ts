@@ -18,6 +18,7 @@ export { default as NodeConnector } from "./NodeConnector";
 export { default as ConnectorSection } from "./ConnectorSection";
 export { default as NodeflowNodeData } from "./NodeflowNodeData";
 export { default as NodeflowChunking } from "./NodeflowChunking";
+export { default as NodeflowData } from "./NodeflowData";
 export * from "./constants";
 export * from "./math-utils";
 export * from "./misc-utils";

@@ -1,0 +1,12 @@
+﻿bun test v1.3.11 (af24e281)
+bun : 
+At line:1 char:42
++ ... v\nodeflow; bun test packages/core/tests/NodeflowData.test.ts 2>&1 |  ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ 39 pass
+ 0 fail
+ 58 expect() calls
+Ran 39 tests across 1 file. [91.00ms]
