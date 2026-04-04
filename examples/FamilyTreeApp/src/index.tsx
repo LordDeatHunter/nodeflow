@@ -1,9 +1,9 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
 
+import "@nodeflow/core/style.css";
 import "./index.scss";
 import App from "./App";
-import "nodeflow-lib";
 
 declare global {
   export interface CustomNodeflowDataType {

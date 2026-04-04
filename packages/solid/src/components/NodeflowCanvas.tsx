@@ -1,9 +1,10 @@
-import { Component, For, Show } from "solid-js";
+import { Component, createMemo, For, Show } from "solid-js";
 import { NodeflowData, NodeflowCss, Vec2 } from "@nodeflow/core";
 import NodeflowNode from "./NodeflowNode";
 import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
 import SelectionBox from "./SelectionBox";
+import { createTick } from "../tick";
 
 interface NodeflowProps {
   css?: NodeflowCss;
@@ -13,114 +14,152 @@ interface NodeflowProps {
 
 const NodeflowCanvas =
   (nodeflowData: NodeflowData): Component<NodeflowProps> =>
-  (props) => (
-    <div
-      ref={(el) => {
-        const resizeObserver = new ResizeObserver(() => {
-          nodeflowData.updateCanvasSize(
-            Vec2.of(el.clientWidth, el.clientHeight),
-          );
-          nodeflowData.update({
-            startPosition: Vec2.of(el.offsetLeft, el.offsetTop),
-          });
-        });
-        resizeObserver.observe(el);
-      }}
-      id={`nodeflow-${nodeflowData.id}`}
-      tabIndex="0"
-      class={props?.css?.nodeflow}
-      style={{
-        height: props.height,
-        width: props.width,
-        overflow: "hidden",
-      }}
-      onMouseMove={(event) =>
-        nodeflowData.eventStore.onMouseMoveInNodeflow.publish({ event })
-      }
-      onPointerUp={(event) =>
-        nodeflowData.eventStore.onPointerUpInNodeflow.publish({ event })
-      }
-      onWheel={(event) =>
-        nodeflowData.eventStore.onWheelInNodeflow.publish({ event })
-      }
-      onMouseDown={(event) =>
-        nodeflowData.eventStore.onMouseDownInNodeflow.publish({ event })
-      }
-      onKeyDown={(event) =>
-        nodeflowData.eventStore.onKeyDownInNodeflow.publish({ event })
-      }
-      onKeyUp={(event) =>
-        nodeflowData.eventStore.onKeyUpInNodeflow.publish({ event })
-      }
-      onTouchStart={(event) =>
-        nodeflowData.eventStore.onTouchStartInNodeflow.publish({ event })
-      }
-      onTouchMove={(event) =>
-        nodeflowData.eventStore.onTouchMoveInNodeflow.publish({ event })
-      }
-    >
+  (props) => {
+    const tick = createTick();
+
+    const nodeIds = createMemo(() => {
+      tick();
+      return Array.from(nodeflowData.nodes.keys());
+    });
+
+    const nodeEntries = createMemo(() => {
+      tick();
+      return Array.from(nodeflowData.nodes.entries());
+    });
+
+    const transform = createMemo(() => {
+      tick();
+      return `scale(${nodeflowData.zoomLevel}) translate(${nodeflowData.position.x}px, ${nodeflowData.position.y}px)`;
+    });
+
+    const hasHeldConnector = createMemo(() => {
+      tick();
+      return nodeflowData.mouseData.heldConnectors.length === 1;
+    });
+
+    const heldConnector = createMemo(() => {
+      tick();
+      return nodeflowData.mouseData.heldConnectors.at(0);
+    });
+
+    const selectionBoxBounds = createMemo(() => {
+      tick();
+      return nodeflowData.mouseData.selectionBox.boundingBox;
+    });
+
+    return (
       <div
-        style={{
-          position: "absolute",
-          transform: `scale(${nodeflowData.zoomLevel}) translate(${nodeflowData.position.x}px, ${nodeflowData.position.y}px)`,
-          "transform-origin": "center",
-          transition: "scale 0.1s ease-out",
+        ref={(el) => {
+          const resizeObserver = new ResizeObserver(() => {
+            nodeflowData.updateCanvasSize(
+              Vec2.of(el.clientWidth, el.clientHeight),
+            );
+            nodeflowData.update({
+              startPosition: Vec2.of(el.offsetLeft, el.offsetTop),
+            });
+          });
+          resizeObserver.observe(el);
         }}
+        id={`nodeflow-${nodeflowData.id}`}
+        tabIndex="0"
+        class={props?.css?.nodeflow}
+        style={{
+          height: props.height,
+          width: props.width,
+          overflow: "hidden",
+        }}
+        onMouseMove={(event) =>
+          nodeflowData.eventStore.onMouseMoveInNodeflow.publish({ event })
+        }
+        onPointerUp={(event) =>
+          nodeflowData.eventStore.onPointerUpInNodeflow.publish({ event })
+        }
+        onWheel={(event) =>
+          nodeflowData.eventStore.onWheelInNodeflow.publish({ event })
+        }
+        onMouseDown={(event) =>
+          nodeflowData.eventStore.onMouseDownInNodeflow.publish({ event })
+        }
+        onKeyDown={(event) =>
+          nodeflowData.eventStore.onKeyDownInNodeflow.publish({ event })
+        }
+        onKeyUp={(event) =>
+          nodeflowData.eventStore.onKeyUpInNodeflow.publish({ event })
+        }
+        onTouchStart={(event) =>
+          nodeflowData.eventStore.onTouchStartInNodeflow.publish({ event })
+        }
+        onTouchMove={(event) =>
+          nodeflowData.eventStore.onTouchMoveInNodeflow.publish({ event })
+        }
       >
-        <For each={Array.from(nodeflowData.nodes.keys())}>
-          {(nodeId) => (
-            <NodeflowNode nodeId={nodeId} nodeflowData={nodeflowData} />
-          )}
-        </For>
-        <svg
+        <div
           style={{
-            "z-index": 2,
             position: "absolute",
-            width: "1px",
-            height: "1px",
-            "pointer-events": "none",
-            overflow: "visible",
+            transform: transform(),
+            "transform-origin": "center",
+            transition: "scale 0.1s ease-out",
           }}
         >
-          <For each={Array.from(nodeflowData.nodes.entries())}>
-            {([nodeId, node]) => (
-              <For each={node.getAllConnectors()}>
-                {(connector) => (
-                  <For each={connector.destinations.array}>
-                    {(outputConnection) => (
-                      <NodeCurve
-                        nodeflowData={nodeflowData}
-                        sourceNodeId={nodeId}
-                        sourceConnectorId={connector.id}
-                        destinationNodeId={
-                          outputConnection.destinationConnector.parentSection
-                            .parentNode.id
-                        }
-                        destinationConnectorId={
-                          outputConnection.destinationConnector.id
-                        }
-                        css={outputConnection.css}
-                      />
-                    )}
-                  </For>
-                )}
-              </For>
+          <For each={nodeIds()}>
+            {(nodeId) => (
+              <NodeflowNode
+                nodeId={nodeId}
+                nodeflowData={nodeflowData}
+                tick={tick}
+              />
             )}
           </For>
-        </svg>
-        <Show when={nodeflowData.mouseData.heldConnectors.length === 1}>
-          <Curve
-            css={props?.css?.getNewCurveCss?.(
-              nodeflowData.mouseData.heldConnectors.at(0),
-            )}
-            nodeflowData={nodeflowData}
-          />
+          <svg
+            style={{
+              "z-index": 2,
+              position: "absolute",
+              width: "1px",
+              height: "1px",
+              "pointer-events": "none",
+              overflow: "visible",
+            }}
+          >
+            <For each={nodeEntries()}>
+              {([nodeId, node]) => (
+                <For each={node.getAllConnectors()}>
+                  {(connector) => (
+                    <For each={connector.destinations.array}>
+                      {(outputConnection) => (
+                        <NodeCurve
+                          nodeflowData={nodeflowData}
+                          sourceNodeId={nodeId}
+                          sourceConnectorId={connector.id}
+                          destinationNodeId={
+                            outputConnection.destinationConnector.parentSection
+                              .parentNode.id
+                          }
+                          destinationConnectorId={
+                            outputConnection.destinationConnector.id
+                          }
+                          css={outputConnection.css}
+                          tick={tick}
+                        />
+                      )}
+                    </For>
+                  )}
+                </For>
+              )}
+            </For>
+          </svg>
+          <Show when={hasHeldConnector()}>
+            <Curve
+              css={props?.css?.getNewCurveCss?.(heldConnector())}
+              nodeflowData={nodeflowData}
+              tick={tick}
+            />
+          </Show>
+        </div>
+        <Show when={selectionBoxBounds()}>
+          <SelectionBox nodeflowData={nodeflowData} tick={tick} />
         </Show>
       </div>
-      <Show when={nodeflowData.mouseData.selectionBox.boundingBox}>
-        <SelectionBox nodeflowData={nodeflowData} />
-      </Show>
-    </div>
-  );
+    );
+  };
 
 export default NodeflowCanvas;

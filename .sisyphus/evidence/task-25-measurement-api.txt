@@ -1,6 +1,0 @@
-﻿
-packages\core\src\NodeflowNodeData.ts:125:  public updateMeasurements(size: Vec2, offset: Vec2): void {
-packages\core\src\NodeConnector.ts:169:  public updateMeasurements(position: Vec2, size: Vec2): void {
-packages\core\src\NodeflowData.ts:315:  public updateCanvasSize(size: Vec2): void {
-
-

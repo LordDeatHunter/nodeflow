@@ -1,4 +1,0 @@
-﻿grep -E 'solid-js|@solid-primitives|ReactiveMap|createStore' packages/core/src/NodeflowChunking.ts
-(no output - zero matches confirmed)
-
-Verification date: 2026-04-04

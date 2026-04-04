@@ -1,4 +1,0 @@
-core build: pass
-solid build: pass
-vanilla build: pass
-root bun test: 216 pass, 0 fail

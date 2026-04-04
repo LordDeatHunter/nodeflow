@@ -1,2 +1,0 @@
-﻿=== SOLID CHECK (expect 0 matches) ===
-0 matches found

@@ -4,10 +4,12 @@ import { NodeflowData, Optional, PathData } from "@nodeflow/core";
 interface CurveProps {
   css?: string;
   nodeflowData: NodeflowData;
+  tick: () => number;
 }
 
 const Curve: Component<CurveProps> = (props) => {
   const curveData = createMemo<Optional<PathData>>(() => {
+    props.tick();
     const { mouseData, curveFunctions } = props.nodeflowData;
 
     if (mouseData.heldConnectors.length !== 1) return undefined;

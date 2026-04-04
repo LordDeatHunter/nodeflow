@@ -37,7 +37,7 @@ export default class NodeflowData {
   private _size: Vec2 = Vec2.zero();
   private _zoomLevel: number = 1;
   private _pinchDistance: number = 0;
-  private _intervalId: number | undefined = undefined;
+  private _intervalId: ReturnType<typeof setInterval> | undefined = undefined;
   private _settings: NodeflowSettings;
 
   public readonly changes: Changes;
@@ -324,7 +324,7 @@ export default class NodeflowData {
     this._pinchDistance = value;
   }
 
-  set intervalId(value: Optional<number>) {
+  set intervalId(value: ReturnType<typeof setInterval> | undefined) {
     this._intervalId = value;
   }
 
@@ -573,9 +573,9 @@ export default class NodeflowData {
 
     this.nodes.get(nodeId)!.connectorSections.forEach((section) => {
       section.connectors.forEach((connector) => {
-        connector.sources.forEach(({ sourceConnector }) => {
+        connector.sources.forEach(({ sourceConnector }: ConnectorSource) => {
           sourceConnector.destinations.filterInPlace(
-            ({ destinationConnector }) =>
+            ({ destinationConnector }: ConnectorDestination) =>
               destinationConnector.parentNode.id !== nodeId,
           );
         });
@@ -591,11 +591,14 @@ export default class NodeflowData {
 
     this.nodes.get(nodeId)!.connectorSections.forEach((section) => {
       section.connectors.forEach((connector) => {
-        connector.destinations.forEach(({ destinationConnector }) => {
-          destinationConnector.sources.filterInPlace(
-            ({ sourceConnector }) => sourceConnector.parentNode.id !== nodeId,
-          );
-        });
+        connector.destinations.forEach(
+          ({ destinationConnector }: ConnectorDestination) => {
+            destinationConnector.sources.filterInPlace(
+              ({ sourceConnector }: ConnectorSource) =>
+                sourceConnector.parentNode.id !== nodeId,
+            );
+          },
+        );
         connector.destinations = new ArrayWrapper<ConnectorDestination>();
       });
     });

@@ -5,12 +5,13 @@
   "type": "module",
   "scripts": {
     "start": "vite",
-    "dev": "vite",
+    "dev": "vite --port 5555",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "types": "src/types.d.ts",
   "dependencies": {
+    "@nodeflow/core": "workspace:*",
     "@nodeflow/solid": "workspace:*",
     "solid-js": "^1.9.3"
   },

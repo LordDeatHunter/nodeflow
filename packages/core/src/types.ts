@@ -93,7 +93,7 @@ export type ConnectorSectionType = {
 
 export interface NodeflowDataType {
   currentMoveSpeed: Vec2;
-  intervalId: Optional<number>;
+  intervalId: ReturnType<typeof setInterval> | undefined;
   pinchDistance: number;
   position: Vec2;
   size: Vec2;

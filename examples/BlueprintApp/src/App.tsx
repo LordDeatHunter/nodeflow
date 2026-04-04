@@ -1,6 +1,14 @@
-import { type Component, createSignal, JSX, onMount, Show } from "solid-js";
+import {
+  type Component,
+  createMemo,
+  createSignal,
+  JSX,
+  onMount,
+  Show,
+} from "solid-js";
 import {
   createSolidNodeflow,
+  createTick,
   NodeflowData,
   NodeflowRegistry,
   Optional,
@@ -25,8 +33,14 @@ const [nodeflowData, Nodeflow] = createSolidNodeflow(
 );
 
 const App: Component = () => {
+  const tick = createTick();
   const [nodePreview, setNodePreview] =
     createSignal<Optional<JSX.Element>>(undefined);
+
+  const mousePos = createMemo(() => {
+    tick();
+    return nodeflowData.mouseData.mousePosition;
+  });
 
   const createNode = (data: { event: PointerEvent }) => {
     if (!nodePreview()) return;
@@ -109,8 +123,8 @@ const App: Component = () => {
         <div
           style={{
             position: "absolute",
-            left: `${nodeflowData.mouseData.mousePosition.x - 75}px`,
-            top: `${nodeflowData.mouseData.mousePosition.y - 45}px`,
+            left: `${mousePos().x - 75}px`,
+            top: `${mousePos().y - 45}px`,
             width: "150px",
             height: "90px",
             display: "flex",

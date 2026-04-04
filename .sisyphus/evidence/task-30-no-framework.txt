@@ -1,1 +1,0 @@
-﻿PASS: No framework dependencies (solid/react/vue/svelte) found in packages/vanilla/package.json or packages/vanilla/src/

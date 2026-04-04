@@ -104,6 +104,9 @@ export function renderCanvas(
     data.eventStore.onWheelInNodeflow.publish({ event });
   });
   outerDiv.addEventListener("mousedown", (event) => {
+    if (event.button === 1) {
+      event.preventDefault();
+    }
     data.eventStore.onMouseDownInNodeflow.publish({ event });
   });
   outerDiv.addEventListener("keydown", (event) => {

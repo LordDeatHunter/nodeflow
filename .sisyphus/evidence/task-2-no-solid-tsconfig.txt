@@ -1,3 +1,0 @@
-grep for "solid" in packages/core/tsconfig.json
-
-Result: No matches found

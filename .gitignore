@@ -4,3 +4,16 @@ dist
 .idea/
 .vscode/
 .DS_Store
+
+# Sisyphus / OpenCode agent artifacts
+.sisyphus/
+.turbo/
+**/.turbo/
+.bp-err.txt
+.bp-err2.txt
+.bp-out.txt
+.bp-out2.txt
+.ft-err.txt
+.ft-out.txt
+playwright-qa.mjs
+*.timestamp-*

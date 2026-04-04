@@ -14,40 +14,48 @@ interface NodeCurveProps {
   destinationConnectorId: string;
   css: SelectableElementCSS;
   nodeflowData: NodeflowData;
+  tick: () => number;
 }
 
 const NodeCurve: Component<NodeCurveProps> = (props) => {
-  const startNode = createMemo<NodeflowNodeData>(
-    () => props.nodeflowData.nodes.get(props.sourceNodeId)!,
-  );
-  const endNode = createMemo<NodeflowNodeData>(
-    () => props.nodeflowData.nodes.get(props.destinationNodeId)!,
-  );
+  const startNode = createMemo<NodeflowNodeData>(() => {
+    props.tick();
+    return props.nodeflowData.nodes.get(props.sourceNodeId)!;
+  });
+  const endNode = createMemo<NodeflowNodeData>(() => {
+    props.tick();
+    return props.nodeflowData.nodes.get(props.destinationNodeId)!;
+  });
 
-  const sourceConnector = createMemo<Optional<NodeConnector>>(() =>
-    startNode().getConnector(props.sourceConnectorId),
-  );
-  const destinationConnector = createMemo<Optional<NodeConnector>>(() =>
-    endNode().getConnector(props.destinationConnectorId),
-  );
+  const sourceConnector = createMemo<Optional<NodeConnector>>(() => {
+    props.tick();
+    return startNode()?.getConnector(props.sourceConnectorId);
+  });
+  const destinationConnector = createMemo<Optional<NodeConnector>>(() => {
+    props.tick();
+    return endNode()?.getConnector(props.destinationConnectorId);
+  });
 
-  const destinationIndex = createMemo<number>(() =>
-    !startNode() || !endNode()
-      ? -1
-      : sourceConnector()?.destinations?.findIndex(
-          (destination) =>
-            destination.destinationConnector === destinationConnector(),
-        ) ?? -1,
-  );
+  const destinationIndex = createMemo<number>(() => {
+    props.tick();
+    if (!startNode() || !endNode()) return -1;
+    return (
+      sourceConnector()?.destinations?.findIndex(
+        (destination) =>
+          destination.destinationConnector === destinationConnector(),
+      ) ?? -1
+    );
+  });
 
-  createEffect(() => {
-    if (destinationIndex() < 0) {
-      return;
-    }
+  const pathData = createMemo(() => {
+    props.tick();
+    if (destinationIndex() < 0) return undefined;
+
     const { curveFunctions } = props.nodeflowData;
 
-    const output = startNode().getConnector(props.sourceConnectorId)!;
-    const input = endNode().getConnector(props.destinationConnectorId)!;
+    const output = startNode()?.getConnector(props.sourceConnectorId);
+    const input = endNode()?.getConnector(props.destinationConnectorId);
+    if (!output || !input) return undefined;
 
     const start = output.getCenter();
     const end = input.getCenter();
@@ -59,18 +67,29 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       endNode().getCenter(),
     );
 
-    sourceConnector()!.destinations.get(destinationIndex()).path = {
+    const path = curveFunctions.createDefaultCurvePath(
       start,
       end,
       anchorStart,
       anchorEnd,
-      path: curveFunctions.createDefaultCurvePath(
-        start,
-        end,
-        anchorStart,
-        anchorEnd,
-      ),
-    };
+    );
+
+    const dest = sourceConnector()?.destinations.get(destinationIndex());
+    if (dest) {
+      dest.path = { start, end, anchorStart, anchorEnd, path };
+    }
+
+    return path;
+  });
+
+  const isSelected = createMemo(() => {
+    props.tick();
+    return props.nodeflowData.mouseData.hasSelectedConnection(
+      props.sourceNodeId,
+      props.sourceConnectorId,
+      props.destinationNodeId,
+      props.destinationConnectorId,
+    );
   });
 
   return (
@@ -83,19 +102,13 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
             destinationConnector: destinationConnector()!,
           });
         }}
-        d={sourceConnector()!.destinations.get(destinationIndex()).path?.path}
+        d={pathData()}
         stroke="black"
         stroke-width={1}
         fill="none"
         classList={{
           [props.css?.normal ?? ""]: true,
-          [props.css?.selected ?? ""]:
-            props.nodeflowData.mouseData.hasSelectedConnection(
-              props.sourceNodeId,
-              props.sourceConnectorId,
-              props.destinationNodeId,
-              props.destinationConnectorId,
-            ),
+          [props.css?.selected ?? ""]: isSelected(),
         }}
         style={{
           cursor: "pointer",
@@ -103,32 +116,30 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
         }}
       />
       <Show when={props.nodeflowData.settings.debugMode}>
-        <circle
-          cx={
-            sourceConnector()!.destinations.get(destinationIndex()).path
-              ?.anchorStart?.x
-          }
-          cy={
-            sourceConnector()!.destinations.get(destinationIndex()).path
-              ?.anchorStart?.y
-          }
-          r={4}
-          fill="none"
-          class={props.css?.normal ?? ""}
-        />
-        <circle
-          cx={
-            sourceConnector()!.destinations.get(destinationIndex()).path
-              ?.anchorEnd?.x
-          }
-          cy={
-            sourceConnector()!.destinations.get(destinationIndex()).path
-              ?.anchorEnd?.y
-          }
-          r={4}
-          fill="none"
-          class={props.css?.normal ?? ""}
-        />
+        {(() => {
+          const dest = createMemo(() => {
+            props.tick();
+            return sourceConnector()?.destinations.get(destinationIndex());
+          });
+          return (
+            <>
+              <circle
+                cx={dest()?.path?.anchorStart?.x}
+                cy={dest()?.path?.anchorStart?.y}
+                r={4}
+                fill="none"
+                class={props.css?.normal ?? ""}
+              />
+              <circle
+                cx={dest()?.path?.anchorEnd?.x}
+                cy={dest()?.path?.anchorEnd?.y}
+                r={4}
+                fill="none"
+                class={props.css?.normal ?? ""}
+              />
+            </>
+          );
+        })()}
       </Show>
     </>
   );

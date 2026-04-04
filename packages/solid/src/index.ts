@@ -8,3 +8,4 @@ export { default as Connector } from "./components/Connector";
 export * from "./types";
 export * from "@nodeflow/core";
 export { windowSize } from "./screen-utils";
+export { createTick } from "./tick";

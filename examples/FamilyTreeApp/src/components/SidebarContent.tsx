@@ -1,4 +1,4 @@
-import { NodeflowNodeData, Optional } from "@nodeflow/solid";
+import { createTick, NodeflowNodeData, Optional } from "@nodeflow/solid";
 import { createMemo, createSignal, Show } from "solid-js";
 import NodeDataDisplay from "./NodeDataDisplay";
 import NodeFormButtons from "./NodeFormButtons";
@@ -9,13 +9,15 @@ import { nodeflowData } from "../App";
 export type FormDataType = CustomNodeflowDataType & { id: string };
 
 const SidebarContent = () => {
+  const tick = createTick();
   const [formData, setFormData] =
     createSignal<Optional<FormDataType>>(undefined);
 
-  const node = createMemo<Optional<NodeflowNodeData>>(
-    () =>
-      nodeflowData.mouseData.selections.selectedNodesMap.values().next().value,
-  );
+  const node = createMemo<Optional<NodeflowNodeData>>(() => {
+    tick();
+    return nodeflowData.mouseData.selections.selectedNodesMap.values().next()
+      .value;
+  });
 
   const nodeData = createMemo<Optional<FormDataType>>(() => {
     const nodeData = node();

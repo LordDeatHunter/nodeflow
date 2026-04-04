@@ -1,2 +1,0 @@
-- Chose an empty `src/index.ts` barrel to establish the package boundary without moving implementation files yet.
-- Kept Rollup externals aligned with the planned Solid adapter surface, including `@nodeflow/core`.
