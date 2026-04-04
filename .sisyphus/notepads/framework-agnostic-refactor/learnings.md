@@ -48,3 +48,29 @@ ew NodeConnector(data) passing a mock ConnectorSectionType. Avoids the full depe
 - SelectionBoxData.boundingBox setter calls nodeflowData.transformVec2ToCanvas() and nodeflowData.chunking.getNodesInRect() — with no nodes in the canvas, setting a bounding box results in empty selections (no crash).
 - KeyboardData.pressKey/releaseKey are the public mutation API. heldKeys setter replaces the entire Set. clearKeys() resets to empty Set.
 - 43 tests total (17 MouseData + 16 KeyboardData + 10 SelectionBoxData) all pass with 0 failures in ~171ms.
+
+## Task 7 â€“ NodeflowNodeData behavioral tests (2026-04-04)
+
+### Import path
+Tests in packages/core/tests/ must use **3 levels up** to reach root src:
+  import X from '../../../src/utils/data/X'
+  (not ../../src/ which would resolve to packages/src/ - nonexistent)
+
+### ConnectorSection.deserialize id-collision behavior
+When adding a connector section with an id that already exists, ConnectorSection.deserialize
+auto-assigns a NEW id (via getNextFreeConnectorSectionId) rather than returning the existing one.
+This means calling addConnectorSection twice with the same id creates TWO sections, not one.
+addConnectorSection only de-dupes if the *generated* id collides.
+
+### Solid store proxy and toBe
+Solid createStore wraps values in proxies. Strict reference equality (toBe) fails when comparing
+objects retrieved from the store. Use .id comparison or toEqual for value equality instead.
+
+### NodeflowData construction in tests
+Instantiate NodeflowData directly: new NodeflowData('some-unique-id')
+Pass hasHistoryGroup=false to all node/section/connector mutations to avoid NodeflowLib.get() calls
+(which would fail without NodeflowLib.createCanvas setup).
+
+### Global type declaration
+Bun test environment requires: declare global { interface CustomNodeflowDataType {} }
+when importing NodeflowData/NodeflowNodeData.
