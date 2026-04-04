@@ -5,8 +5,8 @@
  * Uses the class's public getters/methods — no reactive tracking required.
  */
 import { describe, it, expect, beforeEach } from "bun:test";
-import NodeflowData from "../../../src/utils/data/NodeflowData";
-import Vec2 from "../../../src/utils/data/Vec2";
+import NodeflowData from "../src/NodeflowData";
+import Vec2 from "../src/Vec2";
 
 // Declare the global required by NodeflowNodeData
 declare global {

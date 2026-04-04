@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { BaseEventPublisher } from "../../../src/utils/data/EventPublishers";
+import { BaseEventPublisher } from "../src/EventPublishers";
 
 type StringPublisher = BaseEventPublisher<string, (data: string) => void>;
 

@@ -1058,7 +1058,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/core/tests/Changes.test.ts`
   - Pre-commit: `bun test`
 
-- [ ] 13. Move Framework-Agnostic Files to @nodeflow/core
+- [x] 13. Move Framework-Agnostic Files to @nodeflow/core
 
   **What to do**:
 
@@ -1158,7 +1158,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/core/src/Vec2.ts`, `packages/core/src/Rect.ts`, `packages/core/src/CurveFunctions.ts`, `packages/core/src/ArrayWrapper.ts`, `packages/core/src/Changes.ts`, `packages/core/src/ConnectorDestination.ts`, `packages/core/src/ConnectorSource.ts`, `packages/core/src/constants.ts`, `packages/core/src/math-utils.ts`, `packages/core/src/misc-utils.ts`
   - Pre-commit: `bun test`
 
-- [ ] 14. Refactor Types — Make DisplayFunc Generic, Remove JSX/ReactiveMap from Core Types
+- [x] 14. Refactor Types — Make DisplayFunc Generic, Remove JSX/ReactiveMap from Core Types
 
   **What to do**:
 
@@ -1244,7 +1244,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/core/src/types.ts`, `packages/solid/src/types.ts`
   - Pre-commit: `bun run build`
 
-- [ ] 15. Refactor EventPublishers — Replace ReactiveMap with Map
+- [x] 15. Refactor EventPublishers — Replace ReactiveMap with Map
 
   **What to do**:
 
@@ -1321,7 +1321,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/core/src/EventPublishers.ts`
   - Pre-commit: `bun test`
 
-- [ ] 16. Refactor KeyboardData — Remove createStore + produce
+- [x] 16. Refactor KeyboardData — Remove createStore + produce
 
   **What to do**:
 
@@ -1397,7 +1397,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/core/src/KeyboardData.ts`
   - Pre-commit: `bun test`
 
-- [ ] 17. Refactor SelectionBoxData — Remove createStore
+- [x] 17. Refactor SelectionBoxData — Remove createStore
 
   **What to do**:
 
@@ -1470,7 +1470,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/core/src/SelectionBoxData.ts`
   - Pre-commit: `bun test`
 
-- [ ] 18. Refactor MouseData — Remove createStore
+- [x] 18. Refactor MouseData — Remove createStore
 
   **What to do**:
 
@@ -1548,7 +1548,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/core/src/MouseData.ts`
   - Pre-commit: `bun test`
 
-- [ ] 19. Refactor SelectionMap — Replace 3 ReactiveMap with Map
+- [x] 19. Refactor SelectionMap — Replace 3 ReactiveMap with Map
 
   **What to do**:
 
@@ -1619,7 +1619,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/core/src/SelectionMap.ts`
   - Pre-commit: `bun test`
 
-- [ ] 20. Refactor NodeflowChunking — Remove createStore + ReactiveMap
+- [x] 20. Refactor NodeflowChunking — Remove createStore + ReactiveMap
 
   **What to do**:
 
@@ -1694,7 +1694,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/core/src/NodeflowChunking.ts`
   - Pre-commit: `bun test`
 
-- [ ] 21. Refactor NodeConnector — Remove createStore
+- [x] 21. Refactor NodeConnector — Remove createStore
 
   **What to do**:
 
@@ -1773,7 +1773,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/core/src/NodeConnector.ts`
   - Pre-commit: `bun test`
 
-- [ ] 22. Refactor ConnectorSection — Remove createStore + ReactiveMap
+- [x] 22. Refactor ConnectorSection — Remove createStore + ReactiveMap
 
   **What to do**:
 
@@ -1852,7 +1852,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/core/src/ConnectorSection.ts`
   - Pre-commit: `bun test`
 
-- [ ] 23. Refactor NodeflowNodeData — Remove createStore + createEffect (Collision)
+- [x] 23. Refactor NodeflowNodeData — Remove createStore + createEffect (Collision)
 
   **What to do**:
 
@@ -1944,7 +1944,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/core/src/NodeflowNodeData.ts`
   - Pre-commit: `bun test`
 
-- [ ] 24. Refactor NodeflowData — Remove createStore ×2, ReactiveMap, produce (THE BIG ONE)
+- [x] 24. Refactor NodeflowData — Remove createStore ×2, ReactiveMap, produce (THE BIG ONE)
 
   **What to do**:
 
@@ -2060,7 +2060,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/core/src/NodeflowData.ts`
   - Pre-commit: `bun test`
 
-- [ ] 25. Extract Core Measurement API — Move Component-to-Model Writes
+- [x] 25. Extract Core Measurement API — Move Component-to-Model Writes
 
   **What to do**:
 
@@ -2140,7 +2140,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/core/src/NodeflowNodeData.ts`, `packages/core/src/NodeConnector.ts`, `packages/core/src/NodeflowData.ts`
   - Pre-commit: `bun test`
 
-- [ ] 26. Split NodeflowLib into NodeflowRegistry (Core) + Adapter Initialization
+- [x] 26. Split NodeflowLib into NodeflowRegistry (Core) + Adapter Initialization
 
   **What to do**:
 
@@ -2229,7 +2229,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/core/src/NodeflowRegistry.ts`, `packages/core/src/index.ts`
   - Pre-commit: `bun run build`
 
-- [ ] 27. Move screen-utils.ts to @nodeflow/solid
+- [x] 27. Move screen-utils.ts to @nodeflow/solid
 
   **What to do**:
 
@@ -2289,7 +2289,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/solid/src/screen-utils.ts`
   - Pre-commit: `bun run build`
 
-- [ ] 28. Move CSS to @nodeflow/core Distribution Output
+- [x] 28. Move CSS to @nodeflow/core Distribution Output
 
   **What to do**:
 
@@ -2361,7 +2361,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/core/src/style.css`, `packages/core/package.json`
   - Pre-commit: `bun run build`
 
-- [ ] 29. Implement @nodeflow/solid Adapter — Move .tsx Components + Bridge State
+- [x] 29. Implement @nodeflow/solid Adapter — Move .tsx Components + Bridge State
 
   **What to do**:
 
@@ -2468,7 +2468,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/solid/src/components/*.tsx`, `packages/solid/src/adapter.ts`, `packages/solid/src/index.ts`
   - Pre-commit: `bun run build`
 
-- [ ] 30. Implement @nodeflow/vanilla Adapter — Plain DOM Rendering
+- [x] 30. Implement @nodeflow/vanilla Adapter — Plain DOM Rendering
 
   **What to do**:
 
@@ -2565,7 +2565,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `packages/vanilla/src/adapter.ts`, `packages/vanilla/src/components/*.ts`, `packages/vanilla/src/index.ts`
   - Pre-commit: `bun run build`
 
-- [ ] 31. Migrate Existing Example Apps to @nodeflow/solid
+- [x] 31. Migrate Existing Example Apps to @nodeflow/solid
 
   **What to do**:
 
@@ -2659,7 +2659,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `examples/BlueprintApp/`, `examples/FamilyTreeApp/`, `examples/NoStyle/`
   - Pre-commit: `bun run build`
 
-- [ ] 32. Create Vanilla JS Example App
+- [x] 32. Create Vanilla JS Example App
 
   **What to do**:
 
@@ -2741,7 +2741,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `examples/VanillaApp/`
   - Pre-commit: `bun run build`
 
-- [ ] 33. Core Isolation Verification — Zero Framework Imports Check
+- [x] 33. Core Isolation Verification — Zero Framework Imports Check
 
   **What to do**:
 
@@ -2910,7 +2910,7 @@ Max Concurrent: 7 (Wave 2)
   - Files: `src/` (deleted), `package.json`, `vite.config.ts` (deleted)
   - Pre-commit: `bun test; bun run build`
 
-- [ ] 35. Verify solid-styled-components Usage + Remove if Stale
+- [x] 35. Verify solid-styled-components Usage + Remove if Stale
 
   **What to do**:
 

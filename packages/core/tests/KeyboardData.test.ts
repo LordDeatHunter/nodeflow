@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import NodeflowData from "../../../src/utils/data/NodeflowData";
-import { KEYBOARD_KEY_CODES } from "../../../src/utils/constants";
+import NodeflowData from "../src/NodeflowData";
+import { KEYBOARD_KEY_CODES } from "../src/constants";
 
 describe("KeyboardData", () => {
   let nodeflowData: NodeflowData;

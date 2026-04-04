@@ -1,7 +1,7 @@
 import { describe, it, expect } from "bun:test";
-import SelectionMap from "../../../src/utils/SelectionMap";
-import NodeflowData from "../../../src/utils/data/NodeflowData";
-import { SelectableElementType } from "../../../src/nodeflow-types";
+import SelectionMap from "../src/SelectionMap";
+import NodeflowData from "../src/NodeflowData";
+import { SelectableElementType } from "../src/nodeflow-types";
 
 let testId = 0;
 function createNodeflow(): NodeflowData {

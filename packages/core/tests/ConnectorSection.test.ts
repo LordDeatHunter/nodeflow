@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import ConnectorSection from "../../../src/utils/data/ConnectorSection";
-import Vec2 from "../../../src/utils/data/Vec2";
+import ConnectorSection from "../src/ConnectorSection";
+import Vec2 from "../src/Vec2";
 import { ReactiveMap } from "@solid-primitives/map";
 import type {
   ConnectorSectionType,
   SerializedConnectorSection,
-} from "../../../src/nodeflow-types";
-import type NodeConnector from "../../../src/utils/data/NodeConnector";
-import type { NodeflowData } from "../../../src/utils/data";
+} from "../src/nodeflow-types";
+import type NodeConnector from "../src/NodeConnector";
+import type { NodeflowData } from "../src";
 
 function makeMockNode(nodeId = "node-1") {
   let connectorIdCounter = 0;

@@ -181,3 +181,7 @@ when importing NodeflowData/NodeflowNodeData.
 
 - Solid imports were not found in packages/core/src or packages/core/dist, and packages/core/package.json contains no solid dependencies.
 - The DOM-pattern grep produced 3 matches in packages/core/src/NodeflowRegistry.ts, but they are subscribeMultiple event names containing "Document." rather than DOM API calls; mark the DOM check as FAIL only because the literal regex matched, not because of actual browser API usage.
+## [2026-04-04] Task: T34
+- Removed legacy root-level `src/` and `vite.config.ts` after confirming the code had already moved into `packages/`.
+- Cleaned root package metadata for monorepo usage and updated core tests to import from package-local source paths.
+- Verification: `bun install`, `bun test` (216 pass / 0 fail), and `bun run build` in `packages/core`, `packages/solid`, and `packages/vanilla` all passed.

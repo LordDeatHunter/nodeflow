@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import NodeflowData from "../../../src/utils/data/NodeflowData";
-import Vec2 from "../../../src/utils/data/Vec2";
-import { MOUSE_BUTTONS } from "../../../src/utils/constants";
+import NodeflowData from "../src/NodeflowData";
+import Vec2 from "../src/Vec2";
+import { MOUSE_BUTTONS } from "../src/constants";
 
 describe("MouseData", () => {
   let nodeflowData: NodeflowData;

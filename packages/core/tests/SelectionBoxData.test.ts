@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import NodeflowData from "../../../src/utils/data/NodeflowData";
-import Vec2 from "../../../src/utils/data/Vec2";
-import Rect from "../../../src/utils/data/Rect";
+import NodeflowData from "../src/NodeflowData";
+import Vec2 from "../src/Vec2";
+import Rect from "../src/Rect";
 
 describe("SelectionBoxData", () => {
   let nodeflowData: NodeflowData;

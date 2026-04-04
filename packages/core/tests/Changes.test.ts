@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import Changes from "../../../src/utils/data/Changes";
-import type { Change } from "../../../src/nodeflow-types/types";
+import Changes from "../src/Changes";
+import type { Change } from "../src/nodeflow-types";
 
 let groupCounter = 0;
 

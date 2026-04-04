@@ -13,7 +13,20 @@
     "ses_2aa2eed42ffewMvVs6EYqOXqQS",
     "ses_2aa2f6a60ffew1x5vKmSz2Y5il",
     "ses_2aa2f9442ffe6VjOgBbXP5Z5O7",
-    "ses_2aa2f1dd7ffebQuJIyeb7MKheN"
+    "ses_2aa2f1dd7ffebQuJIyeb7MKheN",
+    "ses_2aa04a90bffeagsLM5Ex9WFa3Q",
+    "ses_2aa046b2affeRfB8CLMlgOzP3V",
+    "ses_2aa004417ffejyez7T4pxbLk6D",
+    "ses_2a9fc50f6ffeRpV3srN6pCb1M9",
+    "ses_2a9f7b70cffekrMLucbbhM3ph3",
+    "ses_2a9eeafd5ffe3TM71EbUAlB8k2",
+    "ses_2a9eb7baeffedmdULGFsqP1Ljp",
+    "ses_2a9e5fc4fffegZx8Z17UeR1MhX",
+    "ses_2a9e38a14ffeF5TimcxBrTHOm0",
+    "ses_2a9deed91ffeqvrFWETIjw4B7w",
+    "ses_2a9d8d727ffeu6tE7sTrJT0luB",
+    "ses_2a9cd98d5ffeGCT8SP1qYgwYYg",
+    "ses_2a9cd59f5ffeo2c69aBWqCcMO2"
   ],
   "plan_name": "framework-agnostic-refactor",
   "agent": "atlas",
@@ -44,6 +57,87 @@
       "agent": "Sisyphus-Junior",
       "category": "deep",
       "updated_at": "2026-04-04T00:17:05.226Z"
+    },
+    "todo:20": {
+      "task_key": "todo:20",
+      "task_label": "20",
+      "task_title": "Refactor NodeflowChunking — Remove createStore + ReactiveMap",
+      "session_id": "ses_2aa04a90bffeagsLM5Ex9WFa3Q",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-04-04T00:56:10.154Z"
+    },
+    "todo:22": {
+      "task_key": "todo:22",
+      "task_label": "22",
+      "task_title": "Refactor ConnectorSection — Remove createStore + ReactiveMap",
+      "session_id": "ses_2aa004417ffejyez7T4pxbLk6D",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-04-04T01:01:31.915Z"
+    },
+    "todo:23": {
+      "task_key": "todo:23",
+      "task_label": "23",
+      "task_title": "Refactor NodeflowNodeData — Remove createStore + createEffect (Collision)",
+      "session_id": "ses_2a9fc50f6ffeRpV3srN6pCb1M9",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-04-04T01:06:19.413Z"
+    },
+    "todo:24": {
+      "task_key": "todo:24",
+      "task_label": "24",
+      "task_title": "Refactor NodeflowData — Remove createStore ×2, ReactiveMap, produce (THE BIG ONE)",
+      "session_id": "ses_2a9f7b70cffekrMLucbbhM3ph3",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-04-04T01:14:28.972Z"
+    },
+    "todo:25": {
+      "task_key": "todo:25",
+      "task_label": "25",
+      "task_title": "Extract Core Measurement API — Move Component-to-Model Writes",
+      "session_id": "ses_2a9eeafd5ffe3TM71EbUAlB8k2",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-04-04T01:20:05.559Z"
+    },
+    "todo:26": {
+      "task_key": "todo:26",
+      "task_label": "26",
+      "task_title": "Split NodeflowLib into NodeflowRegistry (Core) + Adapter Initialization",
+      "session_id": "ses_2a9eb7baeffedmdULGFsqP1Ljp",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-04-04T01:26:21.789Z"
+    },
+    "todo:27": {
+      "task_key": "todo:27",
+      "task_label": "27",
+      "task_title": "Move screen-utils.ts to @nodeflow/solid",
+      "session_id": "ses_2a9e38a14ffeF5TimcxBrTHOm0",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-04-04T01:32:48.141Z"
+    },
+    "todo:29": {
+      "task_key": "todo:29",
+      "task_label": "29",
+      "task_title": "Implement @nodeflow/solid Adapter — Move .tsx Components + Bridge State",
+      "session_id": "ses_2a9deed91ffeqvrFWETIjw4B7w",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-04-04T01:39:50.910Z"
+    },
+    "todo:30": {
+      "task_key": "todo:30",
+      "task_label": "30",
+      "task_title": "Implement @nodeflow/vanilla Adapter — Plain DOM Rendering",
+      "session_id": "ses_2a9d8d727ffeu6tE7sTrJT0luB",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-04-04T01:48:23.533Z"
     }
   }
 }

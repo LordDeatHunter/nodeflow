@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import NodeConnector from "../../../src/utils/data/NodeConnector";
-import ArrayWrapper from "../../../src/utils/data/ArrayWrapper";
-import Vec2 from "../../../src/utils/data/Vec2";
-import ConnectorDestination from "../../../src/utils/data/ConnectorDestination";
-import ConnectorSource from "../../../src/utils/data/ConnectorSource";
+import NodeConnector from "../src/NodeConnector";
+import ArrayWrapper from "../src/ArrayWrapper";
+import Vec2 from "../src/Vec2";
+import ConnectorDestination from "../src/ConnectorDestination";
+import ConnectorSource from "../src/ConnectorSource";
 import type {
   NodeConnectorType,
   ConnectorSectionType,
-} from "../../../src/nodeflow-types";
+} from "../src/nodeflow-types";
 
 function makeMockSection(sectionId = "section-1"): ConnectorSectionType {
   const mockNode = {

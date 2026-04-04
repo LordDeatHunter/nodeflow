@@ -1,8 +1,8 @@
 import { describe, it, expect } from "bun:test";
-import NodeflowChunking from "../../../src/utils/data/NodeflowChunking";
-import NodeflowData from "../../../src/utils/data/NodeflowData";
-import Vec2 from "../../../src/utils/data/Vec2";
-import Rect from "../../../src/utils/data/Rect";
+import NodeflowChunking from "../src/NodeflowChunking";
+import NodeflowData from "../src/NodeflowData";
+import Vec2 from "../src/Vec2";
+import Rect from "../src/Rect";
 
 let testId = 0;
 function createNodeflow(): NodeflowData {

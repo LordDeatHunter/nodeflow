@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import NodeflowData from "../../../src/utils/data/NodeflowData";
-import NodeflowNodeData from "../../../src/utils/data/NodeflowNodeData";
-import Vec2 from "../../../src/utils/data/Vec2";
+import NodeflowData from "../src/NodeflowData";
+import NodeflowNodeData from "../src/NodeflowNodeData";
+import Vec2 from "../src/Vec2";
 
 declare global {
   interface CustomNodeflowDataType {}

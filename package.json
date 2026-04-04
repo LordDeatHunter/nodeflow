@@ -9,7 +9,6 @@
   "version": "0.0.9",
   "description": "Library for creating node/graph-based applications",
   "scripts": {
-    "build": "eslint . --config eslint.config.js && vite build",
     "build-examples": "node scripts/build-examples.cjs",
     "deploy-examples": "run-s build-examples && gh-pages -d examples-build",
     "dev:blueprint": "bun --cwd ./examples/BlueprintApp run start",
@@ -18,7 +17,6 @@
     "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
     "test": "bunx turbo test",
     "typecheck": "turbo typecheck",
-    "serve": "vite preview",
     "start": "run-p dev:*"
   },
   "type": "module",
@@ -28,21 +26,6 @@
     "examples/*"
   ],
   "license": "MIT",
-  "files": [
-    "dist"
-  ],
-  "main": "./dist/nodeflow.cjs.js",
-  "module": "./dist/nodeflow.es.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/nodeflow.es.js",
-      "browser": "./dist/nodeflow.es.js",
-      "require": "./dist/nodeflow.cjs.js",
-      "node": "./dist/nodeflow.cjs.js"
-    }
-  },
   "devDependencies": {
     "@eslint/js": "^9.12.0",
     "@types/eslint__js": "^8.42.3",
@@ -68,12 +51,5 @@
     "vite-plugin-dts": "^4.3.0",
     "vite-plugin-solid": "2.7.0",
     "vite-plugin-terminal": "^1.2.0"
-  },
-  "dependencies": {
-    "@solid-primitives/map": "^0.4.13",
-    "vite-plugin-css-injected-by-js": "^3.5.2"
-  },
-  "peerDependencies": {
-    "solid-js": "^1.9.3"
   }
 }

@@ -1,0 +1,1 @@
+src/ directory removed and root vite.config.ts deleted for T34.
