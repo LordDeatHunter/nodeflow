@@ -14,6 +14,8 @@ export default defineConfig({
       external: [
         "react",
         "react/jsx-runtime",
+        "react-dom",
+        "react-dom/client",
         "@nodeflow/vanilla",
         "@nodeflow/core",
       ],

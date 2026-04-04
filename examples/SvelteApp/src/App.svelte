@@ -1,18 +1,12 @@
 <script lang="ts">
-  import { Nodeflow } from "@nodeflow/svelte";
+  import { Nodeflow, createNodeDisplay } from "@nodeflow/svelte";
   import type { NodeflowData } from "@nodeflow/svelte";
-  import { mount } from "svelte";
   import NodeCard from "./NodeCard.svelte";
 
-  const nodeDisplay = ({ node }: { node: { id: string; position: { x: number; y: number } } }): HTMLElement => {
-    const container = document.createElement("div");
-    mount(NodeCard, {
-      target: container,
-      props: { id: node.id, position: node.position },
-    });
-
-    return container;
-  };
+  const nodeDisplay = createNodeDisplay(NodeCard, (node) => ({
+    id: node.id,
+    position: node.position,
+  }));
 
   const handleReady = (nodeflowData: NodeflowData) => {
     const addNode = (x: number, y: number, inputs: number, outputs: number) => {

@@ -1,6 +1,5 @@
-import { Nodeflow } from "@nodeflow/react";
+import { Nodeflow, createNodeDisplay } from "@nodeflow/react";
 import type { NodeflowData } from "@nodeflow/react";
-import { createRoot } from "react-dom/client";
 
 const NodeCard = ({
   node,
@@ -36,15 +35,7 @@ const NodeCard = ({
   </div>
 );
 
-const nodeDisplay = ({
-  node,
-}: {
-  node: { id: string; position: { x: number; y: number } };
-}): HTMLElement => {
-  const container = document.createElement("div");
-  createRoot(container).render(<NodeCard node={node} />);
-  return container;
-};
+const nodeDisplay = createNodeDisplay(NodeCard);
 
 const App = () => {
   const handleReady = (data: NodeflowData) => {

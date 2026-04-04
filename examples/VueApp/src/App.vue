@@ -1,21 +1,12 @@
 <script setup lang="ts">
-import { Nodeflow } from "@nodeflow/vue";
+import { Nodeflow, createNodeDisplay } from "@nodeflow/vue";
 import type { NodeflowData } from "@nodeflow/vue";
-import { createApp } from "vue";
 import NodeCard from "./NodeCard.vue";
 
-const nodeDisplay = ({
-  node,
-}: {
-  node: { id: string; position: { x: number; y: number } };
-}): HTMLElement => {
-  const wrapper = document.createElement("div");
-  createApp(NodeCard, {
-    id: node.id,
-    position: node.position,
-  }).mount(wrapper);
-  return wrapper;
-};
+const nodeDisplay = createNodeDisplay(NodeCard, (node) => ({
+  id: node.id,
+  position: node.position,
+}));
 
 const addNode = (
   data: NodeflowData,
