@@ -11,19 +11,14 @@ interface ConnectorProps {
 
 const Connector: Component<ConnectorProps> = (props) => (
   <div
-    ref={(el) =>
-      setTimeout(() => {
-        if (!el || !props.nodeflowData.nodes.has(props.nodeId)) return;
+    ref={(el) => {
+      const measure = () => {
+        if (!props.nodeflowData.nodes.has(props.nodeId)) return;
 
         const connector = props.nodeflowData.nodes
           .get(props.nodeId)!
           .connectorSections.get(props.sectionId)!
           .connectors.get(props.connectorId)!;
-
-        const resizeObserver = new ResizeObserver(() => {
-          connector.size = Vec2.of(el.offsetWidth, el.offsetHeight);
-        });
-        resizeObserver.observe(el);
 
         connector.updateMeasurements(
           Vec2.of(
@@ -32,8 +27,13 @@ const Connector: Component<ConnectorProps> = (props) => (
           ),
           Vec2.of(el.offsetWidth, el.offsetHeight),
         );
-      })
-    }
+      };
+
+      const resizeObserver = new ResizeObserver(measure);
+      resizeObserver.observe(el);
+
+      requestAnimationFrame(measure);
+    }}
     class={props.connector?.css}
     id={`connector-${props.connectorId}`}
     onMouseDown={(event) =>

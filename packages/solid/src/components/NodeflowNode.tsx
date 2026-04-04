@@ -8,68 +8,93 @@ import {
 import { NodeflowData, NodeflowNodeData, Vec2 } from "@nodeflow/core";
 import Connector from "./Connector";
 
-// TODO: Probably better to pass the node data directly instead of the id.
 interface NodeProps {
   nodeId: string;
   nodeflowData: NodeflowData;
+  tick: () => number;
 }
 
 const NodeflowNode: Component<NodeProps> = (props) => {
-  const node = createMemo<NodeflowNodeData>(
-    () => props.nodeflowData.nodes.get(props.nodeId)!,
-  );
+  const node = createMemo<NodeflowNodeData>(() => {
+    props.tick();
+    return props.nodeflowData.nodes.get(props.nodeId)!;
+  });
+
   const [isVisible, setIsVisible] = createSignal<boolean>(false);
 
-  onCleanup(() => {
-    props.nodeflowData.chunking.removeNodeFromChunk(
-      props.nodeId,
-      node().position,
+  const nodePosition = createMemo(() => {
+    props.tick();
+    const n = props.nodeflowData.nodes.get(props.nodeId);
+    return n ? n.position : Vec2.zero();
+  });
+
+  const isSelected = createMemo(() => {
+    props.tick();
+    return (
+      props.nodeflowData.mouseData.hasSelectedNode(props.nodeId) ||
+      props.nodeflowData.mouseData.selectionBox.selections.isNodeSelected(
+        props.nodeId,
+      )
     );
+  });
+
+  const connectorSectionEntries = createMemo(() => {
+    props.tick();
+    const n = props.nodeflowData.nodes.get(props.nodeId);
+    return n ? Array.from(n.connectorSections.entries()) : [];
+  });
+
+  onCleanup(() => {
+    const n = props.nodeflowData.nodes.get(props.nodeId);
+    if (n) {
+      props.nodeflowData.chunking.removeNodeFromChunk(props.nodeId, n.position);
+    }
   });
 
   return (
     <div
-      ref={(el) =>
-        setTimeout(() => {
-          if (!el) return;
-
-          const resizeObserver = new ResizeObserver(() => {
-            node().updateMeasurements(
+      ref={(el) => {
+        const measure = () => {
+          const n = props.nodeflowData.nodes.get(props.nodeId);
+          if (n) {
+            n.updateMeasurements(
               Vec2.of(el.clientWidth, el.clientHeight),
               Vec2.of(el.clientLeft, el.clientTop),
             );
-          });
-          resizeObserver.observe(el);
+          }
+        };
 
-          const positionOffset = node().centered
+        const resizeObserver = new ResizeObserver(measure);
+        resizeObserver.observe(el);
+
+        // Defer centering adjustment until first layout is available
+        requestAnimationFrame(() => {
+          const n = props.nodeflowData.nodes.get(props.nodeId);
+          if (!n) return;
+
+          measure();
+
+          const positionOffset = n.centered
             ? Vec2.of(el.clientWidth, el.clientHeight).divideBy(2)
             : Vec2.zero();
 
-          node().update({
-            position: node().position.subtract(positionOffset),
+          n.update({
+            position: n.position.subtract(positionOffset),
           });
-          node().updateMeasurements(
-            Vec2.of(el.clientWidth, el.clientHeight),
-            Vec2.of(el.clientLeft, el.clientTop),
-          );
 
           setIsVisible(true);
-        })
-      }
+        });
+      }}
       style={{
-        left: `${node().position.x}px`,
-        top: `${node().position.y}px`,
+        left: `${nodePosition().x}px`,
+        top: `${nodePosition().y}px`,
         opacity: isVisible() ? 1 : 0,
       }}
       id={`node-${props.nodeId}`}
       class="nodeflowNode"
       classList={{
         [node()?.css?.normal ?? ""]: true,
-        [node()?.css?.selected ?? ""]:
-          props.nodeflowData.mouseData.hasSelectedNode(props.nodeId) ||
-          props.nodeflowData.mouseData.selectionBox.selections.isNodeSelected(
-            props.nodeId,
-          ),
+        [node()?.css?.selected ?? ""]: isSelected(),
       }}
       onMouseDown={(event) =>
         props.nodeflowData.eventStore.onMouseDownInNode.publish({
@@ -91,7 +116,7 @@ const NodeflowNode: Component<NodeProps> = (props) => {
       }
     >
       {node().display({ node: node() })}
-      <For each={Array.from(node().connectorSections.entries())}>
+      <For each={connectorSectionEntries()}>
         {([sectionId, section]) => (
           <div
             classList={{
