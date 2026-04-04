@@ -12,12 +12,10 @@ export default defineConfig({
       formats: ["es", "cjs"],
     },
     rollupOptions: {
-      external: [
-        "svelte",
-        "svelte/internal",
-        "@nodeflow/vanilla",
-        "@nodeflow/core",
-      ],
+      external: (id) =>
+        id === "svelte" ||
+        id.startsWith("svelte/") ||
+        id.startsWith("@nodeflow/"),
       output: { exports: "named" },
     },
   },
