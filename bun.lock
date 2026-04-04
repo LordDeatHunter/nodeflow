@@ -110,6 +110,41 @@
         "vite-plugin-terminal": "^1.2.0",
       },
     },
+    "packages/core": {
+      "name": "@nodeflow/core",
+      "version": "0.0.1",
+      "devDependencies": {
+        "typescript": "^5.6.3",
+        "vite": "^4.5.5",
+        "vite-plugin-dts": "^4.3.0",
+      },
+    },
+    "packages/solid": {
+      "name": "@nodeflow/solid",
+      "version": "0.0.1",
+      "devDependencies": {
+        "typescript": "^5.6.3",
+        "vite": "^4.5.5",
+        "vite-plugin-dts": "^4.3.0",
+        "vite-plugin-solid": "2.7.0",
+      },
+      "peerDependencies": {
+        "@nodeflow/core": "workspace:*",
+        "solid-js": "^1.9.3",
+      },
+    },
+    "packages/vanilla": {
+      "name": "@nodeflow/vanilla",
+      "version": "0.0.1",
+      "devDependencies": {
+        "typescript": "^5.6.3",
+        "vite": "^4.5.5",
+        "vite-plugin-dts": "^4.3.0",
+      },
+      "peerDependencies": {
+        "@nodeflow/core": "workspace:*",
+      },
+    },
   },
   "packages": {
     "@babel/code-frame": ["@babel/code-frame@7.29.0", "", { "dependencies": { "@babel/helper-validator-identifier": "^7.28.5", "js-tokens": "^4.0.0", "picocolors": "^1.1.1" } }, "sha512-9NhCeYjq9+3uxgdtp20LSiJXJvN0FeCtNGpJxuMFZ1Kv3cWUNb6DOhJwUvcVCzKGR66cw4njwM6hrJLqgOwbcw=="],
@@ -393,6 +428,12 @@
     "@microsoft/tsdoc": ["@microsoft/tsdoc@0.16.0", "", {}, "sha512-xgAyonlVVS+q7Vc7qLW0UrJU7rSFcETRWsqdXZtjzRU8dF+6CkozTK4V4y1LwOX7j8r/vHphjDeMeGI4tNGeGA=="],
 
     "@microsoft/tsdoc-config": ["@microsoft/tsdoc-config@0.18.1", "", { "dependencies": { "@microsoft/tsdoc": "0.16.0", "ajv": "~8.18.0", "jju": "~1.4.0", "resolve": "~1.22.2" } }, "sha512-9brPoVdfN9k9g0dcWkFeA7IH9bbcttzDJlXvkf8b2OBzd5MueR1V2wkKBL0abn0otvmkHJC6aapBOTJDDeMCZg=="],
+
+    "@nodeflow/core": ["@nodeflow/core@workspace:packages/core"],
+
+    "@nodeflow/solid": ["@nodeflow/solid@workspace:packages/solid"],
+
+    "@nodeflow/vanilla": ["@nodeflow/vanilla@workspace:packages/vanilla"],
 
     "@nodelib/fs.scandir": ["@nodelib/fs.scandir@2.1.5", "", { "dependencies": { "@nodelib/fs.stat": "2.0.5", "run-parallel": "^1.1.9" } }, "sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g=="],
 
