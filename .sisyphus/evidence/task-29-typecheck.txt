@@ -1,0 +1,16 @@
+﻿bun : $ tsc --noEmit
+At line:1 char:1
++ bun run typecheck 2>&1 | Out-File -FilePath "C:\Users\DH\projects\web ...
++ ~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ($ tsc --noEmit:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+../core/dist/ConnectorSection.d.ts(1,32): error TS2305: Module '"./types"' has no exported member 'SerializedConnectorSection'.
+../core/dist/ConnectorSection.d.ts(1,60): error TS2305: Module '"./types"' has no exported member 'SerializedNodeConnector'.
+../core/dist/NodeConnector.d.ts(1,29): error TS2305: Module '"./types"' has no exported member 'SerializedConnection'.
+../core/dist/NodeConnector.d.ts(1,51): error TS2305: Module '"./types"' has no exported member 'SerializedNodeConnector'.
+../core/dist/NodeflowData.d.ts(2,23): error TS2305: Module '"./nodeflow-types"' has no exported member 'NodeflowEventRecord'.
+../core/dist/NodeflowNodeData.d.ts(1,10): error TS2305: Module '"./nodeflow-types"' has no exported member 'NodeflowNodeType'.
+src/screen-utils.ts(7,57): error TS2709: Cannot use namespace 'Vec2' as a type.
+src/screen-utils.ts(8,8): error TS2339: Property 'of' does not exist on type 'typeof import("C:/Users/DH/projects/webdev/nodeflow/packages/core/dist/index")'.
+src/screen-utils.ts(16,24): error TS2339: Property 'of' does not exist on type 'typeof import("C:/Users/DH/projects/webdev/nodeflow/packages/core/dist/index")'.
