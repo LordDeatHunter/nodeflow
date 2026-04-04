@@ -1,4 +1,5 @@
 export * from "./nodeflow-types";
+export * from "./types";
 export { default as Vec2 } from "./Vec2";
 export type { Vec2Hash } from "./Vec2";
 export { default as Rect } from "./Rect";
@@ -10,3 +11,8 @@ export { default as CurveFunctions } from "./CurveFunctions";
 export * from "./constants";
 export * from "./math-utils";
 export * from "./misc-utils";
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  export interface CustomNodeflowDataType {}
+}
