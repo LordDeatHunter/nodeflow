@@ -89,3 +89,51 @@ Pass hasHistoryGroup=false to all node/section/connector mutations to avoid Node
 
 Bun test environment requires: declare global { interface CustomNodeflowDataType {} }
 when importing NodeflowData/NodeflowNodeData.
+
+## Task 20 – NodeflowChunking Solid removal (2026-04-04)
+
+- createStore replaced with two private props: \_chunkSize: number and \_chunks: Map<Vec2Hash, Set<string>>; getters/setters use direct property access.
+- ReactiveMap is a Map subclass — replacing
+  ew ReactiveMap<K,V>() with
+  ew Map<K,V>() is drop-in; all CRUD methods identical.
+- Return type of getNodesInRect changed from NodeflowNodeData[] to ny[] to avoid circular dependency (nodeflowData typed as ny).
+- NodeflowChunking.ts imports: Vec2 + Vec2Hash from ./Vec2, Rect from ./Rect, isSetEmpty from ./misc-utils — all sibling files in packages/core/src/.
+- All 17 NodeflowChunking tests pass; full 216-test suite passes with 0 regressions.
+
+## Task 23 learnings
+
+- NodeflowNodeData: Replace createStore with private \_ prefixed properties. createEffect for collision resolution becomes an imperative checkAndResolveCollisions() method.
+- The double createEffect (outer: getCollidingNodes, inner: resolve) simplifies to a single forEach � no nested reactivity needed imperatively.
+- Must use this.\_position directly (bypassing the setter) inside checkAndResolveCollisions() to avoid infinite recursion. The setter calls checkAndResolveCollisions().
+- NodeflowLib.get().getNodeflow(nodeflowId) pattern in history closures can be replaced by capturing const nodeflowData = this.nodeflowData and using it directly � removes the NodeflowLib dependency entirely.
+- ReactiveMap is a Map subclass: direct drop-in replacement with
+  ew Map<K,V>().
+- update() and updateWithPrevious() must handle position specially to update the chunking index and trigger collision checks.
+
+## [2026-04-04] Task: T25
+
+- Measurement API methods are simple one-liner wrappers around direct private field assignment � no need for setters since size/offset/position setters may have side effects (e.g., position setter triggers chunking updates) but measurement fields don't.
+- NodeflowNodeData.updateMeasurements(size, offset): sets \_size and \_offset directly (bypassing setters, which have no side effects for these fields).
+- NodeConnector.updateMeasurements(position, size): sets \_position and \_size directly (connector position setter has no side effects).
+- NodeflowData.updateCanvasSize(size): sets \_size directly (size setter has no side effects).
+- All 3 methods added to existing exported classes � no new exports needed in index.ts.
+- 216 pass, 0 fail after adding 3 methods � zero regressions.
+- PowerShell 2>&1 redirect may produce a NativeCommandError warning but test results are still captured correctly.
+
+## [2026-04-04] Task: T26 – NodeflowRegistry creation
+
+- DocumentEventRecord type is defined in packages/core/src/EventPublishers.ts, NOT in
+  odeflow-types.ts. Import from ./EventPublishers not ./nodeflow-types.
+- The subscription routing logic in NodeflowLib (lines 66-98) is pure EventPublisher logic with no DOM dependency — it belongs in core, forwarding globalEventStore events to individual
+  odeflow.mouseData calls.
+- DOM setup (document.onmousemove, document.onpointerleave, document.onpointerup) lives in adapters (T29/T30), not core.
+- createCanvas() in NodeflowRegistry returns NodeflowData directly (not a tuple [NodeflowData, Component]) since rendering is adapter concern.
+- The existing NodeflowData.ts TS errors (implicit any on event callbacks, NodeflowEventRecord not found in nodeflow-types) are pre-existing, not introduced by T26.
+- Build still exits 0 despite DTS type errors (Vite's ite-plugin-dts reports them as warnings/informational, not blocking build output).
+- un test → 216 pass, 0 fail (zero regressions from new file addition).
+
+## [2026-04-04] Task: T27
+
+- `screen-utils` fits in `@nodeflow/solid`; `Vec2` should come from `@nodeflow/core` there.
+- `packages/core/src/` has no `windowSize` consumers, so no core refactor was needed.
+- `bun test` stayed green at 216 pass / 0 fail after the move.
