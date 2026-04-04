@@ -1,5 +1,7 @@
 export * from "./nodeflow-types";
+export * from "./event-types";
 export * from "./types";
+export * from "./EventPublishers";
 export { default as Vec2 } from "./Vec2";
 export type { Vec2Hash } from "./Vec2";
 export { default as Rect } from "./Rect";
