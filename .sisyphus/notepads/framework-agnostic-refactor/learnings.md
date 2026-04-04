@@ -1,3 +1,5 @@
-- Core package scaffold should stay framework-free: only Vite + vite-plugin-dts + TypeScript in devDependencies.
-- Empty entrypoints still build cleanly to ESM/CJS plus declarations with vite-plugin-dts.
-- The core tsconfig must avoid both jsx settings and solid-specific type references.
+## Task 5 learnings
+
+- Bun's built-in test runner works cleanly in the workspace without extra dependencies.
+- Root `bun run test` successfully fans out through Turbo when the package-level `test` script is present.
+- Capturing evidence from PowerShell may add a BOM or command prefix line, but the test results still show the expected pass/fail summary.

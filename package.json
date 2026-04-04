@@ -16,6 +16,7 @@
     "dev:familytree": "bun --cwd ./examples/FamilyTreeApp run start",
     "dev:nostyle": "bun --cwd ./examples/NoStyle run start",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
+    "test": "bunx turbo test",
     "typecheck": "turbo typecheck",
     "serve": "vite preview",
     "start": "run-p dev:*"
