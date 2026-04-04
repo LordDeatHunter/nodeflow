@@ -7,3 +7,4 @@ export { default as SelectionBox } from "./components/SelectionBox";
 export { default as Connector } from "./components/Connector";
 export * from "./types";
 export * from "@nodeflow/core";
+export { windowSize } from "./screen-utils";

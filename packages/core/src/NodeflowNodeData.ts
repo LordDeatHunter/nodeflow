@@ -1,5 +1,4 @@
 import {
-  NodeflowNodeType,
   Optional,
   SelectableElementCSS,
   SerializedConnection,
@@ -7,6 +6,7 @@ import {
   SerializedNodeConnector,
   SerializedNodeflowNode,
 } from "./nodeflow-types";
+import { NodeflowNodeType } from "./types";
 import Vec2 from "./Vec2";
 import ConnectorSection from "./ConnectorSection";
 import NodeConnector from "./NodeConnector";

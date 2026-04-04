@@ -1,11 +1,12 @@
 import { type Component, createSignal, JSX, onMount, Show } from "solid-js";
 import {
+  createSolidNodeflow,
   NodeflowData,
-  NodeflowLib,
+  NodeflowRegistry,
   Optional,
   Vec2,
   windowSize,
-} from "nodeflow-lib";
+} from "@nodeflow/solid";
 import curveCss from "./styles/curve.module.scss";
 import nodeCss from "./styles/node.module.scss";
 import nodeflowCss from "./styles/nodeflow.module.scss";
@@ -17,7 +18,7 @@ import {
 } from "./utils";
 import { BPCurveFunctions } from "./BPCurveFunctions";
 
-const [nodeflowData, Nodeflow] = NodeflowLib.get().createCanvas(
+const [nodeflowData, Nodeflow] = createSolidNodeflow(
   "main",
   {},
   (nodeflow: NodeflowData) => new BPCurveFunctions(nodeflow),
@@ -51,7 +52,7 @@ const App: Component = () => {
     setupDummyNodes();
     setupDummyConnections();
 
-    NodeflowLib.get().globalEventStore.onPointerUpInDocument.subscribe(
+    NodeflowRegistry.get().globalEventStore.onPointerUpInDocument.subscribe(
       "create-node",
       createNode,
     );

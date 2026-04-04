@@ -1,8 +1,8 @@
 import { type Component, onMount } from "solid-js";
-import { NodeflowLib, windowSize } from "nodeflow-lib";
+import { createSolidNodeflow, windowSize } from "@nodeflow/solid";
 import { setupDummyConnections, setupDummyNodes } from "./utils";
 
-const [nodeflowData, Nodeflow] = NodeflowLib.get().createCanvas("main");
+const [nodeflowData, Nodeflow] = createSolidNodeflow("main");
 
 const App: Component = () => {
   onMount(() => {

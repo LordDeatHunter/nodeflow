@@ -1,5 +1,5 @@
 import { createEffect, createSignal } from "solid-js";
-import Vec2 from "@nodeflow/core";
+import { Vec2 } from "@nodeflow/core";
 
 /**
  * A Solid signal that contains the current window size.

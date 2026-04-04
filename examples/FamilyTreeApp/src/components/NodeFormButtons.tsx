@@ -1,5 +1,5 @@
 import { Component, Show } from "solid-js";
-import { Optional } from "nodeflow-lib";
+import { Optional } from "@nodeflow/solid";
 import { FormDataType } from "./SidebarContent";
 import formStyle from "../styles/form.module.scss";
 import { cleanInput, createFamilyMemberNode } from "../utils";

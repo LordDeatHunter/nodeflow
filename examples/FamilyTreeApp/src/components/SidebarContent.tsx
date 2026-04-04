@@ -1,4 +1,4 @@
-import { NodeflowNodeData, Optional } from "nodeflow-lib";
+import { NodeflowNodeData, Optional } from "@nodeflow/solid";
 import { createMemo, createSignal, Show } from "solid-js";
 import NodeDataDisplay from "./NodeDataDisplay";
 import NodeFormButtons from "./NodeFormButtons";

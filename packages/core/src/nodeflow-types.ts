@@ -94,3 +94,49 @@ export enum SelectableElementType {
   Nodeflow = "nodeflow",
   Connection = "connection",
 }
+
+export type SerializedSelectableElement =
+  | {
+      connectorId: string;
+      nodeId: string;
+      type: SelectableElementType.Connector;
+    }
+  | {
+      nodeId: string;
+      type: SelectableElementType.Node;
+    }
+  | {
+      type: SelectableElementType.Nodeflow;
+    }
+  | {
+      connection: SerializedConnection;
+      type: SelectableElementType.Connection;
+    };
+
+export interface SerializedMouseData {
+  clickStartPosition?: SerializedVec2;
+  selections: Record<string, SerializedSelectableElement>;
+}
+
+export interface SerializedNodeflowNode {
+  centered: boolean;
+  connectorSections: Record<string, SerializedConnectorSection>;
+  css: SelectableElementCSS;
+  customData: CustomNodeflowDataType;
+  display: any;
+  id: string;
+  position: SerializedVec2;
+}
+
+export interface SerializedNodeflowData {
+  changes: SerializedChanges;
+  connections: Array<SerializedConnection>;
+  currentMoveSpeed: SerializedVec2;
+  mouseData: SerializedMouseData;
+  nodes: Record<string, SerializedNodeflowNode>;
+  pinchDistance: number;
+  position: SerializedVec2;
+  size: SerializedVec2;
+  startPosition: SerializedVec2;
+  zoomLevel: number;
+}

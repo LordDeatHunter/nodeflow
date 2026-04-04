@@ -1,8 +1,8 @@
+import { ConnectorSectionType } from "./types";
 import {
-  ConnectorSectionType,
   SerializedConnectorSection,
   SerializedNodeConnector,
-} from "./types";
+} from "./nodeflow-types";
 import NodeConnector from "./NodeConnector";
 import Changes from "./Changes";
 

@@ -1,4 +1,4 @@
-import { CurveFunctions, Vec2 } from "nodeflow-lib";
+import { CurveFunctions, Vec2 } from "@nodeflow/solid";
 
 export class BPCurveFunctions extends CurveFunctions {
   public calculateCurveAnchors(

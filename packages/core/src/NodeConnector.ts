@@ -1,8 +1,8 @@
+import { NodeConnectorType } from "./types";
 import {
-  NodeConnectorType,
   SerializedConnection,
   SerializedNodeConnector,
-} from "./types";
+} from "./nodeflow-types";
 import ArrayWrapper from "./ArrayWrapper";
 import ConnectorSource from "./ConnectorSource";
 import ConnectorDestination from "./ConnectorDestination";

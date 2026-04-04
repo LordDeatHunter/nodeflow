@@ -1,10 +1,10 @@
 import { type Component, onMount } from "solid-js";
 import {
+  createSolidNodeflow,
   NodeConnector,
   NodeflowData,
-  NodeflowLib,
   windowSize,
-} from "nodeflow-lib";
+} from "@nodeflow/solid";
 import curveCss from "./styles/curve.module.scss";
 import nodeflowCss from "./styles/nodeflow.module.scss";
 import { setupDummyConnections, setupDummyNodes, setupEvents } from "./utils";
@@ -13,7 +13,7 @@ import SidebarContent from "./components/SidebarContent";
 import { FamilyTreeConstants } from "./Constants";
 import { FTCurveFunctions } from "./FTCurveFunctions";
 
-const [nodeflowData, Nodeflow] = NodeflowLib.get().createCanvas(
+const [nodeflowData, Nodeflow] = createSolidNodeflow(
   FamilyTreeConstants.MAIN_NODEFLOW,
   {},
   (nf: NodeflowData) => new FTCurveFunctions(nf),

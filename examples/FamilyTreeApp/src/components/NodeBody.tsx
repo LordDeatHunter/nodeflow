@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import { NodeflowNodeData } from "nodeflow-lib";
+import { NodeflowNodeData } from "@nodeflow/solid";
 import nodeCss from "../styles/node.module.scss";
 
 const NodeBody: Component<{ node: NodeflowNodeData }> = (props) => (

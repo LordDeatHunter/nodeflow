@@ -1,7 +1,6 @@
 import Vec2 from "./Vec2";
 import {
   DeepPartial,
-  NodeflowEventRecord,
   NodeflowSettings,
   Optional,
   SelectableElementType,
@@ -9,6 +8,7 @@ import {
   SerializedNodeflowData,
   SerializedNodeflowNode,
 } from "./nodeflow-types";
+import { NodeflowEventRecord } from "./EventPublishers";
 import { NodeflowDataType, NodeflowNodeType } from "./types";
 import { clamp } from "./math-utils";
 import Changes from "./Changes";
