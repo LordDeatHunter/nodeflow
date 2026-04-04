@@ -84,8 +84,14 @@ export function renderCanvas(
     },
   ]);
 
-  data.nodes.forEach((node) => {
-    renderNode(innerDiv, node, data, nodeElements);
+  // Defer initial render so nodes added synchronously after
+  // createVanillaNodeflow() are captured in the first pass.
+  queueMicrotask(() => {
+    data.nodes.forEach((node) => {
+      if (!nodeElements.has(node.id)) {
+        renderNode(innerDiv, node, data, nodeElements);
+      }
+    });
   });
 
   outerDiv.addEventListener("mousemove", (event) => {

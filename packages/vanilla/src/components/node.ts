@@ -51,15 +51,9 @@ export function renderNode(
   });
 
   const resizeObserver = new ResizeObserver(() => {
-    const rect = nodeDiv.getBoundingClientRect();
-    const parentRect = parent.getBoundingClientRect();
-    const offset = Vec2.of(
-      rect.left - parentRect.left,
-      rect.top - parentRect.top,
-    );
     node.updateMeasurements(
-      Vec2.of(nodeDiv.offsetWidth, nodeDiv.offsetHeight),
-      offset,
+      Vec2.of(nodeDiv.clientWidth, nodeDiv.clientHeight),
+      Vec2.of(nodeDiv.clientLeft, nodeDiv.clientTop),
     );
   });
   resizeObserver.observe(nodeDiv);

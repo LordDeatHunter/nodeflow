@@ -25,8 +25,8 @@ export function renderConnector(
     if (!nodeEl) return;
     const nodeRect = nodeEl.getBoundingClientRect();
     const position = Vec2.of(
-      rect.left - nodeRect.left + node.offset.x,
-      rect.top - nodeRect.top + node.offset.y,
+      rect.left - nodeRect.left,
+      rect.top - nodeRect.top,
     );
     connector.updateMeasurements(position, Vec2.of(rect.width, rect.height));
   });
