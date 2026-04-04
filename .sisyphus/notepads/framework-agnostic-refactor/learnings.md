@@ -9,7 +9,7 @@
 - EventPublishers.ts uses ReactiveMap from @solid-primitives/map which works fine in Bun's test environment when imported from the root src via relative path ../../../src/utils/data/EventPublishers.
 - BaseEventPublisher subscriptions are keyed by name: calling subscribe() with the same name twice OVERWRITES the first callback (not a double-subscribe).
 - The import path from packages/core/tests/ to root src/ is ../../../src/utils/data/..., not ../../src/utils/data/ as suggested in task spec.
-- Blacklist filter signature is (data, subscriberName, priority) — the second arg is the subscription NAME KEY, not a publisher identifier.
+- Blacklist filter signature is (data, subscriberName, priority) ï¿½ the second arg is the subscription NAME KEY, not a publisher identifier.
 - 11 tests (including 8 required + 3 extras from unblacklist/clearBlacklist/size helpers) all pass in ~120ms.
 
 ## Task 6 learnings
@@ -24,8 +24,8 @@
 ## Task 8 learnings
 
 - NodeConnector and ConnectorSection both use createStore from solid-js/store internally - this works fine in Bun's test environment without a Solid renderer.
-- To test NodeConnector directly, construct it with 
-ew NodeConnector(data) passing a mock ConnectorSectionType. Avoids the full dependency chain.
+- To test NodeConnector directly, construct it with
+  ew NodeConnector(data) passing a mock ConnectorSectionType. Avoids the full dependency chain.
 - ConnectorSection.addConnector() behavior when given a duplicate ID: NodeConnector.deserialize() checks connectors.has(id), generates a NEW auto ID instead, and adds that new connector. It does NOT return the existing connector - both end up in the map.
 - Import paths from packages/core/tests/ to root src/ must use ../../../src/utils/data/... (3 levels up). The task spec saying ../../src/utils/data/ is incorrect.
 - ConnectorSection.addConnector() with hasHistoryGroup: false skips all NodeflowLib/Changes history logic entirely, making the mock nodeflowData only need a stub changes.addChange.
@@ -42,35 +42,50 @@ ew NodeConnector(data) passing a mock ConnectorSectionType. Avoids the full depe
 ## Task 9 learnings
 
 - Import paths from packages/core/tests/ to root src/ require ../../../ (three levels up), NOT ../../ as the task spec states.
-- MouseData, KeyboardData, and SelectionBoxData all require a NodeflowData instance to construct. Use new NodeflowData("test-canvas") directly — solid-js createStore works fine in Bun's test environment.
-- MouseData.reset() does NOT reset mousePosition — it only clears clickStartPosition, pointerDown, heldMouseButtons, selections, and selectionBox. Do not test mousePosition in reset().
-- MouseData.pointerDown is a write-only setter — there is no public getter. Cannot directly assert its value; test via behavioral side effects.
-- SelectionBoxData.boundingBox setter calls nodeflowData.transformVec2ToCanvas() and nodeflowData.chunking.getNodesInRect() — with no nodes in the canvas, setting a bounding box results in empty selections (no crash).
+- MouseData, KeyboardData, and SelectionBoxData all require a NodeflowData instance to construct. Use new NodeflowData("test-canvas") directly ï¿½ solid-js createStore works fine in Bun's test environment.
+- MouseData.reset() does NOT reset mousePosition ï¿½ it only clears clickStartPosition, pointerDown, heldMouseButtons, selections, and selectionBox. Do not test mousePosition in reset().
+- MouseData.pointerDown is a write-only setter ï¿½ there is no public getter. Cannot directly assert its value; test via behavioral side effects.
+- SelectionBoxData.boundingBox setter calls nodeflowData.transformVec2ToCanvas() and nodeflowData.chunking.getNodesInRect() ï¿½ with no nodes in the canvas, setting a bounding box results in empty selections (no crash).
 - KeyboardData.pressKey/releaseKey are the public mutation API. heldKeys setter replaces the entire Set. clearKeys() resets to empty Set.
 - 43 tests total (17 MouseData + 16 KeyboardData + 10 SelectionBoxData) all pass with 0 failures in ~171ms.
+
+## Task 11 â€“ SelectionMap and NodeflowChunking behavioral tests (2026-04-04)
+
+- Import paths from packages/core/tests/ to root src/ require `../../../` (three levels up). The task spec saying `../../src/` is incorrect â€” that would resolve to `packages/src/` which does not exist.
+- SelectionMap constructor requires a `NodeflowData` instance. Construct via `new NodeflowData("test-id")` â€” works fine in Bun without any Solid renderer.
+- SelectionMap.size counts nodes + connectors + connections + (1 if nodeflow selected).
+- NodeflowChunking.addNodeToChunk/removeNodeFromChunk only track node IDs â€” the `NodeflowData.nodes` map is only queried in `getNodesInRect()` and `checkForCollisions()`. Tests for basic chunk add/remove work without populating `NodeflowData.nodes`.
+- For `getNodesInRect()` tests, add nodes via `nf.addNode()` AND call `chunking.addNodeToChunk()` manually since chunking is managed separately in tests.
+- NodeflowChunking uses `createStore` from `solid-js/store` â€” works in Bun test environment without polyfills.
+- 18 SelectionMap tests + 17 NodeflowChunking tests = 35 total, all passing in ~154ms.
 
 ## Task 7 â€“ NodeflowNodeData behavioral tests (2026-04-04)
 
 ### Import path
+
 Tests in packages/core/tests/ must use **3 levels up** to reach root src:
-  import X from '../../../src/utils/data/X'
-  (not ../../src/ which would resolve to packages/src/ - nonexistent)
+import X from '../../../src/utils/data/X'
+(not ../../src/ which would resolve to packages/src/ - nonexistent)
 
 ### ConnectorSection.deserialize id-collision behavior
+
 When adding a connector section with an id that already exists, ConnectorSection.deserialize
 auto-assigns a NEW id (via getNextFreeConnectorSectionId) rather than returning the existing one.
 This means calling addConnectorSection twice with the same id creates TWO sections, not one.
-addConnectorSection only de-dupes if the *generated* id collides.
+addConnectorSection only de-dupes if the _generated_ id collides.
 
 ### Solid store proxy and toBe
+
 Solid createStore wraps values in proxies. Strict reference equality (toBe) fails when comparing
 objects retrieved from the store. Use .id comparison or toEqual for value equality instead.
 
 ### NodeflowData construction in tests
+
 Instantiate NodeflowData directly: new NodeflowData('some-unique-id')
 Pass hasHistoryGroup=false to all node/section/connector mutations to avoid NodeflowLib.get() calls
 (which would fail without NodeflowLib.createCanvas setup).
 
 ### Global type declaration
+
 Bun test environment requires: declare global { interface CustomNodeflowDataType {} }
 when importing NodeflowData/NodeflowNodeData.

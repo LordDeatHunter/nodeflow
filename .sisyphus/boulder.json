@@ -1,0 +1,49 @@
+{
+  "active_plan": "C:\\Users\\DH\\projects\\webdev\\nodeflow\\.sisyphus\\plans\\framework-agnostic-refactor.md",
+  "started_at": "2026-04-03T23:48:08.205Z",
+  "session_ids": [
+    "ses_2aad6708cffeZ9O2vMue1msSV7",
+    "ses_2aa3eed9cffeehYOX6NisJpabT",
+    "ses_2aa3a3f96ffepTWv5aCnsdw58M",
+    "ses_2aa3a78b1ffehx2TFhqyGR0SJM",
+    "ses_2aa39e224ffe1fYp6EWqypBaUA",
+    "ses_2aa3a11faffepDaQurmQfarfaU",
+    "ses_2aa2f43cfffe7AFK0OGxveCYvM",
+    "ses_2aa2ff4eeffe0B0wK6xWw3ovap",
+    "ses_2aa2eed42ffewMvVs6EYqOXqQS",
+    "ses_2aa2f6a60ffew1x5vKmSz2Y5il",
+    "ses_2aa2f9442ffe6VjOgBbXP5Z5O7",
+    "ses_2aa2f1dd7ffebQuJIyeb7MKheN"
+  ],
+  "plan_name": "framework-agnostic-refactor",
+  "agent": "atlas",
+  "task_sessions": {
+    "todo:1": {
+      "task_key": "todo:1",
+      "task_label": "1",
+      "task_title": "Monorepo Scaffold — Bun Workspaces + Turborepo",
+      "session_id": "ses_2aa3eed9cffeehYOX6NisJpabT",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-04-03T23:54:07.602Z"
+    },
+    "todo:2": {
+      "task_key": "todo:2",
+      "task_label": "2",
+      "task_title": "@nodeflow/core Package Scaffold",
+      "session_id": "ses_2aa3a78b1ffehx2TFhqyGR0SJM",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-04-04T00:00:54.097Z"
+    },
+    "todo:6": {
+      "task_key": "todo:6",
+      "task_label": "6",
+      "task_title": "Behavioral Tests for NodeflowData",
+      "session_id": "ses_2aa2ff4eeffe0B0wK6xWw3ovap",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-04-04T00:17:05.226Z"
+    }
+  }
+}
