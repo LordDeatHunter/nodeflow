@@ -38,3 +38,13 @@ ew NodeConnector(data) passing a mock ConnectorSectionType. Avoids the full depe
 - undo() groups changes by historyGroup string; a single undo() call undoes ALL consecutive changes sharing the same topmost historyGroup.
 - evaluateHistoryGroup(false) returns boolean false (not a string), evaluateHistoryGroup(true) generates a UUID string.
 - Import paths from packages/core/tests/ to root src/ require ../../../ (three levels up), not ../../.
+
+## Task 9 learnings
+
+- Import paths from packages/core/tests/ to root src/ require ../../../ (three levels up), NOT ../../ as the task spec states.
+- MouseData, KeyboardData, and SelectionBoxData all require a NodeflowData instance to construct. Use new NodeflowData("test-canvas") directly — solid-js createStore works fine in Bun's test environment.
+- MouseData.reset() does NOT reset mousePosition — it only clears clickStartPosition, pointerDown, heldMouseButtons, selections, and selectionBox. Do not test mousePosition in reset().
+- MouseData.pointerDown is a write-only setter — there is no public getter. Cannot directly assert its value; test via behavioral side effects.
+- SelectionBoxData.boundingBox setter calls nodeflowData.transformVec2ToCanvas() and nodeflowData.chunking.getNodesInRect() — with no nodes in the canvas, setting a bounding box results in empty selections (no crash).
+- KeyboardData.pressKey/releaseKey are the public mutation API. heldKeys setter replaces the entire Set. clearKeys() resets to empty Set.
+- 43 tests total (17 MouseData + 16 KeyboardData + 10 SelectionBoxData) all pass with 0 failures in ~171ms.
