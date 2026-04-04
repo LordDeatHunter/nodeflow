@@ -1,0 +1,5 @@
+Grep for Solid imports in packages/core/src/NodeflowNodeData.ts:
+  grep -rn "solid-js|createStore|createEffect|ReactiveMap|@solid-primitives" packages/core/src/NodeflowNodeData.ts
+
+Result: No matches found (exit code 1)
+=> Zero Solid imports confirmed.
