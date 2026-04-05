@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, Show } from "solid-js";
+import { Component, createMemo, Show } from "solid-js";
 import {
   NodeflowData,
   Optional,
