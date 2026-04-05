@@ -1,13 +1,10 @@
-import { describe, it, expect, beforeEach } from "bun:test";
+import { describe, it, expect, beforeEach } from "vitest";
 import NodeConnector from "../src/NodeConnector";
 import ArrayWrapper from "../src/ArrayWrapper";
 import Vec2 from "../src/Vec2";
 import ConnectorDestination from "../src/ConnectorDestination";
 import ConnectorSource from "../src/ConnectorSource";
-import type {
-  NodeConnectorType,
-  ConnectorSectionType,
-} from "../src/nodeflow-types";
+import type { ConnectorSectionType, NodeConnectorType } from "../src/types";
 
 function makeMockSection(sectionId = "section-1"): ConnectorSectionType {
   const mockNode = {
@@ -37,8 +34,6 @@ function makeConnector(
     id,
     parentSection,
     position: Vec2.of(10, 20),
-    ref: undefined,
-    resizeObserver: undefined,
     size: Vec2.of(16, 16),
     sources: new ArrayWrapper<ConnectorSource>(),
   } satisfies NodeConnectorType);

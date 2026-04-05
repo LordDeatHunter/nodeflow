@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "bun:test";
+import { describe, it, expect, beforeEach } from "vitest";
 import NodeflowData from "../src/NodeflowData";
 import { KEYBOARD_KEY_CODES } from "../src/constants";
 

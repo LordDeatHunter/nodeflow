@@ -1,11 +1,9 @@
-import { describe, it, expect, beforeEach } from "bun:test";
+import { describe, it, expect, beforeEach } from "vitest";
 import ConnectorSection from "../src/ConnectorSection";
 import Vec2 from "../src/Vec2";
 import { ReactiveMap } from "@solid-primitives/map";
-import type {
-  ConnectorSectionType,
-  SerializedConnectorSection,
-} from "../src/nodeflow-types";
+import type { SerializedConnectorSection } from "../src/nodeflow-types";
+import type { ConnectorSectionType } from "../src/types";
 import type NodeConnector from "../src/NodeConnector";
 import type { NodeflowData } from "../src";
 

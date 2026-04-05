@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "bun:test";
+import { describe, it, expect, beforeEach } from "vitest";
 import NodeflowData from "../src/NodeflowData";
 import NodeflowNodeData from "../src/NodeflowNodeData";
 import Vec2 from "../src/Vec2";
