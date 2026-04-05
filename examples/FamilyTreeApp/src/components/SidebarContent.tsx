@@ -9,7 +9,7 @@ import { nodeflowData } from "../App";
 export type FormDataType = CustomNodeflowDataType & { id: string };
 
 const SidebarContent = () => {
-  const tick = createTick();
+  const { tick } = createTick();
   const [formData, setFormData] =
     createSignal<Optional<FormDataType>>(undefined);
 

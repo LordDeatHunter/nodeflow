@@ -33,7 +33,7 @@ const [nodeflowData, Nodeflow] = createSolidNodeflow(
 );
 
 const App: Component = () => {
-  const tick = createTick();
+  const { tick } = createTick();
   const [nodePreview, setNodePreview] =
     createSignal<Optional<JSX.Element>>(undefined);
 
