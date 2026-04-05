@@ -65,7 +65,10 @@ const NodeflowNode: Component<NodeProps> = (props) => {
           }
         };
 
-        const resizeObserver = new ResizeObserver(measure);
+        const resizeObserver = new ResizeObserver(() => {
+          measure();
+          props.markDirty?.();
+        });
         resizeObserver.observe(el);
 
         // Defer centering adjustment until first layout is available
@@ -87,9 +90,10 @@ const NodeflowNode: Component<NodeProps> = (props) => {
         });
       }}
       style={{
-        left: `${nodePosition().x}px`,
-        top: `${nodePosition().y}px`,
+        transform: `translate(${nodePosition().x}px, ${nodePosition().y}px)`,
         opacity: isVisible() ? 1 : 0,
+        contain: "content",
+        "will-change": "transform",
       }}
       id={`node-${props.nodeId}`}
       class="nodeflowNode"
