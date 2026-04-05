@@ -1,11 +1,10 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import { BaseEventPublisher } from "../src/EventPublishers";
 
 type StringPublisher = BaseEventPublisher<string, (data: string) => void>;
 
-function makePublisher(): StringPublisher {
-  return new BaseEventPublisher<string, (data: string) => void>();
-}
+const makePublisher = (): StringPublisher =>
+  new BaseEventPublisher<string, (data: string) => void>();
 
 describe("BaseEventPublisher", () => {
   describe("subscribe()", () => {

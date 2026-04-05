@@ -18,15 +18,31 @@ export class BaseEventPublisher<
     (data: EventData, eventName: string, priority: number) => boolean
   >();
 
+  // Cached sorted array of subscribers — null means stale, rebuilt on next publish().
+  // This is a snapshot: mid-publish subscribe/unsubscribe won't affect the current
+  // iteration, but will invalidate the cache so the next publish() picks up changes.
+  private _sortedCache: Array<{
+    event: EventCallback;
+    name: string;
+    priority: number;
+  }> | null = null;
+
+  // Cached array of blacklist filters — null means stale, rebuilt on next publish().
+  private _blacklistCache: Array<
+    (data: EventData, eventName: string, priority: number) => boolean
+  > | null = null;
+
   public blacklist(
     key: string,
     filter: (data: EventData, key: string, priority: number) => boolean,
   ) {
     this.blacklistFilters.set(key, filter);
+    this._blacklistCache = null;
   }
 
   public unblacklist(key: string) {
     this.blacklistFilters.delete(key);
+    this._blacklistCache = null;
   }
 
   public unblacklistMultiple(keys: string[]) {
@@ -35,10 +51,12 @@ export class BaseEventPublisher<
 
   public clearBlacklist() {
     this.blacklistFilters.clear();
+    this._blacklistCache = null;
   }
 
   public subscribe(name: string, callback: EventCallback, priority = 0) {
     this.subscriptions.set(name, { name, event: callback, priority });
+    this._sortedCache = null;
   }
 
   public subscribeMultiple(
@@ -55,6 +73,7 @@ export class BaseEventPublisher<
 
   public unsubscribe(key: string) {
     this.subscriptions.delete(key);
+    this._sortedCache = null;
   }
 
   public unsubsribeMultiple(keys: string[]) {
@@ -62,18 +81,27 @@ export class BaseEventPublisher<
   }
 
   public publish(data: EventData) {
-    Array.from(this.subscriptions.values())
-      .sort((a, b) => b.priority - a.priority)
-      .filter(({ name, priority }) => {
-        const filters = Array.from(this.blacklistFilters.values());
-        return !filters.some((filter) => filter(data, name, priority));
-      })
-      .map(({ event }) => event)
-      .forEach((callback) => callback(data));
+    if (!this._sortedCache) {
+      this._sortedCache = Array.from(this.subscriptions.values()).sort(
+        (a, b) => b.priority - a.priority,
+      );
+    }
+    const subscribers = this._sortedCache;
+    const filters =
+      this._blacklistCache ??
+      (this.blacklistFilters.size > 0
+        ? (this._blacklistCache = Array.from(this.blacklistFilters.values()))
+        : null);
+    for (const sub of subscribers) {
+      if (filters && filters.some((f) => f(data, sub.name, sub.priority)))
+        continue;
+      sub.event(data);
+    }
   }
 
   public clear() {
     this.subscriptions.clear();
+    this._sortedCache = null;
   }
 
   get size() {
