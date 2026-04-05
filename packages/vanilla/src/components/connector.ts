@@ -5,12 +5,12 @@ import {
   Vec2,
 } from "@nodeflow/core";
 
-export function renderConnector(
+export const renderConnector = (
   parent: HTMLElement,
   connector: NodeConnector,
   node: NodeflowNodeData,
   data: NodeflowData,
-): HTMLDivElement {
+): HTMLDivElement => {
   const connectorDiv = document.createElement("div");
   connectorDiv.id = `connector-${connector.id}`;
   if (connector.css) {
@@ -58,4 +58,4 @@ export function renderConnector(
 
   parent.appendChild(connectorDiv);
   return connectorDiv;
-}
+};

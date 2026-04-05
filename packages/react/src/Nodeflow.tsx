@@ -9,13 +9,13 @@ type NodeflowProps = HTMLAttributes<HTMLDivElement> & {
   onReady?: (data: NodeflowData) => void;
 };
 
-export function Nodeflow({
+export const Nodeflow = ({
   id,
   options,
   onReady,
   style,
   ...rest
-}: NodeflowProps) {
+}: NodeflowProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,4 +40,4 @@ export function Nodeflow({
       {...rest}
     />
   );
-}
+};

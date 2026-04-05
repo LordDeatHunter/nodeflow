@@ -1,12 +1,12 @@
 import { NodeConnector, NodeflowData } from "@nodeflow/core";
 
-export function renderCurve(
+export const renderCurve = (
   svg: SVGElement,
   source: NodeConnector,
   dest: NodeConnector,
   curveId: string,
   _data: NodeflowData,
-): SVGPathElement {
+): SVGPathElement => {
   const start = source.getCenter();
   const end = dest.getCenter();
   const anchorOffset = { x: (end.x - start.x) / 1.5, y: 0 };
@@ -25,4 +25,4 @@ export function renderCurve(
 
   svg.appendChild(path);
   return path;
-}
+};

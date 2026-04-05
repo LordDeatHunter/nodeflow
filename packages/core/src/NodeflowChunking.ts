@@ -1,13 +1,15 @@
 import Vec2, { Vec2Hash } from "./Vec2";
 import Rect from "./Rect";
 import { isSetEmpty } from "./misc-utils";
+import type NodeflowData from "./NodeflowData";
+import type NodeflowNodeData from "./NodeflowNodeData";
 
 export default class NodeflowChunking {
   private _chunkSize: number;
   private _chunks: Map<Vec2Hash, Set<string>> = new Map();
-  private readonly nodeflowData: any;
+  private readonly nodeflowData: NodeflowData;
 
-  public constructor(nodeflowData: any, chunkSize: number = 2048) {
+  public constructor(nodeflowData: NodeflowData, chunkSize: number = 2048) {
     this.nodeflowData = nodeflowData;
     this._chunkSize = chunkSize;
   }
@@ -131,8 +133,8 @@ export default class NodeflowChunking {
     });
   }
 
-  public getNodesInRect(rect: Rect): any[] {
-    const nodes = [] as any[];
+  public getNodesInRect(rect: Rect): NodeflowNodeData[] {
+    const nodes: NodeflowNodeData[] = [];
 
     const startPosition = rect.startPosition();
     const endPosition = rect.endPosition();

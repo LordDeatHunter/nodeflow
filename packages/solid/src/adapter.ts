@@ -1,9 +1,9 @@
 import { NodeflowRegistry, NodeflowData } from "@nodeflow/core";
 import NodeflowCanvas from "./components/NodeflowCanvas";
 
-export function createSolidNodeflow(
+export const createSolidNodeflow = (
   ...params: ConstructorParameters<typeof NodeflowData>
-): [NodeflowData, ReturnType<typeof NodeflowCanvas>] {
+): [NodeflowData, ReturnType<typeof NodeflowCanvas>] => {
   const nodeflowData = NodeflowRegistry.get().createCanvas(...params);
 
   document.onmousemove = (event) =>
@@ -20,4 +20,4 @@ export function createSolidNodeflow(
     });
 
   return [nodeflowData, NodeflowCanvas(nodeflowData)];
-}
+};

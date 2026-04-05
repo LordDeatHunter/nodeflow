@@ -6,11 +6,11 @@ import {
 import "@nodeflow/core/style.css";
 import { renderCanvas } from "./components/canvas";
 
-export function createVanillaNodeflow(
+export const createVanillaNodeflow = (
   id: string,
   container: HTMLElement,
   options?: Partial<NodeflowSettings>,
-): NodeflowData {
+): NodeflowData => {
   const nodeflowData = NodeflowRegistry.get().createCanvas(id, options);
 
   document.onmousemove = (event) =>
@@ -30,4 +30,4 @@ export function createVanillaNodeflow(
   renderCanvas(container, nodeflowData, nodeElements);
 
   return nodeflowData;
-}
+};

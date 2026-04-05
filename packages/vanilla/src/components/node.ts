@@ -1,12 +1,12 @@
 import { NodeflowData, NodeflowNodeData, Vec2 } from "@nodeflow/core";
 import { renderConnector } from "./connector";
 
-export function renderNode(
+export const renderNode = (
   parent: HTMLElement,
   node: NodeflowNodeData,
   data: NodeflowData,
   nodeElements: Map<string, HTMLDivElement>,
-): HTMLDivElement {
+): HTMLDivElement => {
   const nodeDiv = document.createElement("div");
   nodeDiv.id = `node-${node.id}`;
   nodeDiv.className = "nodeflowNode";
@@ -74,4 +74,4 @@ export function renderNode(
   nodeElements.set(node.id, nodeDiv);
 
   return nodeDiv;
-}
+};

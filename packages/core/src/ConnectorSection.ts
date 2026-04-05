@@ -5,6 +5,9 @@ import {
 } from "./nodeflow-types";
 import NodeConnector from "./NodeConnector";
 import Changes from "./Changes";
+import NodeflowRegistry from "./NodeflowRegistry";
+import type NodeflowData from "./NodeflowData";
+import type NodeflowNodeData from "./NodeflowNodeData";
 
 /**
  * Represents a section containing connectors on a node. Used for grouping connectors together.
@@ -13,10 +16,10 @@ export default class ConnectorSection {
   private _connectors: Map<string, NodeConnector> = new Map();
   private _css?: string;
   private _id: string;
-  private readonly _parentNode: any;
-  private readonly nodeflowData: any;
+  private _parentNode: NodeflowNodeData;
+  private readonly nodeflowData: NodeflowData;
 
-  constructor(nodeflowData: any, data: ConnectorSectionType) {
+  constructor(nodeflowData: NodeflowData, data: ConnectorSectionType) {
     this.nodeflowData = nodeflowData;
     this._id = data.id;
     this._css = data.css;
@@ -41,7 +44,7 @@ export default class ConnectorSection {
 
   public static deserialize(
     data: Partial<SerializedConnectorSection>,
-    node: any,
+    node: NodeflowNodeData,
     hasHistoryGroup: string | boolean = true,
   ): ConnectorSection {
     const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
@@ -96,14 +99,14 @@ export default class ConnectorSection {
         type: "add",
         source: "connector",
         applyChange: () => {
-          (this.nodeflowData as any)
-            ?.getNodeflow?.(nodeflowId)
+          NodeflowRegistry.get()
+            .getNodeflow(nodeflowId)
             ?.nodes.get(nodeId)
             ?.addConnector(connectorSectionId, serializedConnector, false);
         },
         undoChange: () => {
-          (this.nodeflowData as any)
-            ?.getNodeflow?.(nodeflowId)
+          NodeflowRegistry.get()
+            .getNodeflow(nodeflowId)
             ?.nodes.get(nodeId)
             ?.removeConnector(connectorSectionId, connectorId, false);
         },
@@ -144,14 +147,14 @@ export default class ConnectorSection {
         type: "remove",
         source: "connector",
         applyChange: () => {
-          (this.nodeflowData as any)
-            ?.getNodeflow?.(nodeflowId)
+          NodeflowRegistry.get()
+            .getNodeflow(nodeflowId)
             ?.nodes.get(nodeId)
             ?.removeConnector(connectorSectionId, removedConnectorId, false);
         },
         undoChange: () => {
-          (this.nodeflowData as any)
-            ?.getNodeflow?.(nodeflowId)
+          NodeflowRegistry.get()
+            .getNodeflow(nodeflowId)
             ?.nodes.get(nodeId)
             ?.addConnector(connectorSectionId, serializedConnector, false);
         },
@@ -186,12 +189,12 @@ export default class ConnectorSection {
     this._id = value;
   }
 
-  public get parentNode(): any {
+  public get parentNode(): NodeflowNodeData {
     return this._parentNode;
   }
 
-  public set parentNode(value: any) {
-    (this as any)._parentNode = value;
+  public set parentNode(value: NodeflowNodeData) {
+    this._parentNode = value;
   }
 
   public update(data: Partial<ConnectorSectionType>) {

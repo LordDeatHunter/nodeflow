@@ -13,6 +13,7 @@ import NodeConnector from "./NodeConnector";
 import { deepCopy } from "./misc-utils";
 import Changes from "./Changes";
 import Rect from "./Rect";
+import type NodeflowData from "./NodeflowData";
 
 export default class NodeflowNodeData {
   private _centered: boolean;
@@ -24,9 +25,9 @@ export default class NodeflowNodeData {
   private _offset: Vec2;
   private _position: Vec2;
   private _size: Vec2;
-  private readonly nodeflowData: any;
+  private readonly nodeflowData: NodeflowData;
 
-  constructor(nodeflowData: any, data: NodeflowNodeType) {
+  constructor(nodeflowData: NodeflowData, data: NodeflowNodeType) {
     this.nodeflowData = nodeflowData;
     this._centered = data.centered ?? false;
     this._connectorSections =
@@ -226,7 +227,7 @@ export default class NodeflowNodeData {
   }
 
   public static deserialize(
-    nodeflowData: any,
+    nodeflowData: NodeflowData,
     data: Partial<SerializedNodeflowNode>,
     hasHistoryGroup: string | boolean = true,
   ): NodeflowNodeData {

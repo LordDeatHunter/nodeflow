@@ -1,4 +1,4 @@
-import { NodeConnectorType } from "./types";
+import { NodeConnectorType, ConnectorSectionType } from "./types";
 import {
   SerializedConnection,
   SerializedNodeConnector,
@@ -17,7 +17,7 @@ export default class NodeConnector {
   private _destinations: ArrayWrapper<ConnectorDestination>;
   private _hovered: boolean;
   private _id: string;
-  private _parentSection: any;
+  private _parentSection: ConnectorSectionType;
   private _position: Vec2;
   private _size: Vec2;
   private _sources: ArrayWrapper<ConnectorSource>;
@@ -70,7 +70,7 @@ export default class NodeConnector {
 
   public static deserialize(
     data: Partial<SerializedNodeConnector>,
-    parentSection: any,
+    parentSection: ConnectorSectionType,
   ) {
     const connectorId =
       !data.id || parentSection.connectors.has(data.id)

@@ -5,7 +5,7 @@ import { createSignal, onCleanup } from "solid-js";
  * Components that read tick() will re-evaluate their memos each frame,
  * allowing them to pick up changes from the imperative core.
  */
-export function createTick(): () => number {
+export const createTick = (): (() => number) => {
   const [tick, setTick] = createSignal(0);
   let rafId: number;
   let running = true;
@@ -24,4 +24,4 @@ export function createTick(): () => number {
   });
 
   return tick;
-}
+};

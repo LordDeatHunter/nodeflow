@@ -74,16 +74,6 @@ export default class NodeflowRegistry {
       },
     ]);
 
-    this.globalEventStore.onPointerUpInDocument.subscribeMultiple([
-      // TODO: figure out why this is always called, even when elements lower in the DOM have cancelled the event
-      // {
-      //   name: "reset-mouse-data",
-      //   event: () => {
-      //     nodeflows.forEach((nodeflow) => {
-      //       nodeflow.mouseData.reset();
-      //     });
-      //   },
-      // },
-    ]);
+    this.globalEventStore.onPointerUpInDocument.subscribeMultiple([]);
   }
 }

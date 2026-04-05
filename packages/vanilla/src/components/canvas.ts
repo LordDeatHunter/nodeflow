@@ -1,11 +1,11 @@
 import { NodeflowData, NodeConnector, Vec2 } from "@nodeflow/core";
 import { renderNode } from "./node";
 
-export function renderCanvas(
+export const renderCanvas = (
   container: HTMLElement,
   data: NodeflowData,
   nodeElements: Map<string, HTMLDivElement>,
-): HTMLDivElement {
+): HTMLDivElement => {
   const outerDiv = document.createElement("div");
   outerDiv.id = `nodeflow-${data.id}`;
   outerDiv.tabIndex = 0;
@@ -37,7 +37,7 @@ export function renderCanvas(
   let lastPosY = data.position.y;
   const curveElements = new Map<string, SVGPathElement>();
 
-  function syncDom() {
+  const syncDom = () => {
     if (
       data.zoomLevel !== lastZoom ||
       data.position.x !== lastPosX ||
@@ -59,7 +59,7 @@ export function renderCanvas(
 
     syncCurves(data, svg, curveElements);
     requestAnimationFrame(syncDom);
-  }
+  };
   requestAnimationFrame(syncDom);
 
   const resizeObserver = new ResizeObserver(() => {
@@ -123,22 +123,94 @@ export function renderCanvas(
   });
 
   return outerDiv;
-}
+};
 
-function makeCurveId(
+const makeCurveId = (
   sourceNodeId: string,
   sourceConnectorId: string,
   destNodeId: string,
   destConnectorId: string,
-): string {
+): string => {
   return `${sourceNodeId}-${sourceConnectorId}--${destNodeId}-${destConnectorId}`;
-}
+};
 
-function syncCurves(
+const computePathD = (source: NodeConnector, dest: NodeConnector): string => {
+  const start = source.getCenter();
+  const end = dest.getCenter();
+  const anchorOffset = Vec2.of((end.x - start.x) / 1.5, 0);
+  const a1 = start.add(anchorOffset);
+  const a2 = end.subtract(anchorOffset);
+  return `M ${start.x} ${start.y} C ${a1.x} ${a1.y}, ${a2.x} ${a2.y}, ${end.x} ${end.y}`;
+};
+
+const createCurvePath = (
+  svg: SVGElement,
+  sourceConnector: NodeConnector,
+  destConnector: NodeConnector,
+  curveId: string,
+  cssClass?: string,
+): SVGPathElement => {
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("id", `curve-${curveId}`);
+  path.setAttribute("stroke", "#666");
+  path.setAttribute("stroke-width", "2");
+  path.setAttribute("fill", "none");
+  path.style.cursor = "pointer";
+  if (cssClass) {
+    path.setAttribute("class", cssClass);
+  }
+  path.setAttribute("d", computePathD(sourceConnector, destConnector));
+  svg.appendChild(path);
+  return path;
+};
+
+const syncHeldConnectorCurve = (
   data: NodeflowData,
   svg: SVGElement,
   curveElements: Map<string, SVGPathElement>,
-): void {
+): void => {
+  const heldId = "__held__";
+
+  if (data.mouseData.heldConnectors.length === 1) {
+    const heldConnector = data.mouseData.heldConnectors[0];
+    if (!heldConnector) return;
+
+    const start = heldConnector.getCenter();
+    const end = data.mouseData.mousePosition
+      .subtract(data.startPosition)
+      .divideBy(data.zoomLevel)
+      .subtract(data.position);
+
+    const anchorOffset = Vec2.of((end.x - start.x) / 1.5, 0);
+    const a1 = start.add(anchorOffset);
+    const a2 = end.subtract(anchorOffset);
+    const pathD = `M ${start.x} ${start.y} C ${a1.x} ${a1.y}, ${a2.x} ${a2.y}, ${end.x} ${end.y}`;
+
+    let path = curveElements.get(heldId);
+    if (!path) {
+      path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("stroke", "#999");
+      path.setAttribute("stroke-width", "2");
+      path.setAttribute("fill", "none");
+      path.style.pointerEvents = "none";
+      svg.appendChild(path);
+      curveElements.set(heldId, path);
+    }
+    path.setAttribute("d", pathD);
+  } else {
+    const path = curveElements.get(heldId);
+    if (path) {
+      svg.removeChild(path);
+      curveElements.delete(heldId);
+    }
+  }
+};
+
+const syncCurves = (
+  data: NodeflowData,
+  svg: SVGElement,
+  curveElements: Map<string, SVGPathElement>,
+): void => {
   const activeCurveIds = new Set<string>();
 
   data.nodes.forEach((node, nodeId) => {
@@ -186,91 +258,19 @@ function syncCurves(
   });
 
   syncHeldConnectorCurve(data, svg, curveElements);
-}
+};
 
-function syncHeldConnectorCurve(
-  data: NodeflowData,
-  svg: SVGElement,
-  curveElements: Map<string, SVGPathElement>,
-): void {
-  const heldId = "__held__";
-
-  if (data.mouseData.heldConnectors.length === 1) {
-    const heldConnector = data.mouseData.heldConnectors[0];
-    if (!heldConnector) return;
-
-    const start = heldConnector.getCenter();
-    const end = data.mouseData.mousePosition
-      .subtract(data.startPosition)
-      .divideBy(data.zoomLevel)
-      .subtract(data.position);
-
-    const anchorOffset = Vec2.of((end.x - start.x) / 1.5, 0);
-    const a1 = start.add(anchorOffset);
-    const a2 = end.subtract(anchorOffset);
-    const pathD = `M ${start.x} ${start.y} C ${a1.x} ${a1.y}, ${a2.x} ${a2.y}, ${end.x} ${end.y}`;
-
-    let path = curveElements.get(heldId);
-    if (!path) {
-      path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute("stroke", "#999");
-      path.setAttribute("stroke-width", "2");
-      path.setAttribute("fill", "none");
-      path.style.pointerEvents = "none";
-      svg.appendChild(path);
-      curveElements.set(heldId, path);
-    }
-    path.setAttribute("d", pathD);
-  } else {
-    const path = curveElements.get(heldId);
-    if (path) {
-      svg.removeChild(path);
-      curveElements.delete(heldId);
-    }
-  }
-}
-
-function createCurvePath(
-  svg: SVGElement,
-  sourceConnector: NodeConnector,
-  destConnector: NodeConnector,
-  curveId: string,
-  cssClass?: string,
-): SVGPathElement {
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path.setAttribute("id", `curve-${curveId}`);
-  path.setAttribute("stroke", "#666");
-  path.setAttribute("stroke-width", "2");
-  path.setAttribute("fill", "none");
-  path.style.cursor = "pointer";
-  if (cssClass) {
-    path.setAttribute("class", cssClass);
-  }
-  path.setAttribute("d", computePathD(sourceConnector, destConnector));
-  svg.appendChild(path);
-  return path;
-}
-
-function computePathD(source: NodeConnector, dest: NodeConnector): string {
-  const start = source.getCenter();
-  const end = dest.getCenter();
-  const anchorOffset = Vec2.of((end.x - start.x) / 1.5, 0);
-  const a1 = start.add(anchorOffset);
-  const a2 = end.subtract(anchorOffset);
-  return `M ${start.x} ${start.y} C ${a1.x} ${a1.y}, ${a2.x} ${a2.y}, ${end.x} ${end.y}`;
-}
-
-export function renderCurve(
+export const renderCurve = (
   svg: SVGElement,
   source: NodeConnector,
   dest: NodeConnector,
   curveId: string,
   _data: NodeflowData,
-): SVGPathElement {
+): SVGPathElement => {
   return createCurvePath(svg, source, dest, curveId, undefined);
-}
+};
 
-export function renderSelectionBox(parent: HTMLElement): HTMLDivElement {
+export const renderSelectionBox = (parent: HTMLElement): HTMLDivElement => {
   const selBox = document.createElement("div");
   selBox.className = "nodeflowSelectionBox";
   selBox.style.position = "absolute";
@@ -280,4 +280,4 @@ export function renderSelectionBox(parent: HTMLElement): HTMLDivElement {
   selBox.style.display = "none";
   parent.appendChild(selBox);
   return selBox;
-}
+};
