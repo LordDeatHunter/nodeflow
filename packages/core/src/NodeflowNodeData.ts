@@ -396,11 +396,15 @@ export default class NodeflowNodeData {
   }
 
   public getAllConnectors(): NodeConnector[] {
-    return Array.from(this._connectorSections.values()).reduce(
-      (connectors, section) =>
-        connectors.concat(Array.from(section.connectors.values())),
-      [] as NodeConnector[],
-    );
+    const out: NodeConnector[] = [];
+
+    for (const section of this._connectorSections.values()) {
+      for (const connector of section.connectors.values()) {
+        out.push(connector);
+      }
+    }
+
+    return out;
   }
 
   public getNextFreeConnectorSectionId(): string {
@@ -463,24 +467,25 @@ export default class NodeflowNodeData {
   }
 
   public getAllSourceConnections(): SerializedConnection[] {
-    return this.getAllSourceConnectors()
-      .map((source) => {
-        const filteredDestinations = source.destinations.filter(
-          (destination: any) =>
-            destination.destinationConnector.parentNode.id === this.id,
-        );
+    const out: SerializedConnection[] = [];
 
-        return filteredDestinations.map(
-          (destination: any): SerializedConnection => ({
-            sourceNodeId: source.parentNode.id,
-            sourceConnectorId: source.id,
-            destinationNodeId: destination.destinationConnector.parentNode.id,
-            destinationConnectorId: destination.destinationConnector.id,
-            css: destination.css,
-          }),
-        );
-      })
-      .flat();
+    this._connectorSections.forEach((section) => {
+      section.connectors.forEach((source) => {
+        source.destinations.forEach((destination) => {
+          if (destination.destinationConnector.parentNode.id === this.id) {
+            out.push({
+              sourceNodeId: source.parentNode.id,
+              sourceConnectorId: source.id,
+              destinationNodeId: destination.destinationConnector.parentNode.id,
+              destinationConnectorId: destination.destinationConnector.id,
+              css: destination.css,
+            });
+          }
+        });
+      });
+    });
+
+    return out;
   }
 
   public getAllDestinationConnections(): SerializedConnection[] {
