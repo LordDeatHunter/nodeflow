@@ -47,6 +47,12 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
     );
   });
 
+  let cachedStartX = NaN,
+    cachedStartY = NaN,
+    cachedEndX = NaN,
+    cachedEndY = NaN;
+  let cachedPath: string | undefined;
+
   const pathData = createMemo(() => {
     props.tick();
     if (destinationIndex() < 0) return undefined;
@@ -59,6 +65,20 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
 
     const start = output.getCenter();
     const end = input.getCenter();
+
+    if (
+      start.x === cachedStartX &&
+      start.y === cachedStartY &&
+      end.x === cachedEndX &&
+      end.y === cachedEndY &&
+      cachedPath
+    ) {
+      return cachedPath;
+    }
+    cachedStartX = start.x;
+    cachedStartY = start.y;
+    cachedEndX = end.x;
+    cachedEndY = end.y;
 
     const { anchorStart, anchorEnd } = curveFunctions.calculateCurveAnchors(
       start,
@@ -79,6 +99,7 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       dest.path = { start, end, anchorStart, anchorEnd, path };
     }
 
+    cachedPath = path;
     return path;
   });
 

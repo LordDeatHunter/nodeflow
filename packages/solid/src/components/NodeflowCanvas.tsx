@@ -1,5 +1,6 @@
-import { Component, createMemo, For, Show } from "solid-js";
+import { Component, createMemo, For, onCleanup, Show } from "solid-js";
 import { NodeflowData, NodeflowCss, Vec2 } from "@nodeflow/core";
+import { NodeflowRegistry } from "@nodeflow/core";
 import NodeflowNode from "./NodeflowNode";
 import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
@@ -15,7 +16,33 @@ interface NodeflowProps {
 const NodeflowCanvas =
   (nodeflowData: NodeflowData): Component<NodeflowProps> =>
   (props) => {
-    const tick = createTick();
+    const { tick, markDirty } = createTick();
+
+    const dirtyKey = "nodeflow-canvas-dirty-" + nodeflowData.id;
+    NodeflowRegistry.get().globalEventStore.onMouseMoveInDocument.subscribe(
+      dirtyKey,
+      markDirty,
+    );
+    NodeflowRegistry.get().globalEventStore.onPointerUpInDocument.subscribe(
+      dirtyKey,
+      markDirty,
+    );
+    NodeflowRegistry.get().globalEventStore.onPointerLeaveFromDocument.subscribe(
+      dirtyKey,
+      markDirty,
+    );
+
+    onCleanup(() => {
+      NodeflowRegistry.get().globalEventStore.onMouseMoveInDocument.unsubscribe(
+        dirtyKey,
+      );
+      NodeflowRegistry.get().globalEventStore.onPointerUpInDocument.unsubscribe(
+        dirtyKey,
+      );
+      NodeflowRegistry.get().globalEventStore.onPointerLeaveFromDocument.unsubscribe(
+        dirtyKey,
+      );
+    });
 
     const nodeIds = createMemo(() => {
       tick();
@@ -51,6 +78,7 @@ const NodeflowCanvas =
       <div
         ref={(el) => {
           const resizeObserver = new ResizeObserver(() => {
+            markDirty();
             nodeflowData.updateCanvasSize(
               Vec2.of(el.clientWidth, el.clientHeight),
             );
@@ -68,30 +96,38 @@ const NodeflowCanvas =
           width: props.width,
           overflow: "hidden",
         }}
-        onMouseMove={(event) =>
-          nodeflowData.eventStore.onMouseMoveInNodeflow.publish({ event })
-        }
-        onPointerUp={(event) =>
-          nodeflowData.eventStore.onPointerUpInNodeflow.publish({ event })
-        }
-        onWheel={(event) =>
-          nodeflowData.eventStore.onWheelInNodeflow.publish({ event })
-        }
-        onMouseDown={(event) =>
-          nodeflowData.eventStore.onMouseDownInNodeflow.publish({ event })
-        }
-        onKeyDown={(event) =>
-          nodeflowData.eventStore.onKeyDownInNodeflow.publish({ event })
-        }
-        onKeyUp={(event) =>
-          nodeflowData.eventStore.onKeyUpInNodeflow.publish({ event })
-        }
-        onTouchStart={(event) =>
-          nodeflowData.eventStore.onTouchStartInNodeflow.publish({ event })
-        }
-        onTouchMove={(event) =>
-          nodeflowData.eventStore.onTouchMoveInNodeflow.publish({ event })
-        }
+        onMouseMove={(event) => {
+          markDirty();
+          nodeflowData.eventStore.onMouseMoveInNodeflow.publish({ event });
+        }}
+        onPointerUp={(event) => {
+          markDirty();
+          nodeflowData.eventStore.onPointerUpInNodeflow.publish({ event });
+        }}
+        onWheel={(event) => {
+          markDirty();
+          nodeflowData.eventStore.onWheelInNodeflow.publish({ event });
+        }}
+        onMouseDown={(event) => {
+          markDirty();
+          nodeflowData.eventStore.onMouseDownInNodeflow.publish({ event });
+        }}
+        onKeyDown={(event) => {
+          markDirty();
+          nodeflowData.eventStore.onKeyDownInNodeflow.publish({ event });
+        }}
+        onKeyUp={(event) => {
+          markDirty();
+          nodeflowData.eventStore.onKeyUpInNodeflow.publish({ event });
+        }}
+        onTouchStart={(event) => {
+          markDirty();
+          nodeflowData.eventStore.onTouchStartInNodeflow.publish({ event });
+        }}
+        onTouchMove={(event) => {
+          markDirty();
+          nodeflowData.eventStore.onTouchMoveInNodeflow.publish({ event });
+        }}
       >
         <div
           style={{
@@ -107,6 +143,7 @@ const NodeflowCanvas =
                 nodeId={nodeId}
                 nodeflowData={nodeflowData}
                 tick={tick}
+                markDirty={markDirty}
               />
             )}
           </For>

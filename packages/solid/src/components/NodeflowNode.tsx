@@ -12,6 +12,7 @@ interface NodeProps {
   nodeId: string;
   nodeflowData: NodeflowData;
   tick: () => number;
+  markDirty?: () => void;
 }
 
 const NodeflowNode: Component<NodeProps> = (props) => {
