@@ -44,6 +44,9 @@ const nodeDisplay = ({ node }: { node: DisplayNode }): HTMLElement => {
   return wrapper;
 };
 
+const randInt = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
+
 const addNode = (x: number, y: number, inputs: number, outputs: number) => {
   const node = nodeflowData.addNode({
     position: { x, y },
@@ -109,3 +112,47 @@ connect(merge.id, "out-0", logger.id, "in-0");
 
 // output → logger
 connect(output.id, "out-0", logger.id, "in-1");
+
+const addRandomNode = () => {
+  addNode(randInt(50, 800), randInt(50, 600), randInt(0, 3), randInt(0, 3));
+};
+
+const addRandomConnection = () => {
+  const nodeIds = Array.from(nodeflowData.nodes.keys());
+  if (nodeIds.length < 2) return;
+
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const srcId = nodeIds[randInt(0, nodeIds.length - 1)];
+    const dstId = nodeIds[randInt(0, nodeIds.length - 1)];
+    if (srcId === dstId) continue;
+
+    const srcNode = nodeflowData.nodes.get(srcId)!;
+    const dstNode = nodeflowData.nodes.get(dstId)!;
+
+    const srcOutputs = srcNode
+      .getAllConnectors()
+      .filter((c) => c.parentSection.id === "outputs");
+    const dstInputs = dstNode
+      .getAllConnectors()
+      .filter((c) => c.parentSection.id === "inputs");
+    if (srcOutputs.length === 0 || dstInputs.length === 0) continue;
+
+    const srcConn = srcOutputs[randInt(0, srcOutputs.length - 1)];
+    const dstConn = dstInputs[randInt(0, dstInputs.length - 1)];
+
+    nodeflowData.addConnection({
+      sourceNodeId: srcId,
+      sourceConnectorId: srcConn.id,
+      destinationNodeId: dstId,
+      destinationConnectorId: dstConn.id,
+    });
+    break;
+  }
+};
+
+document
+  .getElementById("btn-add-node")
+  ?.addEventListener("click", addRandomNode);
+document
+  .getElementById("btn-add-connection")
+  ?.addEventListener("click", addRandomConnection);

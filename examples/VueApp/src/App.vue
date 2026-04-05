@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import { Nodeflow, createNodeDisplay } from "@nodeflow/vue";
 import type { NodeflowData } from "@nodeflow/vue";
 import NodeCard from "./NodeCard.vue";
@@ -7,6 +8,11 @@ const nodeDisplay = createNodeDisplay(NodeCard, (node) => ({
   id: node.id,
   position: node.position,
 }));
+
+const dataRef = ref<NodeflowData | null>(null);
+
+const randInt = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
 
 const addNode = (
   data: NodeflowData,
@@ -28,6 +34,8 @@ const addNode = (
 };
 
 const handleReady = (data: NodeflowData) => {
+  dataRef.value = data;
+
   const start = addNode(data, 80, 100, 0, 2);
   const config = addNode(data, 80, 300, 0, 1);
   const transform = addNode(data, 380, 60, 2, 1);
@@ -79,8 +87,59 @@ const handleReady = (data: NodeflowData) => {
     destinationConnectorId: "in-1",
   });
 };
+
+const addRandomNode = () => {
+  const data = dataRef.value;
+  if (!data) return;
+  addNode(
+    data,
+    randInt(50, 800),
+    randInt(50, 600),
+    randInt(0, 3),
+    randInt(0, 3),
+  );
+};
+
+const addRandomConnection = () => {
+  const data = dataRef.value;
+  if (!data) return;
+  const nodeIds = Array.from(data.nodes.keys());
+  if (nodeIds.length < 2) return;
+
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const srcId = nodeIds[randInt(0, nodeIds.length - 1)];
+    const dstId = nodeIds[randInt(0, nodeIds.length - 1)];
+    if (srcId === dstId) continue;
+
+    const srcNode = data.nodes.get(srcId)!;
+    const dstNode = data.nodes.get(dstId)!;
+
+    const srcOutputs = srcNode
+      .getAllConnectors()
+      .filter((c) => c.parentSection.id === "outputs");
+    const dstInputs = dstNode
+      .getAllConnectors()
+      .filter((c) => c.parentSection.id === "inputs");
+    if (srcOutputs.length === 0 || dstInputs.length === 0) continue;
+
+    const srcConn = srcOutputs[randInt(0, srcOutputs.length - 1)];
+    const dstConn = dstInputs[randInt(0, dstInputs.length - 1)];
+
+    data.addConnection({
+      sourceNodeId: srcId,
+      sourceConnectorId: srcConn.id,
+      destinationNodeId: dstId,
+      destinationConnectorId: dstConn.id,
+    });
+    break;
+  }
+};
 </script>
 
 <template>
+  <div class="toolbar">
+    <button @click="addRandomNode">Add Random Node</button>
+    <button @click="addRandomConnection">Add Random Connection</button>
+  </div>
   <Nodeflow id="main" @ready="handleReady" />
 </template>

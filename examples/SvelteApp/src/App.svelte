@@ -8,39 +8,46 @@
     position: node.position,
   }));
 
-  const handleReady = (nodeflowData: NodeflowData) => {
-    const addNode = (x: number, y: number, inputs: number, outputs: number) => {
-      const node = nodeflowData.addNode({
-        position: { x, y },
-        display: nodeDisplay,
-      });
+  let nodeflowData: NodeflowData | undefined = $state(undefined);
 
-      if (inputs > 0) {
-        const section = node.addConnectorSection({ id: "inputs" });
-        for (let i = 0; i < inputs; i++) {
-          section.addConnector({ id: `in-${i}` });
-        }
+  const randInt = (min: number, max: number) =>
+    Math.floor(Math.random() * (max - min + 1)) + min;
+
+  const addNode = (data: NodeflowData, x: number, y: number, inputs: number, outputs: number) => {
+    const node = data.addNode({
+      position: { x, y },
+      display: nodeDisplay,
+    });
+
+    if (inputs > 0) {
+      const section = node.addConnectorSection({ id: "inputs" });
+      for (let i = 0; i < inputs; i++) {
+        section.addConnector({ id: `in-${i}` });
       }
+    }
 
-      if (outputs > 0) {
-        const section = node.addConnectorSection({ id: "outputs" });
-        for (let i = 0; i < outputs; i++) {
-          section.addConnector({ id: `out-${i}` });
-        }
+    if (outputs > 0) {
+      const section = node.addConnectorSection({ id: "outputs" });
+      for (let i = 0; i < outputs; i++) {
+        section.addConnector({ id: `out-${i}` });
       }
+    }
 
-      return node;
-    };
+    return node;
+  };
 
-    const start = addNode(80, 100, 0, 2);
-    const config = addNode(80, 300, 0, 1);
+  const handleReady = (data: NodeflowData) => {
+    nodeflowData = data;
 
-    const transform = addNode(380, 60, 2, 1);
-    const validate = addNode(380, 260, 2, 1);
-    const merge = addNode(380, 460, 1, 1);
+    const start = addNode(data, 80, 100, 0, 2);
+    const config = addNode(data, 80, 300, 0, 1);
 
-    const output = addNode(700, 160, 2, 1);
-    const logger = addNode(700, 400, 2, 0);
+    const transform = addNode(data, 380, 60, 2, 1);
+    const validate = addNode(data, 380, 260, 2, 1);
+    const merge = addNode(data, 380, 460, 1, 1);
+
+    const output = addNode(data, 700, 160, 2, 1);
+    const logger = addNode(data, 700, 400, 2, 0);
 
     const connect = (
       srcId: string,
@@ -48,7 +55,7 @@
       dstId: string,
       dstConnector: string,
     ) => {
-      nodeflowData.addConnection({
+      data.addConnection({
         sourceNodeId: srcId,
         sourceConnectorId: srcConnector,
         destinationNodeId: dstId,
@@ -64,6 +71,56 @@
     connect(merge.id, "out-0", logger.id, "in-0");
     connect(output.id, "out-0", logger.id, "in-1");
   };
+
+  const addRandomNode = () => {
+    if (!nodeflowData) return;
+    addNode(
+      nodeflowData,
+      randInt(50, 800),
+      randInt(50, 600),
+      randInt(0, 3),
+      randInt(0, 3),
+    );
+  };
+
+  const addRandomConnection = () => {
+    if (!nodeflowData) return;
+    const data = nodeflowData;
+    const nodeIds = Array.from(data.nodes.keys());
+    if (nodeIds.length < 2) return;
+
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const srcId = nodeIds[randInt(0, nodeIds.length - 1)];
+      const dstId = nodeIds[randInt(0, nodeIds.length - 1)];
+      if (srcId === dstId) continue;
+
+      const srcNode = data.nodes.get(srcId)!;
+      const dstNode = data.nodes.get(dstId)!;
+
+      const srcOutputs = srcNode.getAllConnectors().filter(
+        (c) => c.parentSection.id === "outputs",
+      );
+      const dstInputs = dstNode.getAllConnectors().filter(
+        (c) => c.parentSection.id === "inputs",
+      );
+      if (srcOutputs.length === 0 || dstInputs.length === 0) continue;
+
+      const srcConn = srcOutputs[randInt(0, srcOutputs.length - 1)];
+      const dstConn = dstInputs[randInt(0, dstInputs.length - 1)];
+
+      data.addConnection({
+        sourceNodeId: srcId,
+        sourceConnectorId: srcConn.id,
+        destinationNodeId: dstId,
+        destinationConnectorId: dstConn.id,
+      });
+      break;
+    }
+  };
 </script>
 
+<div class="toolbar">
+  <button onclick={addRandomNode}>Add Random Node</button>
+  <button onclick={addRandomConnection}>Add Random Connection</button>
+</div>
 <Nodeflow id="main" onready={handleReady} />

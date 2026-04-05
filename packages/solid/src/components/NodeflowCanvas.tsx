@@ -167,19 +167,8 @@ const NodeflowCanvas =
             transition: "scale 0.1s ease-out",
           }}
         >
-          <For each={nodeIds()}>
-            {(nodeId) => (
-              <NodeflowNode
-                nodeId={nodeId}
-                nodeflowData={nodeflowData}
-                tick={tick}
-                markDirty={markDirty}
-              />
-            )}
-          </For>
           <svg
             style={{
-              "z-index": 2,
               position: "absolute",
               width: "1px",
               height: "1px",
@@ -208,6 +197,16 @@ const NodeflowCanvas =
               tick={tick}
             />
           </Show>
+          <For each={nodeIds()}>
+            {(nodeId) => (
+              <NodeflowNode
+                nodeId={nodeId}
+                nodeflowData={nodeflowData}
+                tick={tick}
+                markDirty={markDirty}
+              />
+            )}
+          </For>
         </div>
         <Show when={selectionBoxBounds()}>
           <SelectionBox nodeflowData={nodeflowData} tick={tick} />

@@ -19,7 +19,7 @@ export const renderConnector = (
   connectorDiv.style.cursor = "crosshair";
   connectorDiv.style.display = "inline-block";
 
-  const resizeObserver = new ResizeObserver(() => {
+  const measureConnector = () => {
     const rect = connectorDiv.getBoundingClientRect();
     const nodeEl = document.getElementById(`node-${node.id}`);
     if (!nodeEl) return;
@@ -29,7 +29,9 @@ export const renderConnector = (
       rect.top - nodeRect.top,
     );
     connector.updateMeasurements(position, Vec2.of(rect.width, rect.height));
-  });
+  };
+
+  const resizeObserver = new ResizeObserver(measureConnector);
   resizeObserver.observe(connectorDiv);
 
   connectorDiv.addEventListener("mousedown", (event) => {

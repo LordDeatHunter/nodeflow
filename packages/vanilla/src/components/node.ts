@@ -55,6 +55,21 @@ export const renderNode = (
       Vec2.of(nodeDiv.clientWidth, nodeDiv.clientHeight),
       Vec2.of(nodeDiv.clientLeft, nodeDiv.clientTop),
     );
+
+    const nodeRect = nodeDiv.getBoundingClientRect();
+    node.connectorSections.forEach((section) => {
+      section.connectors.forEach((connector) => {
+        const connectorEl = nodeDiv.querySelector<HTMLElement>(
+          `#connector-${CSS.escape(connector.id)}`,
+        );
+        if (!connectorEl) return;
+        const rect = connectorEl.getBoundingClientRect();
+        connector.updateMeasurements(
+          Vec2.of(rect.left - nodeRect.left, rect.top - nodeRect.top),
+          Vec2.of(rect.width, rect.height),
+        );
+      });
+    });
   });
   resizeObserver.observe(nodeDiv);
 

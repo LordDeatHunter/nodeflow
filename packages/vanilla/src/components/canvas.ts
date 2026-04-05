@@ -21,7 +21,6 @@ export const renderCanvas = (
   innerDiv.style.transition = "scale 0.1s ease-out";
 
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.style.zIndex = "2";
   svg.style.position = "absolute";
   svg.style.width = "1px";
   svg.style.height = "1px";
@@ -48,6 +47,12 @@ export const renderCanvas = (
       lastPosY = data.position.y;
       innerDiv.style.transform = `scale(${data.zoomLevel}) translate(${data.position.x}px, ${data.position.y}px)`;
     }
+
+    data.nodes.forEach((node, nodeId) => {
+      if (!nodeElements.has(nodeId)) {
+        renderNode(innerDiv, node, data, nodeElements);
+      }
+    });
 
     nodeElements.forEach((el, nodeId) => {
       const node = data.nodes.get(nodeId);

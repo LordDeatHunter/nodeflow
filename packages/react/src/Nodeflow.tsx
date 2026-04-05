@@ -30,6 +30,7 @@ export const Nodeflow = ({
 
     return () => {
       NodeflowRegistry.get().removeNodeflow(id);
+      container.innerHTML = "";
     };
   }, []);
 

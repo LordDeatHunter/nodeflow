@@ -44,7 +44,6 @@ const Curve: Component<CurveProps> = (props) => {
   return (
     <svg
       style={{
-        "z-index": 2,
         position: "absolute",
         width: "1px",
         height: "1px",
