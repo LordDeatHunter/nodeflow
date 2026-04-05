@@ -4,7 +4,6 @@ import {
   Optional,
   SelectableElementCSS,
   NodeConnector,
-  NodeflowNodeData,
 } from "@nodeflow/core";
 
 interface NodeCurveProps {
@@ -17,55 +16,39 @@ interface NodeCurveProps {
   tick: () => number;
 }
 
+interface CurveRenderData {
+  path: string;
+  sourceConnector: NodeConnector;
+  destinationConnector: NodeConnector;
+}
+
 const NodeCurve: Component<NodeCurveProps> = (props) => {
-  const startNode = createMemo<NodeflowNodeData>(() => {
-    props.tick();
-    return props.nodeflowData.nodes.get(props.sourceNodeId)!;
-  });
-  const endNode = createMemo<NodeflowNodeData>(() => {
-    props.tick();
-    return props.nodeflowData.nodes.get(props.destinationNodeId)!;
-  });
-
-  const sourceConnector = createMemo<Optional<NodeConnector>>(() => {
-    props.tick();
-    return startNode()?.getConnector(props.sourceConnectorId);
-  });
-  const destinationConnector = createMemo<Optional<NodeConnector>>(() => {
-    props.tick();
-    return endNode()?.getConnector(props.destinationConnectorId);
-  });
-
-  const destinationIndex = createMemo<number>(() => {
-    props.tick();
-    if (!startNode() || !endNode()) return -1;
-    return (
-      sourceConnector()?.destinations?.findIndex(
-        (destination) =>
-          destination.destinationConnector === destinationConnector(),
-      ) ?? -1
-    );
-  });
-
   let cachedStartX = NaN,
     cachedStartY = NaN,
     cachedEndX = NaN,
     cachedEndY = NaN;
   let cachedPath: string | undefined;
 
-  const pathData = createMemo(() => {
+  const curveData = createMemo<Optional<CurveRenderData>>(() => {
     props.tick();
-    if (destinationIndex() < 0) return undefined;
 
-    const { curveFunctions } = props.nodeflowData;
+    const startNode = props.nodeflowData.nodes.get(props.sourceNodeId);
+    const endNode = props.nodeflowData.nodes.get(props.destinationNodeId);
+    if (!startNode || !endNode) return undefined;
 
-    const output = startNode()?.getConnector(props.sourceConnectorId);
-    const input = endNode()?.getConnector(props.destinationConnectorId);
-    if (!output || !input) return undefined;
+    const sourceConn = startNode.getConnector(props.sourceConnectorId);
+    const destConn = endNode.getConnector(props.destinationConnectorId);
+    if (!sourceConn || !destConn) return undefined;
 
-    const start = output.getCenter();
-    const end = input.getCenter();
+    const destIndex = sourceConn.destinations.findIndex(
+      (d) => d.destinationConnector === destConn,
+    );
+    if (destIndex < 0) return undefined;
 
+    const start = sourceConn.getCenter();
+    const end = destConn.getCenter();
+
+    let path: string;
     if (
       start.x === cachedStartX &&
       start.y === cachedStartY &&
@@ -73,34 +56,41 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       end.y === cachedEndY &&
       cachedPath
     ) {
-      return cachedPath;
+      path = cachedPath;
+    } else {
+      cachedStartX = start.x;
+      cachedStartY = start.y;
+      cachedEndX = end.x;
+      cachedEndY = end.y;
+
+      const { curveFunctions } = props.nodeflowData;
+      const { anchorStart, anchorEnd } = curveFunctions.calculateCurveAnchors(
+        start,
+        end,
+        startNode.getCenter(),
+        endNode.getCenter(),
+      );
+
+      path = curveFunctions.createDefaultCurvePath(
+        start,
+        end,
+        anchorStart,
+        anchorEnd,
+      );
+
+      const dest = sourceConn.destinations.get(destIndex);
+      if (dest) {
+        dest.path = { start, end, anchorStart, anchorEnd, path };
+      }
+
+      cachedPath = path;
     }
-    cachedStartX = start.x;
-    cachedStartY = start.y;
-    cachedEndX = end.x;
-    cachedEndY = end.y;
 
-    const { anchorStart, anchorEnd } = curveFunctions.calculateCurveAnchors(
-      start,
-      end,
-      startNode().getCenter(),
-      endNode().getCenter(),
-    );
-
-    const path = curveFunctions.createDefaultCurvePath(
-      start,
-      end,
-      anchorStart,
-      anchorEnd,
-    );
-
-    const dest = sourceConnector()?.destinations.get(destinationIndex());
-    if (dest) {
-      dest.path = { start, end, anchorStart, anchorEnd, path };
-    }
-
-    cachedPath = path;
-    return path;
+    return {
+      path,
+      sourceConnector: sourceConn,
+      destinationConnector: destConn,
+    };
   });
 
   const isSelected = createMemo(() => {
@@ -117,13 +107,15 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
     <>
       <path
         onPointerDown={(event) => {
+          const data = curveData();
+          if (!data) return;
           props.nodeflowData.eventStore.onPointerDownInNodeCurve.publish({
             event,
-            sourceConnector: sourceConnector()!,
-            destinationConnector: destinationConnector()!,
+            sourceConnector: data.sourceConnector,
+            destinationConnector: data.destinationConnector,
           });
         }}
-        d={pathData()}
+        d={curveData()?.path}
         stroke="black"
         stroke-width={1}
         fill="none"
@@ -138,22 +130,35 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       />
       <Show when={props.nodeflowData.settings.debugMode}>
         {(() => {
-          const dest = createMemo(() => {
+          const debugData = createMemo(() => {
             props.tick();
-            return sourceConnector()?.destinations.get(destinationIndex());
+            const startNode = props.nodeflowData.nodes.get(props.sourceNodeId);
+            if (!startNode) return undefined;
+            const sourceConn = startNode.getConnector(props.sourceConnectorId);
+            if (!sourceConn) return undefined;
+            const endNode = props.nodeflowData.nodes.get(
+              props.destinationNodeId,
+            );
+            if (!endNode) return undefined;
+            const destConn = endNode.getConnector(props.destinationConnectorId);
+            if (!destConn) return undefined;
+            const destIndex = sourceConn.destinations.findIndex(
+              (d) => d.destinationConnector === destConn,
+            );
+            return sourceConn.destinations.get(destIndex);
           });
           return (
             <>
               <circle
-                cx={dest()?.path?.anchorStart?.x}
-                cy={dest()?.path?.anchorStart?.y}
+                cx={debugData()?.path?.anchorStart?.x}
+                cy={debugData()?.path?.anchorStart?.y}
                 r={4}
                 fill="none"
                 class={props.css?.normal ?? ""}
               />
               <circle
-                cx={dest()?.path?.anchorEnd?.x}
-                cy={dest()?.path?.anchorEnd?.y}
+                cx={debugData()?.path?.anchorEnd?.x}
+                cy={debugData()?.path?.anchorEnd?.y}
                 r={4}
                 fill="none"
                 class={props.css?.normal ?? ""}

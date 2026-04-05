@@ -1,5 +1,10 @@
 import { Component, createMemo, For, onCleanup, Show } from "solid-js";
-import { NodeflowData, NodeflowCss, Vec2 } from "@nodeflow/core";
+import {
+  NodeflowData,
+  NodeflowCss,
+  Vec2,
+  SelectableElementCSS,
+} from "@nodeflow/core";
 import { NodeflowRegistry } from "@nodeflow/core";
 import NodeflowNode from "./NodeflowNode";
 import NodeCurve from "./NodeCurve";
@@ -49,9 +54,34 @@ const NodeflowCanvas =
       return Array.from(nodeflowData.nodes.keys());
     });
 
-    const nodeEntries = createMemo(() => {
+    const connectionList = createMemo(() => {
       tick();
-      return Array.from(nodeflowData.nodes.entries());
+      const out: Array<{
+        sourceNodeId: string;
+        sourceConnectorId: string;
+        destinationNodeId: string;
+        destinationConnectorId: string;
+        css: SelectableElementCSS;
+      }> = [];
+
+      for (const [nodeId, node] of nodeflowData.nodes) {
+        for (const section of node.connectorSections.values()) {
+          for (const connector of section.connectors.values()) {
+            for (const dest of connector.destinations.array) {
+              out.push({
+                sourceNodeId: nodeId,
+                sourceConnectorId: connector.id,
+                destinationNodeId:
+                  dest.destinationConnector.parentSection.parentNode.id,
+                destinationConnectorId: dest.destinationConnector.id,
+                css: dest.css,
+              });
+            }
+          }
+        }
+      }
+
+      return out;
     });
 
     const transform = createMemo(() => {
@@ -157,30 +187,17 @@ const NodeflowCanvas =
               overflow: "visible",
             }}
           >
-            <For each={nodeEntries()}>
-              {([nodeId, node]) => (
-                <For each={node.getAllConnectors()}>
-                  {(connector) => (
-                    <For each={connector.destinations.array}>
-                      {(outputConnection) => (
-                        <NodeCurve
-                          nodeflowData={nodeflowData}
-                          sourceNodeId={nodeId}
-                          sourceConnectorId={connector.id}
-                          destinationNodeId={
-                            outputConnection.destinationConnector.parentSection
-                              .parentNode.id
-                          }
-                          destinationConnectorId={
-                            outputConnection.destinationConnector.id
-                          }
-                          css={outputConnection.css}
-                          tick={tick}
-                        />
-                      )}
-                    </For>
-                  )}
-                </For>
+            <For each={connectionList()}>
+              {(conn) => (
+                <NodeCurve
+                  nodeflowData={nodeflowData}
+                  sourceNodeId={conn.sourceNodeId}
+                  sourceConnectorId={conn.sourceConnectorId}
+                  destinationNodeId={conn.destinationNodeId}
+                  destinationConnectorId={conn.destinationConnectorId}
+                  css={conn.css}
+                  tick={tick}
+                />
               )}
             </For>
           </svg>

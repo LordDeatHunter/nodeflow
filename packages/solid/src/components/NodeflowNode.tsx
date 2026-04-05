@@ -92,7 +92,7 @@ const NodeflowNode: Component<NodeProps> = (props) => {
       style={{
         transform: `translate(${nodePosition().x}px, ${nodePosition().y}px)`,
         opacity: isVisible() ? 1 : 0,
-        contain: "content",
+        contain: "layout style",
         "will-change": "transform",
       }}
       id={`node-${props.nodeId}`}
