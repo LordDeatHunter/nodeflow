@@ -11,6 +11,7 @@
   "scripts": {
     "build-examples": "node scripts/build-examples.cjs",
     "deploy-examples": "run-s build-examples && gh-pages -d examples-build",
+    "dev:landing": "bun run scripts/dev-landing.ts",
     "dev:blueprint": "bun --cwd=./examples/BlueprintApp run start",
     "dev:familytree": "bun --cwd=./examples/FamilyTreeApp run start",
     "dev:nostyle": "bun --cwd=./examples/NoStyle run start",

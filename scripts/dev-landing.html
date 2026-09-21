@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#ebede9" />
+    <title>Nodeflow examples (dev)</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background-color: #ebede9;
+        color: #202e37;
+        font-family: "Roboto", sans-serif;
+      }
+
+      .parent-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+        padding: 64px 48px 120px;
+      }
+
+      h1 {
+        font-size: 4rem;
+        font-weight: 700;
+        margin: 0;
+        text-align: center;
+      }
+
+      .subtitle {
+        font-size: 1.25rem;
+        font-weight: 400;
+        margin: 0;
+        opacity: 0.6;
+      }
+
+      .container-box {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 24px;
+        width: 100%;
+        max-width: 1200px;
+        margin-top: 32px;
+      }
+
+      .example-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        padding: 32px 24px;
+        border: 1px solid #d5d9d3;
+        border-radius: 16px;
+        background-color: #f4f6f2;
+        color: inherit;
+        text-decoration: none;
+        transition:
+          transform 0.3s ease-in-out,
+          box-shadow 0.3s ease-in-out;
+      }
+
+      .example-box:hover {
+        transform: scale(1.04);
+        box-shadow: 0 12px 28px rgb(32 46 55 / 12%);
+      }
+
+      h2 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin: 0;
+        text-align: center;
+      }
+
+      .port {
+        font-size: 1rem;
+        font-weight: 400;
+        opacity: 0.55;
+      }
+
+      .footer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: fixed;
+        bottom: 32px;
+        left: 0;
+        margin: 0;
+        width: 100%;
+      }
+
+      .footer-text {
+        font-size: 1.25rem;
+        font-weight: 400;
+        margin: 0;
+      }
+
+      .credits-link {
+        color: #4f8fba;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="parent-box">
+      <h1>Nodeflow examples</h1>
+      <p class="subtitle">Local dev servers</p>
+
+      <div class="container-box">
+        <a class="example-box" href="http://localhost:3001/">
+          <h2>Family Tree</h2>
+          <span class="port">:3001</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="64"
+            height="64"
+            fill="none"
+            stroke-width="1.5"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke="#394a50"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 22v-8m0-4v4m0 0 4-2M17 7A5 5 0 0 0 7 7M12 18H7.5a5.5 5.5 0 1 1 0-11H9M12 18h4.5A5.5 5.5 0 0 0 17 7.022"
+            />
+          </svg>
+        </a>
+
+        <a class="example-box" href="http://localhost:3002/">
+          <h2>Blueprint</h2>
+          <span class="port">:3002</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="64"
+            height="64"
+            fill="none"
+            stroke-width="1.5"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke="#394a50"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3 21V3h18v18H3ZM3 16.5h18M3 12h18M3 7.5h18M16.5 3v18M12 3v18M7.5 3v18"
+            />
+          </svg>
+        </a>
+
+        <a class="example-box" href="http://localhost:3003/">
+          <h2>No styling</h2>
+          <span class="port">:3003</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="64"
+            height="64"
+            fill="none"
+            stroke-width="1.5"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M12 8L12 12"
+              stroke="#000000"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M12 16.01L12.01 15.9989"
+              stroke="#000000"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M9 3H4V6"
+              stroke="#000000"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M4 11V13"
+              stroke="#000000"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M20 11V13"
+              stroke="#000000"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M15 3H20V6"
+              stroke="#000000"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M9 21H4V18"
+              stroke="#000000"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M15 21H20V18"
+              stroke="#000000"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </a>
+
+        <a class="example-box" href="http://localhost:5173/">
+          <h2>Vanilla</h2>
+          <span class="port">:5173</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="64"
+            height="64"
+            fill="none"
+            stroke-width="1.5"
+            viewBox="0 0 24 24"
+          >
+            <rect
+              x="3"
+              y="4"
+              width="18"
+              height="16"
+              rx="2"
+              stroke="#394a50"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </a>
+
+        <a class="example-box" href="http://localhost:5174/">
+          <h2>React</h2>
+          <span class="port">:5174</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="64"
+            height="64"
+            fill="none"
+            stroke-width="1.5"
+            viewBox="0 0 24 24"
+          >
+            <circle cx="12" cy="12" r="1.5" stroke="#394a50" stroke-width="1.5" />
+            <ellipse cx="12" cy="12" rx="9.5" ry="4" stroke="#394a50" stroke-width="1.5" />
+            <ellipse
+              cx="12"
+              cy="12"
+              rx="9.5"
+              ry="4"
+              stroke="#394a50"
+              stroke-width="1.5"
+              transform="rotate(60 12 12)"
+            />
+            <ellipse
+              cx="12"
+              cy="12"
+              rx="9.5"
+              ry="4"
+              stroke="#394a50"
+              stroke-width="1.5"
+              transform="rotate(120 12 12)"
+            />
+          </svg>
+        </a>
+
+        <a class="example-box" href="http://localhost:5175/">
+          <h2>Svelte</h2>
+          <span class="port">:5175</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="64"
+            height="64"
+            fill="none"
+            stroke-width="1.5"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M16 6a4 4 0 0 0-4-2h-2a4 4 0 0 0-1.5 7.7l1 .4"
+              stroke="#394a50"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M8 18a4 4 0 0 0 4 2h2a4 4 0 0 0 1.5-7.7l-1-.4"
+              stroke="#394a50"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </a>
+
+        <a class="example-box" href="http://localhost:5176/">
+          <h2>Vue</h2>
+          <span class="port">:5176</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="64"
+            height="64"
+            fill="none"
+            stroke-width="1.5"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M2 5h5l5 9 5-9h5L12 21 2 5Z"
+              stroke="#394a50"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </a>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p class="footer-text">
+        Icons from <a href="https://iconoir.com/" class="credits-link">Iconoir</a>
+      </p>
+    </footer>
+  </body>
+</html>
