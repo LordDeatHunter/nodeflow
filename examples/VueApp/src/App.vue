@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { shallowRef } from "vue";
 import { Nodeflow, createNodeDisplay } from "@nodeflow/vue";
 import type { NodeflowData } from "@nodeflow/vue";
 import NodeCard from "./NodeCard.vue";
@@ -9,7 +9,7 @@ const nodeDisplay = createNodeDisplay(NodeCard, (node) => ({
   position: node.position,
 }));
 
-const dataRef = ref<NodeflowData | null>(null);
+const dataRef = shallowRef<NodeflowData | null>(null);
 
 const randInt = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
