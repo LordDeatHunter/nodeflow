@@ -46,7 +46,7 @@ const buildExamples = async () => {
 
             const examplePath = path.join(examplesPath, file);
             console.log(`Building ${examplePath}...`);
-            const childProcess = child_process.exec("pnpm run build", { cwd: examplePath });
+            const childProcess = child_process.exec("bun run build", { cwd: examplePath });
             childProcess.stdout.pipe(process.stdout);
             childProcess.stderr.pipe(process.stderr);
 
