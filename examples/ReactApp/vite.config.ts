@@ -5,5 +5,5 @@ export default defineConfig({
   plugins: [react()],
   base: "./",
   build: { target: "esnext" },
-  server: { port: 5174 },
+  server: { port: 3005 },
 });

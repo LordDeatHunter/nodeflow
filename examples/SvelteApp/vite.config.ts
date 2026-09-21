@@ -5,5 +5,5 @@ export default defineConfig({
   plugins: [svelte()],
   base: "./",
   build: { target: "esnext" },
-  server: { port: 5175 },
+  server: { port: 3006 },
 });
