@@ -37,6 +37,12 @@ const NodeflowCanvas =
       markDirty,
     );
 
+    const transformKey = "nodeflow-canvas-transform-" + nodeflowData.id;
+    nodeflowData.eventStore.onCanvasTransformChanged.subscribe(
+      transformKey,
+      markDirty,
+    );
+
     onCleanup(() => {
       NodeflowRegistry.get().globalEventStore.onMouseMoveInDocument.unsubscribe(
         dirtyKey,
@@ -46,6 +52,9 @@ const NodeflowCanvas =
       );
       NodeflowRegistry.get().globalEventStore.onPointerLeaveFromDocument.unsubscribe(
         dirtyKey,
+      );
+      nodeflowData.eventStore.onCanvasTransformChanged.unsubscribe(
+        transformKey,
       );
     });
 
