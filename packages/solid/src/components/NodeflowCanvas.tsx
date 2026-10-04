@@ -14,8 +14,8 @@ import { createTick } from "../tick";
 
 interface NodeflowProps {
   css?: NodeflowCss;
-  height: string;
-  width: string;
+  height?: string;
+  width?: string;
 }
 
 const NodeflowCanvas =
@@ -104,6 +104,37 @@ const NodeflowCanvas =
       return nodeflowData.mouseData.selectionBox.boundingBox;
     });
 
+    const resolveTouchDrop = (touch: Touch) => {
+      const target = document.elementFromPoint(touch.clientX, touch.clientY);
+      const connectorEl = target?.closest<HTMLElement>(
+        "[data-nodeflow-connector]",
+      );
+      if (
+        connectorEl?.dataset.nodeflowNode &&
+        connectorEl.dataset.nodeflowConnector
+      ) {
+        nodeflowData.eventStore.onPointerUpInConnector.publish({
+          nodeId: connectorEl.dataset.nodeflowNode,
+          connectorId: connectorEl.dataset.nodeflowConnector,
+          event: touch as unknown as PointerEvent,
+        });
+        return;
+      }
+
+      const nodeEl = target?.closest<HTMLElement>("[data-nodeflow-node]");
+      if (nodeEl?.dataset.nodeflowNode) {
+        nodeflowData.eventStore.onPointerUpInNode.publish({
+          nodeId: nodeEl.dataset.nodeflowNode,
+          event: touch as unknown as PointerEvent,
+        });
+        return;
+      }
+
+      nodeflowData.eventStore.onPointerUpInNodeflow.publish({
+        event: touch as unknown as PointerEvent,
+      });
+    };
+
     return (
       <div
         ref={(el) => {
@@ -120,11 +151,13 @@ const NodeflowCanvas =
         }}
         id={`nodeflow-${nodeflowData.id}`}
         tabIndex="0"
-        class={props?.css?.nodeflow}
+        class={`nodeflowCanvas ${props?.css?.nodeflow ?? ""}`}
         style={{
-          height: props.height,
-          width: props.width,
+          height: props.height ?? "100%",
+          width: props.width ?? "100%",
           overflow: "hidden",
+          "touch-action": "none",
+          "overscroll-behavior": "contain",
         }}
         onMouseMove={(event) => {
           markDirty();
@@ -157,6 +190,22 @@ const NodeflowCanvas =
         onTouchMove={(event) => {
           markDirty();
           nodeflowData.eventStore.onTouchMoveInNodeflow.publish({ event });
+        }}
+        onTouchEnd={(event) => {
+          markDirty();
+          if (
+            !nodeflowData.mouseData.pinching &&
+            nodeflowData.mouseData.heldConnectors.length === 1 &&
+            event.touches.length === 0
+          ) {
+            const touch = event.changedTouches[0];
+            if (touch) resolveTouchDrop(touch);
+          }
+          nodeflowData.eventStore.onTouchEndInNodeflow.publish({ event });
+        }}
+        onTouchCancel={(event) => {
+          markDirty();
+          nodeflowData.eventStore.onTouchCancelInNodeflow.publish({ event });
         }}
       >
         <div

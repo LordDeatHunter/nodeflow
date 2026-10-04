@@ -53,6 +53,8 @@ export interface NodeflowEventsDataMap {
   onPointerUpInConnector: NodeConnectorPointerUpEventData;
   onPointerUpInNode: { nodeId: string; event: PointerEvent };
   onPointerUpInNodeflow: { event: PointerEvent };
+  onTouchCancelInNodeflow: { event: TouchEvent };
+  onTouchEndInNodeflow: { event: TouchEvent };
   onTouchMoveInNodeflow: { event: TouchEvent };
   onTouchStartInConnector: NodeConnectorTouchStartEventData;
   onTouchStartInNode: NodeTouchStartEventData;

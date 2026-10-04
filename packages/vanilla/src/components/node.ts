@@ -10,6 +10,7 @@ export const renderNode = (
   const nodeDiv = document.createElement("div");
   nodeDiv.id = `node-${node.id}`;
   nodeDiv.className = "nodeflowNode";
+  nodeDiv.dataset.nodeflowNode = node.id;
   nodeDiv.style.position = "absolute";
   nodeDiv.style.left = `${node.position.x}px`;
   nodeDiv.style.top = `${node.position.y}px`;

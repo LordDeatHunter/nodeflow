@@ -10,35 +10,39 @@
         margin: 0;
         padding: 0;
       }
+      html,
+      body {
+        height: 100%;
+      }
       body {
         font-family: sans-serif;
         background: #1a1a2e;
         color: #eee;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
       }
       h1 {
+        flex: 0 0 auto;
         padding: 12px 16px;
         font-size: 1.2rem;
         background: #16213e;
         border-bottom: 1px solid #0f3460;
       }
-      #root {
-        width: 100vw;
-        height: calc(100vh - 85px);
-        position: relative;
-        overflow: hidden;
-      }
-      .nodeflowNode {
-        border: none !important;
-      }
       .toolbar {
+        flex: 0 0 auto;
         display: flex;
+        flex-wrap: wrap;
         gap: 8px;
         padding: 8px 16px;
         background: #16213e;
         border-bottom: 1px solid #0f3460;
       }
       .toolbar button {
-        padding: 6px 14px;
+        min-height: 40px;
+        padding: 8px 16px;
         background: #0f3460;
         color: #e2e2e2;
         border: 1px solid #1a1a4e;
@@ -48,6 +52,33 @@
       }
       .toolbar button:hover {
         background: #1a1a4e;
+      }
+      #root {
+        flex: 1 1 0%;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+      }
+      #root > div:not(.toolbar) {
+        flex: 1 1 0%;
+        min-height: 0;
+      }
+      .nodeflowNode {
+        border: none !important;
+      }
+      @media (max-width: 480px) {
+        h1 {
+          font-size: 1rem;
+          padding: 8px 12px;
+        }
+        .toolbar {
+          padding: 6px 12px;
+        }
+        .toolbar button {
+          flex: 1 1 auto;
+        }
       }
     </style>
   </head>

@@ -3,7 +3,6 @@ import {
   createSolidNodeflow,
   NodeConnector,
   NodeflowData,
-  windowSize,
 } from "@nodeflow/solid";
 import curveCss from "./styles/curve.module.scss";
 import nodeflowCss from "./styles/nodeflow.module.scss";
@@ -39,8 +38,8 @@ const App: Component = () => {
     <>
       <Nodeflow
         css={{ getNewCurveCss, nodeflow: nodeflowCss.nodeflow }}
-        width={`${windowSize().x}px`}
-        height={`${windowSize().y}px`}
+        width="100%"
+        height="100%"
       />
       <Sidebar>
         <SidebarContent />

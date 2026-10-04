@@ -1,5 +1,5 @@
 import { type Component, onMount } from "solid-js";
-import { createSolidNodeflow, windowSize } from "@nodeflow/solid";
+import { createSolidNodeflow } from "@nodeflow/solid";
 import { setupDummyConnections, setupDummyNodes } from "./utils";
 
 const [nodeflowData, Nodeflow] = createSolidNodeflow("main");
@@ -13,8 +13,8 @@ const App: Component = () => {
   return (
     <div
       style={{
-        width: `${windowSize().x}px`,
-        height: `${windowSize().y}px`,
+        width: "100%",
+        height: "100dvh",
       }}
     >
       <Nodeflow height="100%" width="100%" />

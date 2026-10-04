@@ -13,7 +13,6 @@ import {
   NodeflowRegistry,
   Optional,
   Vec2,
-  windowSize,
 } from "@nodeflow/solid";
 import curveCss from "./styles/curve.module.scss";
 import nodeCss from "./styles/node.module.scss";
@@ -76,23 +75,36 @@ const App: Component = () => {
     <div
       style={{
         display: "flex",
-        "flex-direction": "column-reverse",
-        width: `${windowSize().x}px`,
-        height: `${windowSize().y}px`,
+        "flex-direction": "column",
+        width: "100%",
+        height: "100dvh",
+        "min-height": "0",
+        overflow: "hidden",
       }}
     >
-      <Nodeflow
-        css={{
-          getNewCurveCss: () => curveCss.newConnection,
-          nodeflow: nodeflowCss.nodeflow,
-        }}
-        height="100%"
-        width="100%"
-      />
       <div
         style={{
+          flex: "1 1 0%",
+          "min-height": "0",
+          position: "relative",
+        }}
+      >
+        <Nodeflow
+          css={{
+            getNewCurveCss: () => curveCss.newConnection,
+            nodeflow: nodeflowCss.nodeflow,
+          }}
+          height="100%"
+          width="100%"
+        />
+      </div>
+      <div
+        style={{
+          flex: "0 0 auto",
           width: "100%",
-          "min-height": "300px",
+          "min-height": "clamp(120px, 30dvh, 300px)",
+          "max-height": "45dvh",
+          overflow: "auto",
           "background-color": "gray",
           opacity: "0.5",
           display: "flex",

@@ -13,6 +13,8 @@ export const renderConnector = (
 ): HTMLDivElement => {
   const connectorDiv = document.createElement("div");
   connectorDiv.id = `connector-${connector.id}`;
+  connectorDiv.dataset.nodeflowConnector = connector.id;
+  connectorDiv.dataset.nodeflowNode = node.id;
   if (connector.css) {
     connectorDiv.className = connector.css;
   }

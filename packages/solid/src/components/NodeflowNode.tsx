@@ -96,6 +96,7 @@ const NodeflowNode: Component<NodeProps> = (props) => {
         "will-change": "transform",
       }}
       id={`node-${props.nodeId}`}
+      data-nodeflow-node={props.nodeId}
       class="nodeflowNode"
       classList={{
         [node()?.css?.normal ?? ""]: true,

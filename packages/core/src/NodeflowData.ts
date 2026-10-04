@@ -30,6 +30,12 @@ import KeyboardData from "./KeyboardData";
 import NodeflowChunking from "./NodeflowChunking";
 import Rect from "./Rect";
 
+const touchDistance = (
+  first: { pageX: number; pageY: number },
+  second: { pageX: number; pageY: number },
+): number =>
+  Math.hypot(first.pageX - second.pageX, first.pageY - second.pageY);
+
 export default class NodeflowData {
   private _currentMoveSpeed: Vec2 = Vec2.zero();
   private _position: Vec2 = Vec2.zero();
@@ -59,6 +65,7 @@ export default class NodeflowData {
     canPan: true,
     canZoom: true,
     debugMode: false,
+    gestureMovementThreshold: 6,
     keyboardZoomMultiplier: 15,
     maxMovementSpeed: 15,
     maxZoom: 200,
@@ -130,6 +137,10 @@ export default class NodeflowData {
         new NodeflowEventPublisher<"onPointerUpInNodeflow">(this),
       onTouchMoveInNodeflow:
         new NodeflowEventPublisher<"onTouchMoveInNodeflow">(this),
+      onTouchEndInNodeflow:
+        new NodeflowEventPublisher<"onTouchEndInNodeflow">(this),
+      onTouchCancelInNodeflow:
+        new NodeflowEventPublisher<"onTouchCancelInNodeflow">(this),
       onTouchStartInConnector:
         new NodeflowEventPublisher<"onTouchStartInConnector">(this),
       onTouchStartInNode: new NodeflowEventPublisher<"onTouchStartInNode">(
@@ -913,42 +924,38 @@ export default class NodeflowData {
     this.eventStore.onTouchStartInNodeflow.subscribeMultiple([
       {
         name: "nodeflow:stop-propagation",
-        event: ({ event }) => event.stopPropagation(),
-      },
-      {
-        name: "nodeflow:clear-held-keys",
         event: ({ event }) => {
-          if (event.touches.length === 1) {
-            this.keyboardData.clearKeys();
-          }
+          event.stopPropagation();
+          event.preventDefault();
         },
       },
       {
-        name: "nodeflow:handle-pinch",
+        name: "nodeflow:handle-pinch-start",
         event: ({ event }) => {
           const { touches } = event;
+          if (touches.length !== 2) return;
 
-          if (touches.length !== 2) {
-            return;
-          }
-
-          const { pageX: touch1X, pageY: touch1Y } = event.touches[0];
-          const { pageX: touch2X, pageY: touch2Y } = event.touches[1];
-          this.pinchDistance = Math.hypot(touch1X - touch2X, touch1Y - touch2Y);
+          this.keyboardData.clearKeys();
+          this.pinchDistance = touchDistance(touches[0], touches[1]);
+          this.mouseData.pinching = true;
+          this.mouseData.pointerDown = false;
+          this.mouseData.selectionBox.boundingBox = undefined;
+          this.mouseData.clearSelections();
         },
       },
       {
-        name: "nodeflow:update-mouse-data",
+        name: "nodeflow:begin-background-gesture",
         event: ({ event }) => {
           const { touches } = event;
-
           if (touches.length !== 1) return;
 
-          const touch = touches[0];
-          const mousePosition = Vec2.fromEvent(touch);
+          const mousePosition = Vec2.fromEvent(touches[0]);
 
-          this.mouseData.selections.clearNodes();
-
+          this.keyboardData.clearKeys();
+          this.mouseData.pinching = false;
+          this.mouseData.clearSelections();
+          this.mouseData.selectNodeflow();
+          this.mouseData.heldMouseButtons.add(MOUSE_BUTTONS.LEFT);
           this.mouseData.update({
             pointerDown: true,
             mousePosition,
@@ -957,24 +964,37 @@ export default class NodeflowData {
               mousePosition.y / this.zoomLevel - this.position.y,
             ),
           });
+          this.mouseData.touchStartPosition = mousePosition;
+          this.mouseData.touchMoved = false;
         },
       },
     ]);
 
     this.eventStore.onTouchMoveInNodeflow.subscribeMultiple([
       {
+        name: "nodeflow:prevent-scroll",
+        event: ({ event }) => event.preventDefault(),
+        priority: -1,
+      },
+      {
         name: "nodeflow:handle-pinch",
         event: ({ event }) => {
           const { touches } = event;
           if (touches.length !== 2) return;
 
-          const { pageX: touch1X, pageY: touch1Y } = touches[0];
-          const { pageX: touch2X, pageY: touch2Y } = touches[1];
-          const currDist = Math.hypot(touch1X - touch2X, touch1Y - touch2Y);
+          const currDist = touchDistance(touches[0], touches[1]);
           const centerPosition = Vec2.of(
-            (touch1X + touch2X) / 2,
-            (touch1Y + touch2Y) / 2,
+            (touches[0].pageX + touches[1].pageX) / 2,
+            (touches[0].pageY + touches[1].pageY) / 2,
           );
+
+          if (!this.mouseData.pinching) {
+            this.mouseData.pinching = true;
+            this.mouseData.pointerDown = false;
+            this.pinchDistance = currDist;
+            return;
+          }
+
           if (this.settings.canZoom) {
             this.updateZoom(currDist - this.pinchDistance, centerPosition);
           }
@@ -982,22 +1002,86 @@ export default class NodeflowData {
         },
       },
       {
-        name: "nodeflow:update-mouse-data",
+        name: "nodeflow:handle-touch-drag",
         event: ({ event }) => {
           const { touches } = event;
-
           if (touches.length !== 1) return;
 
-          this.mouseData.updateWithPrevious((previous) => {
-            const newMousePos = Vec2.fromEvent(touches[0]);
-            this.updateBackgroundPosition(
-              newMousePos.subtract(previous.mousePosition),
-            );
-            return { mousePosition: newMousePos };
-          });
+          const newMousePos = Vec2.fromEvent(touches[0]);
+
+          if (this.mouseData.pinching) {
+            this.mouseData.pinching = false;
+            this.pinchDistance = 0;
+            this.mouseData.mousePosition = newMousePos;
+            this.mouseData.touchStartPosition = newMousePos;
+            this.mouseData.touchMoved = false;
+            return;
+          }
+
+          const start = this.mouseData.touchStartPosition;
+          if (
+            !this.mouseData.touchMoved &&
+            start &&
+            start.distanceTo(newMousePos) <
+              this.settings.gestureMovementThreshold
+          ) {
+            this.mouseData.mousePosition = newMousePos;
+            return;
+          }
+          this.mouseData.touchMoved = true;
+
+          const moveDistance = newMousePos.subtract(
+            this.mouseData.mousePosition,
+          );
+          this.mouseData.mousePosition = newMousePos;
+
+          if (this.mouseData.heldNodes.length > 0) {
+            this.updateHeldNodePosition(moveDistance.divideBy(this.zoomLevel));
+          } else {
+            this.updateBackgroundPosition(moveDistance);
+          }
         },
       },
     ]);
+
+    this.eventStore.onTouchEndInNodeflow.subscribeMultiple([
+      {
+        name: "nodeflow:finish-touch-gesture",
+        event: ({ event }) => {
+          const { touches } = event;
+
+          if (touches.length === 1 && this.mouseData.pinching) {
+            const remaining = Vec2.fromEvent(touches[0]);
+            this.mouseData.pinching = false;
+            this.pinchDistance = 0;
+            this.mouseData.mousePosition = remaining;
+            this.mouseData.touchStartPosition = remaining;
+            this.mouseData.touchMoved = true;
+            return;
+          }
+
+          if (touches.length !== 0) return;
+
+          this.mouseData.pointerDown = false;
+          this.mouseData.pinching = false;
+          this.mouseData.touchMoved = false;
+          this.mouseData.touchStartPosition = undefined;
+          this.mouseData.heldMouseButtons.delete(MOUSE_BUTTONS.LEFT);
+          this.mouseData.selectionBox.boundingBox = undefined;
+        },
+      },
+    ]);
+
+    this.eventStore.onTouchCancelInNodeflow.subscribeMultiple([
+      {
+        name: "nodeflow:cancel-touch-gesture",
+        event: () => {
+          this.mouseData.reset();
+          this.resetMovement();
+        },
+      },
+    ]);
+
 
     this.eventStore.onKeyUpInNodeflow.subscribeMultiple([
       {
@@ -1192,17 +1276,20 @@ export default class NodeflowData {
     this.eventStore.onTouchStartInConnector.subscribeMultiple([
       {
         name: "nodeflow:stop-propagation",
-        event: ({ event }) => event.stopPropagation(),
+        event: ({ event }) => {
+          event.stopPropagation();
+          event.preventDefault();
+        },
       },
       {
         name: "nodeflow:start-creating-connection",
         event: ({ event, nodeId, connectorId }) => {
           const { clientX: x, clientY: y } = event.touches[0];
-          this.mouseData.startCreatingConnection(
-            nodeId,
-            Vec2.of(x, y),
-            connectorId,
-          );
+          const position = Vec2.of(x, y);
+          this.mouseData.pinching = false;
+          this.mouseData.touchStartPosition = position;
+          this.mouseData.touchMoved = false;
+          this.mouseData.startCreatingConnection(nodeId, position, connectorId);
         },
       },
     ]);
@@ -1219,6 +1306,8 @@ export default class NodeflowData {
       {
         name: "nodeflow:connect-held-nodes",
         event: ({ event, nodeId, connectorId }) => {
+          if ((event as PointerEvent).pointerType === "touch") return;
+
           if (
             !this.settings.canCreateConnections ||
             this.mouseData.heldConnectors.length !== 1
@@ -1287,20 +1376,27 @@ export default class NodeflowData {
         name: "nodeflow:select-node",
         event: ({ event, nodeId }) => {
           const { clientX: x, clientY: y } = event.touches[0];
+          const position = Vec2.of(x, y);
           if (!this.keyboardData.isActionPressed(this.keymap.SELECT_MULTIPLE)) {
             this.mouseData.clearSelections();
           }
 
+          this.mouseData.pinching = false;
+          this.mouseData.touchStartPosition = position;
+          this.mouseData.touchMoved = false;
           this.mouseData.selectNode(
             nodeId,
-            Vec2.of(x, y),
+            position,
             this.settings.canMoveNodes,
           );
         },
       },
       {
         name: "nodeflow:stop-propagation",
-        event: ({ event }) => event.stopPropagation(),
+        event: ({ event }) => {
+          event.stopPropagation();
+          event.preventDefault();
+        },
       },
     ]);
 

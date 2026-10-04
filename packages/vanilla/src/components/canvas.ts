@@ -9,10 +9,15 @@ export const renderCanvas = (
   const outerDiv = document.createElement("div");
   outerDiv.id = `nodeflow-${data.id}`;
   outerDiv.tabIndex = 0;
+  outerDiv.className = "nodeflowCanvas";
   outerDiv.style.overflow = "hidden";
   outerDiv.style.position = "relative";
   outerDiv.style.width = "100%";
   outerDiv.style.height = "100%";
+  outerDiv.style.touchAction = "none";
+  outerDiv.style.overscrollBehavior = "contain";
+  outerDiv.style.setProperty("-webkit-tap-highlight-color", "transparent");
+  outerDiv.style.setProperty("-webkit-touch-callout", "none");
 
   const innerDiv = document.createElement("div");
   innerDiv.style.position = "absolute";
@@ -122,12 +127,55 @@ export const renderCanvas = (
   });
   outerDiv.addEventListener("touchstart", (event) => {
     data.eventStore.onTouchStartInNodeflow.publish({ event });
-  });
+  }, { passive: false });
   outerDiv.addEventListener("touchmove", (event) => {
     data.eventStore.onTouchMoveInNodeflow.publish({ event });
+  }, { passive: false });
+  outerDiv.addEventListener("touchend", (event) => {
+    if (
+      !data.mouseData.pinching &&
+      data.mouseData.heldConnectors.length === 1 &&
+      event.touches.length === 0
+    ) {
+      const touch = event.changedTouches[0];
+      if (touch) resolveTouchDrop(data, touch);
+    }
+    data.eventStore.onTouchEndInNodeflow.publish({ event });
+  });
+  outerDiv.addEventListener("touchcancel", (event) => {
+    data.eventStore.onTouchCancelInNodeflow.publish({ event });
   });
 
   return outerDiv;
+};
+
+const resolveTouchDrop = (data: NodeflowData, touch: Touch): void => {
+  const target = document.elementFromPoint(touch.clientX, touch.clientY);
+  const connectorEl = target?.closest<HTMLElement>("[data-nodeflow-connector]");
+  if (
+    connectorEl?.dataset.nodeflowNode &&
+    connectorEl.dataset.nodeflowConnector
+  ) {
+    data.eventStore.onPointerUpInConnector.publish({
+      nodeId: connectorEl.dataset.nodeflowNode,
+      connectorId: connectorEl.dataset.nodeflowConnector,
+      event: touch as unknown as PointerEvent,
+    });
+    return;
+  }
+
+  const nodeEl = target?.closest<HTMLElement>("[data-nodeflow-node]");
+  if (nodeEl?.dataset.nodeflowNode) {
+    data.eventStore.onPointerUpInNode.publish({
+      nodeId: nodeEl.dataset.nodeflowNode,
+      event: touch as unknown as PointerEvent,
+    });
+    return;
+  }
+
+  data.eventStore.onPointerUpInNodeflow.publish({
+    event: touch as unknown as PointerEvent,
+  });
 };
 
 const makeCurveId = (

@@ -1,23 +1,30 @@
 import { NodeflowRegistry, NodeflowData } from "@nodeflow/core";
 import NodeflowCanvas from "./components/NodeflowCanvas";
 
+let globalListenersAttached = false;
+
+const attachGlobalListeners = () => {
+  if (globalListenersAttached) return;
+  globalListenersAttached = true;
+
+  const registry = NodeflowRegistry.get();
+
+  document.addEventListener("mousemove", (event) =>
+    registry.globalEventStore.onMouseMoveInDocument.publish({ event }),
+  );
+  document.addEventListener("pointerleave", (event) =>
+    registry.globalEventStore.onPointerLeaveFromDocument.publish({ event }),
+  );
+  document.addEventListener("pointerup", (event) =>
+    registry.globalEventStore.onPointerUpInDocument.publish({ event }),
+  );
+};
+
 export const createSolidNodeflow = (
   ...params: ConstructorParameters<typeof NodeflowData>
 ): [NodeflowData, ReturnType<typeof NodeflowCanvas>] => {
   const nodeflowData = NodeflowRegistry.get().createCanvas(...params);
-
-  document.onmousemove = (event) =>
-    NodeflowRegistry.get().globalEventStore.onMouseMoveInDocument.publish({
-      event,
-    });
-  document.onpointerleave = (event) =>
-    NodeflowRegistry.get().globalEventStore.onPointerLeaveFromDocument.publish({
-      event,
-    });
-  document.onpointerup = (event) =>
-    NodeflowRegistry.get().globalEventStore.onPointerUpInDocument.publish({
-      event,
-    });
+  attachGlobalListeners();
 
   return [nodeflowData, NodeflowCanvas(nodeflowData)];
 };

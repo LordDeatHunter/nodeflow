@@ -36,6 +36,8 @@ const Connector: Component<ConnectorProps> = (props) => (
     }}
     class={props.connector?.css}
     id={`connector-${props.connectorId}`}
+    data-nodeflow-connector={props.connectorId}
+    data-nodeflow-node={props.nodeId}
     onMouseDown={(event) =>
       props.nodeflowData.eventStore.onMouseDownInConnector.publish({
         event,

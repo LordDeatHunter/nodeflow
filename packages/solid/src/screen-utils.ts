@@ -1,19 +1,21 @@
-import { createEffect, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 import { Vec2 } from "@nodeflow/core";
+
+const readWindowSize = (): Vec2 =>
+  Vec2.of(
+    window.visualViewport?.width ?? window.innerWidth,
+    window.visualViewport?.height ?? window.innerHeight,
+  );
 
 /**
  * A Solid signal that contains the current window size.
  */
 export const [windowSize, setWindowSize] = createSignal<Vec2>(
-  Vec2.of(window.innerWidth, window.innerHeight),
+  readWindowSize(),
 );
 
-/**
- * A Solid effect that updates the window size signal when the window is resized.
- */
-createEffect(() => {
-  const onResize = () =>
-    setWindowSize(Vec2.of(window.innerWidth, window.innerHeight));
-  window.addEventListener("resize", onResize);
-  return () => window.removeEventListener("resize", onResize);
-});
+const updateWindowSize = () => setWindowSize(readWindowSize());
+
+window.addEventListener("resize", updateWindowSize);
+window.addEventListener("orientationchange", updateWindowSize);
+window.visualViewport?.addEventListener("resize", updateWindowSize);

@@ -13,6 +13,9 @@ export default class MouseData {
   public mousePosition: Vec2 = Vec2.zero();
   public heldMouseButtons: Set<MOUSE_BUTTONS> = new Set<MOUSE_BUTTONS>();
   public pointerDown: boolean = false;
+  public touchStartPosition: Vec2 | undefined = undefined;
+  public touchMoved: boolean = false;
+  public pinching: boolean = false;
   public selections: SelectionMap;
   public selectionBox: SelectionBoxData;
   private readonly nodeflowData: any;
@@ -124,6 +127,9 @@ export default class MouseData {
       selections: new SelectionMap(this.nodeflowData),
       selectionBox: new SelectionBoxData(this.nodeflowData),
     });
+    this.touchStartPosition = undefined;
+    this.touchMoved = false;
+    this.pinching = false;
   }
 
   public selectNodeflow() {

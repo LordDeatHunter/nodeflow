@@ -79,6 +79,8 @@ export type NodeflowSettings = {
   canPan: boolean;
   canZoom: boolean;
   debugMode: boolean;
+  /** Minimum finger travel (px) before a touch is treated as a drag/pan instead of a tap. */
+  gestureMovementThreshold: number;
   keyboardZoomMultiplier: number;
   maxMovementSpeed: number;
   maxZoom: number;
