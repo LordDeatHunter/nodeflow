@@ -41,6 +41,7 @@ export type NodeCurvePointerDownEventData = ConnectionType & {
 };
 
 export interface NodeflowEventsDataMap {
+  onCanvasTransformChanged: { position: { x: number; y: number } };
   onKeyDownInNodeflow: { event: KeyboardEvent };
   onKeyUpInNodeflow: { event: KeyboardEvent };
   onMouseDownInConnector: NodeConnectorMouseDownEventData;

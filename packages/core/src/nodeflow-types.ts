@@ -79,6 +79,12 @@ export type NodeflowSettings = {
   canPan: boolean;
   canZoom: boolean;
   debugMode: boolean;
+  /**
+   * Screen-pixel speed at which the canvas auto-scrolls when a node is dragged
+   * into the viewport edge band. Values below 0 are treated as 0 (disabled).
+   * Defaults to 1.
+   */
+  dragEdgeScrollSpeed: number;
   /** Minimum finger travel (px) before a touch is treated as a drag/pan instead of a tap. */
   gestureMovementThreshold: number;
   keyboardZoomMultiplier: number;

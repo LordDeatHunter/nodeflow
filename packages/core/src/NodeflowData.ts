@@ -22,6 +22,8 @@ import { deepCopy, intersectionOfSets, isSetEmpty } from "./misc-utils";
 import { NodeflowEventPublisher } from "./EventPublishers";
 import CurveFunctions from "./CurveFunctions";
 import {
+  DRAG_EDGE_SCROLL_INTERVAL,
+  DRAG_EDGE_SCROLL_THRESHOLD,
   KEYBOARD_KEY_CODES,
   KeyboardKeyCode,
   MOUSE_BUTTONS,
@@ -44,6 +46,8 @@ export default class NodeflowData {
   private _zoomLevel: number = 1;
   private _pinchDistance: number = 0;
   private _intervalId: ReturnType<typeof setInterval> | undefined = undefined;
+  private _dragEdgeScrollIntervalId: ReturnType<typeof setInterval> | undefined =
+    undefined;
   private _settings: NodeflowSettings;
 
   public readonly changes: Changes;
@@ -65,6 +69,7 @@ export default class NodeflowData {
     canPan: true,
     canZoom: true,
     debugMode: false,
+    dragEdgeScrollSpeed: 1,
     gestureMovementThreshold: 6,
     keyboardZoomMultiplier: 15,
     maxMovementSpeed: 15,
@@ -115,6 +120,8 @@ export default class NodeflowData {
     this.chunking = new NodeflowChunking(this);
 
     this.eventStore = {
+      onCanvasTransformChanged:
+        new NodeflowEventPublisher<"onCanvasTransformChanged">(this),
       onKeyDownInNodeflow: new NodeflowEventPublisher<"onKeyDownInNodeflow">(
         this,
       ),
@@ -307,6 +314,10 @@ export default class NodeflowData {
     return this._intervalId;
   }
 
+  get dragEdgeScrollIntervalId() {
+    return this._dragEdgeScrollIntervalId;
+  }
+
   set currentMoveSpeed(value) {
     this._currentMoveSpeed = value;
   }
@@ -337,6 +348,12 @@ export default class NodeflowData {
 
   set intervalId(value: ReturnType<typeof setInterval> | undefined) {
     this._intervalId = value;
+  }
+
+  set dragEdgeScrollIntervalId(
+    value: ReturnType<typeof setInterval> | undefined,
+  ) {
+    this._dragEdgeScrollIntervalId = value;
   }
 
   public update(data: Partial<NodeflowDataType>) {
@@ -827,6 +844,94 @@ export default class NodeflowData {
     );
   }
 
+  private getDragEdgeScrollSpeed(): number {
+    return Math.max(this.settings.dragEdgeScrollSpeed, 0);
+  }
+
+  private isDraggingNodes(): boolean {
+    return (
+      this.settings.canMoveNodes &&
+      this.mouseData.heldNodes.length > 0 &&
+      (this.mouseData.pointerDown ||
+        this.mouseData.isHoldingButton(MOUSE_BUTTONS.LEFT)) &&
+      !this.mouseData.selectionBox.boundingBox
+    );
+  }
+
+  private axisEdgeDirection(value: number, max: number): number {
+    if (value < DRAG_EDGE_SCROLL_THRESHOLD) return -1;
+    if (value > max - DRAG_EDGE_SCROLL_THRESHOLD) return 1;
+    return 0;
+  }
+
+  public getDragEdgeScrollVector(): Vec2 {
+    if (this.size.x <= 0 || this.size.y <= 0) {
+      return Vec2.zero();
+    }
+
+    const relative = this.mouseData.mousePosition.subtract(this.startPosition);
+
+    return Vec2.of(
+      this.axisEdgeDirection(relative.x, this.size.x),
+      this.axisEdgeDirection(relative.y, this.size.y),
+    );
+  }
+
+  public updateDragEdgeScroll(): void {
+    const vector = this.isDraggingNodes()
+      ? this.getDragEdgeScrollVector()
+      : Vec2.zero();
+
+    if (
+      this.getDragEdgeScrollSpeed() <= 0 ||
+      (vector.x === 0 && vector.y === 0)
+    ) {
+      this.stopDragEdgeScroll();
+      return;
+    }
+
+    if (this.dragEdgeScrollIntervalId === undefined) {
+      this.dragEdgeScrollIntervalId = setInterval(
+        () => this.handleDragEdgeScroll(),
+        DRAG_EDGE_SCROLL_INTERVAL,
+      );
+    }
+  }
+
+  public handleDragEdgeScroll(): void {
+    if (!this.isDraggingNodes()) {
+      this.stopDragEdgeScroll();
+      return;
+    }
+
+    const speed = this.getDragEdgeScrollSpeed();
+    const vector = this.getDragEdgeScrollVector();
+
+    if (speed <= 0 || (vector.x === 0 && vector.y === 0)) {
+      this.stopDragEdgeScroll();
+      return;
+    }
+
+    const localDelta = vector.multiplyBy(speed).divideBy(this.zoomLevel);
+
+    this.updateHeldNodePosition(localDelta);
+    this.updateWithPrevious((prev) => ({
+      position: prev.position.subtract(localDelta),
+    }));
+    this.eventStore.onCanvasTransformChanged.publish({
+      position: this.position.serialize(),
+    });
+  }
+
+  public stopDragEdgeScroll(): void {
+    if (this.dragEdgeScrollIntervalId === undefined) {
+      return;
+    }
+
+    clearInterval(this.dragEdgeScrollIntervalId);
+    this.dragEdgeScrollIntervalId = undefined;
+  }
+
   private setupDefaultEventHandlers() {
     this.eventStore.onNodeConnected.subscribeMultiple([
       {
@@ -861,6 +966,7 @@ export default class NodeflowData {
           this.updateHeldNodePosition(
             Vec2.of(event.movementX, event.movementY).divideBy(this.zoomLevel),
           );
+          this.updateDragEdgeScroll();
         },
       },
       {
@@ -908,6 +1014,7 @@ export default class NodeflowData {
       {
         name: "nodeflow:reset-mouse-data",
         event: ({ event }) => {
+          this.stopDragEdgeScroll();
           this.mouseData.pointerDown = false;
           this.mouseData.selectionBox.boundingBox = undefined;
           this.mouseData.heldMouseButtons.delete(event.button);
@@ -1037,6 +1144,7 @@ export default class NodeflowData {
 
           if (this.mouseData.heldNodes.length > 0) {
             this.updateHeldNodePosition(moveDistance.divideBy(this.zoomLevel));
+            this.updateDragEdgeScroll();
           } else {
             this.updateBackgroundPosition(moveDistance);
           }
@@ -1062,6 +1170,7 @@ export default class NodeflowData {
 
           if (touches.length !== 0) return;
 
+          this.stopDragEdgeScroll();
           this.mouseData.pointerDown = false;
           this.mouseData.pinching = false;
           this.mouseData.touchMoved = false;
@@ -1076,6 +1185,7 @@ export default class NodeflowData {
       {
         name: "nodeflow:cancel-touch-gesture",
         event: () => {
+          this.stopDragEdgeScroll();
           this.mouseData.reset();
           this.resetMovement();
         },
@@ -1447,6 +1557,7 @@ export default class NodeflowData {
       {
         name: "nodeflow:reset-mouse-data",
         event: () => {
+          this.stopDragEdgeScroll();
           this.mouseData.pointerDown = false;
 
           if (this.mouseData.heldConnectors.length === 1) {
