@@ -58,6 +58,7 @@ export default class NodeflowRegistry {
         event: ({ event }) => {
           this.nodeflows.forEach((nodeflow) => {
             nodeflow.mouseData.mousePosition = Vec2.fromEvent(event);
+            nodeflow.updateDragEdgeScroll();
           });
         },
       },

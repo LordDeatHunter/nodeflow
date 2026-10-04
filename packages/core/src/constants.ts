@@ -1,9 +1,3 @@
-/**
- * Distance (screen px) from a canvas viewport edge at which node drag
- * auto-scrolling activates.
- */
-export const DRAG_EDGE_SCROLL_THRESHOLD = 30;
-
 /** Milliseconds between node drag auto-scroll steps. */
 export const DRAG_EDGE_SCROLL_INTERVAL = 16;
 

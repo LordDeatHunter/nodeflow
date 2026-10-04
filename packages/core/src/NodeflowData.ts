@@ -23,7 +23,6 @@ import { NodeflowEventPublisher } from "./EventPublishers";
 import CurveFunctions from "./CurveFunctions";
 import {
   DRAG_EDGE_SCROLL_INTERVAL,
-  DRAG_EDGE_SCROLL_THRESHOLD,
   KEYBOARD_KEY_CODES,
   KeyboardKeyCode,
   MOUSE_BUTTONS,
@@ -69,7 +68,8 @@ export default class NodeflowData {
     canPan: true,
     canZoom: true,
     debugMode: false,
-    dragEdgeScrollSpeed: 1,
+    dragEdgeScrollMargin: 0,
+    dragEdgeScrollSpeed: 10,
     gestureMovementThreshold: 6,
     keyboardZoomMultiplier: 15,
     maxMovementSpeed: 15,
@@ -858,9 +858,9 @@ export default class NodeflowData {
     );
   }
 
-  private axisEdgeDirection(value: number, max: number): number {
-    if (value < DRAG_EDGE_SCROLL_THRESHOLD) return -1;
-    if (value > max - DRAG_EDGE_SCROLL_THRESHOLD) return 1;
+  private axisEdgeDirection(value: number, max: number, margin: number): number {
+    if (value < margin) return -1;
+    if (value > max - margin) return 1;
     return 0;
   }
 
@@ -869,11 +869,12 @@ export default class NodeflowData {
       return Vec2.zero();
     }
 
+    const margin = Math.max(this.settings.dragEdgeScrollMargin, 0);
     const relative = this.mouseData.mousePosition.subtract(this.startPosition);
 
     return Vec2.of(
-      this.axisEdgeDirection(relative.x, this.size.x),
-      this.axisEdgeDirection(relative.y, this.size.y),
+      this.axisEdgeDirection(relative.x, this.size.x, margin),
+      this.axisEdgeDirection(relative.y, this.size.y, margin),
     );
   }
 
