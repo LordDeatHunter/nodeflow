@@ -479,6 +479,8 @@ export default class NodeflowNodeData {
               destinationNodeId: destination.destinationConnector.parentNode.id,
               destinationConnectorId: destination.destinationConnector.id,
               css: destination.css,
+              shape: destination.shape,
+              dash: destination.dash,
             });
           }
         });

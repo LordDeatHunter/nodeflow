@@ -27,7 +27,7 @@ import { BPCurveFunctions } from "./BPCurveFunctions";
 
 const [nodeflowData, Nodeflow] = createSolidNodeflow(
   "main",
-  {},
+  { defaultLineShape: "broken-elbow" },
   (nodeflow: NodeflowData) => new BPCurveFunctions(nodeflow),
 );
 

@@ -4,6 +4,7 @@ import {
   Optional,
   SelectableElementCSS,
   NodeConnector,
+  getLineDashArray,
 } from "@nodeflow/core";
 
 interface NodeCurveProps {
@@ -18,6 +19,7 @@ interface NodeCurveProps {
 
 interface CurveRenderData {
   path: string;
+  dash: string | undefined;
   sourceConnector: NodeConnector;
   destinationConnector: NodeConnector;
 }
@@ -28,6 +30,7 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
     cachedEndX = NaN,
     cachedEndY = NaN;
   let cachedPath: string | undefined;
+  let cachedShape: string | undefined;
 
   const curveData = createMemo<Optional<CurveRenderData>>(() => {
     props.tick();
@@ -45,8 +48,13 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
     );
     if (destIndex < 0) return undefined;
 
+    const dest = sourceConn.destinations.get(destIndex);
+
     const start = sourceConn.getCenter();
     const end = destConn.getCenter();
+    const shape =
+      dest?.shape ?? props.nodeflowData.settings.defaultLineShape;
+    const dash = dest?.dash ?? props.nodeflowData.settings.defaultLineDash;
 
     let path: string;
     if (
@@ -54,6 +62,7 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       start.y === cachedStartY &&
       end.x === cachedEndX &&
       end.y === cachedEndY &&
+      cachedShape === shape &&
       cachedPath
     ) {
       path = cachedPath;
@@ -62,32 +71,29 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
       cachedStartY = start.y;
       cachedEndX = end.x;
       cachedEndY = end.y;
+      cachedShape = shape;
 
       const { curveFunctions } = props.nodeflowData;
-      const { anchorStart, anchorEnd } = curveFunctions.calculateCurveAnchors(
-        start,
-        end,
-        startNode.getCenter(),
-        endNode.getCenter(),
-      );
+      const { anchorStart, anchorEnd, path: newPath } =
+        curveFunctions.createPathForShape(
+          shape,
+          start,
+          end,
+          startNode.getCenter(),
+          endNode.getCenter(),
+        );
 
-      path = curveFunctions.createDefaultCurvePath(
-        start,
-        end,
-        anchorStart,
-        anchorEnd,
-      );
-
-      const dest = sourceConn.destinations.get(destIndex);
       if (dest) {
-        dest.path = { start, end, anchorStart, anchorEnd, path };
+        dest.path = { start, end, anchorStart, anchorEnd, path: newPath };
       }
 
+      path = newPath;
       cachedPath = path;
     }
 
     return {
       path,
+      dash: getLineDashArray(dash),
       sourceConnector: sourceConn,
       destinationConnector: destConn,
     };
@@ -118,6 +124,7 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
         d={curveData()?.path}
         stroke="black"
         stroke-width={1}
+        stroke-dasharray={curveData()?.dash}
         fill="none"
         classList={{
           [props.css?.normal ?? ""]: true,

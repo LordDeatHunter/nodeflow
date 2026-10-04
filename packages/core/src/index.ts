@@ -21,6 +21,7 @@ export { default as NodeflowChunking } from "./NodeflowChunking";
 export { default as NodeflowData } from "./NodeflowData";
 export { default as NodeflowRegistry } from "./NodeflowRegistry";
 export * from "./constants";
+export * from "./LineShapes";
 export * from "./math-utils";
 export * from "./misc-utils";
 

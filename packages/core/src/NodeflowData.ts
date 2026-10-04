@@ -68,6 +68,8 @@ export default class NodeflowData {
     canPan: true,
     canZoom: true,
     debugMode: false,
+    defaultLineDash: "solid",
+    defaultLineShape: "curved",
     dragEdgeScrollMargin: 0,
     dragEdgeScrollSpeed: 10,
     gestureMovementThreshold: 6,
@@ -684,6 +686,8 @@ export default class NodeflowData {
       destinationNodeId,
       destinationConnectorId,
       css,
+      shape,
+      dash,
     } = data;
 
     if (!this.nodes.has(sourceNodeId) || !this.nodes.has(destinationNodeId)) {
@@ -735,6 +739,8 @@ export default class NodeflowData {
       new ConnectorDestination({
         destinationConnector,
         css: css ?? {},
+        shape,
+        dash,
       }),
     );
 
@@ -770,10 +776,11 @@ export default class NodeflowData {
     const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
 
     if (historyGroup) {
-      const css = sourceConnector.destinations.find(
+      const destination = sourceConnector.destinations.find(
         (destination) =>
           destination.destinationConnector.parentNode.id === destinationNodeId,
-      )?.css;
+      );
+      const { css, shape, dash } = destination ?? {};
       const nodeflowData = this;
 
       const undoChange = () => {
@@ -784,6 +791,8 @@ export default class NodeflowData {
             destinationNodeId,
             destinationConnectorId,
             css,
+            shape,
+            dash,
           },
           false,
         );

@@ -1,27 +1,67 @@
-import { NodeConnector, NodeflowData } from "@nodeflow/core";
+import {
+  NodeConnector,
+  NodeflowData,
+  LineDash,
+  LineShape,
+  getLineDashArray,
+} from "@nodeflow/core";
+
+export const resolveLineShape = (
+  data: NodeflowData,
+  shape?: LineShape,
+): LineShape => shape ?? data.settings.defaultLineShape;
+
+export const resolveLineDash = (
+  data: NodeflowData,
+  dash?: LineDash,
+): LineDash => dash ?? data.settings.defaultLineDash;
+
+export const buildCurvePathD = (
+  data: NodeflowData,
+  source: NodeConnector,
+  dest: NodeConnector,
+  shape?: LineShape,
+): string => {
+  const start = source.getCenter();
+  const end = dest.getCenter();
+
+  return data.curveFunctions.createPathForShape(
+    resolveLineShape(data, shape),
+    start,
+    end,
+    source.parentNode.getCenter(),
+    dest.parentNode.getCenter(),
+  ).path;
+};
+
+export const applyLineDash = (
+  path: SVGPathElement,
+  data: NodeflowData,
+  dash?: LineDash,
+): void => {
+  const dashArray = getLineDashArray(resolveLineDash(data, dash));
+
+  if (dashArray) {
+    path.setAttribute("stroke-dasharray", dashArray);
+  } else {
+    path.removeAttribute("stroke-dasharray");
+  }
+};
 
 export const renderCurve = (
   svg: SVGElement,
   source: NodeConnector,
   dest: NodeConnector,
   curveId: string,
-  _data: NodeflowData,
+  data: NodeflowData,
 ): SVGPathElement => {
-  const start = source.getCenter();
-  const end = dest.getCenter();
-  const anchorOffset = { x: (end.x - start.x) / 1.5, y: 0 };
-  const a1 = { x: start.x + anchorOffset.x, y: start.y + anchorOffset.y };
-  const a2 = { x: end.x - anchorOffset.x, y: end.y - anchorOffset.y };
-
   const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
   path.setAttribute("id", `curve-${curveId}`);
   path.setAttribute("stroke", "#666");
   path.setAttribute("stroke-width", "2");
   path.setAttribute("fill", "none");
-  path.setAttribute(
-    "d",
-    `M ${start.x} ${start.y} C ${a1.x} ${a1.y}, ${a2.x} ${a2.y}, ${end.x} ${end.y}`,
-  );
+  path.setAttribute("d", buildCurvePathD(data, source, dest));
+  applyLineDash(path, data);
 
   svg.appendChild(path);
   return path;

@@ -30,12 +30,29 @@ export interface SerializedNodeConnector {
   position: SerializedVec2;
 }
 
+/**
+ * The built-in connector line shapes. Custom shapes can be registered through
+ * `registerLineShape` and referenced by their string name.
+ */
+export type BuiltInLineShape = "curved" | "straight" | "broken-flat-line";
+
+/**
+ * Identifies a connector line shape. Includes the built-in shapes while still
+ * allowing names registered at runtime.
+ */
+export type LineShape = BuiltInLineShape | (string & Record<never, never>);
+
+/** The visual dash pattern applied to a connector line. */
+export type LineDash = "solid" | "dashed" | "dotted";
+
 export interface SerializedConnection {
   sourceNodeId: string;
   sourceConnectorId: string;
   destinationNodeId: string;
   destinationConnectorId: string;
   css?: SelectableElementCSS;
+  shape?: LineShape;
+  dash?: LineDash;
 }
 
 export interface SelectableElementCSS {
@@ -59,6 +76,8 @@ export interface ConnectorDestinationType {
   css: SelectableElementCSS;
   destinationConnector: any;
   path?: PathData;
+  shape?: LineShape;
+  dash?: LineDash;
 }
 
 export type Change = {
@@ -72,6 +91,16 @@ export type Change = {
 export type NodeflowSettings = {
   allowCollision: boolean;
   canAddNodes: boolean;
+  /**
+   * Shape used for connections that do not specify their own `shape`.
+   * Defaults to "curved".
+   */
+  defaultLineShape: LineShape;
+  /**
+   * Dash pattern used for connections that do not specify their own `dash`.
+   * Defaults to "solid".
+   */
+  defaultLineDash: LineDash;
   canCreateConnections: boolean;
   canDeleteConnections: boolean;
   canDeleteNodes: boolean;

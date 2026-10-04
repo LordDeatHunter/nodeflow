@@ -1,5 +1,5 @@
 import { Component, createMemo, Show } from "solid-js";
-import { NodeflowData, Optional, PathData } from "@nodeflow/core";
+import { NodeflowData, getLineDashArray } from "@nodeflow/core";
 
 interface CurveProps {
   css?: string;
@@ -8,9 +8,9 @@ interface CurveProps {
 }
 
 const Curve: Component<CurveProps> = (props) => {
-  const curveData = createMemo<Optional<PathData>>(() => {
+  const curveData = createMemo(() => {
     props.tick();
-    const { mouseData, curveFunctions } = props.nodeflowData;
+    const { mouseData, curveFunctions, settings } = props.nodeflowData;
 
     if (mouseData.heldConnectors.length !== 1) return undefined;
 
@@ -20,7 +20,8 @@ const Curve: Component<CurveProps> = (props) => {
     const start = output.getCenter();
     const end = mouseData.globalMousePosition();
 
-    const { anchorStart, anchorEnd } = curveFunctions.calculateCurveAnchors(
+    const { anchorStart, anchorEnd, path } = curveFunctions.createPathForShape(
+      settings.defaultLineShape,
       start,
       end,
       node.getCenter(),
@@ -32,12 +33,8 @@ const Curve: Component<CurveProps> = (props) => {
       end,
       anchorStart,
       anchorEnd,
-      path: curveFunctions.createDefaultCurvePath(
-        start,
-        end,
-        anchorStart,
-        anchorEnd,
-      ),
+      path,
+      dash: getLineDashArray(settings.defaultLineDash),
     };
   });
 
@@ -55,6 +52,7 @@ const Curve: Component<CurveProps> = (props) => {
         d={curveData()?.path}
         stroke="black"
         stroke-width={1}
+        stroke-dasharray={curveData()?.dash}
         fill="transparent"
         class={props.css}
       />

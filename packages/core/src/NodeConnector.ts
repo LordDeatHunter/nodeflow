@@ -45,26 +45,31 @@ export default class NodeConnector {
 
   public serializeConnections(): Array<SerializedConnection> {
     return [
-      ...this.destinations.map(({ destinationConnector, css }) => ({
+      ...this.destinations.map(({ destinationConnector, css, shape, dash }) => ({
         sourceNodeId: this.parentNode.id,
         sourceConnectorId: this.id,
         destinationNodeId: destinationConnector.parentNode.id,
         destinationConnectorId: destinationConnector.id,
         css: deepCopy(css),
+        shape,
+        dash,
       })),
-      ...this.sources.map(({ sourceConnector }) => ({
-        sourceNodeId: sourceConnector.parentNode.id,
-        sourceConnectorId: sourceConnector.id,
-        destinationNodeId: this.parentNode.id,
-        destinationConnectorId: this.id,
-        css: deepCopy(
-          sourceConnector.destinations.find(
-            (destination: ConnectorDestination) =>
-              destination.destinationConnector.parentNode.id ===
-              this.parentNode.id,
-          )?.css,
-        ),
-      })),
+      ...this.sources.map(({ sourceConnector }) => {
+        const destination = sourceConnector.destinations.find(
+          (destination: ConnectorDestination) =>
+            destination.destinationConnector.parentNode.id ===
+            this.parentNode.id,
+        );
+        return {
+          sourceNodeId: sourceConnector.parentNode.id,
+          sourceConnectorId: sourceConnector.id,
+          destinationNodeId: this.parentNode.id,
+          destinationConnectorId: this.id,
+          css: deepCopy(destination?.css),
+          shape: destination?.shape,
+          dash: destination?.dash,
+        };
+      }),
     ];
   }
 

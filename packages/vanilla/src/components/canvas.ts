@@ -1,4 +1,11 @@
-import { NodeflowData, NodeConnector, Vec2 } from "@nodeflow/core";
+import {
+  NodeflowData,
+  NodeConnector,
+  Vec2,
+  LineDash,
+  LineShape,
+} from "@nodeflow/core";
+import { applyLineDash, buildCurvePathD } from "./curve";
 import { renderNode } from "./node";
 
 export const renderCanvas = (
@@ -187,21 +194,15 @@ const makeCurveId = (
   return `${sourceNodeId}-${sourceConnectorId}--${destNodeId}-${destConnectorId}`;
 };
 
-const computePathD = (source: NodeConnector, dest: NodeConnector): string => {
-  const start = source.getCenter();
-  const end = dest.getCenter();
-  const anchorOffset = Vec2.of((end.x - start.x) / 1.5, 0);
-  const a1 = start.add(anchorOffset);
-  const a2 = end.subtract(anchorOffset);
-  return `M ${start.x} ${start.y} C ${a1.x} ${a1.y}, ${a2.x} ${a2.y}, ${end.x} ${end.y}`;
-};
-
 const createCurvePath = (
   svg: SVGElement,
   sourceConnector: NodeConnector,
   destConnector: NodeConnector,
   curveId: string,
+  data: NodeflowData,
   cssClass?: string,
+  shape?: LineShape,
+  dash?: LineDash,
 ): SVGPathElement => {
   const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
   path.setAttribute("id", `curve-${curveId}`);
@@ -212,7 +213,11 @@ const createCurvePath = (
   if (cssClass) {
     path.setAttribute("class", cssClass);
   }
-  path.setAttribute("d", computePathD(sourceConnector, destConnector));
+  path.setAttribute(
+    "d",
+    buildCurvePathD(data, sourceConnector, destConnector, shape),
+  );
+  applyLineDash(path, data, dash);
   svg.appendChild(path);
   return path;
 };
@@ -234,10 +239,13 @@ const syncHeldConnectorCurve = (
       .divideBy(data.zoomLevel)
       .subtract(data.position);
 
-    const anchorOffset = Vec2.of((end.x - start.x) / 1.5, 0);
-    const a1 = start.add(anchorOffset);
-    const a2 = end.subtract(anchorOffset);
-    const pathD = `M ${start.x} ${start.y} C ${a1.x} ${a1.y}, ${a2.x} ${a2.y}, ${end.x} ${end.y}`;
+    const { path: pathD } = data.curveFunctions.createPathForShape(
+      data.settings.defaultLineShape,
+      start,
+      end,
+      heldConnector.parentNode.getCenter(),
+      end,
+    );
 
     let path = curveElements.get(heldId);
     if (!path) {
@@ -250,6 +258,7 @@ const syncHeldConnectorCurve = (
       curveElements.set(heldId, path);
     }
     path.setAttribute("d", pathD);
+    applyLineDash(path, data, data.settings.defaultLineDash);
   } else {
     const path = curveElements.get(heldId);
     if (path) {
@@ -288,16 +297,19 @@ const syncCurves = (
               connector,
               dest.destinationConnector,
               curveId,
+              data,
               dest.css?.normal,
+              dest.shape,
+              dest.dash,
             ),
           );
         } else {
-          curveElements
-            .get(curveId)!
-            .setAttribute(
-              "d",
-              computePathD(connector, dest.destinationConnector),
-            );
+          const path = curveElements.get(curveId)!;
+          path.setAttribute(
+            "d",
+            buildCurvePathD(data, connector, dest.destinationConnector, dest.shape),
+          );
+          applyLineDash(path, data, dest.dash);
         }
       });
     });
@@ -318,10 +330,8 @@ export const renderCurve = (
   source: NodeConnector,
   dest: NodeConnector,
   curveId: string,
-  _data: NodeflowData,
-): SVGPathElement => {
-  return createCurvePath(svg, source, dest, curveId, undefined);
-};
+  data: NodeflowData,
+): SVGPathElement => createCurvePath(svg, source, dest, curveId, data);
 
 export const renderSelectionBox = (parent: HTMLElement): HTMLDivElement => {
   const selBox = document.createElement("div");

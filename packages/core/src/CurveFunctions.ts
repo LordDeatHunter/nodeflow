@@ -1,4 +1,6 @@
 import Vec2 from "./Vec2";
+import { createLinePath } from "./LineShapes";
+import { LineShape } from "./nodeflow-types";
 
 export default class CurveFunctions {
   private readonly nodeflowData: any;
@@ -38,4 +40,30 @@ export default class CurveFunctions {
     endAnchorPoint: Vec2,
   ): string =>
     `M ${start.x} ${start.y} C ${startAnchorPoint.x} ${startAnchorPoint.y}, ${endAnchorPoint.x} ${endAnchorPoint.y}, ${end.x} ${end.y}`;
+
+  public createPathForShape = (
+    shape: LineShape,
+    start: Vec2,
+    end: Vec2,
+    startAnchorPoint: Vec2,
+    endAnchorPoint: Vec2,
+  ): { anchorStart: Vec2; anchorEnd: Vec2; path: string } => {
+    const { anchorStart, anchorEnd } = this.calculateCurveAnchors(
+      start,
+      end,
+      startAnchorPoint,
+      endAnchorPoint,
+    );
+
+    const path = createLinePath(shape, {
+      start,
+      end,
+      anchorStart,
+      anchorEnd,
+      startNodeCenter: startAnchorPoint,
+      endNodeCenter: endAnchorPoint,
+    });
+
+    return { anchorStart, anchorEnd, path };
+  };
 }
