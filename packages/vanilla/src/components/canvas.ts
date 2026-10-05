@@ -71,6 +71,9 @@ export const renderCanvas = (
       if (node) {
         el.style.left = `${node.position.x}px`;
         el.style.top = `${node.position.y}px`;
+      } else {
+        el.remove();
+        nodeElements.delete(nodeId);
       }
     });
 
