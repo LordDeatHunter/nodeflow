@@ -2,7 +2,6 @@ import {
   type Component,
   createMemo,
   createSignal,
-  JSX,
   onMount,
   Show,
 } from "solid-js";
@@ -17,10 +16,11 @@ import {
 import curveCss from "./styles/curve.module.scss";
 import nodeCss from "./styles/node.module.scss";
 import nodeflowCss from "./styles/nodeflow.module.scss";
+import NewNodeSlot from "./NewNodeSlot";
 import {
-  createDummyNode,
-  setupDummyConnections,
-  setupDummyNodes,
+  createBlueprintNode,
+  NodeType,
+  setupDemoGraph,
   setupEvents,
 } from "./utils";
 import { BPCurveFunctions } from "./BPCurveFunctions";
@@ -31,10 +31,16 @@ const [nodeflowData, Nodeflow] = createSolidNodeflow(
   (nodeflow: NodeflowData) => new BPCurveFunctions(nodeflow),
 );
 
+const PREVIEW_LABELS: Record<NodeType, string> = {
+  number: "Number node",
+  operation: "Sum node",
+  display: "Display node",
+};
+
 const App: Component = () => {
   const { tick } = createTick();
   const [nodePreview, setNodePreview] =
-    createSignal<Optional<JSX.Element>>(undefined);
+    createSignal<Optional<NodeType>>(undefined);
 
   const mousePos = createMemo(() => {
     tick();
@@ -42,7 +48,8 @@ const App: Component = () => {
   });
 
   const createNode = (data: { event: PointerEvent }) => {
-    if (!nodePreview()) return;
+    const type = nodePreview();
+    if (!type) return;
 
     setNodePreview(undefined);
 
@@ -57,13 +64,12 @@ const App: Component = () => {
       .divideBy(nodeflowData.zoomLevel)
       .subtract(nodeflowData.position);
 
-    createDummyNode(nodePosition, true);
+    createBlueprintNode(type, nodePosition, true);
   };
 
   onMount(() => {
     setupEvents();
-    setupDummyNodes();
-    setupDummyConnections();
+    setupDemoGraph();
 
     NodeflowRegistry.get().globalEventStore.onPointerUpInDocument.subscribe(
       "create-node",
@@ -102,8 +108,7 @@ const App: Component = () => {
         style={{
           flex: "0 0 auto",
           width: "100%",
-          "min-height": "clamp(120px, 30dvh, 300px)",
-          "max-height": "45dvh",
+          "min-height": "clamp(120px, 25dvh, 220px)",
           overflow: "auto",
           "background-color": "gray",
           opacity: "0.5",
@@ -113,23 +118,15 @@ const App: Component = () => {
           gap: "20px",
         }}
       >
-        <div
-          class={nodeCss.node}
-          style={{
-            width: "150px",
-            height: "90px",
-            display: "flex",
-            "align-items": "center",
-            "justify-content": "center",
-            "user-select": "none",
-            cursor: "grab",
-          }}
-          onPointerDown={() => {
-            setNodePreview("Generic node");
-          }}
-        >
-          Generic node
-        </div>
+        <NewNodeSlot onClick={() => setNodePreview("number")}>
+          Number node
+        </NewNodeSlot>
+        <NewNodeSlot onClick={() => setNodePreview("operation")}>
+          Sum node
+        </NewNodeSlot>
+        <NewNodeSlot onClick={() => setNodePreview("display")}>
+          Display node
+        </NewNodeSlot>
       </div>
       <Show when={nodePreview()}>
         <div
@@ -148,7 +145,7 @@ const App: Component = () => {
           }}
           class={nodeCss.node}
         >
-          {nodePreview()}
+          {PREVIEW_LABELS[nodePreview()!]}
         </div>
       </Show>
     </div>

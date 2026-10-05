@@ -1,11 +1,9 @@
-import { Component, createMemo } from "solid-js";
+import { Component, createMemo, JSX } from "solid-js";
 import { NodeflowNodeData } from "@nodeflow-lib/solid";
 import { blueprintRevision, markBlueprintDirty } from "./reactivity";
 import { Operator } from "./values";
 
-const OPERATORS: Operator[] = ["+", "-", "*", "/", "%"];
-
-const selectStyle = {
+const selectStyle: JSX.CSSProperties = {
   width: "100%",
   padding: "0.5rem",
   border: "3px solid #202E37",
