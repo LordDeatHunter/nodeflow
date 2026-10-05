@@ -1326,7 +1326,13 @@ export default class NodeflowData {
       {
         name: "nodeflow:reset-mouse-data",
         event: ({ event }) => {
-          if (event.button === MOUSE_BUTTONS.LEFT) {
+          const isAdditiveSelection =
+            this.keyboardData.isActionPressed(this.keymap.SELECT_MULTIPLE) &&
+            this.keyboardData.isActionPressed(
+              this.keymap.CREATE_SELECTION_BOX,
+            );
+
+          if (event.button === MOUSE_BUTTONS.LEFT && !isAdditiveSelection) {
             this.mouseData.clearSelections();
           }
 
