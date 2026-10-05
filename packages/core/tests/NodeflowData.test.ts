@@ -136,6 +136,25 @@ describe("NodeflowData", () => {
       expect(canvas.nodes.has("n1")).toBe(false);
       expect(canvas.nodes.has("n2")).toBe(true);
     });
+
+    it("undoing a removal restores the node with its measured geometry intact", () => {
+      const node = canvas.addNode({
+        id: "undo-node",
+        position: { x: 80, y: 100 },
+      });
+      node.updateMeasurements(Vec2.of(160, 60), Vec2.of(0, 0));
+      const centerBefore = node.getCenter();
+
+      canvas.removeNode("undo-node");
+      canvas.changes.undo();
+
+      const restored = canvas.nodes.get("undo-node");
+      expect(restored).toBeDefined();
+      expect(restored!.position.x).toBe(80);
+      expect(restored!.position.y).toBe(100);
+      expect(restored!.getCenter().x).toBe(centerBefore.x);
+      expect(restored!.getCenter().y).toBe(centerBefore.y);
+    });
   });
 
   // ── 4. addConnection ──────────────────────────────────────────────────────

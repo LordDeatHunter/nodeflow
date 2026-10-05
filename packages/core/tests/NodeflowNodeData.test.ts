@@ -191,6 +191,23 @@ describe("NodeflowNodeData – serialize / deserialize", () => {
     expect(restored.connectorSections.has("rt-sec")).toBe(true);
     expect(restored.getConnector("rt-conn")).toBeDefined();
   });
+
+  it("deserialize round-trip preserves measured offset and size so the center is unchanged", () => {
+    const nf = createNodeflow();
+    const original = addNode(nf, {
+      id: "rt-geometry",
+      position: { x: 50, y: 70 },
+    });
+    original.updateMeasurements(Vec2.of(160, 60), Vec2.of(0, 0));
+
+    const serialized = original.serialize();
+
+    const nf2 = createNodeflow();
+    const restored = NodeflowNodeData.deserialize(nf2, serialized, false);
+
+    expect(restored.getCenter().x).toBe(original.getCenter().x);
+    expect(restored.getCenter().y).toBe(original.getCenter().y);
+  });
 });
 
 describe("NodeflowNodeData – select / deselect", () => {

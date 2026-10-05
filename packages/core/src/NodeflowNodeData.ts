@@ -222,7 +222,9 @@ export default class NodeflowNodeData {
       customData: deepCopy(this._customData),
       id: this._id,
       display: this._display,
+      offset: this._offset.serialize(),
       position: this._position.serialize(),
+      size: this._size.serialize(),
     };
   }
 
@@ -240,9 +242,9 @@ export default class NodeflowNodeData {
       customData: deepCopy(data.customData) ?? ({} as CustomNodeflowDataType),
       display: data.display ?? (() => undefined),
       id,
-      offset: Vec2.zero(),
+      offset: Vec2.deserializeOrDefault(data.offset),
       position: Vec2.deserializeOrDefault(data.position),
-      size: Vec2.zero(),
+      size: Vec2.deserializeOrDefault(data.size),
     });
 
     const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);

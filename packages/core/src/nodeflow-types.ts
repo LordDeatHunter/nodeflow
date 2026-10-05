@@ -167,7 +167,9 @@ export interface SerializedNodeflowNode {
   customData: CustomNodeflowDataType;
   display: any;
   id: string;
+  offset: SerializedVec2;
   position: SerializedVec2;
+  size: SerializedVec2;
 }
 
 export interface SerializedNodeflowData {
