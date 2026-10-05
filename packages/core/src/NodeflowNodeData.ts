@@ -128,6 +128,21 @@ export default class NodeflowNodeData {
     this._offset = offset;
   }
 
+  /**
+   * One-shot center→top-left conversion for `centered` nodes. Clears the flag
+   * so a serialize/deserialize round-trip (undo/redo) does not re-apply it.
+   */
+  public applyCenteringOffset(offset: Vec2): void {
+    if (!this._centered) {
+      return;
+    }
+
+    this.update({
+      centered: false,
+      position: this._position.subtract(offset),
+    });
+  }
+
   public get sizeWithOffset(): Vec2 {
     return this._size.add(this._offset);
   }

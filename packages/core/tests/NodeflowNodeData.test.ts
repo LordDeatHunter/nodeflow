@@ -208,6 +208,36 @@ describe("NodeflowNodeData – serialize / deserialize", () => {
     expect(restored.getCenter().x).toBe(original.getCenter().x);
     expect(restored.getCenter().y).toBe(original.getCenter().y);
   });
+
+  it("applying the centering offset once is not repeated after a serialize round-trip", () => {
+    const nf = createNodeflow();
+    const centered = addNode(nf, {
+      id: "centered-node",
+      position: { x: 400, y: 300 },
+      centered: true,
+    });
+    const size = Vec2.of(160, 60);
+    centered.updateMeasurements(size, Vec2.zero());
+    const halfSize = size.divideBy(2);
+
+    centered.applyCenteringOffset(halfSize);
+    const positionAfterFirst = centered.position.copy();
+
+    expect(centered.centered).toBe(false);
+    expect(positionAfterFirst.x).toBe(400 - 80);
+    expect(positionAfterFirst.y).toBe(300 - 30);
+
+    const nf2 = createNodeflow();
+    const restored = NodeflowNodeData.deserialize(
+      nf2,
+      centered.serialize(),
+      false,
+    );
+    restored.applyCenteringOffset(halfSize);
+
+    expect(restored.position.x).toBe(positionAfterFirst.x);
+    expect(restored.position.y).toBe(positionAfterFirst.y);
+  });
 });
 
 describe("NodeflowNodeData – select / deselect", () => {

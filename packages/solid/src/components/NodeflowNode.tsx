@@ -78,13 +78,9 @@ const NodeflowNode: Component<NodeProps> = (props) => {
 
           measure();
 
-          const positionOffset = n.centered
-            ? Vec2.of(el.clientWidth, el.clientHeight).divideBy(2)
-            : Vec2.zero();
-
-          n.update({
-            position: n.position.subtract(positionOffset),
-          });
+          n.applyCenteringOffset(
+            Vec2.of(el.clientWidth, el.clientHeight).divideBy(2),
+          );
 
           setIsVisible(true);
         });
