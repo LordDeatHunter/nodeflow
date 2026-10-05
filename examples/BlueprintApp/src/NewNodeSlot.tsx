@@ -1,9 +1,10 @@
 import { Component, JSX } from "solid-js";
 import nodeCss from "./styles/node.module.scss";
 
-const NewNodeSlot: Component<{ children: JSX.Element; onClick: () => void }> = (
-  props,
-) => (
+const NewNodeSlot: Component<{
+  children: JSX.Element;
+  onClick: (event: PointerEvent) => void;
+}> = (props) => (
   <div
     class={nodeCss.node}
     style={{
@@ -15,7 +16,7 @@ const NewNodeSlot: Component<{ children: JSX.Element; onClick: () => void }> = (
       "user-select": "none",
       cursor: "grab",
     }}
-    onPointerDown={() => props.onClick()}
+    onPointerDown={(event) => props.onClick(event)}
   >
     {props.children}
   </div>

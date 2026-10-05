@@ -141,13 +141,13 @@ export const setupEvents = () => {
 };
 
 export const setupDemoGraph = () => {
-  const first = createBlueprintNode("number", Vec2.of(220, 120), true);
-  const second = createBlueprintNode("number", Vec2.of(220, 460), true);
+  const first = createBlueprintNode("number", Vec2.of(230, 130), true);
+  const second = createBlueprintNode("number", Vec2.of(230, 470), true);
   first.customData = { type: "number", value: 4 };
   second.customData = { type: "number", value: 6 };
 
-  const operation = createBlueprintNode("operation", Vec2.of(700, 290), true);
-  const display = createBlueprintNode("display", Vec2.of(1180, 290), true);
+  const operation = createBlueprintNode("operation", Vec2.of(640, 300), true);
+  const display = createBlueprintNode("display", Vec2.of(1020, 300), true);
 
   connectNodes(first, operation, "input-0");
   connectNodes(second, operation, "input-1");

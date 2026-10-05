@@ -1,13 +1,6 @@
-import {
-  type Component,
-  createMemo,
-  createSignal,
-  onMount,
-  Show,
-} from "solid-js";
+import { type Component, createSignal, onMount, Show } from "solid-js";
 import {
   createSolidNodeflow,
-  createTick,
   NodeflowData,
   NodeflowRegistry,
   Optional,
@@ -38,14 +31,14 @@ const PREVIEW_LABELS: Record<NodeType, string> = {
 };
 
 const App: Component = () => {
-  const { tick } = createTick();
   const [nodePreview, setNodePreview] =
     createSignal<Optional<NodeType>>(undefined);
+  const [cursor, setCursor] = createSignal(Vec2.of(0, 0));
 
-  const mousePos = createMemo(() => {
-    tick();
-    return nodeflowData.mouseData.mousePosition;
-  });
+  const startPreview = (type: NodeType, event: PointerEvent) => {
+    setCursor(Vec2.of(event.clientX, event.clientY));
+    setNodePreview(type);
+  };
 
   const createNode = (data: { event: PointerEvent }) => {
     const type = nodePreview();
@@ -70,6 +63,11 @@ const App: Component = () => {
   onMount(() => {
     setupEvents();
     setupDemoGraph();
+
+    NodeflowRegistry.get().globalEventStore.onMouseMoveInDocument.subscribe(
+      "blueprint:track-cursor",
+      ({ event }) => setCursor(Vec2.of(event.clientX, event.clientY)),
+    );
 
     NodeflowRegistry.get().globalEventStore.onPointerUpInDocument.subscribe(
       "create-node",
@@ -118,22 +116,22 @@ const App: Component = () => {
           gap: "20px",
         }}
       >
-        <NewNodeSlot onClick={() => setNodePreview("number")}>
+        <NewNodeSlot onClick={(event) => startPreview("number", event)}>
           Number node
         </NewNodeSlot>
-        <NewNodeSlot onClick={() => setNodePreview("operation")}>
+        <NewNodeSlot onClick={(event) => startPreview("operation", event)}>
           Sum node
         </NewNodeSlot>
-        <NewNodeSlot onClick={() => setNodePreview("display")}>
+        <NewNodeSlot onClick={(event) => startPreview("display", event)}>
           Display node
         </NewNodeSlot>
       </div>
       <Show when={nodePreview()}>
         <div
           style={{
-            position: "absolute",
-            left: `${mousePos().x - 75}px`,
-            top: `${mousePos().y - 45}px`,
+            position: "fixed",
+            left: `${cursor().x - 75}px`,
+            top: `${cursor().y - 45}px`,
             width: "150px",
             height: "90px",
             display: "flex",
@@ -141,6 +139,7 @@ const App: Component = () => {
             "justify-content": "center",
             "z-index": 1000,
             "user-select": "none",
+            "pointer-events": "none",
             cursor: "grabbing",
           }}
           class={nodeCss.node}
