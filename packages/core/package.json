@@ -1,5 +1,5 @@
 {
-  "name": "@nodeflow/core",
+  "name": "@nodeflow-lib/core",
   "version": "0.0.1",
   "description": "Framework-agnostic core for nodeflow",
   "type": "module",
@@ -14,6 +14,10 @@
       "require": "./dist/index.cjs.js"
     },
     "./style.css": "./dist/style.css"
+  },
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "vite build",

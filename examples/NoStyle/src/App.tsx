@@ -1,5 +1,5 @@
 import { type Component, onMount } from "solid-js";
-import { createSolidNodeflow } from "@nodeflow/solid";
+import { createSolidNodeflow } from "@nodeflow-lib/solid";
 import { setupDummyConnections, setupDummyNodes } from "./utils";
 
 const [nodeflowData, Nodeflow] = createSolidNodeflow("main");

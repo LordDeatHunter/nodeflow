@@ -5,7 +5,7 @@ import {
   SelectableElementCSS,
   NodeConnector,
   getLineDashArray,
-} from "@nodeflow/core";
+} from "@nodeflow-lib/core";
 
 interface NodeCurveProps {
   sourceNodeId: string;

@@ -2,8 +2,8 @@ import {
   NodeflowRegistry,
   NodeflowData,
   NodeflowSettings,
-} from "@nodeflow/core";
-import "@nodeflow/core/style.css";
+} from "@nodeflow-lib/core";
+import "@nodeflow-lib/core/style.css";
 import { renderCanvas } from "./components/canvas";
 
 let globalListenersAttached = false;

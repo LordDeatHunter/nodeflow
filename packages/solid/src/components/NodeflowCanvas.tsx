@@ -4,8 +4,8 @@ import {
   NodeflowCss,
   Vec2,
   SelectableElementCSS,
-} from "@nodeflow/core";
-import { NodeflowRegistry } from "@nodeflow/core";
+} from "@nodeflow-lib/core";
+import { NodeflowRegistry } from "@nodeflow-lib/core";
 import NodeflowNode from "./NodeflowNode";
 import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";

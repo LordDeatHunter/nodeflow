@@ -1,4 +1,4 @@
-import type { NodeflowNodeType, NodeConnectorType } from "@nodeflow/core";
+import type { NodeflowNodeType, NodeConnectorType } from "@nodeflow-lib/core";
 
 export type SolidNodeflowNodeType = NodeflowNodeType & {
   ref?: HTMLDivElement;

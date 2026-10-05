@@ -6,12 +6,12 @@ TypeScript library for flowcharts/graphs/diagrams, now a framework-agnostic mono
 
 ## Package graph
 
-- `@nodeflow/core` (`packages/core`) — framework-agnostic state/logic. Zero framework/DOM deps. Owns CSS.
-- `@nodeflow/solid` (`packages/solid`) — SolidJS adapter. Depends on **core**.
-- `@nodeflow/vanilla` (`packages/vanilla`) — plain-DOM adapter. Depends on **core**.
-- `@nodeflow/react`, `@nodeflow/vue`, `@nodeflow/svelte` — thin wrappers depending on **`@nodeflow/vanilla`** (not core) and re-exporting it.
+- `@nodeflow-lib/core` (`packages/core`) — framework-agnostic state/logic. Zero framework/DOM deps. Owns CSS.
+- `@nodeflow-lib/solid` (`packages/solid`) — SolidJS adapter. Depends on **core**.
+- `@nodeflow-lib/vanilla` (`packages/vanilla`) — plain-DOM adapter. Depends on **core**.
+- `@nodeflow-lib/react`, `@nodeflow-lib/vue`, `@nodeflow-lib/svelte` — thin wrappers depending on **`@nodeflow-lib/vanilla`** (not core) and re-exporting it.
 - `examples/*` — one app per adapter plus Solid examples (`BlueprintApp`, `FamilyTreeApp`, `NoStyle`).
-- Solid/vanilla entrypoints re-export core (`export * from "@nodeflow/core"`), so consumers get core types through the adapter they import.
+- Solid/vanilla entrypoints re-export core (`export * from "@nodeflow-lib/core"`), so consumers get core types through the adapter they import.
 
 ## Commands (from repo root)
 
@@ -30,10 +30,10 @@ TypeScript library for flowcharts/graphs/diagrams, now a framework-agnostic mono
 
 ## Critical gotchas
 
-- **Examples consume built `dist/`, not package `src`.** There are no Vite aliases; `@nodeflow/*` resolve through package.json `module`/`exports` → `dist/`. After editing any package, re-run `bunx turbo build` before testing an example, or you will test stale code.
+- **Examples consume built `dist/`, not package `src`.** There are no Vite aliases; `@nodeflow-lib/*` resolve through package.json `module`/`exports` → `dist/`. After editing any package, re-run `bunx turbo build` before testing an example, or you will test stale code.
 - `turbo.json` makes `test` and `typecheck` depend on `^build` (deps rebuild first); `dev` does **not**.
 - Tests must live under `packages/core/tests/**/*.test.ts` — vitest `include` is scoped to `tests/`, and `packages/core/tsconfig.json` excludes `tests`.
-- CSS is authored in `packages/core/src/style.css` and copied to `dist/style.css` by a custom Vite plugin. Consumers import `@nodeflow/core/style.css`. Never edit `dist/`.
+- CSS is authored in `packages/core/src/style.css` and copied to `dist/style.css` by a custom Vite plugin. Consumers import `@nodeflow-lib/core/style.css`. Never edit `dist/`.
 - No CI workflows and no committed Prettier config (prettier is only a dependency). Lint is the enforced gate.
 
 ## Core architecture (`packages/core/src`)

@@ -10,8 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@nodeflow/core": "workspace:*",
-    "@nodeflow/vanilla": "workspace:*"
+    "@nodeflow-lib/core": "workspace:*",
+    "@nodeflow-lib/vanilla": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.16.11",

@@ -3,7 +3,7 @@ import {
   NodeflowNodeData,
   NodeConnector,
   Vec2,
-} from "@nodeflow/core";
+} from "@nodeflow-lib/core";
 
 export const renderConnector = (
   parent: HTMLElement,

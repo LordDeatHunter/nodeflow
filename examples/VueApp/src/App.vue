@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { shallowRef } from "vue";
-import { Nodeflow, createNodeDisplay } from "@nodeflow/vue";
-import type { NodeflowData } from "@nodeflow/vue";
+import { Nodeflow, createNodeDisplay } from "@nodeflow-lib/vue";
+import type { NodeflowData } from "@nodeflow-lib/vue";
 import NodeCard from "./NodeCard.vue";
 
 const nodeDisplay = createNodeDisplay(NodeCard, (node) => ({

@@ -1,4 +1,4 @@
-import "@nodeflow/core/style.css";
+import "@nodeflow-lib/core/style.css";
 import { createApp } from "vue";
 import App from "./App.vue";
 

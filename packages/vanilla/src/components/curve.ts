@@ -4,7 +4,7 @@ import {
   LineDash,
   LineShape,
   getLineDashArray,
-} from "@nodeflow/core";
+} from "@nodeflow-lib/core";
 
 export const resolveLineShape = (
   data: NodeflowData,

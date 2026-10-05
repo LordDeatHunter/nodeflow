@@ -7,7 +7,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: "src/index.ts",
-      name: "@nodeflow/solid",
+      name: "@nodeflow-lib/solid",
       fileName: (format) => `index.${format}.js`,
       formats: ["es", "cjs"],
     },
@@ -16,7 +16,7 @@ export default defineConfig({
         "solid-js",
         "solid-js/web",
         "solid-js/store",
-        "@nodeflow/core",
+        "@nodeflow-lib/core",
       ],
       output: {
         exports: "named",

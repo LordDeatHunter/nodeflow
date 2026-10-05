@@ -1,4 +1,4 @@
-import { NodeflowNodeData, SelectableElementCSS, Vec2 } from "@nodeflow/solid";
+import { NodeflowNodeData, SelectableElementCSS, Vec2 } from "@nodeflow-lib/solid";
 import nodeCss from "./styles/node.module.scss";
 import curveCss from "./styles/curve.module.scss";
 import NodeBody from "./components/NodeBody";

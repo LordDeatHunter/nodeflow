@@ -6,6 +6,6 @@ export { default as Curve } from "./components/Curve";
 export { default as SelectionBox } from "./components/SelectionBox";
 export { default as Connector } from "./components/Connector";
 export * from "./types";
-export * from "@nodeflow/core";
+export * from "@nodeflow-lib/core";
 export { windowSize } from "./screen-utils";
 export { createTick } from "./tick";

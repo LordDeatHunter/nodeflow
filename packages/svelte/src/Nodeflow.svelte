@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { NodeflowData, NodeflowSettings } from "@nodeflow/vanilla";
-  import { createVanillaNodeflow } from "@nodeflow/vanilla";
+  import type { NodeflowData, NodeflowSettings } from "@nodeflow-lib/vanilla";
+  import { createVanillaNodeflow } from "@nodeflow-lib/vanilla";
 
   interface Props {
     id: string;

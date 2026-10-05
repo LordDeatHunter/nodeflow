@@ -1,4 +1,4 @@
-import { NodeflowNodeData, Vec2 } from "@nodeflow/solid";
+import { NodeflowNodeData, Vec2 } from "@nodeflow-lib/solid";
 import NodeDisplay from "./NodeDisplay";
 import { nodeflowData } from "./App";
 

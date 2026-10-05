@@ -1,5 +1,6 @@
 {
   "name": "nodeflow-root",
+  "private": true,
   "author": "LordDeatHunter",
   "repository": {
     "type": "git",
@@ -23,7 +24,8 @@
     "test": "bunx turbo test",
     "typecheck": "turbo typecheck",
     "dev": "run-p \"dev:*\"",
-    "start": "run-p \"dev:*\""
+    "start": "run-p \"dev:*\"",
+    "publish:packages": "bun install && bunx turbo build && bun --cwd=packages/core publish && bun --cwd=packages/solid publish && bun --cwd=packages/vanilla publish && bun --cwd=packages/react publish && bun --cwd=packages/vue publish && bun --cwd=packages/svelte publish"
   },
   "type": "module",
   "packageManager": "bun@1.3.11",

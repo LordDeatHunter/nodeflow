@@ -11,8 +11,8 @@
   },
   "types": "src/types.d.ts",
   "dependencies": {
-    "@nodeflow/core": "workspace:*",
-    "@nodeflow/solid": "workspace:*",
+    "@nodeflow-lib/core": "workspace:*",
+    "@nodeflow-lib/solid": "workspace:*",
     "solid-js": "^1.9.3"
   },
   "devDependencies": {

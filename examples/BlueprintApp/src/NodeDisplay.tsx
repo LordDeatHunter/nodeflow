@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import { NodeflowNodeData } from "@nodeflow/solid";
+import { NodeflowNodeData } from "@nodeflow-lib/solid";
 
 const NodeDisplay: Component<{ node: NodeflowNodeData }> = (props) => (
   <div

@@ -1,4 +1,4 @@
-import { Vec2, NodeflowData, NodeConnector } from "@nodeflow/core";
+import { Vec2, NodeflowData, NodeConnector } from "@nodeflow-lib/core";
 import { Component } from "solid-js";
 
 interface ConnectorProps {

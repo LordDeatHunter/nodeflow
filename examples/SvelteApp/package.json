@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@nodeflow/core": "workspace:*",
-    "@nodeflow/svelte": "workspace:*",
+    "@nodeflow-lib/core": "workspace:*",
+    "@nodeflow-lib/svelte": "workspace:*",
     "svelte": "^5.28.2"
   },
   "devDependencies": {

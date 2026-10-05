@@ -6,7 +6,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: "src/index.ts",
-      name: "@nodeflow/react",
+      name: "@nodeflow-lib/react",
       fileName: (format) => `index.${format}.js`,
       formats: ["es", "cjs"],
     },
@@ -16,8 +16,8 @@ export default defineConfig({
         "react/jsx-runtime",
         "react-dom",
         "react-dom/client",
-        "@nodeflow/vanilla",
-        "@nodeflow/core",
+        "@nodeflow-lib/vanilla",
+        "@nodeflow-lib/core",
       ],
       output: { exports: "named" },
     },

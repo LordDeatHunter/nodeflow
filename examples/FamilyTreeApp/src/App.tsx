@@ -3,7 +3,7 @@ import {
   createSolidNodeflow,
   NodeConnector,
   NodeflowData,
-} from "@nodeflow/solid";
+} from "@nodeflow-lib/solid";
 import curveCss from "./styles/curve.module.scss";
 import nodeflowCss from "./styles/nodeflow.module.scss";
 import { setupDummyConnections, setupDummyNodes, setupEvents } from "./utils";

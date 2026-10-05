@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Nodeflow, createNodeDisplay } from "@nodeflow/svelte";
-  import type { NodeflowData } from "@nodeflow/svelte";
+  import { Nodeflow, createNodeDisplay } from "@nodeflow-lib/svelte";
+  import type { NodeflowData } from "@nodeflow-lib/svelte";
   import NodeCard from "./NodeCard.svelte";
 
   const nodeDisplay = createNodeDisplay(NodeCard, (node) => ({

@@ -35,8 +35,8 @@
       "name": "blueprint-app",
       "version": "0.0.1",
       "dependencies": {
-        "@nodeflow/core": "workspace:*",
-        "@nodeflow/solid": "workspace:*",
+        "@nodeflow-lib/core": "workspace:*",
+        "@nodeflow-lib/solid": "workspace:*",
         "solid-js": "^1.9.3",
       },
       "devDependencies": {
@@ -59,8 +59,8 @@
       "name": "familytree-app",
       "version": "0.0.1",
       "dependencies": {
-        "@nodeflow/core": "workspace:*",
-        "@nodeflow/solid": "workspace:*",
+        "@nodeflow-lib/core": "workspace:*",
+        "@nodeflow-lib/solid": "workspace:*",
         "solid-js": "^1.9.3",
       },
       "devDependencies": {
@@ -83,8 +83,8 @@
       "name": "no-style-nodeflow-example",
       "version": "0.0.1",
       "dependencies": {
-        "@nodeflow/core": "workspace:*",
-        "@nodeflow/solid": "workspace:*",
+        "@nodeflow-lib/core": "workspace:*",
+        "@nodeflow-lib/solid": "workspace:*",
         "solid-js": "^1.9.3",
       },
       "devDependencies": {
@@ -106,8 +106,8 @@
       "name": "react-app",
       "version": "0.0.1",
       "dependencies": {
-        "@nodeflow/core": "workspace:*",
-        "@nodeflow/react": "workspace:*",
+        "@nodeflow-lib/core": "workspace:*",
+        "@nodeflow-lib/react": "workspace:*",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
       },
@@ -122,8 +122,8 @@
     "examples/SvelteApp": {
       "name": "svelte-app",
       "dependencies": {
-        "@nodeflow/core": "workspace:*",
-        "@nodeflow/svelte": "workspace:*",
+        "@nodeflow-lib/core": "workspace:*",
+        "@nodeflow-lib/svelte": "workspace:*",
         "svelte": "^5.28.2",
       },
       "devDependencies": {
@@ -136,8 +136,8 @@
       "name": "vanilla-app",
       "version": "0.0.1",
       "dependencies": {
-        "@nodeflow/core": "workspace:*",
-        "@nodeflow/vanilla": "workspace:*",
+        "@nodeflow-lib/core": "workspace:*",
+        "@nodeflow-lib/vanilla": "workspace:*",
       },
       "devDependencies": {
         "@types/node": "^20.16.11",
@@ -148,8 +148,8 @@
     "examples/VueApp": {
       "name": "vue-app",
       "dependencies": {
-        "@nodeflow/core": "workspace:*",
-        "@nodeflow/vue": "workspace:*",
+        "@nodeflow-lib/core": "workspace:*",
+        "@nodeflow-lib/vue": "workspace:*",
         "vue": "^3.5.13",
       },
       "devDependencies": {
@@ -160,7 +160,7 @@
       },
     },
     "packages/core": {
-      "name": "@nodeflow/core",
+      "name": "@nodeflow-lib/core",
       "version": "0.0.1",
       "devDependencies": {
         "typescript": "^5.6.3",
@@ -170,7 +170,7 @@
       },
     },
     "packages/react": {
-      "name": "@nodeflow/react",
+      "name": "@nodeflow-lib/react",
       "version": "0.0.1",
       "devDependencies": {
         "@types/react": "^19.1.2",
@@ -180,13 +180,13 @@
         "vite-plugin-dts": "^4.3.0",
       },
       "peerDependencies": {
-        "@nodeflow/vanilla": "workspace:*",
+        "@nodeflow-lib/vanilla": "workspace:^",
         "react": "^18 || ^19",
         "react-dom": "^18 || ^19",
       },
     },
     "packages/solid": {
-      "name": "@nodeflow/solid",
+      "name": "@nodeflow-lib/solid",
       "version": "0.0.1",
       "devDependencies": {
         "typescript": "^5.6.3",
@@ -195,12 +195,12 @@
         "vite-plugin-solid": "2.7.0",
       },
       "peerDependencies": {
-        "@nodeflow/core": "workspace:*",
+        "@nodeflow-lib/core": "workspace:^",
         "solid-js": "^1.9.3",
       },
     },
     "packages/svelte": {
-      "name": "@nodeflow/svelte",
+      "name": "@nodeflow-lib/svelte",
       "version": "0.0.1",
       "devDependencies": {
         "@sveltejs/vite-plugin-svelte": "^4.0.0",
@@ -210,12 +210,12 @@
         "vite-plugin-dts": "^4.3.0",
       },
       "peerDependencies": {
-        "@nodeflow/vanilla": "workspace:*",
+        "@nodeflow-lib/vanilla": "workspace:^",
         "svelte": "^5.0.0",
       },
     },
     "packages/vanilla": {
-      "name": "@nodeflow/vanilla",
+      "name": "@nodeflow-lib/vanilla",
       "version": "0.0.1",
       "devDependencies": {
         "typescript": "^5.6.3",
@@ -223,11 +223,11 @@
         "vite-plugin-dts": "^4.3.0",
       },
       "peerDependencies": {
-        "@nodeflow/core": "workspace:*",
+        "@nodeflow-lib/core": "workspace:^",
       },
     },
     "packages/vue": {
-      "name": "@nodeflow/vue",
+      "name": "@nodeflow-lib/vue",
       "version": "0.0.1",
       "devDependencies": {
         "typescript": "^5.6.3",
@@ -236,7 +236,7 @@
         "vue": "^3.5.13",
       },
       "peerDependencies": {
-        "@nodeflow/vanilla": "workspace:*",
+        "@nodeflow-lib/vanilla": "workspace:^",
         "vue": "^3.4.0",
       },
     },
@@ -536,17 +536,17 @@
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.1.2", "", { "dependencies": { "@tybys/wasm-util": "^0.10.1" }, "peerDependencies": { "@emnapi/core": "^1.7.1", "@emnapi/runtime": "^1.7.1" } }, "sha512-sNXv5oLJ7ob93xkZ1XnxisYhGYXfaG9f65/ZgYuAu3qt7b3NadcOEhLvx28hv31PgX8SZJRYrAIPQilQmFpLVw=="],
 
-    "@nodeflow/core": ["@nodeflow/core@workspace:packages/core"],
+    "@nodeflow-lib/core": ["@nodeflow-lib/core@workspace:packages/core"],
 
-    "@nodeflow/react": ["@nodeflow/react@workspace:packages/react"],
+    "@nodeflow-lib/react": ["@nodeflow-lib/react@workspace:packages/react"],
 
-    "@nodeflow/solid": ["@nodeflow/solid@workspace:packages/solid"],
+    "@nodeflow-lib/solid": ["@nodeflow-lib/solid@workspace:packages/solid"],
 
-    "@nodeflow/svelte": ["@nodeflow/svelte@workspace:packages/svelte"],
+    "@nodeflow-lib/svelte": ["@nodeflow-lib/svelte@workspace:packages/svelte"],
 
-    "@nodeflow/vanilla": ["@nodeflow/vanilla@workspace:packages/vanilla"],
+    "@nodeflow-lib/vanilla": ["@nodeflow-lib/vanilla@workspace:packages/vanilla"],
 
-    "@nodeflow/vue": ["@nodeflow/vue@workspace:packages/vue"],
+    "@nodeflow-lib/vue": ["@nodeflow-lib/vue@workspace:packages/vue"],
 
     "@nodelib/fs.scandir": ["@nodelib/fs.scandir@2.1.5", "", { "dependencies": { "@nodelib/fs.stat": "2.0.5", "run-parallel": "^1.1.9" } }, "sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g=="],
 

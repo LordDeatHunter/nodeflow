@@ -1,6 +1,6 @@
 import { useRef } from "react";
-import { Nodeflow, createNodeDisplay } from "@nodeflow/react";
-import type { NodeflowData } from "@nodeflow/react";
+import { Nodeflow, createNodeDisplay } from "@nodeflow-lib/react";
+import type { NodeflowData } from "@nodeflow-lib/react";
 
 const NodeCard = ({
   node,

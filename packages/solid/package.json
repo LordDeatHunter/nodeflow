@@ -1,7 +1,7 @@
 {
-  "name": "@nodeflow/solid",
+  "name": "@nodeflow-lib/solid",
   "version": "0.0.1",
-  "description": "SolidJS adapter for @nodeflow/core",
+  "description": "SolidJS adapter for @nodeflow-lib/core",
   "type": "module",
   "main": "./dist/index.cjs.js",
   "module": "./dist/index.es.js",
@@ -12,6 +12,10 @@
       "import": "./dist/index.es.js",
       "require": "./dist/index.cjs.js"
     }
+  },
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "vite build",
@@ -25,6 +29,6 @@
   },
   "peerDependencies": {
     "solid-js": "^1.9.3",
-    "@nodeflow/core": "workspace:*"
+    "@nodeflow-lib/core": "workspace:^"
   }
 }

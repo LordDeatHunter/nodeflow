@@ -6,12 +6,12 @@ export default defineConfig({
   build: {
     lib: {
       entry: "src/index.ts",
-      name: "@nodeflow/vue",
+      name: "@nodeflow-lib/vue",
       fileName: (format) => `index.${format}.js`,
       formats: ["es", "cjs"],
     },
     rollupOptions: {
-      external: ["vue", "@nodeflow/vanilla", "@nodeflow/core"],
+      external: ["vue", "@nodeflow-lib/vanilla", "@nodeflow-lib/core"],
       output: { exports: "named" },
     },
   },

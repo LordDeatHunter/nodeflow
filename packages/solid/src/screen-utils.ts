@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js";
-import { Vec2 } from "@nodeflow/core";
+import { Vec2 } from "@nodeflow-lib/core";
 
 const readWindowSize = (): Vec2 =>
   Vec2.of(

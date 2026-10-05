@@ -4,7 +4,7 @@ import {
   Vec2,
   LineDash,
   LineShape,
-} from "@nodeflow/core";
+} from "@nodeflow-lib/core";
 import { applyLineDash, buildCurvePathD } from "./curve";
 import { renderNode } from "./node";
 

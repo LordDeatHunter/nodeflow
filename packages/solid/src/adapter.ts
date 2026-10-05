@@ -1,4 +1,4 @@
-import { NodeflowRegistry, NodeflowData } from "@nodeflow/core";
+import { NodeflowRegistry, NodeflowData } from "@nodeflow-lib/core";
 import NodeflowCanvas from "./components/NodeflowCanvas";
 
 let globalListenersAttached = false;

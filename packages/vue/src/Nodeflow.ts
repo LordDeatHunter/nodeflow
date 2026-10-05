@@ -1,6 +1,6 @@
 import { defineComponent, h, onMounted, ref } from "vue";
-import { createVanillaNodeflow } from "@nodeflow/vanilla";
-import type { NodeflowData, NodeflowSettings } from "@nodeflow/vanilla";
+import { createVanillaNodeflow } from "@nodeflow-lib/vanilla";
+import type { NodeflowData, NodeflowSettings } from "@nodeflow-lib/vanilla";
 
 export const Nodeflow = defineComponent({
   name: "Nodeflow",

@@ -1,4 +1,4 @@
-import { NodeflowData, NodeflowNodeData, Vec2 } from "@nodeflow/core";
+import { NodeflowData, NodeflowNodeData, Vec2 } from "@nodeflow-lib/core";
 import { renderConnector } from "./connector";
 
 export const renderNode = (

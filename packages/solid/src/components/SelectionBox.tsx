@@ -1,4 +1,4 @@
-import { NodeflowData } from "@nodeflow/core";
+import { NodeflowData } from "@nodeflow-lib/core";
 import { createMemo } from "solid-js";
 
 const SelectionBox = (props: {

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { HTMLAttributes } from "react";
-import { createVanillaNodeflow, NodeflowRegistry } from "@nodeflow/vanilla";
-import type { NodeflowData, NodeflowSettings } from "@nodeflow/vanilla";
+import { createVanillaNodeflow, NodeflowRegistry } from "@nodeflow-lib/vanilla";
+import type { NodeflowData, NodeflowSettings } from "@nodeflow-lib/vanilla";
 
 type NodeflowProps = HTMLAttributes<HTMLDivElement> & {
   id: string;

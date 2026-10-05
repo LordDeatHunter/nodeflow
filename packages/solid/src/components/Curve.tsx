@@ -1,5 +1,5 @@
 import { Component, createMemo, Show } from "solid-js";
-import { NodeflowData, getLineDashArray } from "@nodeflow/core";
+import { NodeflowData, getLineDashArray } from "@nodeflow-lib/core";
 
 interface CurveProps {
   css?: string;

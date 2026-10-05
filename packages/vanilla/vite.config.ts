@@ -6,12 +6,12 @@ export default defineConfig({
   build: {
     lib: {
       entry: "src/index.ts",
-      name: "@nodeflow/vanilla",
+      name: "@nodeflow-lib/vanilla",
       fileName: (format) => `index.${format}.js`,
       formats: ["es", "cjs"],
     },
     rollupOptions: {
-      external: ["@nodeflow/core"],
+      external: ["@nodeflow-lib/core"],
       output: { exports: "named" },
     },
   },

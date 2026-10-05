@@ -10,8 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@nodeflow/core": "workspace:*",
-    "@nodeflow/react": "workspace:*",
+    "@nodeflow-lib/core": "workspace:*",
+    "@nodeflow-lib/react": "workspace:*",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

@@ -5,7 +5,7 @@ import {
   For,
   onCleanup,
 } from "solid-js";
-import { NodeflowData, NodeflowNodeData, Vec2 } from "@nodeflow/core";
+import { NodeflowData, NodeflowNodeData, Vec2 } from "@nodeflow-lib/core";
 import Connector from "./Connector";
 
 interface NodeProps {

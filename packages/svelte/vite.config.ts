@@ -7,7 +7,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: "src/index.ts",
-      name: "@nodeflow/svelte",
+      name: "@nodeflow-lib/svelte",
       fileName: (format) => `index.${format}.js`,
       formats: ["es", "cjs"],
     },
@@ -15,7 +15,7 @@ export default defineConfig({
       external: (id) =>
         id === "svelte" ||
         id.startsWith("svelte/") ||
-        id.startsWith("@nodeflow/"),
+        id.startsWith("@nodeflow-lib/"),
       output: { exports: "named" },
     },
   },

@@ -1,5 +1,5 @@
-import "@nodeflow/core/style.css";
-import { createVanillaNodeflow } from "@nodeflow/vanilla";
+import "@nodeflow-lib/core/style.css";
+import { createVanillaNodeflow } from "@nodeflow-lib/vanilla";
 
 const container = document.getElementById("app")!;
 
