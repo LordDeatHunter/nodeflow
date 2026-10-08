@@ -1,8 +1,9 @@
 @use "sass:color";
 @use "colors";
 
-$connector-size: 12px;
-$connector-border: 4px;
+$connector-size: 14px;
+$connector-border: 3px;
+$node-radius: 16px;
 
 @mixin baseConnector($bg-color) {
   position: relative;
@@ -12,37 +13,88 @@ $connector-border: 4px;
   border: $connector-border solid colors.$node-border-color;
   cursor: crosshair;
 
+  // Total box (content-box) stays 20px so section anchoring math is unchanged.
   background-color: $bg-color;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 0 10px color.adjust($bg-color, $alpha: -0.35),
+    inset 0 1px 1px rgba(255, 255, 255, 0.28);
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    background-color 120ms ease;
 
   &:hover {
-    background-color: color.adjust($bg-color, $lightness: 10%);
+    background-color: color.adjust($bg-color, $lightness: 8%);
+    transform: scale(1.35);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.12),
+      0 0 16px color.adjust($bg-color, $alpha: -0.05),
+      inset 0 1px 1px rgba(255, 255, 255, 0.4);
   }
 }
 
 .node {
   width: 300px;
   height: 180px;
-  border-radius: 12px;
-  border: 2px solid colors.$node-border-color;
+  border-radius: $node-radius;
+  border: 1px solid colors.$node-border-color;
   background-color: colors.$node-background-color;
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.055),
+    rgba(0, 0, 0, 0.22)
+  );
+  color: colors.$node-text-color;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 10px 22px -10px rgba(0, 0, 0, 0.6),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+  transition:
+    background-color 180ms ease-in-out,
+    border-color 180ms ease-in-out,
+    box-shadow 180ms ease-in-out;
+
+  // Accent spine: input color -> connection color.
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: $node-radius $node-radius 0 0;
+    background: linear-gradient(
+      90deg,
+      colors.$input-connector-color,
+      colors.$connection-color
+    );
+    opacity: 0.75;
+  }
 
   &:hover {
     background-color: colors.$node-highlighted-background-color;
+    border-color: colors.$node-border-highlight-color;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 0 1px colors.$node-border-highlight-color,
+      0 14px 28px -12px rgba(0, 0, 0, 0.7),
+      0 0 24px colors.$accent-glow-color;
     z-index: 3;
   }
-
-  box-shadow: 0 0 5px 0 colors.$node-border-color;
-  transition:
-    background-color 0.2s ease-in-out 0s,
-    border-color 0.2s ease-in-out 0s,
-    box-shadow 0.2s ease-in-out 0s;
 }
 
 .selectedNode {
-  box-shadow: 0 0 10px 5px colors.$node-border-color;
+  background-color: colors.$node-highlighted-background-color;
+  border-color: colors.$focus-ring-color;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 1px colors.$focus-ring-color,
+    0 0 0 5px rgba(132, 195, 255, 0.12),
+    0 0 30px colors.$accent-glow-color,
+    0 14px 30px -12px rgba(0, 0, 0, 0.75);
   cursor: grabbing;
   z-index: 3;
-  background-color: colors.$node-highlighted-background-color;
 }
 
 .inputConnector {

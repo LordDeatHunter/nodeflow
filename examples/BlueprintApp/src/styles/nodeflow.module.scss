@@ -1,3 +1,35 @@
+@use "colors";
+
 .nodeflow {
   overflow: hidden;
+  background-color: colors.$canvas-background-color;
+
+  // Layered blueprint drafting surface: vignette -> key light -> major grid ->
+  // minor dot grid.
+  background-image:
+    radial-gradient(
+      ellipse at center,
+      transparent 42%,
+      colors.$canvas-vignette-color 100%
+    ),
+    radial-gradient(
+      circle at 50% 32%,
+      colors.$canvas-glow-color,
+      transparent 62%
+    ),
+    linear-gradient(colors.$grid-line-color 1px, transparent 1px),
+    linear-gradient(90deg, colors.$grid-line-color 1px, transparent 1px),
+    radial-gradient(circle, colors.$grid-dot-color 1.1px, transparent 1.1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    120px 120px,
+    120px 120px,
+    24px 24px;
+  background-position:
+    center,
+    center,
+    -1px -1px,
+    -1px -1px,
+    0 0;
 }

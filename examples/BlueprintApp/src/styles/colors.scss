@@ -1,26 +1,44 @@
-$dark-1: #10141F;
-$dark-2: #151D28;
-$dark-3: #202E37;
-$dark-4: #394A50;
+// Core slate-teal ramp
+$dark-1: #10141f;
+$dark-2: #151d28;
+$dark-3: #202e37;
+$dark-4: #394a50;
 $dark-5: #577277;
 $dark-6: #819796;
-$dark-7: #A4B5B2;
-$dark-8: #C7CFCC;
-$dark-9: #ECEBE7;
+$dark-7: #a4b5b2;
+$dark-8: #c7cfcc;
+$dark-9: #ecebe7;
 
+// Layout surfaces
 $background-color: $dark-3;
+$canvas-background-color: #0c131c;
 $element-background-color: $dark-5;
+$panel-background-color: rgba(16, 20, 31, 0.72);
 $border-color: $dark-1;
 
-$node-background-color: $element-background-color;
-$node-border-color: $border-color;
+// Blueprint drafting canvas
+$grid-dot-color: rgba(129, 151, 150, 0.18);
+$grid-line-color: rgba(129, 151, 150, 0.055);
+$canvas-glow-color: rgba(132, 195, 255, 0.07);
+$canvas-vignette-color: rgba(4, 7, 12, 0.55);
+
+// Node surfaces
+$node-background-color: #1b2734;
+$node-highlighted-background-color: #283845;
+$node-border-color: #0a0f17;
+$node-border-highlight-color: rgba(164, 181, 178, 0.14);
 $node-text-color: $dark-9;
-$node-highlighted-background-color: $dark-6;
 
+// Typography
 $font-color: $dark-8;
+$font-color-muted: $dark-6;
 
-$connection-color: #84C3FF;
-$new-connection-color: #C3FF84;
+// Accents
+$connection-color: #84c3ff;
+$new-connection-color: #c3ff84;
 
-$input-connector-color: #A4DDDB;
-$output-connector-color: #D0DA91;
+$input-connector-color: #a4dddb;
+$output-connector-color: #d0da91;
+
+$focus-ring-color: #84c3ff;
+$accent-glow-color: rgba(132, 195, 255, 0.28);

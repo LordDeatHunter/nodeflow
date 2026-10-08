@@ -1,18 +1,8 @@
-import { Component, createMemo, JSX } from "solid-js";
+import { Component, createMemo } from "solid-js";
 import { NodeflowNodeData } from "@nodeflow-lib/solid";
 import { blueprintRevision, markBlueprintDirty } from "./reactivity";
 import { Operator } from "./values";
-
-const selectStyle: JSX.CSSProperties = {
-  width: "100%",
-  padding: "0.5rem",
-  border: "3px solid #202E37",
-  "border-radius": "0.5rem",
-  "box-sizing": "border-box",
-  "font-size": "2rem",
-  "background-color": "#819796",
-  color: "#202E37",
-};
+import contentCss from "./styles/content.module.scss";
 
 const OperationNode: Component<{ node: NodeflowNodeData }> = (props) => {
   const operator = createMemo(() => {
@@ -26,12 +16,10 @@ const OperationNode: Component<{ node: NodeflowNodeData }> = (props) => {
   };
 
   return (
-    <div
-      style={{ padding: "2rem", height: "100%", "box-sizing": "border-box" }}
-    >
-      <h2 style={{ margin: "0 0 1rem 0" }}>Operation Node</h2>
+    <div class={contentCss.pad}>
+      <span class={contentCss.label}>Operation</span>
       <select
-        style={selectStyle}
+        class={contentCss.control}
         value={operator()}
         onChange={(event) => setOperator(event.currentTarget.value as Operator)}
         onKeyDown={(event) => event.stopPropagation()}

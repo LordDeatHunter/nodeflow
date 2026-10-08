@@ -7,8 +7,8 @@ import {
   Vec2,
 } from "@nodeflow-lib/solid";
 import curveCss from "./styles/curve.module.scss";
-import nodeCss from "./styles/node.module.scss";
 import nodeflowCss from "./styles/nodeflow.module.scss";
+import appCss from "./styles/app.module.scss";
 import NewNodeSlot from "./NewNodeSlot";
 import {
   createBlueprintNode,
@@ -76,23 +76,8 @@ const App: Component = () => {
   });
 
   return (
-    <div
-      style={{
-        display: "flex",
-        "flex-direction": "column",
-        width: "100%",
-        height: "100dvh",
-        "min-height": "0",
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          flex: "1 1 0%",
-          "min-height": "0",
-          position: "relative",
-        }}
-      >
+    <div class={appCss.app}>
+      <div class={appCss.viewport}>
         <Nodeflow
           css={{
             getNewCurveCss: () => curveCss.newConnection,
@@ -102,47 +87,30 @@ const App: Component = () => {
           width="100%"
         />
       </div>
-      <div
-        style={{
-          flex: "0 0 auto",
-          width: "100%",
-          "min-height": "clamp(120px, 25dvh, 220px)",
-          overflow: "auto",
-          "background-color": "gray",
-          opacity: "0.5",
-          display: "flex",
-          "align-items": "center",
-          "justify-content": "center",
-          gap: "20px",
-        }}
-      >
-        <NewNodeSlot onClick={(event) => startPreview("number", event)}>
-          Number node
-        </NewNodeSlot>
-        <NewNodeSlot onClick={(event) => startPreview("operation", event)}>
-          Sum node
-        </NewNodeSlot>
-        <NewNodeSlot onClick={(event) => startPreview("display", event)}>
-          Display node
-        </NewNodeSlot>
+      <div class={appCss.hotbar}>
+        <div class={appCss.hotbarHeader}>
+          <h1 class={appCss.hotbarTitle}>Node palette</h1>
+          <p class={appCss.hotbarHint}>Drag a node onto the canvas to add it</p>
+        </div>
+        <div class={appCss.slots}>
+          <NewNodeSlot onClick={(event) => startPreview("number", event)}>
+            Number node
+          </NewNodeSlot>
+          <NewNodeSlot onClick={(event) => startPreview("operation", event)}>
+            Sum node
+          </NewNodeSlot>
+          <NewNodeSlot onClick={(event) => startPreview("display", event)}>
+            Display node
+          </NewNodeSlot>
+        </div>
       </div>
       <Show when={nodePreview()}>
         <div
+          class={appCss.previewCard}
           style={{
-            position: "fixed",
             left: `${cursor().x - 75}px`,
             top: `${cursor().y - 45}px`,
-            width: "150px",
-            height: "90px",
-            display: "flex",
-            "align-items": "center",
-            "justify-content": "center",
-            "z-index": 1000,
-            "user-select": "none",
-            "pointer-events": "none",
-            cursor: "grabbing",
           }}
-          class={nodeCss.node}
         >
           {PREVIEW_LABELS[nodePreview()!]}
         </div>
