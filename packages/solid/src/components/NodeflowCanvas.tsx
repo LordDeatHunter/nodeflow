@@ -113,6 +113,11 @@ const NodeflowCanvas =
       return nodeflowData.mouseData.selectionBox.boundingBox;
     });
 
+    const nodeBoundary = createMemo(() => {
+      tick();
+      return nodeflowData.settings.nodeBoundary;
+    });
+
     const resolveTouchDrop = (touch: Touch) => {
       const target = document.elementFromPoint(touch.clientX, touch.clientY);
       const connectorEl = target?.closest<HTMLElement>(
@@ -225,6 +230,23 @@ const NodeflowCanvas =
             transition: "scale 0.1s ease-out",
           }}
         >
+          <Show when={nodeBoundary()}>
+            {(boundary) => {
+              const start = () => boundary().startPosition();
+              const end = () => boundary().endPosition();
+              return (
+                <div
+                  class="nodeflowBoundary"
+                  style={{
+                    left: `${start().x}px`,
+                    top: `${start().y}px`,
+                    width: `${end().x - start().x}px`,
+                    height: `${end().y - start().y}px`,
+                  }}
+                />
+              );
+            }}
+          </Show>
           <svg
             style={{
               position: "absolute",

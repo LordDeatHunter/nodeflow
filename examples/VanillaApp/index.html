@@ -53,6 +53,20 @@
       .toolbar button:hover {
         background: #1a1a4e;
       }
+      .toolbar select {
+        min-height: 40px;
+        padding: 8px 12px;
+        background: #0f3460;
+        color: #e2e2e2;
+        border: 1px solid #1a1a4e;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      .nodeflowBoundary {
+        border-color: rgba(226, 226, 226, 0.5);
+        background-color: rgba(255, 255, 255, 0.04);
+      }
       #app {
         flex: 1 1 0%;
         min-height: 0;
@@ -81,6 +95,12 @@
     <div class="toolbar">
       <button id="btn-add-node">Add Random Node</button>
       <button id="btn-add-connection">Add Random Connection</button>
+      <select id="boundary-mode" aria-label="Canvas boundary">
+        <option value="off">Boundary: off</option>
+        <option value="nodes">Boundary: nodes</option>
+        <option value="view">Boundary: view</option>
+        <option value="both">Boundary: nodes + view</option>
+      </select>
     </div>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>

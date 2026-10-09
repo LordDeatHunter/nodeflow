@@ -32,6 +32,13 @@ export const renderCanvas = (
   innerDiv.style.transform = `scale(${data.zoomLevel}) translate(${data.position.x}px, ${data.position.y}px)`;
   innerDiv.style.transition = "scale 0.1s ease-out";
 
+  const boundaryDiv = document.createElement("div");
+  boundaryDiv.className = "nodeflowBoundary";
+  boundaryDiv.style.position = "absolute";
+  boundaryDiv.style.boxSizing = "border-box";
+  boundaryDiv.style.pointerEvents = "none";
+  boundaryDiv.style.display = "none";
+
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.style.position = "absolute";
   svg.style.width = "1px";
@@ -39,6 +46,7 @@ export const renderCanvas = (
   svg.style.pointerEvents = "none";
   svg.style.overflow = "visible";
 
+  innerDiv.appendChild(boundaryDiv);
   innerDiv.appendChild(svg);
   outerDiv.appendChild(innerDiv);
   container.appendChild(outerDiv);
@@ -46,7 +54,31 @@ export const renderCanvas = (
   let lastZoom = data.zoomLevel;
   let lastPosX = data.position.x;
   let lastPosY = data.position.y;
+  let lastBoundaryKey = "";
   const curveElements = new Map<string, SVGPathElement>();
+
+  const syncBoundary = () => {
+    const boundary = data.settings.nodeBoundary;
+    if (!boundary) {
+      if (lastBoundaryKey !== "") {
+        lastBoundaryKey = "";
+        boundaryDiv.style.display = "none";
+      }
+      return;
+    }
+
+    const start = boundary.startPosition();
+    const end = boundary.endPosition();
+    const key = `${start.x}:${start.y}:${end.x}:${end.y}`;
+    if (key === lastBoundaryKey) return;
+
+    lastBoundaryKey = key;
+    boundaryDiv.style.display = "";
+    boundaryDiv.style.left = `${start.x}px`;
+    boundaryDiv.style.top = `${start.y}px`;
+    boundaryDiv.style.width = `${end.x - start.x}px`;
+    boundaryDiv.style.height = `${end.y - start.y}px`;
+  };
 
   const syncDom = () => {
     if (
@@ -59,6 +91,8 @@ export const renderCanvas = (
       lastPosY = data.position.y;
       innerDiv.style.transform = `scale(${data.zoomLevel}) translate(${data.position.x}px, ${data.position.y}px)`;
     }
+
+    syncBoundary();
 
     data.nodes.forEach((node, nodeId) => {
       if (!nodeElements.has(nodeId)) {

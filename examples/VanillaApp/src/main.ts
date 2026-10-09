@@ -1,5 +1,5 @@
 import "@nodeflow-lib/core/style.css";
-import { createVanillaNodeflow } from "@nodeflow-lib/vanilla";
+import { createVanillaNodeflow, Rect, Vec2 } from "@nodeflow-lib/vanilla";
 
 const container = document.getElementById("app")!;
 
@@ -156,3 +156,23 @@ document
 document
   .getElementById("btn-add-connection")
   ?.addEventListener("click", addRandomConnection);
+
+// Optional boundary demo: the canvas is infinite by default. The same rect is
+// used for nodes and/or the view depending on the selected mode.
+const BOUNDARY = Rect.of(Vec2.of(-200, -200), Vec2.of(1600, 1200));
+
+const applyBoundaryMode = (mode: string) => {
+  const boundNodes = mode === "nodes" || mode === "both";
+  const boundView = mode === "view" || mode === "both";
+
+  nodeflowData.updateSettings({
+    nodeBoundary: boundNodes ? BOUNDARY : undefined,
+    viewBoundary: boundView ? BOUNDARY : undefined,
+  });
+};
+
+document
+  .getElementById("boundary-mode")
+  ?.addEventListener("change", (event) =>
+    applyBoundaryMode((event.target as HTMLSelectElement).value),
+  );

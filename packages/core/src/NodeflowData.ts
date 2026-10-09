@@ -113,6 +113,7 @@ export default class NodeflowData {
   ) {
     this.id = id;
     this._settings = { ...NodeflowData.DEFAULT_SETTINGS, ...settings };
+    this.constrainView();
     this.curveFunctions = curveFunctions?.(this) ?? new CurveFunctions(this);
 
     this.changes = new Changes();
@@ -272,12 +273,119 @@ export default class NodeflowData {
       | Partial<NodeflowSettings>
       | ((prev: NodeflowSettings) => Partial<NodeflowSettings>),
   ) {
+    const previous = this._settings;
+
     if (typeof settings === "function") {
       const updates = settings(this._settings);
       this._settings = { ...this._settings, ...updates };
     } else {
       this._settings = { ...this._settings, ...settings };
     }
+
+    const nodeBoundaryChanged =
+      previous.nodeBoundary !== this._settings.nodeBoundary;
+    const viewBoundaryChanged =
+      previous.viewBoundary !== this._settings.viewBoundary;
+
+    if (nodeBoundaryChanged) {
+      this.nodes.forEach((node) => node.clampToBoundary());
+    }
+
+    const viewChanged = this.constrainView();
+
+    if (nodeBoundaryChanged || viewBoundaryChanged || viewChanged) {
+      this.publishCanvasTransformChanged();
+    }
+  }
+
+  private publishCanvasTransformChanged(): void {
+    this.eventStore.onCanvasTransformChanged.publish({
+      position: this.position.serialize(),
+    });
+  }
+
+  private static normalizeBoundary(
+    rect: Rect | undefined,
+  ): { min: Vec2; max: Vec2 } | undefined {
+    if (!rect) return undefined;
+
+    const min = rect.startPosition();
+    const max = rect.endPosition();
+
+    if (max.x - min.x <= 0 || max.y - min.y <= 0) return undefined;
+
+    return { min, max };
+  }
+
+  /**
+   * The smallest zoom level the view may reach. Equals `settings.minZoom`
+   * unless a `viewBoundary` is set and the canvas has been measured, in which
+   * case zooming out is limited so the viewport never grows past the boundary.
+   */
+  public getEffectiveMinZoom(): number {
+    const boundary = NodeflowData.normalizeBoundary(this.settings.viewBoundary);
+
+    if (!boundary || this._size.x <= 0 || this._size.y <= 0) {
+      return this.settings.minZoom;
+    }
+
+    const fitZoom = Math.max(
+      this._size.x / (boundary.max.x - boundary.min.x),
+      this._size.y / (boundary.max.y - boundary.min.y),
+    );
+
+    return Math.max(this.settings.minZoom, fitZoom);
+  }
+
+  /**
+   * Clamps zoom and position so the visible viewport stays inside
+   * `settings.viewBoundary`. Writes the private fields directly so it can be
+   * called from `update()` without recursing. Returns whether anything moved.
+   */
+  private constrainView(): boolean {
+    const boundary = NodeflowData.normalizeBoundary(this.settings.viewBoundary);
+    if (!boundary) return false;
+
+    let changed = false;
+
+    if (this._size.x > 0 && this._size.y > 0) {
+      const minZoom = Math.min(
+        this.getEffectiveMinZoom(),
+        this.settings.maxZoom,
+      );
+      const zoom = clamp(this._zoomLevel, minZoom, this.settings.maxZoom);
+
+      if (zoom !== this._zoomLevel) {
+        this._zoomLevel = zoom;
+        changed = true;
+      }
+    }
+
+    const viewSize = this._size.divideBy(this._zoomLevel);
+
+    const clampAxis = (
+      value: number,
+      min: number,
+      max: number,
+      visible: number,
+    ): number => {
+      const low = visible - max;
+      const high = -min;
+
+      return low > high ? (low + high) / 2 : clamp(value, low, high);
+    };
+
+    const next = Vec2.of(
+      clampAxis(this._position.x, boundary.min.x, boundary.max.x, viewSize.x),
+      clampAxis(this._position.y, boundary.min.y, boundary.max.y, viewSize.y),
+    );
+
+    if (!next.equals(this._position)) {
+      this._position = next;
+      changed = true;
+    }
+
+    return changed;
   }
 
   public resetMovement = () => {
@@ -325,7 +433,7 @@ export default class NodeflowData {
   }
 
   set position(value) {
-    this._position = value;
+    this.update({ position: value });
   }
 
   set startPosition(value) {
@@ -333,15 +441,19 @@ export default class NodeflowData {
   }
 
   set size(value) {
-    this._size = value;
+    this.update({ size: value });
   }
 
   public updateCanvasSize(size: Vec2): void {
     this._size = size;
+
+    if (this.constrainView()) {
+      this.publishCanvasTransformChanged();
+    }
   }
 
   set zoomLevel(value) {
-    this._zoomLevel = value;
+    this.update({ zoomLevel: value });
   }
 
   set pinchDistance(value) {
@@ -369,6 +481,14 @@ export default class NodeflowData {
     if (data.pinchDistance !== undefined)
       this._pinchDistance = data.pinchDistance;
     if (data.intervalId !== undefined) this._intervalId = data.intervalId;
+
+    if (
+      data.position !== undefined ||
+      data.zoomLevel !== undefined ||
+      data.size !== undefined
+    ) {
+      this.constrainView();
+    }
   }
 
   public updateWithPrevious(
@@ -429,14 +549,17 @@ export default class NodeflowData {
 
     if (distance === 0) return;
 
-    const newZoom = Number(
-      clamp(
-        distance > 0
-          ? oldZoom + oldZoom * distance * this.settings.zoomMultiplier
-          : oldZoom / (1 - distance * this.settings.zoomMultiplier),
-        this.settings.minZoom,
-        this.settings.maxZoom,
-      ).toFixed(4),
+    const rawZoom =
+      distance > 0
+        ? oldZoom + oldZoom * distance * this.settings.zoomMultiplier
+        : oldZoom / (1 - distance * this.settings.zoomMultiplier);
+
+    // Round before clamping so the result can never dip below the effective
+    // minimum (which would let the viewport peek outside a view boundary).
+    const newZoom = clamp(
+      Number(rawZoom.toFixed(4)),
+      Math.min(this.getEffectiveMinZoom(), this.settings.maxZoom),
+      this.settings.maxZoom,
     );
 
     this.mouseData.pointerDown = false;
@@ -827,17 +950,65 @@ export default class NodeflowData {
     );
   }
 
-  public updateHeldNodePosition(moveSpeed: Vec2) {
+  /**
+   * Moves every held node by `moveSpeed`. With a `nodeBoundary` the delta is
+   * shrunk to what *all* held nodes can travel, so a multi-selection stops as
+   * a block instead of piling up against the edge. Returns the applied delta.
+   */
+  public updateHeldNodePosition(moveSpeed: Vec2): Vec2 {
     if (
       !this.settings.canMoveNodes ||
       this.mouseData.selectionBox.boundingBox
     ) {
-      return;
+      return Vec2.zero();
     }
 
-    this.mouseData.heldNodes.forEach(
-      (element) => (element.position = element.position.add(moveSpeed)),
+    const heldNodes = this.mouseData.heldNodes as Array<NodeflowNodeData>;
+    const delta = this.settings.nodeBoundary
+      ? NodeflowData.limitGroupDelta(heldNodes, moveSpeed)
+      : moveSpeed;
+
+    heldNodes.forEach(
+      (element) => (element.position = element.position.add(delta)),
     );
+
+    return delta;
+  }
+
+  private static limitGroupDelta(
+    nodes: Array<NodeflowNodeData>,
+    delta: Vec2,
+  ): Vec2 {
+    let allowX = Infinity;
+    let allowY = Infinity;
+
+    nodes.forEach((node) => {
+      const travel = node.getBoundaryTravel();
+      if (!travel) return;
+
+      // Nodes too large for the boundary stay pinned and don't block the rest.
+      if (travel.high.x >= travel.low.x) {
+        allowX = Math.min(
+          allowX,
+          delta.x > 0
+            ? travel.high.x - node.position.x
+            : node.position.x - travel.low.x,
+        );
+      }
+      if (travel.high.y >= travel.low.y) {
+        allowY = Math.min(
+          allowY,
+          delta.y > 0
+            ? travel.high.y - node.position.y
+            : node.position.y - travel.low.y,
+        );
+      }
+    });
+
+    const limitAxis = (value: number, allowed: number): number =>
+      Math.sign(value) * Math.min(Math.abs(value), Math.max(allowed, 0));
+
+    return Vec2.of(limitAxis(delta.x, allowX), limitAxis(delta.y, allowY));
   }
 
   public setHeldNodePosition(position: Vec2) {
@@ -924,13 +1095,13 @@ export default class NodeflowData {
 
     const localDelta = vector.multiplyBy(speed).divideBy(this.zoomLevel);
 
-    this.updateHeldNodePosition(localDelta);
+    // Scroll by the delta the nodes actually moved so a node pinned against a
+    // boundary doesn't slide out from under the pointer.
+    const applied = this.updateHeldNodePosition(localDelta);
     this.updateWithPrevious((prev) => ({
-      position: prev.position.subtract(localDelta),
+      position: prev.position.subtract(applied),
     }));
-    this.eventStore.onCanvasTransformChanged.publish({
-      position: this.position.serialize(),
-    });
+    this.publishCanvasTransformChanged();
   }
 
   public stopDragEdgeScroll(): void {

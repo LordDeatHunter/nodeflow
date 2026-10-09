@@ -28,6 +28,15 @@
     cursor: grab;
   }
 
+  .nodeflowBoundary {
+    position: absolute;
+    box-sizing: border-box;
+    border: 1px dashed rgba(0, 0, 0, 0.35);
+    background-color: rgba(0, 0, 0, 0.04);
+    pointer-events: none;
+    z-index: 0;
+  }
+
   .nodeflowSelectionBox {
     position: absolute;
     background-color: rgba(0, 0, 0, 0.1);

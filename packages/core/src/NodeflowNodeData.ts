@@ -42,6 +42,7 @@ export default class NodeflowNodeData {
     this._offset = data.offset ?? Vec2.zero();
     this._position = data.position ?? Vec2.zero();
     this._size = data.size ?? Vec2.zero();
+    this._position = this.clampedPosition(this._position);
     this.nodeflowData.chunking.addNodeToChunk(this.id, this.getCenter());
   }
 
@@ -118,15 +119,66 @@ export default class NodeflowNodeData {
     this._position = value;
     this.nodeflowData.chunking.updateNodeInChunk(this.id, oldPos, value);
     this.checkAndResolveCollisions();
+    this.clampToBoundary();
   }
 
   public set size(value: Vec2) {
     this._size = value;
+    this.clampToBoundary();
   }
 
   public updateMeasurements(size: Vec2, offset: Vec2): void {
     this._size = size;
     this._offset = offset;
+    // The node's extent is only known after the adapter measures the DOM, so a
+    // node placed near a boundary edge is pushed fully inside here.
+    this.clampToBoundary();
+  }
+
+  /**
+   * The range `position` may take so the rendered box
+   * (`position` to `position + size + 2 * offset`) stays inside
+   * `settings.nodeBoundary`. `high < low` on an axis means the node is larger
+   * than the boundary on that axis. `undefined` when no boundary is set.
+   */
+  public getBoundaryTravel(): { low: Vec2; high: Vec2 } | undefined {
+    const boundary = this.nodeflowData.settings.nodeBoundary;
+    if (!boundary) return undefined;
+
+    const min = boundary.startPosition();
+    const max = boundary.endPosition();
+    const box = this._size.add(this._offset.multiplyBy(2));
+
+    return { low: min, high: max.subtract(box) };
+  }
+
+  private clampedPosition(position: Vec2): Vec2 {
+    const travel = this.getBoundaryTravel();
+    if (!travel) return position;
+
+    // `low` wins when the node is oversized, pinning it to the top-left corner.
+    const pin = (value: number, low: number, high: number): number =>
+      Math.max(Math.min(value, high), low);
+
+    return Vec2.of(
+      pin(position.x, travel.low.x, travel.high.x),
+      pin(position.y, travel.low.y, travel.high.y),
+    );
+  }
+
+  /**
+   * Moves the node back inside `settings.nodeBoundary` if it has left it.
+   * Returns whether the position changed.
+   */
+  public clampToBoundary(): boolean {
+    const next = this.clampedPosition(this._position);
+    if (next.equals(this._position)) return false;
+
+    const oldPos = this._position;
+    this._position = next;
+    this.nodeflowData.chunking.updateNodeInChunk(this.id, oldPos, next);
+
+    return true;
   }
 
   /**
@@ -199,6 +251,13 @@ export default class NodeflowNodeData {
         data.position,
       );
       this.checkAndResolveCollisions();
+    }
+    if (
+      data.position !== undefined ||
+      data.size !== undefined ||
+      data.offset !== undefined
+    ) {
+      this.clampToBoundary();
     }
   }
 

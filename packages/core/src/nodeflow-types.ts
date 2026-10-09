@@ -1,3 +1,5 @@
+import type Rect from "./Rect";
+
 export type Optional<T> = T | undefined;
 
 export type DeepPartial<T> = T extends object
@@ -127,6 +129,21 @@ export type NodeflowSettings = {
   minZoom: number;
   movementAcceleration: number;
   movementDeceleration: number;
+  /**
+   * Optional canvas-space rectangle that nodes are kept inside. A node's
+   * rendered box (`position` to `position + size + 2 * offset`) is clamped so
+   * it never leaves the rectangle; nodes larger than the rectangle pin to its
+   * top-left corner. `undefined` (default) leaves node placement unbounded.
+   */
+  nodeBoundary?: Rect;
+  /**
+   * Optional canvas-space rectangle that the visible viewport is kept inside.
+   * Panning stops at the edges and zooming out is limited so the viewport never
+   * extends past the rectangle (effective min zoom = max(`minZoom`,
+   * viewportSize / boundarySize)). `undefined` (default) leaves the view
+   * unbounded.
+   */
+  viewBoundary?: Rect;
   zoomMultiplier: number;
 };
 
