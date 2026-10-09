@@ -514,21 +514,25 @@ export default class NodeflowNodeData {
   }
 
   public getAllDestinationConnections(): SerializedConnection[] {
-    return this.getAllDestinationConnectors()
-      .map((destination) => {
-        const filteredSources = destination.sources.filter(
-          (source: any) => source.sourceConnector.parentNode.id === this.id,
-        );
-        return filteredSources.map(
-          (source: any): SerializedConnection => ({
-            sourceNodeId: source.sourceConnector.parentNode.id,
-            sourceConnectorId: source.sourceConnector.id,
-            destinationNodeId: destination.parentNode.id,
-            destinationConnectorId: destination.id,
-          }),
-        );
-      })
-      .flat();
+    const out: SerializedConnection[] = [];
+
+    this._connectorSections.forEach((section) => {
+      section.connectors.forEach((connector) => {
+        connector.destinations.forEach((destination) => {
+          out.push({
+            sourceNodeId: this.id,
+            sourceConnectorId: connector.id,
+            destinationNodeId: destination.destinationConnector.parentNode.id,
+            destinationConnectorId: destination.destinationConnector.id,
+            css: destination.css,
+            shape: destination.shape,
+            dash: destination.dash,
+          });
+        });
+      });
+    });
+
+    return out;
   }
 
   public getAllSourceNodes(): NodeflowNodeData[] {

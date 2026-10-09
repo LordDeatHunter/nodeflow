@@ -185,3 +185,98 @@ describe("NodeflowNodeData – getAllSourceConnections()", () => {
     ]);
   });
 });
+
+describe("NodeflowNodeData – getAllDestinationConnections()", () => {
+  let nf: NodeflowData;
+  let node: NodeflowNodeData;
+  let target: NodeflowNodeData;
+
+  beforeEach(() => {
+    nf = createNodeflow();
+    node = addNode(nf, { id: "source-node" });
+    node.addConnectorSection({ id: "out-sec" }, false);
+    node.addConnector("out-sec", { id: "out-a" }, false);
+    node.addConnector("out-sec", { id: "out-b" }, false);
+
+    target = addNode(nf, { id: "target" });
+    target.addConnectorSection({ id: "in-sec" }, false);
+    target.addConnector("in-sec", { id: "in" }, false);
+  });
+
+  it("returns connections going out to other nodes, with their styling", () => {
+    nf.addConnection(
+      {
+        sourceNodeId: node.id,
+        sourceConnectorId: "out-a",
+        destinationNodeId: "target",
+        destinationConnectorId: "in",
+        css: { normal: "line", selected: "line-selected" },
+        dash: "dotted",
+      },
+      false,
+    );
+
+    expect(node.getAllDestinationConnections()).toEqual([
+      {
+        sourceNodeId: node.id,
+        sourceConnectorId: "out-a",
+        destinationNodeId: "target",
+        destinationConnectorId: "in",
+        css: { normal: "line", selected: "line-selected" },
+        shape: undefined,
+        dash: "dotted",
+      },
+    ]);
+  });
+
+  it("does not return connections coming in from other nodes", () => {
+    target.addConnector("in-sec", { id: "back-out" }, false);
+    node.addConnector("out-sec", { id: "back-in" }, false);
+
+    nf.addConnection(
+      {
+        sourceNodeId: "target",
+        sourceConnectorId: "back-out",
+        destinationNodeId: node.id,
+        destinationConnectorId: "back-in",
+      },
+      false,
+    );
+
+    expect(node.getAllDestinationConnections()).toEqual([]);
+    expect(target.getAllDestinationConnections()).toHaveLength(1);
+  });
+
+  it("returns one entry per connection when several of the node's connectors feed the same connector", () => {
+    nf.addConnection(
+      {
+        sourceNodeId: node.id,
+        sourceConnectorId: "out-a",
+        destinationNodeId: "target",
+        destinationConnectorId: "in",
+        dash: "solid",
+      },
+      false,
+    );
+    nf.addConnection(
+      {
+        sourceNodeId: node.id,
+        sourceConnectorId: "out-b",
+        destinationNodeId: "target",
+        destinationConnectorId: "in",
+        dash: "dashed",
+      },
+      false,
+    );
+
+    const connections = node
+      .getAllDestinationConnections()
+      .map(({ sourceConnectorId, dash }) => ({ sourceConnectorId, dash }))
+      .sort((a, b) => a.sourceConnectorId.localeCompare(b.sourceConnectorId));
+
+    expect(connections).toEqual([
+      { sourceConnectorId: "out-a", dash: "solid" },
+      { sourceConnectorId: "out-b", dash: "dashed" },
+    ]);
+  });
+});
