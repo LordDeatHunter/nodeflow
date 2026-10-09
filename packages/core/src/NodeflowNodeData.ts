@@ -10,6 +10,7 @@ import { NodeflowNodeType } from "./types";
 import Vec2 from "./Vec2";
 import ConnectorSection from "./ConnectorSection";
 import NodeConnector from "./NodeConnector";
+import type ConnectorDestination from "./ConnectorDestination";
 import { deepCopy } from "./misc-utils";
 import Changes from "./Changes";
 import Rect from "./Rect";
@@ -487,19 +488,24 @@ export default class NodeflowNodeData {
     const out: SerializedConnection[] = [];
 
     this._connectorSections.forEach((section) => {
-      section.connectors.forEach((source) => {
-        source.destinations.forEach((destination) => {
-          if (destination.destinationConnector.parentNode.id === this.id) {
-            out.push({
-              sourceNodeId: source.parentNode.id,
-              sourceConnectorId: source.id,
-              destinationNodeId: destination.destinationConnector.parentNode.id,
-              destinationConnectorId: destination.destinationConnector.id,
-              css: destination.css,
-              shape: destination.shape,
-              dash: destination.dash,
-            });
-          }
+      section.connectors.forEach((connector) => {
+        connector.sources.forEach(({ sourceConnector }) => {
+          // The connection's styling lives on the source side.
+          const destination = sourceConnector.destinations.find(
+            (candidate: ConnectorDestination) =>
+              candidate.destinationConnector === connector,
+          );
+          if (!destination) return;
+
+          out.push({
+            sourceNodeId: sourceConnector.parentNode.id,
+            sourceConnectorId: sourceConnector.id,
+            destinationNodeId: this.id,
+            destinationConnectorId: connector.id,
+            css: destination.css,
+            shape: destination.shape,
+            dash: destination.dash,
+          });
         });
       });
     });

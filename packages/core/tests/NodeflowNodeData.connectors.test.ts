@@ -92,4 +92,96 @@ describe("NodeflowNodeData – getAllSourceConnections()", () => {
     expect(connections[0].destinationNodeId).toBe(node.id);
     expect(connections[0].destinationConnectorId).toBe("dst-conn");
   });
+
+  it("returns connections coming in from other nodes, with their styling", () => {
+    const parent = addNode(nf, { id: "parent" });
+    parent.addConnectorSection({ id: "out-sec" }, false);
+    parent.addConnector("out-sec", { id: "out" }, false);
+
+    nf.addConnection(
+      {
+        sourceNodeId: "parent",
+        sourceConnectorId: "out",
+        destinationNodeId: node.id,
+        destinationConnectorId: "dst-conn",
+        css: { normal: "line", selected: "line-selected" },
+        dash: "dotted",
+      },
+      false,
+    );
+
+    expect(node.getAllSourceConnections()).toEqual([
+      {
+        sourceNodeId: "parent",
+        sourceConnectorId: "out",
+        destinationNodeId: node.id,
+        destinationConnectorId: "dst-conn",
+        css: { normal: "line", selected: "line-selected" },
+        shape: undefined,
+        dash: "dotted",
+      },
+    ]);
+  });
+
+  it("does not return connections going out to other nodes", () => {
+    const child = addNode(nf, { id: "child" });
+    child.addConnectorSection({ id: "in-sec" }, false);
+    child.addConnector("in-sec", { id: "in" }, false);
+
+    nf.addConnection(
+      {
+        sourceNodeId: node.id,
+        sourceConnectorId: "src-conn",
+        destinationNodeId: "child",
+        destinationConnectorId: "in",
+      },
+      false,
+    );
+
+    expect(node.getAllSourceConnections()).toEqual([]);
+    expect(child.getAllSourceConnections()).toHaveLength(1);
+    expect(child.getAllSourceConnections()[0].sourceNodeId).toBe(node.id);
+  });
+
+  it("returns one entry per connection when a source feeds several of the node's connectors", () => {
+    const parent = addNode(nf, { id: "parent" });
+    parent.addConnectorSection({ id: "out-sec" }, false);
+    parent.addConnector("out-sec", { id: "out" }, false);
+
+    nf.addConnection(
+      {
+        sourceNodeId: "parent",
+        sourceConnectorId: "out",
+        destinationNodeId: node.id,
+        destinationConnectorId: "src-conn",
+        dash: "solid",
+      },
+      false,
+    );
+    nf.addConnection(
+      {
+        sourceNodeId: "parent",
+        sourceConnectorId: "out",
+        destinationNodeId: node.id,
+        destinationConnectorId: "dst-conn",
+        dash: "dashed",
+      },
+      false,
+    );
+
+    const connections = node
+      .getAllSourceConnections()
+      .map(({ destinationConnectorId, dash }) => ({
+        destinationConnectorId,
+        dash,
+      }))
+      .sort((a, b) =>
+        a.destinationConnectorId.localeCompare(b.destinationConnectorId),
+      );
+
+    expect(connections).toEqual([
+      { destinationConnectorId: "dst-conn", dash: "dashed" },
+      { destinationConnectorId: "src-conn", dash: "solid" },
+    ]);
+  });
 });
