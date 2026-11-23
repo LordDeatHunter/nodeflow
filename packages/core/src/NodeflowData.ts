@@ -471,6 +471,9 @@ export default class NodeflowData {
   }
 
   public update(data: Partial<NodeflowDataType>) {
+    const previousPosition = this._position;
+    const previousZoomLevel = this._zoomLevel;
+
     if (data.currentMoveSpeed !== undefined)
       this._currentMoveSpeed = data.currentMoveSpeed;
     if (data.position !== undefined) this._position = data.position;
@@ -488,6 +491,13 @@ export default class NodeflowData {
       data.size !== undefined
     ) {
       this.constrainView();
+    }
+
+    if (
+      !this._position.equals(previousPosition) ||
+      this._zoomLevel !== previousZoomLevel
+    ) {
+      this.publishCanvasTransformChanged();
     }
   }
 
@@ -1101,7 +1111,6 @@ export default class NodeflowData {
     this.updateWithPrevious((prev) => ({
       position: prev.position.subtract(applied),
     }));
-    this.publishCanvasTransformChanged();
   }
 
   public stopDragEdgeScroll(): void {
