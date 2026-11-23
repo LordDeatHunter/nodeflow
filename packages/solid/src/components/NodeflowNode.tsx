@@ -5,7 +5,12 @@ import {
   For,
   onCleanup,
 } from "solid-js";
-import { NodeflowData, NodeflowNodeData, Vec2 } from "@nodeflow-lib/core";
+import {
+  ConnectorSection,
+  NodeflowData,
+  NodeflowNodeData,
+  Vec2,
+} from "@nodeflow-lib/core";
 import Connector from "./Connector";
 
 interface NodeProps {
@@ -39,11 +44,23 @@ const NodeflowNode: Component<NodeProps> = (props) => {
     );
   });
 
-  const connectorSectionEntries = createMemo(() => {
+  // <For> keys items by reference, so list the section and connector objects
+  // themselves (stable across redraws) rather than fresh [id, value] pairs.
+  const connectorSections = createMemo(() => {
     props.tick();
     const n = props.nodeflowData.nodes.get(props.nodeId);
-    return n ? Array.from(n.connectorSections.entries()) : [];
+    return n ? Array.from(n.connectorSections.values()) : [];
   });
+
+  const sectionConnectors = (section: ConnectorSection) => {
+    props.tick();
+    return Array.from(section.connectors.values());
+  };
+
+  const sectionCss = (section: ConnectorSection) => {
+    props.tick();
+    return section.css ?? "";
+  };
 
   onCleanup(() => {
     const n = props.nodeflowData.nodes.get(props.nodeId);
@@ -118,23 +135,24 @@ const NodeflowNode: Component<NodeProps> = (props) => {
       }
     >
       {node().display({ node: node() })}
-      <For each={connectorSectionEntries()}>
-        {([sectionId, section]) => (
+      <For each={connectorSections()}>
+        {(section) => (
           <div
             classList={{
-              [section?.css ?? ""]: true,
+              [sectionCss(section)]: true,
               nodeflowConnectorSection: true,
             }}
-            id={`section-${sectionId}`}
+            id={`section-${section.id}`}
           >
-            <For each={Array.from(section.connectors.entries())}>
-              {([connectorId, connector]) => (
+            <For each={sectionConnectors(section)}>
+              {(connector) => (
                 <Connector
                   connector={connector}
-                  connectorId={connectorId}
+                  connectorId={connector.id}
                   nodeId={props.nodeId}
-                  sectionId={sectionId}
+                  sectionId={section.id}
                   nodeflowData={props.nodeflowData}
+                  tick={props.tick}
                 />
               )}
             </For>

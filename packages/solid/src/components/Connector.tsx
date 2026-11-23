@@ -7,6 +7,8 @@ interface ConnectorProps {
   nodeId: string;
   sectionId: string;
   nodeflowData: NodeflowData;
+  /** Re-reads the connector's css on each tick when provided. */
+  tick?: () => number;
 }
 
 const Connector: Component<ConnectorProps> = (props) => (
@@ -34,7 +36,7 @@ const Connector: Component<ConnectorProps> = (props) => (
 
       requestAnimationFrame(measure);
     }}
-    class={props.connector?.css}
+    class={(props.tick?.(), props.connector?.css)}
     id={`connector-${props.connectorId}`}
     data-nodeflow-connector={props.connectorId}
     data-nodeflow-node={props.nodeId}
