@@ -1,4 +1,4 @@
-import { NodeflowNodeData, Vec2 } from "@nodeflow-lib/solid";
+import { Changes, NodeflowNodeData, Vec2 } from "@nodeflow-lib/solid";
 import NodeDisplay from "./NodeDisplay";
 import { nodeflowData } from "./App";
 
@@ -6,7 +6,7 @@ export const createDummyNode = (
   position: Vec2,
   centered = false,
 ): NodeflowNodeData => {
-  const historyGroup = crypto.randomUUID();
+  const historyGroup = Changes.createHistoryGroup();
 
   const newNode = nodeflowData.addNode(
     {

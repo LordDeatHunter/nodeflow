@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import { NodeflowNodeData, Vec2 } from "@nodeflow-lib/solid";
+import { Changes, NodeflowNodeData, Vec2 } from "@nodeflow-lib/solid";
 import nodeCss from "./styles/node.module.scss";
 import curveCss from "./styles/curve.module.scss";
 import NumberNode from "./NumberNode";
@@ -49,7 +49,7 @@ export const createBlueprintNode = (
   centered = false,
 ): NodeflowNodeData => {
   const config = NODE_CONFIG[type];
-  const historyGroup = crypto.randomUUID();
+  const historyGroup = Changes.createHistoryGroup();
 
   const newNode = nodeflowData.addNode(
     {
