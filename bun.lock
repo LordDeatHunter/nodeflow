@@ -161,7 +161,7 @@
     },
     "packages/core": {
       "name": "@nodeflow-lib/core",
-      "version": "0.0.1",
+      "version": "0.0.2",
       "devDependencies": {
         "typescript": "^5.6.3",
         "vite": "^4.5.5",
@@ -187,7 +187,7 @@
     },
     "packages/solid": {
       "name": "@nodeflow-lib/solid",
-      "version": "0.0.1",
+      "version": "0.0.2",
       "devDependencies": {
         "typescript": "^5.6.3",
         "vite": "^4.5.5",
