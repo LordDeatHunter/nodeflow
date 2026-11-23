@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Changes from "../src/Changes";
 import type { Change } from "../src/nodeflow-types";
 
@@ -322,6 +322,31 @@ describe("Changes (undo/redo system)", () => {
       const g1 = Changes.evaluateHistoryGroup(true);
       const g2 = Changes.evaluateHistoryGroup(true);
       expect(g1).not.toBe(g2);
+    });
+  });
+
+  describe("Changes.createHistoryGroup()", () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it("works without crypto.randomUUID (insecure contexts)", () => {
+      vi.stubGlobal("crypto", {});
+
+      const g1 = Changes.createHistoryGroup();
+      const g2 = Changes.evaluateHistoryGroup(true);
+
+      expect(typeof g1).toBe("string");
+      expect(g1.length).toBeGreaterThan(0);
+      expect(g2).not.toBe(g1);
+    });
+
+    it("works without a crypto global", () => {
+      vi.stubGlobal("crypto", undefined);
+
+      expect(Changes.createHistoryGroup()).not.toBe(
+        Changes.createHistoryGroup(),
+      );
     });
   });
 });

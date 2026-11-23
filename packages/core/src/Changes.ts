@@ -69,9 +69,29 @@ export default class Changes {
     return true;
   }
 
+  private static historyGroupCounter = 0;
+
+  /**
+   * Creates a unique history group id. `crypto.randomUUID` only exists in
+   * secure contexts (HTTPS or localhost), so pages served over plain HTTP,
+   * e.g. a dev server opened by LAN IP, fall back to a generated id.
+   */
+  public static createHistoryGroup(): string {
+    if (
+      typeof crypto !== "undefined" &&
+      typeof crypto.randomUUID === "function"
+    ) {
+      return crypto.randomUUID();
+    }
+
+    const counter = (++Changes.historyGroupCounter).toString(36);
+    const random = Math.random().toString(36).slice(2);
+    return `${Date.now().toString(36)}-${counter}-${random}`;
+  }
+
   public static evaluateHistoryGroup(historyGroup: string | boolean = true) {
     if (typeof historyGroup === "boolean") {
-      return historyGroup ? crypto.randomUUID() : false;
+      return historyGroup ? Changes.createHistoryGroup() : false;
     }
     return historyGroup;
   }
