@@ -185,6 +185,7 @@ const NodeflowCanvas =
             });
           });
           resizeObserver.observe(el);
+          onCleanup(() => resizeObserver.disconnect());
         }}
         id={`nodeflow-${nodeflowData.id}`}
         tabIndex="0"

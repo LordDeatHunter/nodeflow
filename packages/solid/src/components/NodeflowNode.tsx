@@ -83,6 +83,7 @@ const NodeflowNode: Component<NodeProps> = (props) => {
 
         const resizeObserver = new ResizeObserver(measure);
         resizeObserver.observe(el);
+        onCleanup(() => resizeObserver.disconnect());
 
         // Defer centering adjustment until first layout is available
         requestAnimationFrame(() => {

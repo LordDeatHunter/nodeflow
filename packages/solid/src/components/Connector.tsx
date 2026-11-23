@@ -1,5 +1,5 @@
 import { Vec2, NodeflowData, NodeConnector } from "@nodeflow-lib/core";
-import { Component } from "solid-js";
+import { Component, onCleanup } from "solid-js";
 
 interface ConnectorProps {
   connector: NodeConnector;
@@ -33,6 +33,7 @@ const Connector: Component<ConnectorProps> = (props) => (
 
       const resizeObserver = new ResizeObserver(measure);
       resizeObserver.observe(el);
+      onCleanup(() => resizeObserver.disconnect());
 
       requestAnimationFrame(measure);
     }}
