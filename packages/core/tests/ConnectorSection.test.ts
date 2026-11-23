@@ -14,7 +14,7 @@ function makeMockNode(nodeId = "node-1") {
     getNextFreeConnectorId: () => `connector-${connectorIdCounter++}`,
     getNextFreeConnectorSectionId: () => "section-auto",
     connectorSections: new Map(),
-    nodeflow: {} as any,
+    nodeflow: { publishContentChanged: () => {} } as any,
     addConnector: () => {},
     removeConnector: () => {},
   } as any;
@@ -23,6 +23,7 @@ function makeMockNode(nodeId = "node-1") {
 function makeMockNodeflowData(): NodeflowData {
   return {
     id: "nodeflow-1",
+    publishContentChanged: () => {},
     changes: {
       addChange: () => {},
     },

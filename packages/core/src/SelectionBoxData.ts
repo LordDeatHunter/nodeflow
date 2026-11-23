@@ -18,6 +18,7 @@ export default class SelectionBoxData {
 
   public set boundingBox(value: Rect | undefined) {
     this._boundingBox = value;
+    this.nodeflowData.publishContentChanged();
 
     if (!value) {
       this.selections.selectedNodes.forEach((node) => {

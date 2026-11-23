@@ -125,6 +125,7 @@ export default class NodeflowData {
     this.eventStore = {
       onCanvasTransformChanged:
         new NodeflowEventPublisher<"onCanvasTransformChanged">(this),
+      onContentChanged: new NodeflowEventPublisher<"onContentChanged">(this),
       onKeyDownInNodeflow: new NodeflowEventPublisher<"onKeyDownInNodeflow">(
         this,
       ),
@@ -245,6 +246,7 @@ export default class NodeflowData {
     const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
 
     this.nodes.clear();
+    this.publishContentChanged();
     Object.values(data.nodes).forEach((node) => {
       this.addNode(node, historyGroup);
     });
@@ -302,6 +304,14 @@ export default class NodeflowData {
     this.eventStore.onCanvasTransformChanged.publish({
       position: this.position.serialize(),
     });
+  }
+
+  /**
+   * Notifies subscribers of `onContentChanged`. Called by core whenever it
+   * mutates rendered state; call it after mutating that state directly.
+   */
+  public publishContentChanged(): void {
+    this.eventStore.onContentChanged.publish({});
   }
 
   private static normalizeBoundary(
@@ -620,6 +630,7 @@ export default class NodeflowData {
     const node = NodeflowNodeData.deserialize(this, data, historyGroup);
 
     this.nodes.set(node.id, node);
+    this.publishContentChanged();
 
     if (historyGroup) {
       const oldConnections = node.serializeConnections();
@@ -727,6 +738,7 @@ export default class NodeflowData {
     this.removeOutgoingConnections(nodeId);
 
     this.nodes.delete(nodeId);
+    this.publishContentChanged();
   }
 
   public removeIncomingConnections(nodeId: string) {
@@ -745,6 +757,7 @@ export default class NodeflowData {
         connector.sources = new ArrayWrapper<ConnectorSource>();
       });
     });
+    this.publishContentChanged();
   }
 
   public removeOutgoingConnections(nodeId: string) {
@@ -765,6 +778,7 @@ export default class NodeflowData {
         connector.destinations = new ArrayWrapper<ConnectorDestination>();
       });
     });
+    this.publishContentChanged();
   }
 
   public getAllSourceConnectors(nodeId: string): NodeConnector[] {
@@ -882,6 +896,7 @@ export default class NodeflowData {
         sourceConnector,
       }),
     );
+    this.publishContentChanged();
   }
 
   public removeConnection(
@@ -958,6 +973,7 @@ export default class NodeflowData {
     destinationConnector.sources.filterInPlace(
       (source) => source.sourceConnector.parentNode.id !== sourceNodeId,
     );
+    this.publishContentChanged();
   }
 
   /**

@@ -145,10 +145,12 @@ export default class NodeConnector {
 
   public set css(value) {
     this._css = value;
+    this.publishContentChanged();
   }
 
   public set destinations(value) {
     this._destinations = value;
+    this.publishContentChanged();
   }
 
   public set hovered(value) {
@@ -165,19 +167,27 @@ export default class NodeConnector {
 
   public set position(value) {
     this._position = value;
+    this.publishContentChanged();
   }
 
   public set size(value) {
     this._size = value;
+    this.publishContentChanged();
   }
 
   public updateMeasurements(position: Vec2, size: Vec2): void {
     this._position = position;
     this._size = size;
+    this.publishContentChanged();
+  }
+
+  private publishContentChanged(): void {
+    this.parentNode.nodeflow.publishContentChanged();
   }
 
   public set sources(value) {
     this._sources = value;
+    this.publishContentChanged();
   }
 
   public update(data: Partial<NodeConnectorType>) {
@@ -190,6 +200,7 @@ export default class NodeConnector {
     if (data.position !== undefined) this._position = data.position;
     if (data.size !== undefined) this._size = data.size;
     if (data.sources !== undefined) this._sources = data.sources;
+    this.publishContentChanged();
   }
 
   public updateWithPrevious(

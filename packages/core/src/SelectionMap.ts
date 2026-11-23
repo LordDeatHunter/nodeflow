@@ -33,7 +33,9 @@ export default class SelectionMap {
       node,
       type: SelectableElementType.Node,
     });
-    return this.nodesMap.set(hash, node);
+    this.nodesMap.set(hash, node);
+    this.nodeflowData.publishContentChanged();
+    return this.nodesMap;
   }
 
   public addConnector(connector: any) {
@@ -41,16 +43,21 @@ export default class SelectionMap {
       connector,
       type: SelectableElementType.Connector,
     });
-    return this.connectorsMap.set(hash, connector);
+    this.connectorsMap.set(hash, connector);
+    this.nodeflowData.publishContentChanged();
+    return this.connectorsMap;
   }
 
   public addConnection(connection: SelectableConnection) {
     const hash = SelectionMap.createHash(connection);
-    return this.connectionsMap.set(hash, connection);
+    this.connectionsMap.set(hash, connection);
+    this.nodeflowData.publishContentChanged();
+    return this.connectionsMap;
   }
 
   public addNodeflow() {
     this._hasSelectedNodeflow = true;
+    this.nodeflowData.publishContentChanged();
     return this;
   }
 
@@ -68,6 +75,12 @@ export default class SelectionMap {
   }
 
   public delete(value: SelectableElement) {
+    const result = this.deleteElement(value);
+    this.nodeflowData.publishContentChanged();
+    return result;
+  }
+
+  private deleteElement(value: SelectableElement) {
     const hash = SelectionMap.createHash(value);
     switch (value.type) {
       case SelectableElementType.Connector:
@@ -272,25 +285,30 @@ export default class SelectionMap {
 
   public clearConnectors() {
     this.connectorsMap.clear();
+    this.nodeflowData.publishContentChanged();
   }
 
   public clearNodes() {
     this.nodesMap.clear();
+    this.nodeflowData.publishContentChanged();
   }
 
   public clearConnections() {
     this.connectionsMap.clear();
+    this.nodeflowData.publishContentChanged();
   }
 
   public clearNodeflow() {
     this._hasSelectedNodeflow = false;
+    this.nodeflowData.publishContentChanged();
   }
 
   public clear() {
-    this.clearConnectors();
-    this.clearNodes();
-    this.clearConnections();
-    this.clearNodeflow();
+    this.connectorsMap.clear();
+    this.nodesMap.clear();
+    this.connectionsMap.clear();
+    this._hasSelectedNodeflow = false;
+    this.nodeflowData.publishContentChanged();
   }
 
   public isNodeSelected(nodeId: string): boolean {
@@ -318,6 +336,7 @@ export default class SelectionMap {
         this.nodesMap.delete(node.id);
       }
     }
+    this.nodeflowData.publishContentChanged();
   }
 
   public deleteConnectors(predicate: (connector: any) => boolean) {
@@ -326,6 +345,7 @@ export default class SelectionMap {
         this.connectorsMap.delete(`${connector.parentNode.id}-${connector.id}`);
       }
     }
+    this.nodeflowData.publishContentChanged();
   }
 
   public deleteConnections(
@@ -338,6 +358,7 @@ export default class SelectionMap {
         );
       }
     }
+    this.nodeflowData.publishContentChanged();
   }
 
   public get size() {

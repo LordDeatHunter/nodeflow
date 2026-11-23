@@ -42,6 +42,12 @@ export type NodeCurvePointerDownEventData = ConnectionType & {
 
 export interface NodeflowEventsDataMap {
   onCanvasTransformChanged: { position: { x: number; y: number } };
+  /**
+   * Published whenever something an adapter renders changes, other than the
+   * canvas transform: nodes, connectors, connections, measurements and
+   * selections. Fires once per mutation; adapters should batch redraws.
+   */
+  onContentChanged: Record<string, never>;
   onKeyDownInNodeflow: { event: KeyboardEvent };
   onKeyUpInNodeflow: { event: KeyboardEvent };
   onMouseDownInConnector: NodeConnectorMouseDownEventData;

@@ -92,18 +92,22 @@ export default class NodeflowNodeData {
 
   public set connectorSections(value: Map<string, ConnectorSection>) {
     this._connectorSections = value;
+    this.nodeflowData.publishContentChanged();
   }
 
   public set css(value: SelectableElementCSS) {
     this._css = value;
+    this.nodeflowData.publishContentChanged();
   }
 
   public set customData(value: CustomNodeflowDataType) {
     this._customData = value;
+    this.nodeflowData.publishContentChanged();
   }
 
   public set display(value: any) {
     this._display = value;
+    this.nodeflowData.publishContentChanged();
   }
 
   public set id(value: string) {
@@ -112,6 +116,7 @@ export default class NodeflowNodeData {
 
   public set offset(value: Vec2) {
     this._offset = value;
+    this.nodeflowData.publishContentChanged();
   }
 
   public set position(value: Vec2) {
@@ -120,11 +125,13 @@ export default class NodeflowNodeData {
     this.nodeflowData.chunking.updateNodeInChunk(this.id, oldPos, value);
     this.checkAndResolveCollisions();
     this.clampToBoundary();
+    this.nodeflowData.publishContentChanged();
   }
 
   public set size(value: Vec2) {
     this._size = value;
     this.clampToBoundary();
+    this.nodeflowData.publishContentChanged();
   }
 
   public updateMeasurements(size: Vec2, offset: Vec2): void {
@@ -133,6 +140,7 @@ export default class NodeflowNodeData {
     // The node's extent is only known after the adapter measures the DOM, so a
     // node placed near a boundary edge is pushed fully inside here.
     this.clampToBoundary();
+    this.nodeflowData.publishContentChanged();
   }
 
   /**
@@ -177,6 +185,7 @@ export default class NodeflowNodeData {
     const oldPos = this._position;
     this._position = next;
     this.nodeflowData.chunking.updateNodeInChunk(this.id, oldPos, next);
+    this.nodeflowData.publishContentChanged();
 
     return true;
   }
@@ -259,6 +268,8 @@ export default class NodeflowNodeData {
     ) {
       this.clampToBoundary();
     }
+
+    this.nodeflowData.publishContentChanged();
   }
 
   public updateWithPrevious(
@@ -383,6 +394,7 @@ export default class NodeflowNodeData {
     }
 
     this._connectorSections.set(section.id, section);
+    this.nodeflowData.publishContentChanged();
 
     return section;
   }
@@ -421,6 +433,7 @@ export default class NodeflowNodeData {
     }
 
     this._connectorSections.delete(sectionId);
+    this.nodeflowData.publishContentChanged();
   }
 
   public getConnectorCount(): number {

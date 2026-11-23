@@ -89,6 +89,16 @@ export default class MouseData {
     }>,
   ) {
     Object.assign(this, data);
+    this.publishIfSelectionsReplaced(data);
+  }
+
+  private publishIfSelectionsReplaced(data: {
+    selections?: SelectionMap;
+    selectionBox?: SelectionBoxData;
+  }) {
+    if (data.selections !== undefined || data.selectionBox !== undefined) {
+      this.nodeflowData.publishContentChanged();
+    }
   }
 
   public updateWithPrevious(
@@ -117,6 +127,7 @@ export default class MouseData {
       selectionBox: this.selectionBox,
     });
     Object.assign(this, result);
+    this.publishIfSelectionsReplaced(result);
   }
 
   public reset() {

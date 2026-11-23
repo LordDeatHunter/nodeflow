@@ -12,6 +12,7 @@ function makeMockSection(sectionId = "section-1"): ConnectorSectionType {
     getNextFreeConnectorId: () => "connector-auto",
     position: Vec2.zero(),
     offset: Vec2.zero(),
+    nodeflow: { publishContentChanged: () => {} },
   } as any;
 
   return {

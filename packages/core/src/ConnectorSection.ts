@@ -115,6 +115,7 @@ export default class ConnectorSection {
     }
 
     this._connectors.set(connector.id, connector);
+    this.nodeflowData.publishContentChanged();
 
     return connector;
   }
@@ -163,6 +164,7 @@ export default class ConnectorSection {
     }
 
     this._connectors.delete(connectorId);
+    this.nodeflowData.publishContentChanged();
   }
 
   public get connectors(): Map<string, NodeConnector> {
@@ -171,6 +173,7 @@ export default class ConnectorSection {
 
   public set connectors(value: Map<string, NodeConnector>) {
     this._connectors = value;
+    this.nodeflowData.publishContentChanged();
   }
 
   public get css(): string | undefined {
@@ -179,6 +182,7 @@ export default class ConnectorSection {
 
   public set css(value: string | undefined) {
     this._css = value;
+    this.nodeflowData.publishContentChanged();
   }
 
   public get id(): string {
@@ -202,6 +206,7 @@ export default class ConnectorSection {
       this._connectors = data.connectors as Map<string, NodeConnector>;
     if (data.css !== undefined) this._css = data.css;
     if (data.id !== undefined) this._id = data.id;
+    this.nodeflowData.publishContentChanged();
   }
 
   public updateWithPrevious(
