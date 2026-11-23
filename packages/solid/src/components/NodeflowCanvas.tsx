@@ -30,40 +30,38 @@ interface NodeflowProps {
 const NodeflowCanvas =
   (nodeflowData: NodeflowData): Component<NodeflowProps> =>
   (props) => {
+    // Nodes, connectors, curves and selections redraw on `tick`; the canvas
+    // transform has its own `viewTick`, so panning and zooming never
+    // re-evaluate per-node and per-curve memos.
     const { tick, markDirty } = createTick();
+    const { tick: viewTick, markDirty: markViewDirty } = createTick();
 
-    const dirtyKey = "nodeflow-canvas-dirty-" + nodeflowData.id;
-    NodeflowRegistry.get().globalEventStore.onMouseMoveInDocument.subscribe(
-      dirtyKey,
-      markDirty,
-    );
-    NodeflowRegistry.get().globalEventStore.onPointerUpInDocument.subscribe(
-      dirtyKey,
-      markDirty,
-    );
-    NodeflowRegistry.get().globalEventStore.onPointerLeaveFromDocument.subscribe(
-      dirtyKey,
-      markDirty,
-    );
+    const contentKey = "nodeflow-canvas-content-" + nodeflowData.id;
+    nodeflowData.eventStore.onContentChanged.subscribe(contentKey, markDirty);
 
     const transformKey = "nodeflow-canvas-transform-" + nodeflowData.id;
     nodeflowData.eventStore.onCanvasTransformChanged.subscribe(
       transformKey,
-      markDirty,
+      markViewDirty,
+    );
+
+    // The new-connection preview follows the pointer, which core does not
+    // report as a content change.
+    const pointerKey = "nodeflow-canvas-pointer-" + nodeflowData.id;
+    NodeflowRegistry.get().globalEventStore.onMouseMoveInDocument.subscribe(
+      pointerKey,
+      () => {
+        if (nodeflowData.mouseData.heldConnectors.length === 1) markDirty();
+      },
     );
 
     onCleanup(() => {
-      NodeflowRegistry.get().globalEventStore.onMouseMoveInDocument.unsubscribe(
-        dirtyKey,
-      );
-      NodeflowRegistry.get().globalEventStore.onPointerUpInDocument.unsubscribe(
-        dirtyKey,
-      );
-      NodeflowRegistry.get().globalEventStore.onPointerLeaveFromDocument.unsubscribe(
-        dirtyKey,
-      );
+      nodeflowData.eventStore.onContentChanged.unsubscribe(contentKey);
       nodeflowData.eventStore.onCanvasTransformChanged.unsubscribe(
         transformKey,
+      );
+      NodeflowRegistry.get().globalEventStore.onMouseMoveInDocument.unsubscribe(
+        pointerKey,
       );
     });
 
@@ -120,7 +118,7 @@ const NodeflowCanvas =
     });
 
     const transform = createMemo(() => {
-      tick();
+      viewTick();
       return `scale(${nodeflowData.zoomLevel}) translate(${nodeflowData.position.x}px, ${nodeflowData.position.y}px)`;
     });
 
@@ -140,7 +138,7 @@ const NodeflowCanvas =
     });
 
     const nodeBoundary = createMemo(() => {
-      tick();
+      viewTick();
       return nodeflowData.settings.nodeBoundary;
     });
 
@@ -179,7 +177,6 @@ const NodeflowCanvas =
       <div
         ref={(el) => {
           const resizeObserver = new ResizeObserver(() => {
-            markDirty();
             nodeflowData.updateCanvasSize(
               Vec2.of(el.clientWidth, el.clientHeight),
             );
@@ -200,39 +197,31 @@ const NodeflowCanvas =
           "overscroll-behavior": "contain",
         }}
         onMouseMove={(event) => {
-          markDirty();
           nodeflowData.eventStore.onMouseMoveInNodeflow.publish({ event });
         }}
         onPointerUp={(event) => {
-          markDirty();
           nodeflowData.eventStore.onPointerUpInNodeflow.publish({ event });
         }}
         onWheel={(event) => {
-          markDirty();
           nodeflowData.eventStore.onWheelInNodeflow.publish({ event });
         }}
         onMouseDown={(event) => {
-          markDirty();
           nodeflowData.eventStore.onMouseDownInNodeflow.publish({ event });
         }}
         onKeyDown={(event) => {
-          markDirty();
           nodeflowData.eventStore.onKeyDownInNodeflow.publish({ event });
         }}
         onKeyUp={(event) => {
-          markDirty();
           nodeflowData.eventStore.onKeyUpInNodeflow.publish({ event });
         }}
         onTouchStart={(event) => {
-          markDirty();
           nodeflowData.eventStore.onTouchStartInNodeflow.publish({ event });
         }}
         onTouchMove={(event) => {
-          markDirty();
           nodeflowData.eventStore.onTouchMoveInNodeflow.publish({ event });
+          if (nodeflowData.mouseData.heldConnectors.length === 1) markDirty();
         }}
         onTouchEnd={(event) => {
-          markDirty();
           if (
             !nodeflowData.mouseData.pinching &&
             nodeflowData.mouseData.heldConnectors.length === 1 &&
@@ -244,7 +233,6 @@ const NodeflowCanvas =
           nodeflowData.eventStore.onTouchEndInNodeflow.publish({ event });
         }}
         onTouchCancel={(event) => {
-          markDirty();
           nodeflowData.eventStore.onTouchCancelInNodeflow.publish({ event });
         }}
       >
@@ -309,7 +297,6 @@ const NodeflowCanvas =
                 nodeId={nodeId}
                 nodeflowData={nodeflowData}
                 tick={tick}
-                markDirty={markDirty}
               />
             )}
           </For>

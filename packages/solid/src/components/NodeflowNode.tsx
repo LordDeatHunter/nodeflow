@@ -17,7 +17,6 @@ interface NodeProps {
   nodeId: string;
   nodeflowData: NodeflowData;
   tick: () => number;
-  markDirty?: () => void;
 }
 
 const NodeflowNode: Component<NodeProps> = (props) => {
@@ -82,10 +81,7 @@ const NodeflowNode: Component<NodeProps> = (props) => {
           }
         };
 
-        const resizeObserver = new ResizeObserver(() => {
-          measure();
-          props.markDirty?.();
-        });
+        const resizeObserver = new ResizeObserver(measure);
         resizeObserver.observe(el);
 
         // Defer centering adjustment until first layout is available
