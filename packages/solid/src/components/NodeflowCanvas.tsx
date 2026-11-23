@@ -1,16 +1,25 @@
 import { Component, createMemo, For, onCleanup, Show } from "solid-js";
 import {
+  ConnectorDestination,
   NodeflowData,
   NodeflowCss,
+  NodeflowRegistry,
   Vec2,
   SelectableElementCSS,
 } from "@nodeflow-lib/core";
-import { NodeflowRegistry } from "@nodeflow-lib/core";
 import NodeflowNode from "./NodeflowNode";
 import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
 import SelectionBox from "./SelectionBox";
 import { createTick } from "../tick";
+
+interface ConnectionEntry {
+  sourceNodeId: string;
+  sourceConnectorId: string;
+  destinationNodeId: string;
+  destinationConnectorId: string;
+  css: SelectableElementCSS;
+}
 
 interface NodeflowProps {
   css?: NodeflowCss;
@@ -63,28 +72,45 @@ const NodeflowCanvas =
       return Array.from(nodeflowData.nodes.keys());
     });
 
+    // <For> keys items by reference, so each connection must map to the same
+    // entry object across redraws or its curve is torn down and rebuilt.
+    const connectionEntries = new WeakMap<
+      ConnectorDestination,
+      ConnectionEntry
+    >();
+
     const connectionList = createMemo(() => {
       tick();
-      const out: Array<{
-        sourceNodeId: string;
-        sourceConnectorId: string;
-        destinationNodeId: string;
-        destinationConnectorId: string;
-        css: SelectableElementCSS;
-      }> = [];
+      const out: ConnectionEntry[] = [];
 
       for (const [nodeId, node] of nodeflowData.nodes) {
         for (const section of node.connectorSections.values()) {
           for (const connector of section.connectors.values()) {
             for (const dest of connector.destinations.array) {
-              out.push({
-                sourceNodeId: nodeId,
-                sourceConnectorId: connector.id,
-                destinationNodeId:
-                  dest.destinationConnector.parentSection.parentNode.id,
-                destinationConnectorId: dest.destinationConnector.id,
-                css: dest.css,
-              });
+              const destinationNodeId =
+                dest.destinationConnector.parentSection.parentNode.id;
+              const destinationConnectorId = dest.destinationConnector.id;
+              let entry = connectionEntries.get(dest);
+
+              if (
+                !entry ||
+                entry.sourceNodeId !== nodeId ||
+                entry.sourceConnectorId !== connector.id ||
+                entry.destinationNodeId !== destinationNodeId ||
+                entry.destinationConnectorId !== destinationConnectorId ||
+                entry.css !== dest.css
+              ) {
+                entry = {
+                  sourceNodeId: nodeId,
+                  sourceConnectorId: connector.id,
+                  destinationNodeId,
+                  destinationConnectorId,
+                  css: dest.css,
+                };
+                connectionEntries.set(dest, entry);
+              }
+
+              out.push(entry);
             }
           }
         }
