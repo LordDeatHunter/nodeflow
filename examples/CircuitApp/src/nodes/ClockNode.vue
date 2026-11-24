@@ -1,22 +1,30 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import type { NodeflowNodeData } from "@nodeflow-lib/vue";
 import { outputLevel, stop, updateCustomData, useCustomData } from "./common";
-import { CLOCK_PERIODS, clockPeriod } from "../simulation";
+import { CLOCK_PERIODS, clockPeriod, frameCount } from "../simulation";
+import ClockSymbol from "../components/parts/ClockSymbol.vue";
+
+/** How many past frames the trace shows. */
+const TRACE_FRAMES = 12;
 
 const props = defineProps<{ node: NodeflowNodeData }>();
 const data = useCustomData(props.node);
 const high = computed(() => !!outputLevel(props.node, "output-0"));
+
+// The level at the end of each past frame; the live level is drawn last.
+const history = ref<Array<boolean>>(Array(TRACE_FRAMES - 1).fill(false));
+watch(frameCount, () => {
+  history.value = [...history.value.slice(1), high.value];
+});
+const trace = computed(() => [...history.value, high.value]);
 </script>
 
 <template>
-  <div class="node-body node-body--source">
-    <span class="node-label">
-      Clock
-      <span class="led" :class="{ 'led--on': high }" aria-hidden="true" />
-    </span>
+  <div class="part">
+    <ClockSymbol :trace="trace" />
     <select
-      class="node-control"
+      class="part-picker part-picker--clock"
       :value="clockPeriod(data.period)"
       aria-label="Clock period in frames"
       @change="

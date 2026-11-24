@@ -3,6 +3,7 @@ import { onBeforeUnmount, ref } from "vue";
 import type { NodeflowNodeData } from "@nodeflow-lib/vue";
 import { simulationOf } from "../simulation";
 import { stop, updateCustomData, useCustomData } from "./common";
+import ButtonSymbol from "../components/parts/ButtonSymbol.vue";
 
 const props = defineProps<{ node: NodeflowNodeData }>();
 const data = useCustomData(props.node);
@@ -40,9 +41,22 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="node-body node-body--source">
+  <div class="part">
+    <ButtonSymbol :pressed="pressed" />
+    <button
+      type="button"
+      class="part-hit push-button"
+      :aria-pressed="pressed"
+      aria-label="Hold to send a high signal"
+      title="Hold to send a high signal"
+      @pointerdown="press"
+      @mousedown="stop"
+      @keydown="onKey($event, true)"
+      @keyup="onKey($event, false)"
+      @blur="release"
+    />
     <input
-      class="node-name"
+      class="node-name part-name"
       :value="data.name ?? ''"
       placeholder="Button"
       aria-label="Button name"
@@ -54,19 +68,6 @@ onBeforeUnmount(() => {
       @keydown="stop"
       @pointerdown="stop"
       @mousedown="stop"
-    />
-    <button
-      type="button"
-      class="push-button"
-      :class="{ 'push-button--down': pressed }"
-      :aria-pressed="pressed"
-      aria-label="Hold to send a high signal"
-      title="Hold to send a high signal"
-      @pointerdown="press"
-      @mousedown="stop"
-      @keydown="onKey($event, true)"
-      @keyup="onKey($event, false)"
-      @blur="release"
     />
   </div>
 </template>

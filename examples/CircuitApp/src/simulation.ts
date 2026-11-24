@@ -443,9 +443,14 @@ export const simulationOf = (
   nodeflow: NodeflowData,
 ): CircuitSimulation | undefined => simulations.get(nodeflow);
 
+/** Frames advanced so far; displays that draw over time track it. */
+export const frameCount = ref(0);
+
 /** Advances every canvas one frame. */
-export const stepFrame = () =>
+export const stepFrame = () => {
   simulations.forEach((simulation) => simulation.frame());
+  frameCount.value++;
+};
 
 let frameTimer: ReturnType<typeof setInterval> | undefined;
 watch(

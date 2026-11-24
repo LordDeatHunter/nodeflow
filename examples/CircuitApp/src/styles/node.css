@@ -43,7 +43,11 @@
   height: 100%;
 }
 
+/* Parts are drawn at this size (components/parts/geometry.ts). */
 .node--gate,
+.node--switch,
+.node--button,
+.node--clock,
 .node--lamp {
   width: 144px;
 }
@@ -131,16 +135,6 @@
   padding: 12px 22px;
 }
 
-.node-body--source {
-  align-items: flex-start;
-}
-
-.node-body--sink {
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
-}
-
 .node-label {
   display: flex;
   align-items: center;
@@ -179,8 +173,8 @@
   background-color: rgba(3, 8, 6, 0.5);
 }
 
-.node-control,
-.gate-kind {
+.gate-kind,
+.part-picker {
   padding: 3px 6px;
   border: 1px solid var(--panel-border);
   border-radius: 6px;
@@ -192,8 +186,8 @@
   cursor: pointer;
 }
 
-.node-control:focus,
-.gate-kind:focus {
+.gate-kind:focus,
+.part-picker:focus {
   border-color: var(--accent-line);
 }
 
@@ -231,84 +225,39 @@
   box-shadow: 0 0 8px var(--signal-glow);
 }
 
-/* ─── Switch and push button ──────────────────────────────────────────────── */
-
-.toggle {
-  position: relative;
-  width: 52px;
-  height: 26px;
-  padding: 0;
-  border: 1px solid var(--panel-border);
-  border-radius: 999px;
-  background-color: #1a2a22;
-  cursor: pointer;
-  transition: background-color 120ms ease;
-}
-
-.toggle-knob {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background-color: var(--text-muted);
-  transition:
-    transform 140ms ease,
-    background-color 120ms ease;
-}
-
-.toggle--on {
-  background-color: rgba(89, 255, 156, 0.25);
-  border-color: var(--accent-line);
-}
-
-.toggle--on .toggle-knob {
-  transform: translateX(26px);
-  background-color: var(--signal);
-  box-shadow: 0 0 10px var(--signal-glow);
-}
-
-.push-button {
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border: 3px solid #26392f;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #ff8f7d, #c2412f 70%);
-  box-shadow: 0 3px 0 #5d1b12;
-  cursor: pointer;
-  touch-action: none;
-  transition:
-    transform 60ms ease,
-    box-shadow 60ms ease;
-}
-
-.push-button--down {
-  transform: translateY(2px);
-  box-shadow:
-    0 1px 0 #5d1b12,
-    0 0 14px rgba(255, 120, 100, 0.55);
-}
-
 /* ─── Gates ───────────────────────────────────────────────────────────────── */
 
 /*
- * A gate node is just its symbol: no frame, pins drawn from the node edges
- * (where the connectors sit) to the body.
+ * Gates and the other parts are just their schematic symbols: no frame, pins
+ * drawn from the node edges (where the connectors sit) to the symbol.
  */
-.node.node--gate {
+.node.node--gate,
+.node.node--switch,
+.node.node--button,
+.node.node--clock,
+.node.node--lamp,
+.node.node--hex {
   border: none;
   border-radius: 12px;
   background: none;
   box-shadow: none;
 }
 
-.node.node--gate:hover {
+.node.node--gate:hover,
+.node.node--switch:hover,
+.node.node--button:hover,
+.node.node--clock:hover,
+.node.node--lamp:hover,
+.node.node--hex:hover {
   background-color: rgba(89, 255, 156, 0.03);
 }
 
-.node.node--gate.node--selected {
+.node.node--gate.node--selected,
+.node.node--switch.node--selected,
+.node.node--button.node--selected,
+.node.node--clock.node--selected,
+.node.node--lamp.node--selected,
+.node.node--hex.node--selected {
   background-color: var(--accent-soft);
   box-shadow: 0 0 0 1.5px var(--accent);
 }
@@ -357,14 +306,14 @@
 }
 
 /* Pins match the wires they meet. */
-.gate-pin {
+.pin {
   stroke: var(--copper);
   stroke-width: 3.5px;
   stroke-linecap: round;
   transition: stroke 90ms linear;
 }
 
-.gate-pin--on {
+.pin--on {
   stroke: var(--signal);
 }
 
@@ -394,77 +343,245 @@
 }
 
 /* Connectors are the pin tips: invisible until hovered. */
-.node--gate .connector {
+.node--gate .connector,
+.node--switch .connector,
+.node--button .connector,
+.node--clock .connector,
+.node--lamp .connector,
+.node--hex .connector {
   border-color: transparent;
   background-color: transparent;
   box-shadow: none;
 }
 
-.node--gate .connector:hover {
+.node--gate .connector:hover,
+.node--switch .connector:hover,
+.node--button .connector:hover,
+.node--clock .connector:hover,
+.node--lamp .connector:hover,
+.node--hex .connector:hover {
   border-color: var(--accent);
   transform: none;
 }
 
-/* ─── Lamp and hex display ────────────────────────────────────────────────── */
+/* ─── Switch, button, clock, lamp and hex display ─────────────────────────── */
 
-.lamp {
-  flex: none;
-  width: 34px;
-  height: 34px;
-  margin-left: 4px;
-  border-radius: 50%;
-  border: 3px solid #26392f;
-  background: radial-gradient(circle at 35% 30%, #3b4a42, #17211c 70%);
-  transition:
-    background 90ms linear,
-    box-shadow 90ms linear;
-}
-
-.lamp--on {
-  background: radial-gradient(circle at 35% 30%, #f4fff8, var(--signal) 60%);
-  box-shadow:
-    0 0 18px var(--signal-glow),
-    0 0 40px rgba(89, 255, 156, 0.2);
-}
-
-.node-body--hex {
+.part {
   position: relative;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0 18px 0 0;
-}
-
-/* Spread like the input pads, so each label sits by its pad. */
-.bit-labels {
-  position: absolute;
-  top: 0;
-  left: 16px;
+  width: 100%;
   height: 100%;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  font-size: 0.6rem;
-  color: var(--text-muted);
 }
 
-.hex-digit {
-  width: 64px;
-  height: 84px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  background-color: #050b08;
-  box-shadow: inset 0 0 0 1px rgba(89, 255, 156, 0.18);
-  color: var(--signal);
-  font-size: 3rem;
+.part .part-symbol {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.part-stroke,
+.part-rail {
+  stroke: var(--copper);
+  stroke-width: 3px;
+  stroke-linecap: round;
+}
+
+/* The supply rail is always high. */
+.part-rail {
+  stroke: var(--signal);
+  stroke-width: 4px;
+}
+
+.part-dot {
+  fill: var(--copper);
+}
+
+.part-dot--on {
+  fill: var(--signal);
+}
+
+.part-contact {
+  fill: var(--board-color);
+  stroke: var(--copper);
+  stroke-width: 2.5px;
+  transition: stroke 90ms linear;
+}
+
+.part-contact--on {
+  stroke: var(--signal);
+}
+
+/* Clickable area over the switch blade or button plunger. */
+.part-hit {
+  position: absolute;
+  left: 28px;
+  top: 6px;
+  width: 84px;
+  height: 56px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: none;
+  cursor: pointer;
+}
+
+.part-hit:hover {
+  border-color: var(--panel-border);
+}
+
+.part-name {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  width: 104px;
+  margin: 0;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.part-picker {
+  position: absolute;
+  left: 58px;
+  bottom: 2px;
+  transform: translateX(-50%);
+  padding: 1px 2px;
+  border-color: transparent;
+  background: none;
+  appearance: none;
+  -webkit-appearance: none;
+  color: var(--text-color);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+.part-picker:hover {
+  border-color: var(--panel-border);
+  background-color: rgba(3, 8, 6, 0.6);
+}
+
+.part-picker option {
+  background-color: var(--node-color);
+}
+
+.switch-blade {
+  stroke: var(--copper);
+  stroke-width: 4px;
+  stroke-linecap: round;
+  transform-origin: 40px 48px;
+  transform: rotate(-30deg);
+  transition:
+    transform 160ms cubic-bezier(0.5, 1.8, 0.6, 1),
+    stroke 90ms linear;
+}
+
+.switch-blade--closed {
+  stroke: var(--signal);
+  transform: rotate(0deg);
+}
+
+.plunger {
+  transition: transform 70ms ease-out;
+}
+
+.plunger--down {
+  transform: translateY(12px);
+}
+
+.plunger-bar {
+  stroke: var(--copper);
+  stroke-width: 4px;
+  stroke-linecap: round;
+  transition: stroke 70ms linear;
+}
+
+.plunger--down .plunger-bar,
+.plunger--down .part-stroke {
+  stroke: var(--signal);
+}
+
+.scope {
+  fill: color-mix(in srgb, var(--signal) 4%, #020604);
+  stroke: var(--copper-dim);
+  stroke-width: 2px;
+}
+
+.scope-grid {
+  stroke: rgba(89, 255, 156, 0.1);
+  stroke-width: 1px;
+  stroke-dasharray: 3 4;
+}
+
+.clock-trace {
+  fill: none;
+  stroke: var(--copper);
+  stroke-width: 2.5px;
+  stroke-linejoin: round;
+}
+
+.clock-trace--on {
+  stroke: var(--signal);
+  filter: drop-shadow(0 0 3px var(--signal-glow));
+}
+
+.lamp-halo {
+  fill: var(--signal);
+  opacity: 0;
+  filter: blur(10px);
+  transition: opacity 120ms linear;
+}
+
+.lamp-bulb {
+  fill: color-mix(in srgb, var(--copper) 10%, var(--board-color));
+  stroke: var(--copper);
+  stroke-width: 2.5px;
+  transition:
+    fill 120ms linear,
+    stroke 120ms linear;
+}
+
+.lamp-filament {
+  stroke: var(--copper-dim);
+  stroke-width: 2.5px;
+  stroke-linecap: round;
+  transition: stroke 120ms linear;
+}
+
+.lamp--on .lamp-halo {
+  opacity: 0.35;
+}
+
+.lamp--on .lamp-bulb {
+  fill: color-mix(in srgb, var(--signal) 22%, var(--board-color));
+  stroke: var(--signal);
+}
+
+.lamp--on .lamp-filament {
+  stroke: #e9fff1;
+}
+
+.bit-label {
+  fill: var(--text-muted);
+  font-size: 10px;
   font-weight: 600;
-  line-height: 1;
-  text-shadow: 0 0 16px var(--signal-glow);
+  text-anchor: middle;
+}
+
+.bit-label--on {
+  fill: var(--signal);
+}
+
+.segment {
+  stroke: rgba(89, 255, 156, 0.07);
+  stroke-width: 8px;
+  stroke-linecap: round;
+  transition: stroke 90ms linear;
+}
+
+.segment--on {
+  stroke: var(--signal);
+  filter: drop-shadow(0 0 4px var(--signal-glow));
 }
 
 /* ─── Chips ───────────────────────────────────────────────────────────────── */

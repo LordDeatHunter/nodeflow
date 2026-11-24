@@ -1,10 +1,9 @@
 import { gateInputCount, type GateKind } from "../simulation";
+import { connectorYs, PART_HEIGHT, PART_WIDTH } from "./parts/geometry";
 
-/** Gate nodes are drawn in node pixels: 144×96, matching `.node--gate`. */
-export const GATE_WIDTH = 144;
-export const GATE_HEIGHT = 96;
-/** A connector's box (`.connector`), centred on the node edge. */
-const CONNECTOR_SIZE = 20;
+/** Gate nodes are drawn in node pixels, like every part. */
+export const GATE_WIDTH = PART_WIDTH;
+export const GATE_HEIGHT = PART_HEIGHT;
 
 /**
  * Body outlines are authored in a 70×40 box (bodies span y 4–36) and scaled
@@ -104,12 +103,11 @@ export interface GateGeometry {
 export const gateGeometry = (kind: GateKind): GateGeometry => {
   const outline = OUTLINES[kind];
   const count = gateInputCount(kind);
-  // `space-evenly` spreads the connector boxes, not their centres.
-  const gap = (GATE_HEIGHT - count * CONNECTOR_SIZE) / (count + 1);
-  const inputs = Array.from({ length: count }, (_, i) => {
-    const y = gap * (i + 1) + CONNECTOR_SIZE * (i + 0.5);
-    return { x1: 0, x2: toNodeX(outline.backAt(toBodyY(y))), y };
-  });
+  const inputs = connectorYs(count, GATE_HEIGHT).map((y) => ({
+    x1: 0,
+    x2: toNodeX(outline.backAt(toBodyY(y))),
+    y,
+  }));
   const front =
     outline.bubble === undefined
       ? outline.front

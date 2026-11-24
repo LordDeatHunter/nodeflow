@@ -2,28 +2,18 @@
 import { computed } from "vue";
 import type { NodeflowNodeData } from "@nodeflow-lib/vue";
 import { inputLevel } from "./common";
+import HexSymbol from "../components/parts/HexSymbol.vue";
 
 const props = defineProps<{ node: NodeflowNodeData }>();
 
 /** Inputs top to bottom are the 1, 2, 4 and 8 bits. */
-const BITS = [0, 1, 2, 3];
-
-const value = computed(() =>
-  BITS.reduce(
-    (total, bit) =>
-      inputLevel(props.node, `input-${bit}`) ? total + (1 << bit) : total,
-    0,
-  ),
+const bits = computed(() =>
+  [0, 1, 2, 3].map((bit) => inputLevel(props.node, `input-${bit}`)),
 );
 </script>
 
 <template>
-  <div class="node-body node-body--hex">
-    <ul class="bit-labels" aria-hidden="true">
-      <li v-for="bit in BITS" :key="bit">{{ 1 << bit }}</li>
-    </ul>
-    <output class="hex-digit" :aria-label="`Value ${value}`">
-      {{ value.toString(16).toUpperCase() }}
-    </output>
+  <div class="part">
+    <HexSymbol :bits="bits" />
   </div>
 </template>

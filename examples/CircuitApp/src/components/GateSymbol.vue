@@ -33,16 +33,16 @@ const geometry = computed(() => gateGeometry(props.kind));
     <line
       v-for="(pin, i) in geometry.inputs"
       :key="i"
-      class="gate-pin"
-      :class="{ 'gate-pin--on': inputsOn?.[i] }"
+      class="pin"
+      :class="{ 'pin--on': inputsOn?.[i] }"
       :x1="pin.x1"
       :x2="pin.x2"
       :y1="pin.y"
       :y2="pin.y"
     />
     <line
-      class="gate-pin"
-      :class="{ 'gate-pin--on': on }"
+      class="pin"
+      :class="{ 'pin--on': on }"
       :x1="geometry.output.x1"
       :x2="geometry.output.x2"
       :y1="geometry.output.y"
