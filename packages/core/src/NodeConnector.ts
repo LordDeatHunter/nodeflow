@@ -57,8 +57,7 @@ export default class NodeConnector {
       ...this.sources.map(({ sourceConnector }) => {
         const destination = sourceConnector.destinations.find(
           (destination: ConnectorDestination) =>
-            destination.destinationConnector.parentNode.id ===
-            this.parentNode.id,
+            destination.destinationConnector.isSameConnector(this),
         );
         return {
           sourceNodeId: sourceConnector.parentNode.id,
@@ -129,6 +128,14 @@ export default class NodeConnector {
 
   public get parentNode() {
     return this._parentSection.parentNode;
+  }
+
+  /**
+   * Whether `other` is this connector: same node and connector id. Compares
+   * ids, not objects, so connectors rebuilt by undo/redo still match.
+   */
+  public isSameConnector(other: NodeConnector): boolean {
+    return other.id === this.id && other.parentNode.id === this.parentNode.id;
   }
 
   public get position() {
@@ -217,7 +224,7 @@ export default class NodeConnector {
     this.sources.forEach(({ sourceConnector }) => {
       sourceConnector.destinations.filterInPlace(
         ({ destinationConnector }: ConnectorDestination) =>
-          destinationConnector.parentNode.id !== this.id,
+          !destinationConnector.isSameConnector(this),
       );
     });
     this.sources = new ArrayWrapper<ConnectorSource>();
@@ -230,7 +237,7 @@ export default class NodeConnector {
     this.destinations.forEach(({ destinationConnector }) => {
       destinationConnector.sources.filterInPlace(
         ({ sourceConnector }: ConnectorSource) =>
-          sourceConnector.parentNode.id !== this.id,
+          !sourceConnector.isSameConnector(this),
       );
     });
     this.destinations = new ArrayWrapper<ConnectorDestination>();

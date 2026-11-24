@@ -264,6 +264,86 @@ describe("NodeflowData", () => {
       expect(sourceConnector.destinations.length).toBe(0);
     });
 
+    describe("between two inputs of the same node", () => {
+      // One output feeding inputs i0 and i1 of the same node.
+      const setup = () => {
+        addNodeWithConnector(canvas, { x: 0, y: 0 }, "src", "s0", "out");
+        const dst = canvas.addNode(
+          {
+            id: "dst",
+            position: { x: 200, y: 0 },
+            connectorSections: {
+              s0: {
+                id: "s0",
+                connectors: {
+                  i0: { id: "i0", hovered: false, position: { x: 0, y: 0 } },
+                  i1: { id: "i1", hovered: false, position: { x: 0, y: 0 } },
+                },
+              },
+            },
+          },
+          false,
+        );
+        ["i0", "i1"].forEach((input) =>
+          canvas.addConnection(
+            {
+              sourceNodeId: "src",
+              sourceConnectorId: "out",
+              destinationNodeId: "dst",
+              destinationConnectorId: input,
+              css: { normal: `wire-${input}` },
+            },
+            false,
+          ),
+        );
+        return {
+          output: canvas.nodes.get("src")!.getConnector("out")!,
+          i0: dst.getConnector("i0")!,
+          i1: dst.getConnector("i1")!,
+        };
+      };
+
+      it("removes only the given wire", () => {
+        const { output, i0, i1 } = setup();
+        canvas.removeConnection("src", "out", "dst", "i0", false);
+
+        expect(output.destinations.map((d) => d.destinationConnector.id)).toEqual(
+          ["i1"],
+        );
+        expect(i0.sources.length).toBe(0);
+        expect(i1.sources.length).toBe(1);
+      });
+
+      it("restores the removed wire's own css on undo", () => {
+        const { output } = setup();
+        canvas.removeConnection("src", "out", "dst", "i1");
+        canvas.changes.undo();
+
+        const restored = output.destinations.find(
+          (d) => d.destinationConnector.id === "i1",
+        );
+        expect(restored?.css).toEqual({ normal: "wire-i1" });
+      });
+
+      it("removeOutgoingConnections on the output clears both inputs", () => {
+        const { output, i0, i1 } = setup();
+        output.removeOutgoingConnections();
+
+        expect(i0.sources.length).toBe(0);
+        expect(i1.sources.length).toBe(0);
+      });
+
+      it("removeIncomingConnections on one input leaves the other", () => {
+        const { output, i0, i1 } = setup();
+        i0.removeIncomingConnections();
+
+        expect(output.destinations.map((d) => d.destinationConnector.id)).toEqual(
+          ["i1"],
+        );
+        expect(i1.sources.length).toBe(1);
+      });
+    });
+
     it("does not throw when removing a non-existent connection", () => {
       canvas.addNode({ id: "n1" }, false);
       expect(() =>

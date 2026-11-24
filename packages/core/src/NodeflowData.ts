@@ -1051,9 +1051,8 @@ export default class NodeflowData {
     const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
 
     if (historyGroup) {
-      const destination = sourceConnector.destinations.find(
-        (destination) =>
-          destination.destinationConnector.parentNode.id === destinationNodeId,
+      const destination = sourceConnector.destinations.find((destination) =>
+        destination.destinationConnector.isSameConnector(destinationConnector),
       );
       const { css, shape, dash } = destination ?? {};
 
@@ -1091,13 +1090,15 @@ export default class NodeflowData {
       });
     }
 
+    // Match connectors, not nodes: other wires between the same two nodes
+    // (e.g. one output feeding two inputs) must stay.
     sourceConnector.destinations.filterInPlace(
       (destination) =>
-        destination.destinationConnector.parentNode.id !== destinationNodeId,
+        !destination.destinationConnector.isSameConnector(destinationConnector),
     );
 
     destinationConnector.sources.filterInPlace(
-      (source) => source.sourceConnector.parentNode.id !== sourceNodeId,
+      (source) => !source.sourceConnector.isSameConnector(sourceConnector),
     );
     this.publishContentChanged();
   }
