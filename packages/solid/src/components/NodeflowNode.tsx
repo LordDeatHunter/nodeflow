@@ -46,6 +46,13 @@ const NodeflowNode: Component<NodeProps> = (props) => {
     );
   });
 
+  // Apps lay rotated nodes out from `data-nodeflow-rotation` (see
+  // `NodeRotation`); 0 leaves the attribute off.
+  const rotation = createMemo(() => {
+    props.tick();
+    return props.nodeflowData.nodes.get(props.nodeId)?.rotation ?? 0;
+  });
+
   // Read css straight off the tick: node() keeps the same object reference
   // when the node is updated in place, so it never re-notifies on css changes.
   const nodeCss = createMemo(
@@ -127,6 +134,7 @@ const NodeflowNode: Component<NodeProps> = (props) => {
       }}
       id={`node-${props.nodeId}`}
       data-nodeflow-node={props.nodeId}
+      data-nodeflow-rotation={rotation() || undefined}
       class="nodeflowNode"
       classList={{
         [nodeCss().normal]: true,

@@ -7,6 +7,7 @@ import {
   SelectableElementType,
   NodeflowSettings,
   SerializedCompositeDefinition,
+  NodeRotation,
 } from "./nodeflow-types";
 import Vec2 from "./Vec2";
 import Rect from "./Rect";
@@ -90,6 +91,8 @@ export type NodeflowNodeType = {
   offset: Vec2;
   position: Vec2;
   size: Vec2;
+  /** Clockwise rotation; see `NodeRotation`. 0 when missing. */
+  rotation?: NodeRotation;
   composite?: SerializedCompositeDefinition;
 };
 

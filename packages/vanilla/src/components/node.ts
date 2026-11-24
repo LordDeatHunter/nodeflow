@@ -23,6 +23,8 @@ interface NodeElementState {
   sections: Map<ConnectorSection, SectionElement>;
   /** Last applied class list, so unchanged nodes skip DOM writes. */
   className: string;
+  /** Last applied `data-nodeflow-rotation`. */
+  rotation: number;
   frame?: number;
   /** The element returned by the node's `display`, if any. */
   display?: Node;
@@ -155,6 +157,15 @@ export const syncNode = (
 
   let changed = false;
 
+  // Apps lay rotated nodes out from this attribute (see `NodeRotation`).
+  if (node.rotation !== state.rotation) {
+    state.rotation = node.rotation;
+    if (node.rotation) nodeDiv.dataset.nodeflowRotation = String(node.rotation);
+    else delete nodeDiv.dataset.nodeflowRotation;
+    // Connectors may move to other edges without resizing.
+    changed = true;
+  }
+
   state.sections.forEach((element, section) => {
     if (node.connectorSections.get(section.id) === section) return;
     element.observer.disconnect();
@@ -198,8 +209,9 @@ export const syncNode = (
     });
   });
 
-  // Sections are absolutely positioned, so adding or removing one does not
-  // resize the node; re-measure its connectors once the change is laid out.
+  // Sections are absolutely positioned, so adding or removing one (or
+  // rotating the node) does not resize the node; re-measure its connectors
+  // once the change is laid out.
   if (changed) {
     requestAnimationFrame(() =>
       state.sections.forEach((element) => measureSection(element)),
@@ -227,6 +239,7 @@ export const renderNode = (
     observers: [],
     sections: new Map(),
     className: "",
+    rotation: 0,
   };
   nodeStates.set(nodeDiv, state);
 

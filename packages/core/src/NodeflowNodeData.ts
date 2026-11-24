@@ -6,6 +6,7 @@ import {
   SerializedConnectorSection,
   SerializedNodeConnector,
   SerializedNodeflowNode,
+  NodeRotation,
 } from "./nodeflow-types";
 import { DisplayFunc, NodeflowNodeType } from "./types";
 import Vec2 from "./Vec2";
@@ -27,6 +28,7 @@ export default class NodeflowNodeData {
   private _offset: Vec2;
   private _position: Vec2;
   private _size: Vec2;
+  private _rotation: NodeRotation;
   private _composite: SerializedCompositeDefinition | undefined;
   private readonly nodeflowData: NodeflowData;
 
@@ -44,6 +46,7 @@ export default class NodeflowNodeData {
     this._offset = data.offset ?? Vec2.zero();
     this._position = data.position ?? Vec2.zero();
     this._size = data.size ?? Vec2.zero();
+    this._rotation = data.rotation ?? 0;
     this._composite = data.composite;
     this._position = this.normalizedPosition(this._position);
     this.nodeflowData.chunking.addNodeToChunk(this.id, this._position);
@@ -96,6 +99,26 @@ export default class NodeflowNodeData {
   }
 
   /** The inner graph of a composite node; `undefined` for plain nodes. */
+  /** Clockwise rotation in degrees; see `NodeRotation`. */
+  public get rotation(): NodeRotation {
+    return this._rotation;
+  }
+
+  public set rotation(value: NodeRotation) {
+    this._rotation = value;
+    this.nodeflowData.publishContentChanged();
+  }
+
+  /**
+   * The rotation `steps` quarter turns clockwise from the current one
+   * (negative for counter-clockwise). Apply it with `NodeflowData.updateNode`
+   * to make it undoable.
+   */
+  public rotatedBy(steps: number): NodeRotation {
+    const quarters = (((this._rotation / 90 + steps) % 4) + 4) % 4;
+    return (quarters * 90) as NodeRotation;
+  }
+
   public get composite(): SerializedCompositeDefinition | undefined {
     return this._composite;
   }
@@ -309,6 +332,7 @@ export default class NodeflowNodeData {
     if (data.id !== undefined) this.reindexId(data.id);
     if (data.offset !== undefined) this._offset = data.offset;
     if (data.size !== undefined) this._size = data.size;
+    if (data.rotation !== undefined) this._rotation = data.rotation;
     if (data.composite !== undefined) this._composite = data.composite;
     if (data.size !== undefined || data.offset !== undefined) {
       this.trackExtent();
@@ -347,6 +371,7 @@ export default class NodeflowNodeData {
       offset: this._offset,
       position: this._position,
       size: this._size,
+      rotation: this._rotation,
       composite: this._composite,
     };
     const updates = updater(current);
@@ -374,6 +399,7 @@ export default class NodeflowNodeData {
       offset: this._offset.serialize(),
       position: this._position.serialize(),
       size: this._size.serialize(),
+      rotation: this._rotation,
       ...(this._composite && { composite: deepCopy(this._composite) }),
     };
   }
@@ -398,6 +424,7 @@ export default class NodeflowNodeData {
       offset: Vec2.deserializeOrDefault(data.offset),
       position: Vec2.deserializeOrDefault(data.position),
       size: Vec2.deserializeOrDefault(data.size),
+      rotation: data.rotation ?? 0,
       composite: deepCopy(data.composite),
     });
 

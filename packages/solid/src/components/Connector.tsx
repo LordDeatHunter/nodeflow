@@ -1,5 +1,5 @@
 import { Vec2, NodeflowData, NodeConnector } from "@nodeflow-lib/core";
-import { Component, onCleanup } from "solid-js";
+import { Component, createEffect, onCleanup } from "solid-js";
 
 interface ConnectorProps {
   connector: NodeConnector;
@@ -38,6 +38,18 @@ const Connector: Component<ConnectorProps> = (props) => (
       onCleanup(() => {
         resizeObserver.disconnect();
         siblingObserver.disconnect();
+      });
+
+      // Rotating the node can move its connectors to other edges without
+      // resizing anything; re-measure once the new layout is in.
+      let lastRotation: number | undefined;
+      createEffect(() => {
+        props.tick?.();
+        const rotation = props.nodeflowData.nodes.get(props.nodeId)?.rotation;
+        if (rotation === lastRotation) return;
+        const first = lastRotation === undefined;
+        lastRotation = rotation;
+        if (!first) requestAnimationFrame(measure);
       });
 
       // The element is only in its section once it has been inserted.

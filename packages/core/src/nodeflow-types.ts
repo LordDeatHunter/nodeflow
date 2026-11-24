@@ -231,6 +231,13 @@ export interface SerializedMouseData {
   selections: Record<string, SerializedSelectableElement>;
 }
 
+/**
+ * A node's clockwise rotation in degrees. Core stores it and adapters expose
+ * it on the node element as `data-nodeflow-rotation`; laying the node out for
+ * it (e.g. moving connector sections to other edges) is up to the app's CSS.
+ */
+export type NodeRotation = 0 | 90 | 180 | 270;
+
 export interface SerializedNodeflowNode {
   centered: boolean;
   connectorSections: Record<string, SerializedConnectorSection>;
@@ -241,6 +248,8 @@ export interface SerializedNodeflowNode {
   offset: SerializedVec2;
   position: SerializedVec2;
   size: SerializedVec2;
+  /** Clockwise rotation; 0 when missing. */
+  rotation?: NodeRotation;
   /**
    * Set on composite nodes: the inner graph the node stands in for. See
    * `NodeflowData.createCompositeNode`.
