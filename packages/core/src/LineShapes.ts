@@ -28,12 +28,32 @@ const straightPath = ({ start, end }: LineShapeContext): string =>
   `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
 
 /**
- * A Manhattan/step route: runs flat out of the dominant axis from `start`,
- * breaks at the midpoint, then runs flat into `end`. The break replaces the
- * smooth bend of a curve with hard corners.
+ * Picks the axis a step route leaves `start` along. The anchor direction
+ * (`start` → `anchorStart`) describes which way the connector faces, so it
+ * wins; only when it is degenerate does the dominant delta decide.
  */
-const brokenFlatLinePath = ({ start, end }: LineShapeContext): string => {
-  if (Math.abs(end.x - start.x) >= Math.abs(end.y - start.y)) {
+const leavesHorizontally = ({
+  start,
+  end,
+  anchorStart,
+}: LineShapeContext): boolean => {
+  const exitX = Math.abs(anchorStart.x - start.x);
+  const exitY = Math.abs(anchorStart.y - start.y);
+  if (exitX !== exitY) {
+    return exitX > exitY;
+  }
+
+  return Math.abs(end.x - start.x) >= Math.abs(end.y - start.y);
+};
+
+/**
+ * A Manhattan/step route: runs flat out of `start` along the connector's exit
+ * axis, breaks at the midpoint, then runs flat into `end`. The break replaces
+ * the smooth bend of a curve with hard corners.
+ */
+const brokenFlatLinePath = (context: LineShapeContext): string => {
+  const { start, end } = context;
+  if (leavesHorizontally(context)) {
     const midX = (start.x + end.x) / 2;
     return `M ${start.x} ${start.y} L ${midX} ${start.y} L ${midX} ${end.y} L ${end.x} ${end.y}`;
   }

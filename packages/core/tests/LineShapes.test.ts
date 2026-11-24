@@ -93,6 +93,24 @@ describe("LineShapes", () => {
       expect(path).toBe("M 0 0 L 0 50 L 20 50 L 20 100");
     });
 
+    it("follows a horizontal anchor even when the y delta dominates", () => {
+      const path = createLinePath(
+        "broken-flat-line",
+        context([0, 0], [20, 100], [13, 0], [7, 100]),
+      );
+
+      expect(path).toBe("M 0 0 L 10 0 L 10 100 L 20 100");
+    });
+
+    it("follows a vertical anchor even when the x delta dominates", () => {
+      const path = createLinePath(
+        "broken-flat-line",
+        context([0, 0], [100, 50], [0, 30], [100, 20]),
+      );
+
+      expect(path).toBe("M 0 0 L 0 25 L 100 25 L 100 50");
+    });
+
     it("always ends exactly at the destination", () => {
       const path = createLinePath("broken-flat-line", context([7, 3], [90, 40]));
 
