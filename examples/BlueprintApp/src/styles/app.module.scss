@@ -513,3 +513,121 @@ $palette-animation-time: 0.3s;
     padding-left: 18px;
   }
 }
+
+// ─── Palette header links ────────────────────────────────────────────────────
+
+.hotbarActions {
+  display: flex;
+  gap: 14px;
+  margin-top: 2px;
+}
+
+.linkButton {
+  padding: 0;
+  border: none;
+  background: none;
+  color: rgba(132, 195, 255, 0.85);
+  font: inherit;
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-decoration: underline;
+  text-decoration-color: rgba(132, 195, 255, 0.35);
+  text-underline-offset: 3px;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    color: colors.$dark-9;
+    text-decoration-color: currentColor;
+  }
+}
+
+// ─── Dialogs ─────────────────────────────────────────────────────────────────
+
+.dialogBackdrop {
+  position: fixed;
+  inset: 0;
+  // Above everything, the context menu included.
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background-color: rgba(4, 7, 12, 0.6);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.dialog {
+  width: min(440px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(164, 181, 178, 0.18);
+  background-color: colors.$panel-background-color;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.9);
+  color: colors.$dark-9;
+}
+
+.dialogTitle {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: colors.$dark-7;
+}
+
+%dialogField {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(164, 181, 178, 0.22);
+  background-color: rgba(10, 15, 23, 0.6);
+  color: colors.$dark-9;
+  font: inherit;
+  outline: none;
+
+  &:focus {
+    border-color: rgba(132, 195, 255, 0.55);
+  }
+}
+
+.dialogInput {
+  @extend %dialogField;
+
+  font-size: 0.95rem;
+}
+
+.dialogText {
+  @extend %dialogField;
+
+  height: 120px;
+  resize: vertical;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.dialogNote {
+  margin: 0;
+  font-size: 0.68rem;
+  line-height: 1.45;
+  color: colors.$font-color-muted;
+}
+
+.dialogError {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #ff9c8a;
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

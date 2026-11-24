@@ -21,6 +21,7 @@ import appCss from "./styles/app.module.scss";
 import NewNodeSlot from "./NewNodeSlot";
 import ContextMenu, { ContextMenuItem } from "./ContextMenu";
 import DerivedTypeEditor from "./DerivedTypeEditor";
+import SavedTypeDialogs, { SavedTypeDialogState } from "./SavedTypeDialogs";
 import {
   editorData,
   editorSession,
@@ -93,6 +94,8 @@ const App: Component = () => {
   });
   const [menu, setMenu] = createSignal<Optional<PaletteMenu>>(undefined);
   const [paletteOpen, setPaletteOpen] = createSignal(false);
+  const [dialog, setDialog] =
+    createSignal<Optional<SavedTypeDialogState>>(undefined);
   let palette: HTMLDivElement | undefined;
 
   const openMenu = (entry: Preview, x: number, y: number) => {
@@ -121,6 +124,16 @@ const App: Component = () => {
               onSelect: () => openTemplateEditor(entry.templateId),
             },
           ]),
+      {
+        label: "Rename",
+        onSelect: () =>
+          setDialog({ kind: "rename", templateId: entry.templateId }),
+      },
+      {
+        label: "Export",
+        onSelect: () =>
+          setDialog({ kind: "export", templateIds: [entry.templateId] }),
+      },
       {
         label: "Delete",
         danger: true,
@@ -306,6 +319,24 @@ const App: Component = () => {
                 itself, and types built from it, can't be added.
               </Show>
             </p>
+            <div class={appCss.hotbarActions}>
+              <button
+                type="button"
+                class={appCss.linkButton}
+                onClick={() => setDialog({ kind: "import" })}
+              >
+                Import types
+              </button>
+              <Show when={savedTypes().length > 0}>
+                <button
+                  type="button"
+                  class={appCss.linkButton}
+                  onClick={() => setDialog({ kind: "export" })}
+                >
+                  Export all types
+                </button>
+              </Show>
+            </div>
           </div>
           <div class={appCss.slots}>
             <For each={BUILT_IN_TYPES}>
@@ -381,6 +412,14 @@ const App: Component = () => {
             title={labelOf(open().entry)}
             items={menuItems(open().entry)}
             onClose={() => setMenu(undefined)}
+          />
+        )}
+      </Show>
+      <Show when={dialog()} keyed>
+        {(open) => (
+          <SavedTypeDialogs
+            dialog={open}
+            onClose={() => setDialog(undefined)}
           />
         )}
       </Show>
