@@ -10,6 +10,7 @@ const FOLDER_MAP = {
     "BlueprintApp": "blueprint",
     "FamilyTreeApp": "familytree",
     "NoStyle": "nostyle",
+    "CircuitApp": "circuit",
 };
 
 const recreateFolder = (path) => {

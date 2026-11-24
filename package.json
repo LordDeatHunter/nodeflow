@@ -19,6 +19,7 @@
     "dev:svelte": "bun --cwd=./examples/SvelteApp run start",
     "dev:vue": "bun --cwd=./examples/VueApp run start",
     "dev:vanilla": "bun --cwd=./examples/VanillaApp run start",
+    "dev:circuit": "bun --cwd=./examples/CircuitApp run start",
     "lint": "eslint .",
     "test": "bunx turbo test",
     "typecheck": "turbo typecheck",

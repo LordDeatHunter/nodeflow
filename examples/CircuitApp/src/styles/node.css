@@ -1,0 +1,558 @@
+/* ─── Node frames ─────────────────────────────────────────────────────────── */
+
+.node {
+  width: 168px;
+  height: 96px;
+  border-radius: 10px;
+  border: 1px solid var(--node-border-color);
+  background-color: var(--node-color);
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.045),
+    rgba(0, 0, 0, 0.22)
+  );
+  color: var(--text-strong);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 0 1px var(--node-edge-color),
+    0 10px 22px -10px rgba(0, 0, 0, 0.7);
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.node:hover {
+  background-color: var(--node-hover-color);
+  z-index: 3;
+}
+
+.node--selected {
+  background-color: var(--node-hover-color);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 0 1px var(--accent),
+    0 0 0 5px var(--accent-soft),
+    0 0 26px var(--signal-glow);
+  cursor: grabbing;
+  z-index: 3;
+}
+
+/* The element `createNodeDisplay` mounts each Vue display into. */
+.node > div:not(.nodeflowConnectorSection) {
+  width: 100%;
+  height: 100%;
+}
+
+.node--gate,
+.node--lamp {
+  width: 144px;
+}
+
+.node--hex {
+  width: 144px;
+  height: 120px;
+}
+
+/* Chips size to their pin list. */
+.node--chip {
+  width: 288px;
+  height: auto;
+  min-height: 144px;
+  border-top: 3px solid var(--chip-color);
+}
+
+/* Chip-editor terminals grow with their pin count. */
+.node--terminal {
+  width: 216px;
+  height: auto;
+  min-height: 144px;
+  border-style: dashed;
+  border-color: rgba(185, 140, 255, 0.45);
+}
+
+/* ─── Connectors (pads) ───────────────────────────────────────────────────── */
+
+/* 14px pad + 3px ring = 20px, centered on the node edge. */
+.connector {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 3px solid var(--node-border-color);
+  cursor: crosshair;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease;
+}
+
+.connector:hover {
+  transform: scale(1.35);
+}
+
+.connector--input {
+  background-color: var(--input-connector-color);
+}
+
+.connector--output {
+  background-color: var(--output-connector-color);
+}
+
+.inputs-section {
+  left: -10px;
+}
+
+.outputs-section {
+  right: 10px;
+  left: auto;
+}
+
+/*
+ * Terminal pins sit in fixed rows lined up with the pin names: the list
+ * starts 56px down (16px padding + 28px header + 12px gap) and each 24px row
+ * centres a 20px pad.
+ */
+.terminal-section {
+  top: 56px;
+  height: auto;
+  justify-content: flex-start;
+  gap: 4px;
+  padding-top: 2px;
+}
+
+/* ─── Shared node content ─────────────────────────────────────────────────── */
+
+.node-body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 22px;
+}
+
+.node-body--source {
+  align-items: flex-start;
+}
+
+.node-body--sink {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.node-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.node-name {
+  width: 100%;
+  min-width: 0;
+  padding: 2px 6px;
+  margin-left: -6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  outline: none;
+}
+
+.node-name::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.node-name:hover,
+.node-name:focus {
+  border-color: var(--accent-line);
+  background-color: rgba(3, 8, 6, 0.5);
+}
+
+.node-control,
+.gate-kind {
+  padding: 3px 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background-color: rgba(3, 8, 6, 0.6);
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 0.74rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.node-control:focus,
+.gate-kind:focus {
+  border-color: var(--accent-line);
+}
+
+.node-button {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid var(--accent-line);
+  border-radius: 7px;
+  background-color: var(--accent-soft);
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.node-button:hover {
+  background-color: rgba(89, 255, 156, 0.2);
+}
+
+/* A small status light. */
+.led {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #1d3328;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+  transition:
+    background-color 90ms linear,
+    box-shadow 90ms linear;
+}
+
+.led--on {
+  background-color: var(--signal);
+  box-shadow: 0 0 8px var(--signal-glow);
+}
+
+/* ─── Switch and push button ──────────────────────────────────────────────── */
+
+.toggle {
+  position: relative;
+  width: 52px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background-color: #1a2a22;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--text-muted);
+  transition:
+    transform 140ms ease,
+    background-color 120ms ease;
+}
+
+.toggle--on {
+  background-color: rgba(89, 255, 156, 0.25);
+  border-color: var(--accent-line);
+}
+
+.toggle--on .toggle-knob {
+  transform: translateX(26px);
+  background-color: var(--signal);
+  box-shadow: 0 0 10px var(--signal-glow);
+}
+
+.push-button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 3px solid #26392f;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff8f7d, #c2412f 70%);
+  box-shadow: 0 3px 0 #5d1b12;
+  cursor: pointer;
+  touch-action: none;
+  transition:
+    transform 60ms ease,
+    box-shadow 60ms ease;
+}
+
+.push-button--down {
+  transform: translateY(2px);
+  box-shadow:
+    0 1px 0 #5d1b12,
+    0 0 14px rgba(255, 120, 100, 0.55);
+}
+
+/* ─── Gates ───────────────────────────────────────────────────────────────── */
+
+.node-body--gate {
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+}
+
+.gate-symbol {
+  width: 84px;
+  height: 48px;
+  overflow: visible;
+}
+
+.gate-body,
+.gate-line {
+  fill: rgba(201, 139, 69, 0.08);
+  stroke: var(--copper);
+  stroke-width: 2.2px;
+  stroke-linejoin: round;
+  transition:
+    stroke 90ms linear,
+    fill 90ms linear;
+}
+
+.gate-line {
+  fill: none;
+}
+
+.gate-symbol--on .gate-body,
+.gate-symbol--on .gate-line {
+  stroke: var(--signal);
+}
+
+.gate-symbol--on .gate-body {
+  fill: rgba(89, 255, 156, 0.12);
+}
+
+.gate-kind {
+  padding: 1px 4px;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+}
+
+/* ─── Lamp and hex display ────────────────────────────────────────────────── */
+
+.lamp {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  margin-left: 4px;
+  border-radius: 50%;
+  border: 3px solid #26392f;
+  background: radial-gradient(circle at 35% 30%, #3b4a42, #17211c 70%);
+  transition:
+    background 90ms linear,
+    box-shadow 90ms linear;
+}
+
+.lamp--on {
+  background: radial-gradient(circle at 35% 30%, #f4fff8, var(--signal) 60%);
+  box-shadow:
+    0 0 18px var(--signal-glow),
+    0 0 40px rgba(89, 255, 156, 0.2);
+}
+
+.node-body--hex {
+  position: relative;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 18px 0 0;
+}
+
+/* Spread like the input pads, so each label sits by its pad. */
+.bit-labels {
+  position: absolute;
+  top: 0;
+  left: 16px;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+.hex-digit {
+  width: 64px;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background-color: #050b08;
+  box-shadow: inset 0 0 0 1px rgba(89, 255, 156, 0.18);
+  color: var(--signal);
+  font-size: 3rem;
+  font-weight: 600;
+  line-height: 1;
+  text-shadow: 0 0 16px var(--signal-glow);
+}
+
+/* ─── Chips ───────────────────────────────────────────────────────────────── */
+
+.node-body--chip {
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 14px 22px 16px;
+}
+
+.chip-name {
+  width: 100%;
+  padding: 3px 6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.chip-name:hover,
+.chip-name:focus {
+  border-color: rgba(185, 140, 255, 0.45);
+  background-color: rgba(3, 8, 6, 0.5);
+}
+
+.chip-ports {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.port-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.port-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.port-list--outputs {
+  align-items: flex-end;
+  text-align: right;
+}
+
+/* A pin the type's author named, e.g. "sum". */
+.port-name {
+  color: var(--text-strong);
+  font-weight: 600;
+}
+
+.chip-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ─── Chip-editor terminals ───────────────────────────────────────────────── */
+
+/* Fixed px sizes: rows must line up with `.terminal-section` above. */
+.terminal-root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px 18px;
+}
+
+.terminal-header {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.terminal-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.terminal-button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(185, 140, 255, 0.45);
+  border-radius: 7px;
+  background-color: rgba(185, 140, 255, 0.1);
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.terminal-button:hover:not(:disabled) {
+  background-color: rgba(185, 140, 255, 0.22);
+}
+
+.terminal-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.terminal-ports {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.terminal-ports li {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.terminal-ports--right {
+  align-items: flex-end;
+}
+
+.port-name-input {
+  width: 128px;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-strong);
+  font: inherit;
+  outline: none;
+}
+
+.terminal-ports--right .port-name-input {
+  text-align: right;
+}
+
+.port-name-input::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.port-name-input:hover,
+.port-name-input:focus {
+  border-color: rgba(185, 140, 255, 0.45);
+  background-color: rgba(3, 8, 6, 0.5);
+}

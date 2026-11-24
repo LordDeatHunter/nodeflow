@@ -14,6 +14,7 @@ const DEV_PORTS: Record<string, number> = {
   ReactApp: 3005,
   SvelteApp: 3006,
   VueApp: 3007,
+  circuit: 3008,
 };
 
 Bun.serve({

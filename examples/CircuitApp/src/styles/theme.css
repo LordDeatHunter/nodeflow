@@ -1,0 +1,94 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+/* A dark circuit board: green solder mask, copper traces that light up. */
+:root {
+  --board-color: #07110d;
+  --panel-color: rgba(7, 18, 13, 0.78);
+  --panel-border: rgba(140, 200, 165, 0.16);
+
+  --node-color: #0f2119;
+  --node-hover-color: #15301f;
+  --node-border-color: #030806;
+  --node-edge-color: rgba(140, 200, 165, 0.16);
+
+  --text-color: #d9e8df;
+  --text-strong: #f1f7f3;
+  --text-muted: #7f9a8c;
+
+  --copper: #c98b45;
+  --copper-dim: #6d5534;
+  --signal: #59ff9c;
+  --signal-glow: rgba(89, 255, 156, 0.35);
+  --accent: #59ff9c;
+  --accent-soft: rgba(89, 255, 156, 0.12);
+  --accent-line: rgba(89, 255, 156, 0.38);
+  --chip-color: #b98cff;
+  --danger: #ff8a7a;
+
+  --input-connector-color: #e0b061;
+  --output-connector-color: #8fe3b4;
+
+  --grid-dot-color: rgba(120, 190, 150, 0.16);
+  --grid-line-color: rgba(120, 190, 150, 0.05);
+  --grid-glow-color: rgba(89, 255, 156, 0.05);
+  --grid-vignette-color: rgba(2, 6, 4, 0.6);
+}
+
+* {
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: #2a4436 transparent;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  position: fixed;
+  inset: 0;
+  font-family: "IBM Plex Mono", "Roboto Mono", ui-monospace, monospace;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--board-color);
+  color: var(--text-color);
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+::selection {
+  background-color: rgba(89, 255, 156, 0.3);
+  color: var(--text-strong);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Core layout tweaks: connectors run down the left and right node edges. */
+.nodeflowConnectorSection {
+  position: absolute;
+  flex-direction: column;
+  justify-content: space-evenly;
+  width: 0;
+  top: 0;
+  height: 100%;
+}
+
+.nodeflowSelectionBox {
+  background-color: rgba(89, 255, 156, 0.06);
+  border: 1.5px dashed rgba(89, 255, 156, 0.55);
+  border-radius: 8px;
+}
+
+.circuit-canvas {
+  overflow: hidden;
+  background-color: var(--board-color);
+}

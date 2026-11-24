@@ -10,7 +10,7 @@ TypeScript library for flowcharts/graphs/diagrams, now a framework-agnostic mono
 - `@nodeflow-lib/solid` (`packages/solid`) — SolidJS adapter. Depends on **core**.
 - `@nodeflow-lib/vanilla` (`packages/vanilla`) — plain-DOM adapter. Depends on **core**.
 - `@nodeflow-lib/react`, `@nodeflow-lib/vue`, `@nodeflow-lib/svelte` — thin wrappers depending on **`@nodeflow-lib/vanilla`** (not core) and re-exporting it.
-- `examples/*` — one app per adapter plus Solid examples (`BlueprintApp`, `FamilyTreeApp`, `NoStyle`).
+- `examples/*` — one app per adapter, Solid examples (`BlueprintApp`, `FamilyTreeApp`, `NoStyle`), and `CircuitApp` (Vue logic-gate editor at Blueprint parity: chips = composite nodes, saved chip types, nested chip editor; signals simulated in `src/simulation.ts`).
 - Solid/vanilla entrypoints re-export core (`export * from "@nodeflow-lib/core"`), so consumers get core types through the adapter they import.
 
 ## Commands (from repo root)
@@ -27,7 +27,7 @@ TypeScript library for flowcharts/graphs/diagrams, now a framework-agnostic mono
 
 ### Dev servers
 
-`bun run dev` / `bun run start` runs `run-p "dev:*"`, i.e. **everything at once**: landing `:3000`, Blueprint `:3001`, FamilyTree `:3002`, NoStyle `:3003`, Vanilla `:3004`, React `:3005`, Svelte `:3006`, Vue `:3007`. For a single app use `bun run dev:react` (etc.). Ports are hardcoded in each `examples/*/vite.config.ts`; a new example needs a unique port plus a new `dev:<name>` root script.
+`bun run dev` / `bun run start` runs `run-p "dev:*"`, i.e. **everything at once**: landing `:3000`, Blueprint `:3001`, FamilyTree `:3002`, NoStyle `:3003`, Vanilla `:3004`, React `:3005`, Svelte `:3006`, Vue `:3007`, Circuit `:3008`. For a single app use `bun run dev:react` (etc.). Ports are hardcoded in each `examples/*/vite.config.ts`; a new example needs a unique port plus a new `dev:<name>` root script.
 
 ## Critical gotchas
 
