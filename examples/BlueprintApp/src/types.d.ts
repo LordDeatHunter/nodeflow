@@ -8,7 +8,8 @@ declare global {
       | "negation"
       | "plusMinus"
       | "display"
-      | "derived";
+      | "derived"
+      | "terminal";
     value?: number;
     /** Operator nodes: `^` is power, `√` is root (square root with one input). */
     operator?: "+" | "-" | "*" | "/" | "%" | "^" | "√";
@@ -16,5 +17,7 @@ declare global {
     name?: string;
     /** Derived nodes: id of the saved type this node was saved as. */
     templateId?: string;
+    /** Derived-type editor terminals: which side of the type they stand for. */
+    side?: "inputs" | "outputs";
   }
 }

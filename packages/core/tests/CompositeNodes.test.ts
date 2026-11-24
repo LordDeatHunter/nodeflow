@@ -278,6 +278,94 @@ describe("NodeflowData.explodeCompositeNode", () => {
   });
 });
 
+describe("composite fan-out ports", () => {
+  it("explode re-wires an input port to every target", () => {
+    const nf = createNodeflow();
+    addNode(nf, "src", 0, 0, 0, 1);
+    addNode(nf, "x", 300, 0, 1, 1);
+    addNode(nf, "y", 300, 200, 1, 1);
+    const composite = nf.createCompositeNode(["x", "y"])!;
+    const definition = composite.composite!;
+    const [first, second] = definition.inputs;
+    nf.updateCompositeNode(composite.id, {
+      ...definition,
+      inputs: [
+        {
+          ...first,
+          extraTargets: [
+            {
+              innerNodeId: second.innerNodeId,
+              innerConnectorId: second.innerConnectorId,
+            },
+          ],
+        },
+      ],
+    });
+    connect(nf, "src", composite.id, "input-0");
+
+    nf.explodeCompositeNode(composite.id);
+
+    expect(allConnections(nf)).toEqual(
+      ["src.output-0->x.input-0", "src.output-0->y.input-0"].sort(),
+    );
+  });
+});
+
+describe("NodeflowData.updateCompositeNode", () => {
+  it("keeps wires to remaining ports and drops the rest", () => {
+    const nf = buildDemo();
+    addNode(nf, "c", 0, 400, 0, 1);
+    // Composite of sum alone: inputs input-0/input-1, output output-0.
+    const composite = nf.createCompositeNode(["sum"])!;
+    const definition = composite.composite!;
+
+    const updated = nf.updateCompositeNode(composite.id, {
+      ...definition,
+      inputs: [definition.inputs[0]],
+    })!;
+
+    expect(updated.id).toBe(composite.id);
+    expect(updated.composite!.inputs).toHaveLength(1);
+    expect(updated.connectorSections.get("inputs")!.connectors.size).toBe(1);
+    expect(allConnections(nf)).toEqual(
+      [
+        `a.output-0->${composite.id}.input-0`,
+        `${composite.id}.output-0->display.input-0`,
+      ].sort(),
+    );
+  });
+
+  it("keeps group membership and is one undo step", () => {
+    const nf = buildDemo();
+    const composite = nf.createCompositeNode(["sum"])!;
+    const group = nf.addGroup([composite.id, "display"], { title: "g" })!;
+    const before = allConnections(nf);
+    const definition = composite.composite!;
+
+    nf.updateCompositeNode(composite.id, { ...definition, inputs: [] });
+
+    expect(nf.getGroupOfNode(composite.id)?.id).toBe(group.id);
+    expect(nf.nodes.get(composite.id)!.composite!.inputs).toHaveLength(0);
+
+    nf.changes.undo();
+    expect(nf.nodes.get(composite.id)!.composite!.inputs).toHaveLength(2);
+    expect(allConnections(nf)).toEqual(before);
+    expect(nf.getGroupOfNode(composite.id)?.id).toBe(group.id);
+  });
+
+  it("ignores plain nodes", () => {
+    const nf = buildDemo();
+    expect(
+      nf.updateCompositeNode("sum", {
+        nodes: {},
+        connections: [],
+        inputs: [],
+        outputs: [],
+      }),
+    ).toBeUndefined();
+  });
+});
+
 describe("composite serialization", () => {
   it("round-trips through serialize/deserialize", () => {
     const nf = buildDemo();

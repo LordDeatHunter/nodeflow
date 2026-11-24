@@ -5,6 +5,7 @@ import type NodeflowNodeData from "./NodeflowNodeData";
 import type NodeConnector from "./NodeConnector";
 import type {
   CompositePort,
+  CompositePortTarget,
   SelectableElementCSS,
   SerializedCompositeDefinition,
   SerializedConnection,
@@ -257,6 +258,14 @@ export const stripNodeDisplay = <T extends Partial<SerializedNodeflowNode>>(
     ...(composite && { composite: stripDefinitionDisplay(composite) }),
   } as T;
 };
+
+/** Every inner connector a port maps to: its main target, then extras. */
+export const getCompositePortTargets = (
+  port: CompositePort,
+): Array<CompositePortTarget> => [
+  { innerNodeId: port.innerNodeId, innerConnectorId: port.innerConnectorId },
+  ...(port.extraTargets ?? []),
+];
 
 /** The inner node a composite's port maps to, if any. */
 export const getCompositePort = (

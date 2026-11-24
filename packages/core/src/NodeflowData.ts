@@ -4,6 +4,7 @@ import {
   NodeflowSettings,
   Optional,
   SelectableElementType,
+  SerializedCompositeDefinition,
   SerializedConnection,
   SerializedNodeflowData,
   SerializedNodeflowGroup,
@@ -16,6 +17,7 @@ import {
   analyzeCompositeSelection,
   CompositeNodeOptions,
   createCompositeSections,
+  getCompositePortTargets,
 } from "./CompositeNodes";
 import { NodeflowEventRecord } from "./EventPublishers";
 import { NodeflowDataType, NodeflowNodeType } from "./types";
@@ -2108,33 +2110,52 @@ export default class NodeflowData {
       ),
     );
 
+    // An input port may fan out to several inner connectors.
     const resolvePort = (connectorId: string) => {
       const port = ports.find((candidate) => candidate.id === connectorId);
-      return port && idMap.has(port.innerNodeId)
-        ? {
-            nodeId: idMap.get(port.innerNodeId)!,
-            connectorId: port.innerConnectorId,
-          }
-        : undefined;
+      if (!port) return [];
+      return getCompositePortTargets(port)
+        .filter((target) => idMap.has(target.innerNodeId))
+        .map((target) => ({
+          nodeId: idMap.get(target.innerNodeId)!,
+          connectorId: target.innerConnectorId,
+        }));
     };
 
     outerConnections.forEach((connection) => {
-      const next = { ...connection };
+      const sources =
+        connection.sourceNodeId === nodeId
+          ? resolvePort(connection.sourceConnectorId).slice(0, 1)
+          : [
+              {
+                nodeId: connection.sourceNodeId,
+                connectorId: connection.sourceConnectorId,
+              },
+            ];
+      const destinations =
+        connection.destinationNodeId === nodeId
+          ? resolvePort(connection.destinationConnectorId)
+          : [
+              {
+                nodeId: connection.destinationNodeId,
+                connectorId: connection.destinationConnectorId,
+              },
+            ];
 
-      if (connection.sourceNodeId === nodeId) {
-        const inner = resolvePort(connection.sourceConnectorId);
-        if (!inner) return;
-        next.sourceNodeId = inner.nodeId;
-        next.sourceConnectorId = inner.connectorId;
-      }
-      if (connection.destinationNodeId === nodeId) {
-        const inner = resolvePort(connection.destinationConnectorId);
-        if (!inner) return;
-        next.destinationNodeId = inner.nodeId;
-        next.destinationConnectorId = inner.connectorId;
-      }
-
-      this.addConnection(next, historyGroup);
+      sources.forEach((source) =>
+        destinations.forEach((destination) =>
+          this.addConnection(
+            {
+              ...connection,
+              sourceNodeId: source.nodeId,
+              sourceConnectorId: source.connectorId,
+              destinationNodeId: destination.nodeId,
+              destinationConnectorId: destination.connectorId,
+            },
+            historyGroup,
+          ),
+        ),
+      );
     });
 
     if (group) {
@@ -2160,6 +2181,70 @@ export default class NodeflowData {
     });
 
     return restored;
+  }
+
+  /**
+   * Replaces the inner graph of composite node `nodeId` with `definition`,
+   * rebuilding its connector sections from the definition's ports. The node
+   * keeps its id, position, css, custom data and group. Outside connections
+   * to ports that still exist are kept; the rest are dropped. Recorded as one
+   * undo step unless `hasHistoryGroup` is false.
+   */
+  public updateCompositeNode(
+    nodeId: string,
+    definition: SerializedCompositeDefinition,
+    options: Pick<
+      CompositeNodeOptions,
+      "inputSection" | "outputSection" | "connectorCss"
+    > = {},
+    hasHistoryGroup: string | boolean = true,
+  ): NodeflowNodeData | undefined {
+    const node = this.nodes.get(nodeId);
+    if (!node?.composite) return undefined;
+
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+    const serialized = node.serialize();
+    const connections = node.serializeConnections();
+    const group = this.getGroupOfNode(nodeId)?.serialize();
+    const wasSelected = this.mouseData.hasSelectedNode(nodeId);
+
+    this.removeNode(nodeId, historyGroup);
+
+    const updated = this.addNode(
+      {
+        ...serialized,
+        centered: false,
+        connectorSections: createCompositeSections(definition, options),
+        composite: deepCopy(definition),
+      },
+      historyGroup,
+    );
+
+    // Connections are listed from both ends; add each once.
+    const seen = new Set<string>();
+    connections.forEach((connection) => {
+      const key = [
+        connection.sourceNodeId,
+        connection.sourceConnectorId,
+        connection.destinationNodeId,
+        connection.destinationConnectorId,
+      ].join("|");
+      if (seen.has(key)) return;
+      seen.add(key);
+
+      const ownConnector =
+        connection.sourceNodeId === nodeId
+          ? connection.sourceConnectorId
+          : connection.destinationConnectorId;
+      if (!updated.getConnector(ownConnector)) return;
+
+      this.addConnection(connection, historyGroup);
+    });
+
+    if (group) this.commitGroup(group.id, group, historyGroup);
+    if (wasSelected) this.mouseData.selections.addNode(updated);
+
+    return updated;
   }
 
   /**

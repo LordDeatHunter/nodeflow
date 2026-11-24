@@ -19,6 +19,16 @@ import curveCss from "./styles/curve.module.scss";
 import nodeflowCss from "./styles/nodeflow.module.scss";
 import appCss from "./styles/app.module.scss";
 import NewNodeSlot from "./NewNodeSlot";
+import ContextMenu, { ContextMenuItem } from "./ContextMenu";
+import DerivedTypeEditor from "./DerivedTypeEditor";
+import {
+  editorData,
+  editorSession,
+  isTypeLockedInEditor,
+  openTemplateEditor,
+} from "./editor";
+import { syncBackgroundGrid } from "./backgroundGrid";
+import { BLUEPRINT_SETTINGS } from "./settings";
 import {
   createBlueprintNode,
   createDerivedNode,
@@ -32,19 +42,10 @@ import {
 } from "./utils";
 import { BPCurveFunctions } from "./BPCurveFunctions";
 
-// Matches the 24px minor dot grid in nodeflow.module.scss (major lines are
-// every 5 cells).
-const GRID_SIZE = 24;
-
 const [nodeflowData, Nodeflow] = createSolidNodeflow(
   "main",
   {
-    defaultLineShape: "broken-elbow",
-    gridSize: GRID_SIZE,
-    snapNodePositionToGrid: true,
-    snapNodeSizeToGrid: true,
-    groupPadding: GRID_SIZE,
-    groupHeaderHeight: 36,
+    ...BLUEPRINT_SETTINGS,
     resolveNodeDisplay: (node) => resolveNodeDisplay(node),
   },
   (nodeflow: NodeflowData) => new BPCurveFunctions(nodeflow),
@@ -58,9 +59,26 @@ const PREVIEW_LABELS: Record<NodeType, string> = {
   display: "Display node",
 };
 
+const BUILT_IN_TYPES: Array<NodeType> = [
+  "number",
+  "operation",
+  "negation",
+  "plusMinus",
+  "display",
+];
+
 type Preview =
   | { kind: "node"; type: NodeType }
   | { kind: "saved"; templateId: string; name: string };
+
+const labelOf = (entry: Preview) =>
+  entry.kind === "node" ? PREVIEW_LABELS[entry.type] : entry.name;
+
+/** An open palette context menu, for the entry it was opened on. */
+type PaletteMenu = { x: number; y: number; entry: Preview };
+
+/** The canvas the palette adds to: the type editor while it is open. */
+const activeCanvas = () => (editorSession() ? editorData : nodeflowData);
 
 const sameIds = (prev: Array<string>, next: Array<string>) =>
   prev.length === next.length && prev.every((id, i) => id === next[i]);
@@ -73,6 +91,41 @@ const App: Component = () => {
   const [selectedIds, setSelectedIds] = createSignal<Array<string>>([], {
     equals: sameIds,
   });
+  const [menu, setMenu] = createSignal<Optional<PaletteMenu>>(undefined);
+
+  const openMenu = (entry: Preview, x: number, y: number) => {
+    // A right-click or long press is not a drag.
+    setNodePreview(undefined);
+    setMenu({ x, y, entry });
+  };
+
+  const menuItems = (entry: Preview): Array<ContextMenuItem> => {
+    const spawn = () => {
+      const canvas = activeCanvas();
+      const center = canvas.center();
+      if (entry.kind === "node") {
+        createBlueprintNode(entry.type, center, true, canvas);
+      } else spawnSavedType(entry.templateId, center, true, canvas);
+    };
+    if (entry.kind === "node") return [{ label: "Spawn", onSelect: spawn }];
+    return [
+      { label: "Spawn", onSelect: spawn },
+      // Opening another type would throw away the edit in progress.
+      ...(editorSession()
+        ? []
+        : [
+            {
+              label: "Edit",
+              onSelect: () => openTemplateEditor(entry.templateId),
+            },
+          ]),
+      {
+        label: "Delete",
+        danger: true,
+        onSelect: () => nodeflowData.templates.remove(entry.templateId),
+      },
+    ];
+  };
 
   const startPreview = (preview: Preview, event: PointerEvent) => {
     setCursor(Vec2.of(event.clientX, event.clientY));
@@ -85,21 +138,22 @@ const App: Component = () => {
 
     setNodePreview(undefined);
 
+    const canvas = activeCanvas();
     const clickPos = Vec2.fromEvent(data.event);
-    const nodeflowPosition = nodeflowData.startPosition;
-    const nodeflowSize = nodeflowData.size;
+    const nodeflowPosition = canvas.startPosition;
+    const nodeflowSize = canvas.size;
 
     if (!clickPos.isWithinRect(nodeflowPosition, nodeflowSize)) return;
 
     const nodePosition = clickPos
       .subtract(nodeflowPosition)
-      .divideBy(nodeflowData.zoomLevel)
-      .subtract(nodeflowData.position);
+      .divideBy(canvas.zoomLevel)
+      .subtract(canvas.position);
 
     if (preview.kind === "node") {
-      createBlueprintNode(preview.type, nodePosition, true);
+      createBlueprintNode(preview.type, nodePosition, true, canvas);
     } else {
-      spawnSavedType(preview.templateId, nodePosition, true);
+      spawnSavedType(preview.templateId, nodePosition, true, canvas);
     }
   };
 
@@ -117,7 +171,7 @@ const App: Component = () => {
     setupEvents();
     setupSavedTypePersistence();
     setupDemoGraph();
-    onCleanup(syncBackgroundGrid());
+    onCleanup(syncBackgroundGrid(nodeflowData));
 
     setSavedTypes(nodeflowData.templates.list());
     nodeflowData.eventStore.onTemplatesChanged.subscribe(
@@ -144,8 +198,7 @@ const App: Component = () => {
 
   const previewLabel = () => {
     const preview = nodePreview();
-    if (!preview) return "";
-    return preview.kind === "node" ? PREVIEW_LABELS[preview.type] : preview.name;
+    return preview ? labelOf(preview) : "";
   };
 
   return (
@@ -195,55 +248,48 @@ const App: Component = () => {
             </Show>
           </div>
         </Show>
+        <Show when={editorSession()}>
+          <DerivedTypeEditor />
+        </Show>
       </div>
       <div class={appCss.hotbar}>
         <div class={appCss.hotbarHeader}>
           <h1 class={appCss.hotbarTitle}>Node palette</h1>
           <p class={appCss.hotbarHint}>
-            Drag a node onto the canvas to add it. Select nodes to group them
-            or turn them into a derived node.
+            <Show
+              when={editorSession()}
+              fallback={
+                <>
+                  Drag a node onto the canvas to add it, or right-click
+                  (long-press) it for more. Select nodes to group them or turn
+                  them into a derived node.
+                </>
+              }
+            >
+              Drag a node into the type being edited to add it. The type
+              itself, and types built from it, can't be added.
+            </Show>
           </p>
         </div>
         <div class={appCss.slots}>
-          <NewNodeSlot
-            onClick={(event) =>
-              startPreview({ kind: "node", type: "number" }, event)
-            }
-          >
-            Number node
-          </NewNodeSlot>
-          <NewNodeSlot
-            onClick={(event) =>
-              startPreview({ kind: "node", type: "operation" }, event)
-            }
-          >
-            Operator node
-          </NewNodeSlot>
-          <NewNodeSlot
-            onClick={(event) =>
-              startPreview({ kind: "node", type: "negation" }, event)
-            }
-          >
-            Negation node
-          </NewNodeSlot>
-          <NewNodeSlot
-            onClick={(event) =>
-              startPreview({ kind: "node", type: "plusMinus" }, event)
-            }
-          >
-            Plus-minus node
-          </NewNodeSlot>
-          <NewNodeSlot
-            onClick={(event) =>
-              startPreview({ kind: "node", type: "display" }, event)
-            }
-          >
-            Display node
-          </NewNodeSlot>
+          <For each={BUILT_IN_TYPES}>
+            {(type) => (
+              <NewNodeSlot
+                onClick={(event) => startPreview({ kind: "node", type }, event)}
+                onContextMenu={(x, y) =>
+                  openMenu({ kind: "node", type }, x, y)
+                }
+              >
+                {PREVIEW_LABELS[type]}
+              </NewNodeSlot>
+            )}
+          </For>
           <For each={savedTypes()}>
             {(template) => (
               <NewNodeSlot
                 saved
+                disabled={isTypeLockedInEditor(template.id)}
+                disabledReason="A type can't contain itself"
                 onClick={(event) =>
                   startPreview(
                     {
@@ -254,7 +300,22 @@ const App: Component = () => {
                     event,
                   )
                 }
-                onRemove={() => nodeflowData.templates.remove(template.id)}
+                onContextMenu={(x, y) =>
+                  openMenu(
+                    {
+                      kind: "saved",
+                      templateId: template.id,
+                      name: template.name,
+                    },
+                    x,
+                    y,
+                  )
+                }
+                onRemove={
+                  isTypeLockedInEditor(template.id)
+                    ? undefined
+                    : () => nodeflowData.templates.remove(template.id)
+                }
               >
                 {template.name}
               </NewNodeSlot>
@@ -273,44 +334,19 @@ const App: Component = () => {
           {previewLabel()}
         </div>
       </Show>
+      <Show when={menu()}>
+        {(open) => (
+          <ContextMenu
+            x={open().x}
+            y={open().y}
+            title={labelOf(open().entry)}
+            items={menuItems(open().entry)}
+            onClose={() => setMenu(undefined)}
+          />
+        )}
+      </Show>
     </div>
   );
-};
-
-/**
- * Keeps the canvas background grid aligned with the panned/zoomed canvas, so
- * snapped nodes sit on the drawn grid. Reads where the transformed layer's
- * origin (canvas-space 0,0) lands on screen each frame and exposes it, plus
- * the zoom level, as CSS variables used by nodeflow.module.scss.
- */
-const syncBackgroundGrid = (): (() => void) => {
-  let frame = 0;
-  let lastKey = "";
-
-  const sync = () => {
-    frame = requestAnimationFrame(sync);
-
-    const canvas = document.getElementById(`nodeflow-${nodeflowData.id}`);
-    const layer = canvas?.firstElementChild;
-    if (!canvas || !layer) return;
-
-    const canvasRect = canvas.getBoundingClientRect();
-    const layerRect = layer.getBoundingClientRect();
-    const x = layerRect.left - canvasRect.left - canvas.clientLeft;
-    const y = layerRect.top - canvasRect.top - canvas.clientTop;
-    const scale = nodeflowData.zoomLevel;
-
-    const key = `${x}:${y}:${scale}`;
-    if (key === lastKey) return;
-    lastKey = key;
-
-    canvas.style.setProperty("--grid-x", `${x}px`);
-    canvas.style.setProperty("--grid-y", `${y}px`);
-    canvas.style.setProperty("--grid-scale", `${scale}`);
-  };
-
-  frame = requestAnimationFrame(sync);
-  return () => cancelAnimationFrame(frame);
 };
 
 export { nodeflowData };

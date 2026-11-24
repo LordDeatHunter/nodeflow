@@ -93,6 +93,9 @@
   font-size: 0.78rem;
   letter-spacing: 0.05em;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
   cursor: grab;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
@@ -104,19 +107,23 @@
     background-color 140ms ease;
 
   &::before {
+    // A 3px top border that follows the rounded corners; see `.node`.
     content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    border-radius: 14px 14px 0 0;
+    inset: -1px;
+    border-top: 3px solid transparent;
+    border-radius: 14px;
     background: linear-gradient(
       90deg,
       colors.$input-connector-color,
       colors.$connection-color
     );
+    background-origin: border-box;
+    mask:
+      linear-gradient(#000 0 0) padding-box exclude,
+      linear-gradient(#000 0 0);
     opacity: 0.85;
+    pointer-events: none;
   }
 
   &:hover {
@@ -167,13 +174,25 @@
   transform: rotate(-3deg) scale(1.02);
 }
 
+.disabledSlot {
+  opacity: 0.38;
+  cursor: not-allowed;
+  filter: grayscale(0.6);
+
+  &:hover,
+  &:active {
+    transform: none;
+    cursor: not-allowed;
+  }
+}
+
 .savedSlot {
   flex-direction: column;
   gap: 4px;
   border-color: rgba(195, 255, 132, 0.28);
 
   &::before {
-    background: linear-gradient(
+    background-image: linear-gradient(
       90deg,
       colors.$connection-color,
       colors.$new-connection-color
@@ -253,5 +272,182 @@
   &:hover {
     background-color: rgba(132, 195, 255, 0.2);
     border-color: rgba(132, 195, 255, 0.6);
+  }
+}
+
+.primaryButton {
+  border-color: rgba(195, 255, 132, 0.45);
+  background-color: rgba(195, 255, 132, 0.12);
+
+  &:hover:not(:disabled) {
+    border-color: rgba(195, 255, 132, 0.75);
+    background-color: rgba(195, 255, 132, 0.22);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+// ─── Palette context menu ───────────────────────────────────────────────────
+
+.contextMenu {
+  position: fixed;
+  z-index: 1100;
+  width: 184px;
+  padding: 6px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  border: 1px solid rgba(164, 181, 178, 0.2);
+  background-color: #17212c;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 18px 40px -16px rgba(0, 0, 0, 0.9);
+}
+
+.contextMenuTitle {
+  padding: 6px 10px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: colors.$font-color-muted;
+}
+
+.contextMenuItem {
+  height: 38px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: colors.$dark-9;
+  font: inherit;
+  font-size: 0.82rem;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    background-color: rgba(132, 195, 255, 0.14);
+  }
+}
+
+.contextMenuDanger {
+  color: #ff9c8a;
+
+  &:hover,
+  &:focus-visible {
+    background-color: rgba(255, 120, 100, 0.14);
+  }
+}
+
+// ─── Derived-type editor ────────────────────────────────────────────────────
+
+// Fixed at the page origin: core measures the canvas with offsetLeft/Top.
+.editorOverlay {
+  // Fills the viewport above the palette, which stays usable while editing.
+  position: absolute;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  background-color: colors.$canvas-background-color;
+}
+
+.editorHeader {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(164, 181, 178, 0.14);
+  background-color: colors.$panel-background-color;
+  box-shadow: 0 16px 34px -24px rgba(0, 0, 0, 0.9);
+}
+
+.editorTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.editorKicker {
+  font-size: 0.6rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: colors.$font-color-muted;
+}
+
+.editorName {
+  width: 240px;
+  max-width: 100%;
+  padding: 4px 6px;
+  margin-left: -6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: colors.$dark-9;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 600;
+  outline: none;
+
+  &:hover,
+  &:focus {
+    border-color: rgba(132, 195, 255, 0.35);
+    background-color: rgba(10, 15, 23, 0.5);
+  }
+}
+
+.editorHint {
+  flex: 1 1 260px;
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: colors.$font-color-muted;
+}
+
+.editorActions {
+  display: flex;
+  gap: 8px;
+}
+
+.editorCanvas {
+  flex: 1 1 0%;
+  min-height: 0;
+}
+
+.editorProblems {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 20;
+  max-width: min(360px, calc(100% - 32px));
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 156, 138, 0.35);
+  background-color: colors.$panel-background-color;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  font-size: 0.74rem;
+  color: colors.$dark-8;
+
+  strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #ff9c8a;
+    font-weight: 600;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 18px;
   }
 }

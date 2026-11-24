@@ -1,4 +1,5 @@
 import {
+  getCompositePortTargets,
   NodeflowData,
   NodeflowNodeData,
   SerializedCompositeDefinition,
@@ -107,10 +108,13 @@ const definitionGraph = (
         };
       }
 
-      const port = definition.inputs.find(
-        (candidate) =>
-          candidate.innerNodeId === innerId &&
-          candidate.innerConnectorId === inputId,
+      // An input port may feed several inner inputs.
+      const port = definition.inputs.find((candidate) =>
+        getCompositePortTargets(candidate).some(
+          (target) =>
+            target.innerNodeId === innerId &&
+            target.innerConnectorId === inputId,
+        ),
       );
       return port ? outer.getSource(nodeId, port.id) : undefined;
     },
@@ -182,6 +186,9 @@ const evaluate = (
         const [source] = getSources(graph, nodeId);
         return source ? valueOf(source) : undefined;
       }
+      case "terminal":
+        // Derived-type editor placeholders have no value of their own.
+        return undefined;
       case "derived": {
         const definition = node.composite;
         const port = definition?.outputs.find(

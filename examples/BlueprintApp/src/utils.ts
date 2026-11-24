@@ -1,7 +1,9 @@
 import { Component } from "solid-js";
 import {
   Changes,
+  CompositeNodeOptions,
   generateId,
+  NodeflowData,
   NodeTemplate,
   NodeflowNodeData,
   SerializedNodeflowNode,
@@ -16,6 +18,7 @@ import NegationNode from "./NegationNode";
 import PlusMinusNode from "./PlusMinusNode";
 import DisplayNode from "./DisplayNode";
 import DerivedNode from "./DerivedNode";
+import TerminalNode from "./TerminalNode";
 import { markBlueprintDirty } from "./reactivity";
 import { nodeflowData } from "./App";
 
@@ -35,6 +38,7 @@ const DISPLAYS: Record<CustomNodeflowDataType["type"], NodeDisplay> = {
   plusMinus: PlusMinusNode,
   display: DisplayNode,
   derived: DerivedNode,
+  terminal: TerminalNode,
 };
 
 /**
@@ -80,20 +84,34 @@ const NODE_CONFIG: Record<NodeType, NodeConfig> = {
   },
 };
 
-const connectionCss = {
+export const connectionCss = {
   normal: curveCss.connection,
   selected: curveCss.selectedConnection,
+};
+
+/** Port sections of derived nodes, shared by creating and editing them. */
+export const DERIVED_SECTION_OPTIONS: Pick<
+  CompositeNodeOptions,
+  "inputSection" | "outputSection" | "connectorCss"
+> = {
+  inputSection: { css: nodeCss.inputsSection },
+  outputSection: { css: nodeCss.outputsSection },
+  connectorCss: {
+    input: nodeCss.inputConnector,
+    output: nodeCss.outputConnector,
+  },
 };
 
 export const createBlueprintNode = (
   type: NodeType,
   position: Vec2,
   centered = false,
+  nodeflow: NodeflowData = nodeflowData,
 ): NodeflowNodeData => {
   const config = NODE_CONFIG[type];
   const historyGroup = Changes.createHistoryGroup();
 
-  const newNode = nodeflowData.addNode(
+  const newNode = nodeflow.addNode(
     {
       css: { normal: nodeCss.node, selected: nodeCss.selectedNode },
       position,
@@ -146,12 +164,7 @@ export const createDerivedNode = (
     },
     display: DerivedNode,
     customData: { type: "derived", name: `Derived node ${count + 1}` },
-    inputSection: { css: nodeCss.inputsSection },
-    outputSection: { css: nodeCss.outputsSection },
-    connectorCss: {
-      input: nodeCss.inputConnector,
-      output: nodeCss.outputConnector,
-    },
+    ...DERIVED_SECTION_OPTIONS,
     isInput: (connector) => connector.parentSection.id === "inputs",
   });
 
@@ -179,12 +192,21 @@ export const saveDerivedNodeType = (nodeId: string) => {
   markBlueprintDirty();
 };
 
+/**
+ * Adds an instance of saved type `templateId` to `nodeflow`. Saved types live
+ * on the main canvas, so another canvas gets a copy of the type first.
+ */
 export const spawnSavedType = (
   templateId: string,
   position: Vec2,
   centered = false,
+  nodeflow: NodeflowData = nodeflowData,
 ) => {
-  const node = nodeflowData.instantiateTemplate(templateId, position, {
+  const template = nodeflowData.templates.get(templateId);
+  if (!template) return undefined;
+  if (nodeflow !== nodeflowData) nodeflow.templates.add(template);
+
+  const node = nodeflow.instantiateTemplate(templateId, position, {
     centered,
   });
   markBlueprintDirty();
@@ -248,23 +270,24 @@ export const connectNodes = (
   markBlueprintDirty();
 };
 
-export const setupEvents = () => {
-  nodeflowData.eventStore.onNodeDataChanged.subscribe(
+/** Wires up a canvas: redraw on change, and the connection rules. */
+export const setupEvents = (nodeflow: NodeflowData = nodeflowData) => {
+  nodeflow.eventStore.onNodeDataChanged.subscribe(
     "blueprint:node-data-changed",
     markBlueprintDirty,
   );
-  nodeflowData.eventStore.onKeyDownInNodeflow.subscribe(
+  nodeflow.eventStore.onKeyDownInNodeflow.subscribe(
     "blueprint:history-changed",
     markBlueprintDirty,
   );
 
-  nodeflowData.eventStore.onNodeConnected.subscribe(
+  nodeflow.eventStore.onNodeConnected.subscribe(
     "nodeflow:create-connection",
     ({ outputNodeId, inputNodeId, outputId, inputId }) => {
       if (outputNodeId === inputNodeId) return;
 
-      const inputNode = nodeflowData.nodes.get(inputNodeId);
-      const outputNode = nodeflowData.nodes.get(outputNodeId);
+      const inputNode = nodeflow.nodes.get(inputNodeId);
+      const outputNode = nodeflow.nodes.get(outputNodeId);
 
       const inputs = inputNode?.connectorSections.get("inputs")?.connectors;
       const outputs = outputNode?.connectorSections.get("outputs")?.connectors;
@@ -272,7 +295,7 @@ export const setupEvents = () => {
       if (!inputs?.has(inputId) || !outputs?.has(outputId)) return;
       if (inputs.get(inputId)!.sources.length > 0) return;
 
-      nodeflowData.addConnection({
+      nodeflow.addConnection({
         sourceNodeId: outputNodeId,
         sourceConnectorId: outputId,
         destinationNodeId: inputNodeId,

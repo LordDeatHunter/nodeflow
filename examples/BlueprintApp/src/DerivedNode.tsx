@@ -3,35 +3,22 @@ import { CompositePort, NodeflowNodeData } from "@nodeflow-lib/solid";
 import { blueprintRevision, markBlueprintDirty } from "./reactivity";
 import { formatValue, getOutputValue } from "./values";
 import { breakApartDerivedNode, saveDerivedNodeType } from "./utils";
+import { connectorNumber, describeNodeKind } from "./labels";
+import { nodeflowData } from "./App";
 import contentCss from "./styles/content.module.scss";
 
 const stop = (event: Event) => event.stopPropagation();
 
-/** What a port connects to inside, e.g. "Op + · in 2". */
+/** What a port connects to inside, e.g. "Op + · in 2" ("+1" if it fans out). */
 const describePort = (
   node: NodeflowNodeData,
   port: CompositePort,
   direction: "in" | "out",
 ): string => {
   const inner = node.composite?.nodes[port.innerNodeId]?.customData;
-  const index = Number(port.innerConnectorId.split("-").at(-1)) + 1;
-  const kind = (() => {
-    switch (inner?.type) {
-      case "operation":
-        return `Op ${inner.operator ?? "+"}`;
-      case "derived":
-        return inner.name ?? "Derived";
-      case "number":
-        return "Number";
-      case "negation":
-        return "Negation";
-      case "plusMinus":
-        return "±";
-      default:
-        return "Display";
-    }
-  })();
-  return `${kind} · ${direction} ${index}`;
+  const extra = port.extraTargets?.length ?? 0;
+  const label = `${describeNodeKind(inner)} · ${direction} ${connectorNumber(port.innerConnectorId)}`;
+  return extra > 0 ? `${label} +${extra}` : label;
 };
 
 const DerivedNode: Component<{ node: NodeflowNodeData }> = (props) => {
@@ -96,6 +83,8 @@ const DerivedNode: Component<{ node: NodeflowNodeData }> = (props) => {
           </For>
         </ul>
       </div>
+      {/* Breaking apart and saving act on the main canvas only. */}
+      <Show when={props.node.nodeflow === nodeflowData}>
       <div class={contentCss.derivedActions}>
         <button
           type="button"
@@ -116,6 +105,7 @@ const DerivedNode: Component<{ node: NodeflowNodeData }> = (props) => {
           {isSaved() ? "Update type" : "Save type"}
         </button>
       </div>
+      </Show>
     </div>
   );
 };

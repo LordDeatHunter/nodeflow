@@ -55,21 +55,26 @@ $node-radius: 16px;
     border-color 180ms ease-in-out,
     box-shadow 180ms ease-in-out;
 
-  // Accent spine: input color -> connection color.
+  // Accent spine: input color -> connection color. It covers the whole node,
+  // border included, and the mask keeps only a 3px top border, so it follows
+  // the rounded corners and tapers off down the sides.
   &::before {
     content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    border-radius: $node-radius $node-radius 0 0;
-    background: linear-gradient(
+    inset: -1px;
+    border-top: 3px solid transparent;
+    border-radius: $node-radius;
+    background-image: linear-gradient(
       90deg,
       colors.$input-connector-color,
       colors.$connection-color
     );
+    background-origin: border-box;
+    mask:
+      linear-gradient(#000 0 0) padding-box exclude,
+      linear-gradient(#000 0 0);
     opacity: 0.75;
+    pointer-events: none;
   }
 
   &:hover {
@@ -121,10 +126,35 @@ $node-radius: 16px;
   min-height: 180px;
 
   &::before {
-    background: linear-gradient(
+    background-image: linear-gradient(
       90deg,
       colors.$connection-color,
       colors.$new-connection-color
     );
   }
+}
+
+// Derived-type editor terminals grow with their port count.
+.terminalNode {
+  width: 216px;
+  height: auto;
+  min-height: 144px;
+  border-style: dashed;
+  border-color: rgba(195, 255, 132, 0.35);
+
+  &::before {
+    background-image: none;
+    background-color: colors.$new-connection-color;
+  }
+}
+
+// Terminal ports sit in fixed rows lined up with the port labels (see
+// `.terminalRoot` in content.module.scss): the list starts 56px down and each
+// 24px row centres a 20px connector.
+.terminalSection {
+  top: 56px;
+  height: auto;
+  justify-content: flex-start;
+  gap: 4px;
+  padding-top: 2px;
 }

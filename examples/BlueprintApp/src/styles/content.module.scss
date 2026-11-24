@@ -170,3 +170,73 @@ select.control {
   color: colors.$connection-color;
   text-shadow: 0 0 22px rgba(132, 195, 255, 0.45);
 }
+
+// Fixed px sizes: the port rows must line up with `.terminalSection` in
+// node.module.scss (16px padding + 28px header + 12px gap = 56px).
+.terminalRoot {
+  padding: 16px 1.2rem 18px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.terminalHeader {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .label {
+    margin: 0;
+  }
+}
+
+.terminalButtons {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.terminalButton {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(132, 195, 255, 0.35);
+  border-radius: 0.5rem;
+  background-color: rgba(132, 195, 255, 0.08);
+  color: colors.$dark-9;
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background-color: rgba(132, 195, 255, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.terminalPorts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: colors.$dark-7;
+
+  li {
+    height: 24px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+.terminalPortsRight {
+  align-items: flex-end;
+}

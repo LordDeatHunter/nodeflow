@@ -239,12 +239,21 @@ export interface SerializedNodeflowNode {
   composite?: SerializedCompositeDefinition;
 }
 
-/** Maps one connector of a composite node to the inner connector it exposes. */
-export interface CompositePort {
-  /** Connector id on the composite node. */
-  id: string;
+/** An inner connector of a composite node. */
+export interface CompositePortTarget {
   innerNodeId: string;
   innerConnectorId: string;
+}
+
+/** Maps one connector of a composite node to the inner connector it exposes. */
+export interface CompositePort extends CompositePortTarget {
+  /** Connector id on the composite node. */
+  id: string;
+  /**
+   * Input ports only: further inner connectors fed by this port (fan-out),
+   * besides `innerNodeId`/`innerConnectorId`.
+   */
+  extraTargets?: Array<CompositePortTarget>;
 }
 
 /**
