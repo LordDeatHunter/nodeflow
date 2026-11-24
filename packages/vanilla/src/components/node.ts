@@ -1,5 +1,6 @@
 import { NodeflowData, NodeflowNodeData, Vec2 } from "@nodeflow-lib/core";
 import { renderConnector } from "./connector";
+import { applyGridSize } from "./grid-sizing";
 
 const nodeObservers = new WeakMap<HTMLElement, ResizeObserver[]>();
 
@@ -75,6 +76,7 @@ export const renderNode = (
   });
 
   const resizeObserver = new ResizeObserver(() => {
+    applyGridSize(nodeDiv, data);
     node.updateMeasurements(
       Vec2.of(nodeDiv.clientWidth, nodeDiv.clientHeight),
       Vec2.of(nodeDiv.clientLeft, nodeDiv.clientTop),

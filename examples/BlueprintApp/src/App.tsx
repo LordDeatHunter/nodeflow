@@ -1,4 +1,10 @@
-import { type Component, createSignal, onMount, Show } from "solid-js";
+import {
+  type Component,
+  createSignal,
+  onCleanup,
+  onMount,
+  Show,
+} from "solid-js";
 import {
   createSolidNodeflow,
   NodeflowData,
@@ -18,9 +24,18 @@ import {
 } from "./utils";
 import { BPCurveFunctions } from "./BPCurveFunctions";
 
+// Matches the 24px minor dot grid in nodeflow.module.scss (major lines are
+// every 5 cells).
+const GRID_SIZE = 24;
+
 const [nodeflowData, Nodeflow] = createSolidNodeflow(
   "main",
-  { defaultLineShape: "broken-elbow" },
+  {
+    defaultLineShape: "broken-elbow",
+    gridSize: GRID_SIZE,
+    snapNodePositionToGrid: true,
+    snapNodeSizeToGrid: true,
+  },
   (nodeflow: NodeflowData) => new BPCurveFunctions(nodeflow),
 );
 
@@ -63,6 +78,7 @@ const App: Component = () => {
   onMount(() => {
     setupEvents();
     setupDemoGraph();
+    onCleanup(syncBackgroundGrid());
 
     NodeflowRegistry.get().globalEventStore.onMouseMoveInDocument.subscribe(
       "blueprint:track-cursor",
@@ -117,6 +133,42 @@ const App: Component = () => {
       </Show>
     </div>
   );
+};
+
+/**
+ * Keeps the canvas background grid aligned with the panned/zoomed canvas, so
+ * snapped nodes sit on the drawn grid. Reads where the transformed layer's
+ * origin (canvas-space 0,0) lands on screen each frame and exposes it, plus
+ * the zoom level, as CSS variables used by nodeflow.module.scss.
+ */
+const syncBackgroundGrid = (): (() => void) => {
+  let frame = 0;
+  let lastKey = "";
+
+  const sync = () => {
+    frame = requestAnimationFrame(sync);
+
+    const canvas = document.getElementById(`nodeflow-${nodeflowData.id}`);
+    const layer = canvas?.firstElementChild;
+    if (!canvas || !layer) return;
+
+    const canvasRect = canvas.getBoundingClientRect();
+    const layerRect = layer.getBoundingClientRect();
+    const x = layerRect.left - canvasRect.left - canvas.clientLeft;
+    const y = layerRect.top - canvasRect.top - canvas.clientTop;
+    const scale = nodeflowData.zoomLevel;
+
+    const key = `${x}:${y}:${scale}`;
+    if (key === lastKey) return;
+    lastKey = key;
+
+    canvas.style.setProperty("--grid-x", `${x}px`);
+    canvas.style.setProperty("--grid-y", `${y}px`);
+    canvas.style.setProperty("--grid-scale", `${scale}`);
+  };
+
+  frame = requestAnimationFrame(sync);
+  return () => cancelAnimationFrame(frame);
 };
 
 export { nodeflowData };

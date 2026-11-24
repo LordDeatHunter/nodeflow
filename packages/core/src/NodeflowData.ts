@@ -48,6 +48,15 @@ export default class NodeflowData {
   private _dragEdgeScrollIntervalId: ReturnType<typeof setInterval> | undefined =
     undefined;
   private _settings: NodeflowSettings;
+  /**
+   * Unsnapped positions of held nodes, so small drag deltas accumulate across
+   * moves instead of being rounded away by grid snapping. `snapped` detects
+   * when something else moved the node, which re-seeds `raw`.
+   */
+  private readonly dragRawPositions = new Map<
+    string,
+    { raw: Vec2; snapped: Vec2 }
+  >();
 
   public readonly changes: Changes;
   public readonly mouseData: MouseData;
@@ -73,12 +82,15 @@ export default class NodeflowData {
     dragEdgeScrollMargin: 0,
     dragEdgeScrollSpeed: 10,
     gestureMovementThreshold: 6,
+    gridSize: 20,
     keyboardZoomMultiplier: 15,
     maxMovementSpeed: 15,
     maxZoom: 200,
     minZoom: 0.02,
     movementAcceleration: 1.5,
     movementDeceleration: 0.85,
+    snapNodePositionToGrid: false,
+    snapNodeSizeToGrid: false,
     virtualization: true,
     virtualizationMargin: 200,
     zoomMultiplier: 0.005,
@@ -292,8 +304,23 @@ export default class NodeflowData {
     const viewBoundaryChanged =
       previous.viewBoundary !== this._settings.viewBoundary;
 
-    if (nodeBoundaryChanged) {
+    const gridSizeChanged = previous.gridSize !== this._settings.gridSize;
+    const positionSnapChanged =
+      gridSizeChanged ||
+      previous.snapNodePositionToGrid !== this._settings.snapNodePositionToGrid;
+    const sizeSnapChanged =
+      gridSizeChanged ||
+      previous.snapNodeSizeToGrid !== this._settings.snapNodeSizeToGrid;
+
+    if (nodeBoundaryChanged || positionSnapChanged) {
+      this.dragRawPositions.clear();
+      // clampToBoundary also re-snaps the position to the grid.
       this.nodes.forEach((node) => node.clampToBoundary());
+    }
+
+    if (sizeSnapChanged) {
+      // Adapters re-apply grid sizing on content changes.
+      this.publishContentChanged();
     }
 
     const viewChanged = this.constrainView();
@@ -308,6 +335,50 @@ export default class NodeflowData {
     ) {
       this.publishContentChanged();
     }
+  }
+
+  private get validGridSize(): number | undefined {
+    const { gridSize } = this._settings;
+    return Number.isFinite(gridSize) && gridSize > 0 ? gridSize : undefined;
+  }
+
+  /**
+   * Rounds `position` to the nearest grid point when
+   * `settings.snapNodePositionToGrid` is on; returns it unchanged otherwise.
+   */
+  public snapPositionToGrid(position: Vec2): Vec2 {
+    const grid = this.validGridSize;
+    if (!this._settings.snapNodePositionToGrid || grid === undefined) {
+      return position;
+    }
+
+    // `+ 0` turns -0 into 0.
+    const snap = (value: number): number =>
+      Math.round(value / grid) * grid + 0;
+
+    return Vec2.of(snap(position.x), snap(position.y));
+  }
+
+  /**
+   * Rounds a node's rendered box size up to a multiple of `settings.gridSize`
+   * (at least one cell) when `settings.snapNodeSizeToGrid` is on; returns it
+   * unchanged otherwise. Adapters use this to size node elements.
+   */
+  public snapSizeToGrid(size: Vec2): Vec2 {
+    const grid = this.validGridSize;
+    if (!this._settings.snapNodeSizeToGrid || grid === undefined) {
+      return size;
+    }
+
+    const snap = (value: number): number =>
+      Math.max(1, Math.ceil(value / grid - 1e-6)) * grid;
+
+    return Vec2.of(snap(size.x), snap(size.y));
+  }
+
+  /** Forgets the unsnapped positions tracked while dragging nodes. */
+  public clearDragState(): void {
+    this.dragRawPositions.clear();
   }
 
   private publishCanvasTransformChanged(): void {
@@ -410,6 +481,7 @@ export default class NodeflowData {
 
   public resetMovement = () => {
     this.currentMoveSpeed = Vec2.zero();
+    this.clearDragState();
     this.keymap.MOVE_LEFT.forEach((key) => this.keyboardData.releaseKey(key));
     this.keymap.MOVE_RIGHT.forEach((key) => this.keyboardData.releaseKey(key));
     this.keymap.MOVE_UP.forEach((key) => this.keyboardData.releaseKey(key));
@@ -1001,13 +1073,22 @@ export default class NodeflowData {
     }
 
     const heldNodes = this.mouseData.heldNodes as Array<NodeflowNodeData>;
+    const rawPositionOf = (node: NodeflowNodeData): Vec2 => {
+      const tracked = this.dragRawPositions.get(node.id);
+      return tracked && tracked.snapped.equals(node.position)
+        ? tracked.raw
+        : node.position;
+    };
+
     const delta = this.settings.nodeBoundary
-      ? NodeflowData.limitGroupDelta(heldNodes, moveSpeed)
+      ? NodeflowData.limitGroupDelta(heldNodes, moveSpeed, rawPositionOf)
       : moveSpeed;
 
-    heldNodes.forEach(
-      (element) => (element.position = element.position.add(delta)),
-    );
+    heldNodes.forEach((node) => {
+      const raw = rawPositionOf(node).add(delta);
+      node.position = raw;
+      this.dragRawPositions.set(node.id, { raw, snapped: node.position });
+    });
 
     return delta;
   }
@@ -1015,6 +1096,7 @@ export default class NodeflowData {
   private static limitGroupDelta(
     nodes: Array<NodeflowNodeData>,
     delta: Vec2,
+    positionOf: (node: NodeflowNodeData) => Vec2,
   ): Vec2 {
     let allowX = Infinity;
     let allowY = Infinity;
@@ -1022,22 +1104,23 @@ export default class NodeflowData {
     nodes.forEach((node) => {
       const travel = node.getBoundaryTravel();
       if (!travel) return;
+      const position = positionOf(node);
 
       // Nodes too large for the boundary stay pinned and don't block the rest.
       if (travel.high.x >= travel.low.x) {
         allowX = Math.min(
           allowX,
           delta.x > 0
-            ? travel.high.x - node.position.x
-            : node.position.x - travel.low.x,
+            ? travel.high.x - position.x
+            : position.x - travel.low.x,
         );
       }
       if (travel.high.y >= travel.low.y) {
         allowY = Math.min(
           allowY,
           delta.y > 0
-            ? travel.high.y - node.position.y
-            : node.position.y - travel.low.y,
+            ? travel.high.y - position.y
+            : position.y - travel.low.y,
         );
       }
     });
@@ -1232,6 +1315,7 @@ export default class NodeflowData {
         name: "nodeflow:reset-mouse-data",
         event: ({ event }) => {
           this.stopDragEdgeScroll();
+          this.clearDragState();
           this.mouseData.pointerDown = false;
           this.mouseData.selectionBox.boundingBox = undefined;
           this.mouseData.heldMouseButtons.delete(event.button);
@@ -1388,6 +1472,7 @@ export default class NodeflowData {
           if (touches.length !== 0) return;
 
           this.stopDragEdgeScroll();
+          this.clearDragState();
           this.mouseData.pointerDown = false;
           this.mouseData.pinching = false;
           this.mouseData.touchMoved = false;
@@ -1781,6 +1866,7 @@ export default class NodeflowData {
         name: "nodeflow:reset-mouse-data",
         event: () => {
           this.stopDragEdgeScroll();
+          this.clearDragState();
           this.mouseData.pointerDown = false;
 
           if (this.mouseData.heldConnectors.length === 1) {

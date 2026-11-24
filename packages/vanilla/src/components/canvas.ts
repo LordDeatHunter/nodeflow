@@ -7,6 +7,7 @@ import {
 } from "@nodeflow-lib/core";
 import { applyLineDash, buildCurvePathD } from "./curve";
 import { renderNode, unmountNode } from "./node";
+import { applyGridSize, gridSizingKey } from "./grid-sizing";
 
 export const renderCanvas = (
   container: HTMLElement,
@@ -55,6 +56,7 @@ export const renderCanvas = (
   let lastPosX = data.position.x;
   let lastPosY = data.position.y;
   let lastBoundaryKey = "";
+  let lastGridSizingKey = gridSizingKey(data);
   const curveElements = new Map<string, SVGPathElement>();
 
   const syncBoundary = () => {
@@ -113,6 +115,14 @@ export const renderCanvas = (
     syncBoundary();
 
     syncNodes();
+
+    // Newly mounted nodes size themselves on their first resize; re-apply to
+    // mounted ones only when the grid sizing settings change.
+    const sizingKey = gridSizingKey(data);
+    if (sizingKey !== lastGridSizingKey) {
+      lastGridSizingKey = sizingKey;
+      nodeElements.forEach((el) => applyGridSize(el, data));
+    }
 
     nodeElements.forEach((el, nodeId) => {
       const node = data.nodes.get(nodeId)!;

@@ -1,8 +1,17 @@
 @use "colors";
 
+// Grid cell sizes; the minor size must match GRID_SIZE in App.tsx.
+$minor-grid: 24px;
+$major-grid: 120px;
+
 .nodeflow {
   overflow: hidden;
   background-color: colors.$canvas-background-color;
+
+  // Set by App.tsx so the grid follows panning and zooming.
+  --grid-x: 0px;
+  --grid-y: 0px;
+  --grid-scale: 1;
 
   // Layered blueprint drafting surface: vignette -> key light -> major grid ->
   // minor dot grid.
@@ -23,13 +32,16 @@
   background-size:
     100% 100%,
     100% 100%,
-    120px 120px,
-    120px 120px,
-    24px 24px;
+    calc(#{$major-grid} * var(--grid-scale)) calc(#{$major-grid} * var(--grid-scale)),
+    calc(#{$major-grid} * var(--grid-scale)) calc(#{$major-grid} * var(--grid-scale)),
+    calc(#{$minor-grid} * var(--grid-scale)) calc(#{$minor-grid} * var(--grid-scale));
+  // Lines sit at the top/left of each tile; dots sit at the tile center, so
+  // shift them back half a cell to land on grid points.
   background-position:
     center,
     center,
-    -1px -1px,
-    -1px -1px,
-    0 0;
+    var(--grid-x) var(--grid-y),
+    var(--grid-x) var(--grid-y),
+    calc(var(--grid-x) - #{$minor-grid} * var(--grid-scale) / 2)
+      calc(var(--grid-y) - #{$minor-grid} * var(--grid-scale) / 2);
 }

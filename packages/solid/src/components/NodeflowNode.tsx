@@ -1,5 +1,6 @@
 import {
   type Component,
+  createEffect,
   createMemo,
   createSignal,
   For,
@@ -12,6 +13,7 @@ import {
   Vec2,
 } from "@nodeflow-lib/core";
 import Connector from "./Connector";
+import { applyGridSize, gridSizingKey } from "../grid-sizing";
 
 interface NodeProps {
   nodeId: string;
@@ -65,6 +67,7 @@ const NodeflowNode: Component<NodeProps> = (props) => {
     <div
       ref={(el) => {
         const measure = () => {
+          applyGridSize(el, props.nodeflowData);
           const n = props.nodeflowData.nodes.get(props.nodeId);
           if (n) {
             n.updateMeasurements(
@@ -77,6 +80,17 @@ const NodeflowNode: Component<NodeProps> = (props) => {
         const resizeObserver = new ResizeObserver(measure);
         resizeObserver.observe(el);
         onCleanup(() => resizeObserver.disconnect());
+
+        // Re-apply grid sizing when its settings change at runtime. Keyed so
+        // the forced layout does not run on every content tick (e.g. drags).
+        let lastSizingKey = gridSizingKey(props.nodeflowData);
+        createEffect(() => {
+          props.tick();
+          const key = gridSizingKey(props.nodeflowData);
+          if (key === lastSizingKey) return;
+          lastSizingKey = key;
+          measure();
+        });
 
         // Defer centering adjustment until first layout is available
         requestAnimationFrame(() => {

@@ -42,7 +42,7 @@ export default class NodeflowNodeData {
     this._offset = data.offset ?? Vec2.zero();
     this._position = data.position ?? Vec2.zero();
     this._size = data.size ?? Vec2.zero();
-    this._position = this.clampedPosition(this._position);
+    this._position = this.normalizedPosition(this._position);
     this.nodeflowData.chunking.addNodeToChunk(this.id, this._position);
     this.trackExtent();
   }
@@ -135,7 +135,7 @@ export default class NodeflowNodeData {
 
   public set position(value: Vec2) {
     const oldPos = this._position;
-    this._position = value;
+    this._position = this.nodeflowData.snapPositionToGrid(value);
     this.checkAndResolveCollisions();
     this.nodeflowData.chunking.updateNodeInChunk(
       this.id,
@@ -195,11 +195,21 @@ export default class NodeflowNodeData {
   }
 
   /**
-   * Moves the node back inside `settings.nodeBoundary` if it has left it.
-   * Returns whether the position changed.
+   * Snaps `position` to the grid (when `settings.snapNodePositionToGrid` is
+   * on), then clamps it into `settings.nodeBoundary`, so the boundary wins.
+   */
+  private normalizedPosition(position: Vec2): Vec2 {
+    return this.clampedPosition(
+      this.nodeflowData.snapPositionToGrid(position),
+    );
+  }
+
+  /**
+   * Moves the node back onto the grid and inside `settings.nodeBoundary` if
+   * it has left either. Returns whether the position changed.
    */
   public clampToBoundary(): boolean {
-    const next = this.clampedPosition(this._position);
+    const next = this.normalizedPosition(this._position);
     if (next.equals(this._position)) return false;
 
     const oldPos = this._position;
@@ -276,7 +286,7 @@ export default class NodeflowNodeData {
     }
     if (data.position !== undefined) {
       const oldPos = this._position;
-      this._position = data.position;
+      this._position = this.nodeflowData.snapPositionToGrid(data.position);
       this.checkAndResolveCollisions();
       this.nodeflowData.chunking.updateNodeInChunk(
         this.id,

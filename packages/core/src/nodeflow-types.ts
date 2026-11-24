@@ -123,6 +123,12 @@ export type NodeflowSettings = {
   dragEdgeScrollSpeed: number;
   /** Minimum finger travel (px) before a touch is treated as a drag/pan instead of a tap. */
   gestureMovementThreshold: number;
+  /**
+   * Canvas-space size (px) of one grid cell, used by `snapNodePositionToGrid`
+   * and `snapNodeSizeToGrid`. Values of 0 or below disable snapping.
+   * Defaults to 20.
+   */
+  gridSize: number;
   keyboardZoomMultiplier: number;
   maxMovementSpeed: number;
   maxZoom: number;
@@ -136,6 +142,19 @@ export type NodeflowSettings = {
    * top-left corner. `undefined` (default) leaves node placement unbounded.
    */
   nodeBoundary?: Rect;
+  /**
+   * When true, node positions are rounded to the nearest multiple of
+   * `gridSize`. Dragging accumulates the unsnapped position, so nodes step
+   * from cell to cell. `nodeBoundary` takes precedence over the grid.
+   * Defaults to false.
+   */
+  snapNodePositionToGrid: boolean;
+  /**
+   * When true, adapters grow each node's rendered box (border included) so
+   * its width and height are multiples of `gridSize` (at least one cell).
+   * Defaults to false.
+   */
+  snapNodeSizeToGrid: boolean;
   /**
    * Optional canvas-space rectangle that the visible viewport is kept inside.
    * Panning stops at the edges and zooming out is limited so the viewport never
