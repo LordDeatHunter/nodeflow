@@ -1,0 +1,44 @@
+@use "colors";
+
+.toolbar {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  z-index: 2;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.4rem;
+  background-color: colors.$surface;
+  border: 1px solid colors.$hairline;
+  border-radius: 22px;
+  box-shadow: colors.$shadow-toolbar;
+}
+
+.toolbarButton {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 8px;
+  background-color: transparent;
+  color: colors.$ink-soft;
+
+  > svg {
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+
+  &:hover,
+  &:focus {
+    background-color: colors.$surface-muted;
+    color: colors.$ink;
+    filter: none;
+  }
+
+  &:active {
+    background-color: colors.$surface-sunken;
+  }
+}

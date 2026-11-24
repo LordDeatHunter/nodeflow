@@ -9,6 +9,7 @@ import nodeflowCss from "./styles/nodeflow.module.scss";
 import { setupDummyConnections, setupDummyNodes, setupEvents } from "./utils";
 import Sidebar from "./components/Sidebar";
 import SidebarContent from "./components/SidebarContent";
+import Toolbar from "./components/Toolbar";
 import { FamilyTreeConstants } from "./Constants";
 import { FTCurveFunctions } from "./FTCurveFunctions";
 
@@ -41,6 +42,7 @@ const App: Component = () => {
         width="100%"
         height="100%"
       />
+      <Toolbar />
       <Sidebar>
         <SidebarContent />
       </Sidebar>

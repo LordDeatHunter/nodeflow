@@ -1,8 +1,55 @@
-import { NodeflowNodeData, SelectableElementCSS, Vec2 } from "@nodeflow-lib/solid";
+import {
+  Changes,
+  NodeflowNodeData,
+  SelectableElementCSS,
+  Vec2,
+} from "@nodeflow-lib/solid";
 import nodeCss from "./styles/node.module.scss";
 import curveCss from "./styles/curve.module.scss";
 import NodeBody from "./components/NodeBody";
 import { nodeflowData } from "./App";
+import { computeTreeLayout } from "./treeLayout";
+
+/** Whether `ancestor` is `node` or one of its parents, grandparents, etc. */
+const isAncestorOf = (
+  ancestor: NodeflowNodeData,
+  node: NodeflowNodeData,
+): boolean => {
+  const visited = new Set<string>();
+  const stack = [node];
+
+  while (stack.length > 0) {
+    const current = stack.pop()!;
+    if (current.id === ancestor.id) return true;
+    if (visited.has(current.id)) continue;
+    visited.add(current.id);
+    stack.push(...current.getAllSourceNodes());
+  }
+
+  return false;
+};
+
+/**
+ * Whether `parent` may be linked as one of `child`'s parents: the child has at
+ * most one other parent, of the other gender, and the link would not make
+ * anyone their own ancestor.
+ */
+const canBeParentOf = (
+  parent: NodeflowNodeData,
+  child: NodeflowNodeData,
+): boolean => {
+  const sources = child.getConnector("I")?.sources ?? [];
+
+  return (
+    sources.length < 2 &&
+    !sources.some(
+      (source) =>
+        source.sourceConnector.parentNode.customData.gender ===
+        parent.customData.gender,
+    ) &&
+    !isAncestorOf(child, parent)
+  );
+};
 
 export const fetchRandomData = async (
   amount: number,
@@ -194,26 +241,10 @@ export const setupEvents = () => {
   nodeflowData.eventStore.onNodeConnected.subscribe(
     "nodeflow:create-connection",
     ({ outputNodeId, inputNodeId }) => {
-      if (outputNodeId === inputNodeId) return;
-
       const outputNode = nodeflowData.nodes.get(outputNodeId)!;
       const inputNode = nodeflowData.nodes.get(inputNodeId)!;
 
-      const connector = inputNode.getConnector("I")?.sources;
-
-      // Return if:
-      // The connector already has 2 parents
-      // The connector already has parent of the same gender as the source node
-      if (
-        connector?.length === 2 ||
-        connector?.some(
-          (source) =>
-            source.sourceConnector.parentNode.customData.gender ===
-            outputNode.customData.gender,
-        )
-      ) {
-        return;
-      }
+      if (!canBeParentOf(outputNode, inputNode)) return;
 
       nodeflowData.addConnection({
         sourceNodeId: outputNodeId,
@@ -239,21 +270,7 @@ export const setupEvents = () => {
       const sourceNode =
         nodeflowData.mouseData.heldConnectors[0].parentSection.parentNode;
 
-      if (nodeId === sourceNode.id) return;
-
-      const connector = destinationNode.getConnector("I")?.sources;
-      // Return if:
-      // The connector already has 2 parents
-      // One of the parents is the same gender as the source node
-      if (
-        connector?.length === 2 ||
-        connector?.some(
-          (source) =>
-            source.sourceConnector.parentNode.customData.gender ===
-            sourceNode.customData.gender,
-        )
-      )
-        return;
+      if (!canBeParentOf(sourceNode, destinationNode)) return;
 
       nodeflowData.addConnection({
         sourceNodeId: sourceNode.id,
@@ -283,22 +300,9 @@ export const setupDummyConnections = () => {
     const fromNode = nodeflowData.nodes.get(from.toString())!;
     const toNode = nodeflowData.nodes.get(to.toString())!;
 
-    const sourceGender = fromNode.customData.gender;
-
-    const connector = toNode.getConnector("I")?.sources;
-    // Continue if:
-    // The source node is the same as the destination node
-    // The destination node already has a connection
-    if (
-      from === to ||
-      connector?.length === 2 ||
-      connector?.some(
-        (source) =>
-          source.sourceConnector.parentNode.customData.gender === sourceGender,
-      )
-    ) {
-      continue;
-    }
+    // Random links could otherwise make someone their own ancestor, which
+    // a family tree (and sorting it into generations) can't represent.
+    if (!canBeParentOf(fromNode, toNode)) continue;
 
     nodeflowData.addConnection({
       sourceNodeId: from.toString(),
@@ -308,6 +312,71 @@ export const setupDummyConnections = () => {
       css: getConnectionCSS(fromNode.customData.gender),
     });
   }
+};
+
+/** Screen pixels kept free around the tree when zooming out to fit it. */
+const FIT_MARGIN = 48;
+
+const moveNodes = (positions: Map<string, Vec2>) =>
+  positions.forEach((position, id) => {
+    const node = nodeflowData.nodes.get(id);
+    if (node) node.position = position;
+  });
+
+/** Pans the viewport so `point` (in world space) sits in its middle. */
+const centerViewportOn = (point: Vec2) => {
+  nodeflowData.position = nodeflowData.size
+    .divideBy(2)
+    .divideBy(nodeflowData.zoomLevel)
+    .subtract(point);
+};
+
+/**
+ * Rearranges every node into a family tree (one row per generation, partners
+ * side by side, children centered below their parents) around the canvas
+ * origin, then fits it in the viewport. Undo restores the old positions.
+ */
+export const sortTree = () => {
+  const nodes = [...nodeflowData.nodes.values()];
+  if (nodes.length === 0) return;
+
+  const { positions, size } = computeTreeLayout(
+    nodes.map((node) => {
+      const outerSize = node.size.add(node.offset.multiplyBy(2));
+      return {
+        id: node.id,
+        width: outerSize.x,
+        height: outerSize.y,
+        x: node.getCenter().x,
+        gender: node.customData.gender,
+      };
+    }),
+    nodeflowData
+      .serializeConnections()
+      .map(({ sourceNodeId, destinationNodeId }) => ({
+        parent: sourceNodeId,
+        child: destinationNodeId,
+      })),
+  );
+
+  const previous = new Map(nodes.map((node) => [node.id, node.position]));
+  nodeflowData.changes.addChange({
+    type: "update",
+    source: "node",
+    historyGroup: Changes.createHistoryGroup(),
+    applyChange: () => moveNodes(positions),
+    undoChange: () => moveNodes(previous),
+  });
+  moveNodes(positions);
+
+  const fit = Math.min(
+    (nodeflowData.size.x - 2 * FIT_MARGIN) / size.x,
+    (nodeflowData.size.y - 2 * FIT_MARGIN) / size.y,
+  );
+  if (fit < nodeflowData.zoomLevel) {
+    nodeflowData.zoomLevel = Math.max(fit, nodeflowData.settings.minZoom);
+  }
+  centerViewportOn(Vec2.zero());
 };
 
 export const cleanInput = (input?: string): string =>
