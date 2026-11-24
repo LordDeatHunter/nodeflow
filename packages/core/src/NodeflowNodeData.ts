@@ -43,7 +43,13 @@ export default class NodeflowNodeData {
     this._position = data.position ?? Vec2.zero();
     this._size = data.size ?? Vec2.zero();
     this._position = this.clampedPosition(this._position);
-    this.nodeflowData.chunking.addNodeToChunk(this.id, this.getCenter());
+    this.nodeflowData.chunking.addNodeToChunk(this.id, this._position);
+    this.trackExtent();
+  }
+
+  /** Lets chunk queries account for this node's rendered box. */
+  private trackExtent(): void {
+    this.nodeflowData.chunking.trackNodeExtent(this.rectWithOffset.size);
   }
 
   public get nodeflow() {
@@ -111,25 +117,38 @@ export default class NodeflowNodeData {
   }
 
   public set id(value: string) {
+    this.reindexId(value);
+  }
+
+  private reindexId(value: string): void {
+    if (value === this._id) return;
+    this.nodeflowData.chunking.removeNodeFromChunk(this._id, this._position);
     this._id = value;
+    this.nodeflowData.chunking.addNodeToChunk(this._id, this._position);
   }
 
   public set offset(value: Vec2) {
     this._offset = value;
+    this.trackExtent();
     this.nodeflowData.publishContentChanged();
   }
 
   public set position(value: Vec2) {
     const oldPos = this._position;
     this._position = value;
-    this.nodeflowData.chunking.updateNodeInChunk(this.id, oldPos, value);
     this.checkAndResolveCollisions();
+    this.nodeflowData.chunking.updateNodeInChunk(
+      this.id,
+      oldPos,
+      this._position,
+    );
     this.clampToBoundary();
     this.nodeflowData.publishContentChanged();
   }
 
   public set size(value: Vec2) {
     this._size = value;
+    this.trackExtent();
     this.clampToBoundary();
     this.nodeflowData.publishContentChanged();
   }
@@ -137,6 +156,7 @@ export default class NodeflowNodeData {
   public updateMeasurements(size: Vec2, offset: Vec2): void {
     this._size = size;
     this._offset = offset;
+    this.trackExtent();
     // The node's extent is only known after the adapter measures the DOM, so a
     // node placed near a boundary edge is pushed fully inside here.
     this.clampToBoundary();
@@ -248,18 +268,21 @@ export default class NodeflowNodeData {
     if (data.css !== undefined) this._css = data.css;
     if (data.customData !== undefined) this._customData = data.customData;
     if (data.display !== undefined) this._display = data.display;
-    if (data.id !== undefined) this._id = data.id;
+    if (data.id !== undefined) this.reindexId(data.id);
     if (data.offset !== undefined) this._offset = data.offset;
     if (data.size !== undefined) this._size = data.size;
+    if (data.size !== undefined || data.offset !== undefined) {
+      this.trackExtent();
+    }
     if (data.position !== undefined) {
       const oldPos = this._position;
       this._position = data.position;
+      this.checkAndResolveCollisions();
       this.nodeflowData.chunking.updateNodeInChunk(
         this.id,
         oldPos,
-        data.position,
+        this._position,
       );
-      this.checkAndResolveCollisions();
     }
     if (
       data.position !== undefined ||

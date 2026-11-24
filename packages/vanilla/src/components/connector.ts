@@ -10,6 +10,7 @@ export const renderConnector = (
   connector: NodeConnector,
   node: NodeflowNodeData,
   data: NodeflowData,
+  observers: ResizeObserver[] = [],
 ): HTMLDivElement => {
   const connectorDiv = document.createElement("div");
   connectorDiv.id = `connector-${connector.id}`;
@@ -35,6 +36,7 @@ export const renderConnector = (
 
   const resizeObserver = new ResizeObserver(measureConnector);
   resizeObserver.observe(connectorDiv);
+  observers.push(resizeObserver);
 
   connectorDiv.addEventListener("mousedown", (event) => {
     data.eventStore.onMouseDownInConnector.publish({

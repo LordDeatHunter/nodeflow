@@ -61,13 +61,6 @@ const NodeflowNode: Component<NodeProps> = (props) => {
     return section.css ?? "";
   };
 
-  onCleanup(() => {
-    const n = props.nodeflowData.nodes.get(props.nodeId);
-    if (n) {
-      props.nodeflowData.chunking.removeNodeFromChunk(props.nodeId, n.position);
-    }
-  });
-
   return (
     <div
       ref={(el) => {

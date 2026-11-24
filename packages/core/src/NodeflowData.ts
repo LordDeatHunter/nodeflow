@@ -79,6 +79,8 @@ export default class NodeflowData {
     minZoom: 0.02,
     movementAcceleration: 1.5,
     movementDeceleration: 0.85,
+    virtualization: true,
+    virtualizationMargin: 200,
     zoomMultiplier: 0.005,
   } as const;
 
@@ -246,6 +248,7 @@ export default class NodeflowData {
     const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
 
     this.nodes.clear();
+    this.chunking.rebuild();
     this.publishContentChanged();
     Object.values(data.nodes).forEach((node) => {
       this.addNode(node, historyGroup);
@@ -297,6 +300,13 @@ export default class NodeflowData {
 
     if (nodeBoundaryChanged || viewBoundaryChanged || viewChanged) {
       this.publishCanvasTransformChanged();
+    }
+
+    if (
+      previous.virtualization !== this._settings.virtualization ||
+      previous.virtualizationMargin !== this._settings.virtualizationMargin
+    ) {
+      this.publishContentChanged();
     }
   }
 
@@ -737,6 +747,7 @@ export default class NodeflowData {
     this.removeIncomingConnections(nodeId);
     this.removeOutgoingConnections(nodeId);
 
+    this.chunking.removeNodeFromChunk(nodeId, this.nodes.get(nodeId)!.position);
     this.nodes.delete(nodeId);
     this.publishContentChanged();
   }
@@ -1784,6 +1795,54 @@ export default class NodeflowData {
 
   public selectNode(nodeId: string, position?: Vec2) {
     this.mouseData.selectNode(nodeId, position ?? Vec2.zero(), false);
+  }
+
+  /**
+   * The canvas-space rectangle currently visible in the viewport, or
+   * `undefined` before the adapter has measured the canvas.
+   */
+  public getVisibleRect(): Rect | undefined {
+    if (this._size.x <= 0 || this._size.y <= 0) return undefined;
+
+    return Rect.of(
+      Vec2.zero().subtract(this._position),
+      this._size.divideBy(this._zoomLevel),
+    );
+  }
+
+  /**
+   * Ids of the nodes an adapter should keep in the DOM: those overlapping the
+   * viewport grown by `settings.virtualizationMargin` screen pixels, plus any
+   * node that is selected or owns a held connector, so in-progress drags and
+   * connections never lose their element. Before the adapter has measured
+   * the canvas nothing counts as visible, so a large graph is not mounted in
+   * full only to be unmounted a frame later. Returns `undefined` (render every
+   * node) when `settings.virtualization` is off.
+   */
+  public getVisibleNodeIds(): Set<string> | undefined {
+    if (!this.settings.virtualization) return undefined;
+
+    const ids = new Set<string>();
+    const view = this.getVisibleRect();
+    if (!view) return ids;
+
+    const margin = Vec2.of(1, 1).multiplyBy(
+      Math.max(0, this.settings.virtualizationMargin) / this._zoomLevel,
+    );
+    const area = Rect.fromPositions(
+      view.startPosition().subtract(margin),
+      view.endPosition().add(margin),
+    );
+
+    this.chunking.getNodesInRect(area).forEach((node) => ids.add(node.id));
+    this.mouseData.heldNodes.forEach((node: NodeflowNodeData) =>
+      ids.add(node.id),
+    );
+    this.mouseData.heldConnectors.forEach((connector: NodeConnector) =>
+      ids.add(connector.parentNode.id),
+    );
+
+    return ids;
   }
 
   public transformVec2ToCanvas(position: Vec2) {

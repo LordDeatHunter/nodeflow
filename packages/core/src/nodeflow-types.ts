@@ -144,6 +144,20 @@ export type NodeflowSettings = {
    * unbounded.
    */
   viewBoundary?: Rect;
+  /**
+   * When true (default), adapters only mount DOM elements for nodes near the
+   * viewport (see `NodeflowData.getVisibleNodeIds`). Nodes scrolled out of
+   * view are unmounted, so state held only inside a node's DOM (focus, an
+   * uncontrolled input) is lost; keep such state in `customData` or disable
+   * this.
+   */
+  virtualization: boolean;
+  /**
+   * Screen-pixel distance past each viewport edge within which nodes stay
+   * mounted when `virtualization` is on, so panning does not reveal empty
+   * space before nodes mount. Defaults to 200.
+   */
+  virtualizationMargin: number;
   zoomMultiplier: number;
 };
 

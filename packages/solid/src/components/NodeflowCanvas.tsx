@@ -65,10 +65,24 @@ const NodeflowCanvas =
       );
     });
 
-    const nodeIds = createMemo(() => {
-      tick();
-      return Array.from(nodeflowData.nodes.keys());
-    });
+    // With virtualization on, only nodes near the viewport are mounted, so
+    // this also re-runs on `viewTick`. Unchanged lists keep the previous array
+    // so panning within the same set of nodes does not touch <For>.
+    const nodeIds = createMemo(
+      () => {
+        tick();
+        viewTick();
+        const visible = nodeflowData.getVisibleNodeIds();
+        const ids = Array.from(nodeflowData.nodes.keys());
+        return visible ? ids.filter((id) => visible.has(id)) : ids;
+      },
+      [],
+      {
+        equals: (prev, next) =>
+          prev.length === next.length &&
+          prev.every((id, index) => id === next[index]),
+      },
+    );
 
     // <For> keys items by reference, so each connection must map to the same
     // entry object across redraws or its curve is torn down and rebuilt.
@@ -183,6 +197,8 @@ const NodeflowCanvas =
             nodeflowData.update({
               startPosition: Vec2.of(el.offsetLeft, el.offsetTop),
             });
+            // A resize changes which nodes are visible.
+            markViewDirty();
           });
           resizeObserver.observe(el);
           onCleanup(() => resizeObserver.disconnect());

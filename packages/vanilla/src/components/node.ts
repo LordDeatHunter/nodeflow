@@ -1,6 +1,26 @@
 import { NodeflowData, NodeflowNodeData, Vec2 } from "@nodeflow-lib/core";
 import { renderConnector } from "./connector";
 
+const nodeObservers = new WeakMap<HTMLElement, ResizeObserver[]>();
+
+/**
+ * Detaches a node element rendered by `renderNode`. Its observers are
+ * disconnected first: a detached element measures 0x0, which would otherwise
+ * overwrite the node's size in core while it is merely scrolled out of view.
+ */
+export const unmountNode = (
+  nodeId: string,
+  nodeElements: Map<string, HTMLDivElement>,
+): void => {
+  const el = nodeElements.get(nodeId);
+  if (!el) return;
+
+  nodeObservers.get(el)?.forEach((observer) => observer.disconnect());
+  nodeObservers.delete(el);
+  el.remove();
+  nodeElements.delete(nodeId);
+};
+
 export const renderNode = (
   parent: HTMLElement,
   node: NodeflowNodeData,
@@ -17,6 +37,9 @@ export const renderNode = (
   nodeDiv.style.cursor = "grab";
   nodeDiv.style.userSelect = "none";
   nodeDiv.style.boxSizing = "border-box";
+
+  const observers: ResizeObserver[] = [];
+  nodeObservers.set(nodeDiv, observers);
 
   if (node.css?.normal) {
     nodeDiv.classList.add(node.css.normal);
@@ -45,7 +68,7 @@ export const renderNode = (
     }
 
     section.connectors.forEach((connector) => {
-      renderConnector(sectionDiv, connector, node, data);
+      renderConnector(sectionDiv, connector, node, data, observers);
     });
 
     nodeDiv.appendChild(sectionDiv);
@@ -73,6 +96,7 @@ export const renderNode = (
     });
   });
   resizeObserver.observe(nodeDiv);
+  observers.push(resizeObserver);
 
   nodeDiv.addEventListener("mousedown", (event) => {
     data.eventStore.onMouseDownInNode.publish({ event, nodeId: node.id });

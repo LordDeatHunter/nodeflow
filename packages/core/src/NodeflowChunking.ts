@@ -7,6 +7,12 @@ import type NodeflowNodeData from "./NodeflowNodeData";
 export default class NodeflowChunking {
   private _chunkSize: number;
   private _chunks: Map<Vec2Hash, Set<string>> = new Map();
+  /**
+   * Largest node extent (`rectWithOffset.size`) seen so far. Nodes are keyed
+   * by their top-left position only, so `getNodesInRect` widens its scan by
+   * this much up and left to catch nodes that start before the rect.
+   */
+  private _maxNodeExtent: Vec2 = Vec2.zero();
   private readonly nodeflowData: NodeflowData;
 
   public constructor(nodeflowData: NodeflowData, chunkSize: number = 2048) {
@@ -20,6 +26,39 @@ export default class NodeflowChunking {
 
   public set chunkSize(size: number) {
     this._chunkSize = size;
+    this.rebuild();
+  }
+
+  public get maxNodeExtent(): Vec2 {
+    return this._maxNodeExtent;
+  }
+
+  /**
+   * Grows `maxNodeExtent` to cover `extent`. Never shrinks, so a stale large
+   * value only costs a slightly wider scan.
+   */
+  public trackNodeExtent(extent: Vec2): void {
+    if (
+      extent.x <= this._maxNodeExtent.x &&
+      extent.y <= this._maxNodeExtent.y
+    ) {
+      return;
+    }
+
+    this._maxNodeExtent = Vec2.of(
+      Math.max(extent.x, this._maxNodeExtent.x),
+      Math.max(extent.y, this._maxNodeExtent.y),
+    );
+  }
+
+  /** Re-indexes every node of the owning `NodeflowData` from scratch. */
+  public rebuild(): void {
+    this._chunks = new Map();
+    this._maxNodeExtent = Vec2.zero();
+    this.nodeflowData.nodes.forEach((node) => {
+      this.addNodeToChunk(node.id, node.position);
+      this.trackNodeExtent(node.rectWithOffset.size);
+    });
   }
 
   public get chunks(): Map<Vec2Hash, Set<string>> {
@@ -42,7 +81,9 @@ export default class NodeflowChunking {
     const chunk = this.chunks.get(chunkPosition);
     if (chunk) {
       chunk.delete(nodeId);
-      this.chunks.set(chunkPosition, chunk);
+      if (isSetEmpty(chunk)) {
+        this.chunks.delete(chunkPosition);
+      }
     }
   }
 
@@ -136,7 +177,9 @@ export default class NodeflowChunking {
   public getNodesInRect(rect: Rect): NodeflowNodeData[] {
     const nodes: NodeflowNodeData[] = [];
 
-    const startPosition = rect.startPosition();
+    // A node is indexed by its top-left corner, so one that starts up or left
+    // of the rect can still overlap it.
+    const startPosition = rect.startPosition().subtract(this._maxNodeExtent);
     const endPosition = rect.endPosition();
 
     const startChunk = this.calculateChunkPosition(startPosition);

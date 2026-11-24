@@ -6,7 +6,7 @@ import {
   LineShape,
 } from "@nodeflow-lib/core";
 import { applyLineDash, buildCurvePathD } from "./curve";
-import { renderNode } from "./node";
+import { renderNode, unmountNode } from "./node";
 
 export const renderCanvas = (
   container: HTMLElement,
@@ -80,6 +80,24 @@ export const renderCanvas = (
     boundaryDiv.style.height = `${end.y - start.y}px`;
   };
 
+  // Mounts nodes that should be in the DOM and unmounts the rest: deleted
+  // nodes, and with virtualization on, nodes outside the viewport margin.
+  const syncNodes = () => {
+    const visible = data.getVisibleNodeIds();
+
+    nodeElements.forEach((_el, nodeId) => {
+      if (!data.nodes.has(nodeId) || (visible && !visible.has(nodeId))) {
+        unmountNode(nodeId, nodeElements);
+      }
+    });
+
+    data.nodes.forEach((node, nodeId) => {
+      if (!nodeElements.has(nodeId) && (!visible || visible.has(nodeId))) {
+        renderNode(innerDiv, node, data, nodeElements);
+      }
+    });
+  };
+
   const syncDom = () => {
     if (
       data.zoomLevel !== lastZoom ||
@@ -94,21 +112,12 @@ export const renderCanvas = (
 
     syncBoundary();
 
-    data.nodes.forEach((node, nodeId) => {
-      if (!nodeElements.has(nodeId)) {
-        renderNode(innerDiv, node, data, nodeElements);
-      }
-    });
+    syncNodes();
 
     nodeElements.forEach((el, nodeId) => {
-      const node = data.nodes.get(nodeId);
-      if (node) {
-        el.style.left = `${node.position.x}px`;
-        el.style.top = `${node.position.y}px`;
-      } else {
-        el.remove();
-        nodeElements.delete(nodeId);
-      }
+      const node = data.nodes.get(nodeId)!;
+      el.style.left = `${node.position.x}px`;
+      el.style.top = `${node.position.y}px`;
     });
 
     syncCurves(data, svg, curveElements);
@@ -116,37 +125,27 @@ export const renderCanvas = (
   };
   requestAnimationFrame(syncDom);
 
-  const resizeObserver = new ResizeObserver(() => {
+  const measureCanvas = () => {
     data.updateCanvasSize(Vec2.of(outerDiv.clientWidth, outerDiv.clientHeight));
     data.update({
       startPosition: Vec2.of(outerDiv.offsetLeft, outerDiv.offsetTop),
     });
-  });
+  };
+  // Measure now so the first node pass already knows the viewport.
+  measureCanvas();
+  const resizeObserver = new ResizeObserver(measureCanvas);
   resizeObserver.observe(outerDiv);
 
   data.eventStore.onNodeDataChanged.subscribeMultiple([
     {
       name: "vanilla:render-new-nodes",
-      event: ({ nodeId }: { nodeId: string; data: unknown }) => {
-        if (!nodeElements.has(nodeId)) {
-          const node = data.nodes.get(nodeId);
-          if (node) {
-            renderNode(innerDiv, node, data, nodeElements);
-          }
-        }
-      },
+      event: () => syncNodes(),
     },
   ]);
 
   // Defer initial render so nodes added synchronously after
   // createVanillaNodeflow() are captured in the first pass.
-  queueMicrotask(() => {
-    data.nodes.forEach((node) => {
-      if (!nodeElements.has(node.id)) {
-        renderNode(innerDiv, node, data, nodeElements);
-      }
-    });
-  });
+  queueMicrotask(syncNodes);
 
   outerDiv.addEventListener("mousemove", (event) => {
     data.eventStore.onMouseMoveInNodeflow.publish({ event });
