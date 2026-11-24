@@ -1,5 +1,5 @@
 import { createTick, NodeflowNodeData, Optional } from "@nodeflow-lib/solid";
-import { createMemo, createSignal, Show } from "solid-js";
+import { createMemo, createSignal, onCleanup, Show } from "solid-js";
 import NodeDataDisplay from "./NodeDataDisplay";
 import NodeFormButtons from "./NodeFormButtons";
 import NodeForm from "./NodeForm";
@@ -9,7 +9,12 @@ import { nodeflowData } from "../App";
 export type FormDataType = CustomNodeflowDataType & { id: string };
 
 const SidebarContent = () => {
-  const { tick } = createTick();
+  const { tick, markDirty } = createTick();
+  const tickKey = "familytree:sidebar";
+  nodeflowData.eventStore.onContentChanged.subscribe(tickKey, markDirty);
+  onCleanup(() =>
+    nodeflowData.eventStore.onContentChanged.unsubscribe(tickKey),
+  );
   const [formData, setFormData] =
     createSignal<Optional<FormDataType>>(undefined);
 
@@ -29,6 +34,13 @@ const SidebarContent = () => {
       ...nodeData.customData,
       id: nodeData.id,
     };
+  });
+
+  const group = createMemo(() => {
+    tick();
+    const current = node();
+    const found = current && nodeflowData.getGroupOfNode(current.id);
+    return found ? { id: found.id, collapsed: found.collapsed } : undefined;
   });
 
   const showForm = createMemo(
@@ -63,6 +75,7 @@ const SidebarContent = () => {
         setFormData={setFormData}
         nodeData={nodeData()}
         formData={formData()}
+        group={group()}
       />
     </div>
   );

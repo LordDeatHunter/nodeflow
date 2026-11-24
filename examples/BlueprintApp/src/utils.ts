@@ -1,17 +1,43 @@
 import { Component } from "solid-js";
-import { Changes, NodeflowNodeData, Vec2 } from "@nodeflow-lib/solid";
+import {
+  Changes,
+  generateId,
+  NodeTemplate,
+  NodeflowNodeData,
+  SerializedNodeflowNode,
+  Vec2,
+} from "@nodeflow-lib/solid";
 import nodeCss from "./styles/node.module.scss";
 import curveCss from "./styles/curve.module.scss";
+import groupCss from "./styles/group.module.scss";
 import NumberNode from "./NumberNode";
 import OperationNode from "./OperationNode";
 import DisplayNode from "./DisplayNode";
+import DerivedNode from "./DerivedNode";
 import { markBlueprintDirty } from "./reactivity";
 import { nodeflowData } from "./App";
 
 export type NodeType = "number" | "operation" | "display";
 
+type NodeDisplay = Component<{ node: NodeflowNodeData }>;
+
+const DISPLAYS: Record<CustomNodeflowDataType["type"], NodeDisplay> = {
+  number: NumberNode,
+  operation: OperationNode,
+  display: DisplayNode,
+  derived: DerivedNode,
+};
+
+/**
+ * Picks a node's component from its type. Saved types are stored as JSON,
+ * which cannot hold components, so core asks for them when spawning.
+ */
+export const resolveNodeDisplay = (
+  node: Partial<SerializedNodeflowNode>,
+): NodeDisplay | undefined =>
+  node.customData ? DISPLAYS[node.customData.type] : undefined;
+
 type NodeConfig = {
-  display: Component<{ node: NodeflowNodeData }>;
   inputs: number;
   outputs: number;
   customData: CustomNodeflowDataType;
@@ -19,19 +45,16 @@ type NodeConfig = {
 
 const NODE_CONFIG: Record<NodeType, NodeConfig> = {
   number: {
-    display: NumberNode,
     inputs: 0,
     outputs: 1,
     customData: { type: "number", value: 0 },
   },
   operation: {
-    display: OperationNode,
     inputs: 2,
     outputs: 1,
     customData: { type: "operation", operator: "+" },
   },
   display: {
-    display: DisplayNode,
     inputs: 1,
     outputs: 0,
     customData: { type: "display" },
@@ -55,7 +78,7 @@ export const createBlueprintNode = (
     {
       css: { normal: nodeCss.node, selected: nodeCss.selectedNode },
       position,
-      display: config.display,
+      display: DISPLAYS[type],
       centered,
       customData: { ...config.customData },
     },
@@ -87,6 +110,108 @@ export const createBlueprintNode = (
 
   markBlueprintDirty();
   return newNode;
+};
+
+/** Replaces `nodeIds` with one derived node. */
+export const createDerivedNode = (
+  nodeIds: Array<string>,
+): NodeflowNodeData | undefined => {
+  const count = Array.from(nodeflowData.nodes.values()).filter(
+    (node) => node.customData.type === "derived",
+  ).length;
+
+  const node = nodeflowData.createCompositeNode(nodeIds, {
+    css: {
+      normal: `${nodeCss.node} ${nodeCss.derivedNode}`,
+      selected: nodeCss.selectedNode,
+    },
+    display: DerivedNode,
+    customData: { type: "derived", name: `Derived node ${count + 1}` },
+    inputSection: { css: nodeCss.inputsSection },
+    outputSection: { css: nodeCss.outputsSection },
+    connectorCss: {
+      input: nodeCss.inputConnector,
+      output: nodeCss.outputConnector,
+    },
+    isInput: (connector) => connector.parentSection.id === "inputs",
+  });
+
+  markBlueprintDirty();
+  return node;
+};
+
+export const breakApartDerivedNode = (nodeId: string) => {
+  nodeflowData.explodeCompositeNode(nodeId);
+  markBlueprintDirty();
+};
+
+/** Saves a derived node as a reusable type, or updates the one it came from. */
+export const saveDerivedNodeType = (nodeId: string) => {
+  const node = nodeflowData.nodes.get(nodeId);
+  if (!node?.composite) return;
+
+  const templateId = node.customData.templateId ?? generateId();
+  node.customData = { ...node.customData, templateId };
+  nodeflowData.templates.saveFromNode(
+    nodeId,
+    node.customData.name ?? "Derived node",
+    templateId,
+  );
+  markBlueprintDirty();
+};
+
+export const spawnSavedType = (
+  templateId: string,
+  position: Vec2,
+  centered = false,
+) => {
+  const node = nodeflowData.instantiateTemplate(templateId, position, {
+    centered,
+  });
+  markBlueprintDirty();
+  return node;
+};
+
+export const groupNodes = (nodeIds: Array<string>) =>
+  nodeflowData.addGroup(nodeIds, {
+    title: `Group ${nodeflowData.groups.size + 1}`,
+    css: {
+      frame: groupCss.frame,
+      header: groupCss.header,
+      collapsed: groupCss.collapsed,
+      selected: groupCss.selected,
+    },
+  });
+
+const TEMPLATES_STORAGE_KEY = "nodeflow-blueprint:saved-types";
+
+/**
+ * Demo persistence: core keeps saved types in memory only, so this example
+ * stores them in localStorage. A real app could use a database instead.
+ */
+export const setupSavedTypePersistence = () => {
+  try {
+    const stored = localStorage.getItem(TEMPLATES_STORAGE_KEY);
+    if (stored) {
+      nodeflowData.templates.load(JSON.parse(stored) as Array<NodeTemplate>);
+    }
+  } catch {
+    // Unavailable or corrupt storage: start without saved types.
+  }
+
+  nodeflowData.eventStore.onTemplatesChanged.subscribe(
+    "blueprint:persist-saved-types",
+    () => {
+      try {
+        localStorage.setItem(
+          TEMPLATES_STORAGE_KEY,
+          JSON.stringify(nodeflowData.templates.toJSON()),
+        );
+      } catch {
+        // Storage full or blocked; saved types last for this session only.
+      }
+    },
+  );
 };
 
 export const connectNodes = (

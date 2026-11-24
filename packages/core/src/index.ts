@@ -20,6 +20,12 @@ export { default as NodeflowNodeData } from "./NodeflowNodeData";
 export { default as NodeflowChunking } from "./NodeflowChunking";
 export { default as NodeflowData } from "./NodeflowData";
 export { default as NodeflowRegistry } from "./NodeflowRegistry";
+export {
+  default as NodeflowGroupData,
+  DEFAULT_COLLAPSED_GROUP_SIZE,
+} from "./NodeflowGroupData";
+export { default as NodeTemplates } from "./NodeTemplates";
+export * from "./CompositeNodes";
 export * from "./constants";
 export * from "./LineShapes";
 export * from "./math-utils";

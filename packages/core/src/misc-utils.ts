@@ -65,3 +65,23 @@ export const deepCopy = <T>(obj: T): T => {
   }
   return obj;
 };
+
+let generatedIdCounter = 0;
+
+/**
+ * Creates a unique id. `crypto.randomUUID` only exists in secure contexts
+ * (HTTPS or localhost), so pages served over plain HTTP, e.g. a dev server
+ * opened by LAN IP, fall back to a generated id.
+ */
+export const generateId = (): string => {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    return crypto.randomUUID();
+  }
+
+  const counter = (++generatedIdCounter).toString(36);
+  const random = Math.random().toString(36).slice(2);
+  return `${Date.now().toString(36)}-${counter}-${random}`;
+};

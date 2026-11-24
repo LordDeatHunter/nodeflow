@@ -6,6 +6,7 @@ import {
   ConnectorDestinationType,
   SelectableElementType,
   NodeflowSettings,
+  SerializedCompositeDefinition,
 } from "./nodeflow-types";
 import Vec2 from "./Vec2";
 import Rect from "./Rect";
@@ -82,6 +83,7 @@ export type NodeflowNodeType = {
   offset: Vec2;
   position: Vec2;
   size: Vec2;
+  composite?: SerializedCompositeDefinition;
 };
 
 export type ConnectorSectionType = {

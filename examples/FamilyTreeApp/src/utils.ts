@@ -102,6 +102,39 @@ export const createFamilyMemberNode = (
   return newNode;
 };
 
+/** `nodeId` and everyone descended from them. */
+export const getBranch = (nodeId: string): Array<string> => {
+  const branch = new Set<string>();
+  const queue = [nodeId];
+
+  while (queue.length > 0) {
+    const id = queue.shift()!;
+    const node = nodeflowData.nodes.get(id);
+    if (!node || branch.has(id)) continue;
+
+    branch.add(id);
+    node.getAllDestinationNodes().forEach((child) => queue.push(child.id));
+  }
+
+  return Array.from(branch);
+};
+
+/** Groups a person with all their descendants into a collapsible frame. */
+export const groupBranch = (nodeId: string) => {
+  const root = nodeflowData.nodes.get(nodeId);
+  if (!root) return undefined;
+
+  return nodeflowData.addGroup(getBranch(nodeId), {
+    title: `${root.customData.name}'s branch`,
+    css: {
+      frame: nodeCss.groupFrame,
+      header: nodeCss.groupHeader,
+      collapsed: nodeCss.groupCollapsed,
+      selected: nodeCss.groupSelected,
+    },
+  });
+};
+
 export const setupDummyNodes = async (count: number = 50) => {
   const data = await fetchRandomData(count);
   for (const person of data) {

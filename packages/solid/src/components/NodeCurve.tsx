@@ -50,8 +50,9 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
 
     const dest = sourceConn.destinations.get(destIndex);
 
-    const start = sourceConn.getCenter();
-    const end = destConn.getCenter();
+    // Ends hidden in a collapsed group attach to the group's box.
+    const { start, end, startAnchor, endAnchor } =
+      props.nodeflowData.getConnectionEndpoints(sourceConn, destConn);
     const shape =
       dest?.shape ?? props.nodeflowData.settings.defaultLineShape;
     const dash = dest?.dash ?? props.nodeflowData.settings.defaultLineDash;
@@ -79,8 +80,8 @@ const NodeCurve: Component<NodeCurveProps> = (props) => {
           shape,
           start,
           end,
-          startNode.getCenter(),
-          endNode.getCenter(),
+          startAnchor,
+          endAnchor,
         );
 
       if (dest) {

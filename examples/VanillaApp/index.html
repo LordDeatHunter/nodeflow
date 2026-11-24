@@ -67,6 +67,32 @@
         border-color: rgba(226, 226, 226, 0.5);
         background-color: rgba(255, 255, 255, 0.04);
       }
+      .nodeflowGroupFrame {
+        border: 1px dashed rgba(226, 226, 226, 0.35);
+        background-color: rgba(255, 255, 255, 0.03);
+      }
+      .nodeflowGroupHeader,
+      .nodeflowGroupCollapsed {
+        color: #e2e2e2;
+        font-size: 13px;
+      }
+      .nodeflowGroupHeader {
+        background: rgba(15, 52, 96, 0.6);
+        border-radius: 6px 6px 0 0;
+      }
+      .nodeflowGroupCollapsed {
+        background: #16213e;
+        border-color: #0f3460;
+        min-height: 56px;
+      }
+      .nodeflowGroupToggle {
+        width: 24px;
+        height: 24px;
+        background: #0f3460;
+        color: #e2e2e2;
+        border: 1px solid #1a1a4e;
+        border-radius: 4px;
+      }
       #app {
         flex: 1 1 0%;
         min-height: 0;
@@ -95,6 +121,9 @@
     <div class="toolbar">
       <button id="btn-add-node">Add Random Node</button>
       <button id="btn-add-connection">Add Random Connection</button>
+      <button id="btn-group">Group Selected</button>
+      <button id="btn-combine">Combine Selected</button>
+      <button id="btn-break-apart">Break Apart Selected</button>
       <select id="boundary-mode" aria-label="Canvas boundary">
         <option value="off">Boundary: off</option>
         <option value="nodes">Boundary: nodes</option>

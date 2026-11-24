@@ -80,3 +80,81 @@ select.control {
   font-size: 0.9rem;
   color: colors.$font-color-muted;
 }
+
+.derivedRoot {
+  padding: 1.1rem 1.4rem 1.2rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.derivedName {
+  width: 100%;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  box-sizing: border-box;
+  background: transparent;
+  color: colors.$dark-9;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  outline: none;
+
+  &:hover,
+  &:focus {
+    border-color: rgba(132, 195, 255, 0.35);
+    background-color: rgba(10, 15, 23, 0.5);
+  }
+}
+
+.derivedPorts {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.portList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: colors.$dark-7;
+}
+
+.portListOutputs {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.portValue {
+  margin-left: 0.5rem;
+  color: colors.$connection-color;
+  font-weight: 600;
+}
+
+.derivedActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.button {
+  flex: 1;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid rgba(132, 195, 255, 0.35);
+  border-radius: 0.55rem;
+  background-color: rgba(132, 195, 255, 0.08);
+  color: colors.$dark-9;
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgba(132, 195, 255, 0.18);
+  }
+}

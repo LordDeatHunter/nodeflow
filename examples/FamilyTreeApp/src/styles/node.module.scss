@@ -129,3 +129,32 @@ $connector-border: 6px;
   font-weight: bold;
   user-select: none;
 }
+
+.groupFrame {
+  border: 2px dashed colors.$dark-4;
+  border-radius: 12px;
+  background-color: rgba(166, 158, 154, 0.08);
+}
+
+.groupHeader {
+  border-radius: 10px 10px 0 0;
+  background-color: rgba(166, 158, 154, 0.25);
+  color: colors.$dark-8;
+  font-weight: bold;
+}
+
+.groupCollapsed {
+  min-width: 200px;
+  min-height: 64px;
+  padding: 0 16px;
+  border: 2px solid colors.$node-border-color;
+  border-radius: 12px;
+  background-color: colors.$node-background-color;
+  color: colors.$node-text-color;
+  font-weight: bold;
+}
+
+.groupSelected {
+  border-color: colors.$dark-7;
+  box-shadow: 0 0 0 3px rgba(50, 50, 50, 0.25);
+}

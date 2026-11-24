@@ -1,6 +1,7 @@
 import { SelectableElementType } from "./nodeflow-types";
 import SelectionMap from "./SelectionMap";
 import Rect from "./Rect";
+import type NodeflowNodeData from "./NodeflowNodeData";
 
 export default class SelectionBoxData {
   private _boundingBox: Rect | undefined = undefined;
@@ -40,8 +41,12 @@ export default class SelectionBoxData {
       this.nodeflowData.transformVec2ToCanvas(rect.endPosition()),
     );
 
-    const highlightedNodes =
-      this.nodeflowData.chunking.getNodesInRect(transformedRect);
+    // Nodes hidden in collapsed groups cannot be box-selected.
+    const highlightedNodes = this.nodeflowData.chunking
+      .getNodesInRect(transformedRect)
+      .filter(
+        (node: NodeflowNodeData) => !this.nodeflowData.isNodeHidden(node.id),
+      );
 
     this.selections.clear();
     highlightedNodes.forEach((node: any) => {

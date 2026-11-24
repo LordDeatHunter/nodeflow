@@ -37,6 +37,68 @@
     z-index: 0;
   }
 
+  .nodeflowGroupFrame {
+    position: absolute;
+    box-sizing: border-box;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    background-color: rgba(0, 0, 0, 0.03);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .nodeflowGroupHeader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
+    overflow: hidden;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    pointer-events: auto;
+    cursor: grab;
+  }
+
+  .nodeflowGroupTitle {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nodeflowGroupToggle {
+    flex: none;
+    cursor: pointer;
+  }
+
+  .nodeflowGroupCollapsed {
+    position: absolute;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    min-width: 120px;
+    border: 1px solid black;
+    border-radius: 6px;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    z-index: 1;
+    cursor: grab;
+  }
+
+  .nodeflowGroupCount {
+    opacity: 0.6;
+  }
+
   .nodeflowSelectionBox {
     position: absolute;
     background-color: rgba(0, 0, 0, 0.1);

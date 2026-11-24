@@ -2,7 +2,7 @@ import { Component, Show } from "solid-js";
 import { Optional } from "@nodeflow-lib/solid";
 import { FormDataType } from "./SidebarContent";
 import formStyle from "../styles/form.module.scss";
-import { cleanInput, createFamilyMemberNode } from "../utils";
+import { cleanInput, createFamilyMemberNode, groupBranch } from "../utils";
 import nodeCss from "../styles/node.module.scss";
 import { nodeflowData } from "../App";
 
@@ -11,6 +11,8 @@ interface NodeFormButtonsProps {
   nodeData: Optional<FormDataType>;
   formData: Optional<FormDataType>;
   setFormData: (data: Optional<FormDataType>) => void;
+  /** The group the selected person belongs to. */
+  group: Optional<{ id: string; collapsed: boolean }>;
 }
 
 const AddButton: Component<{ onClick: () => void }> = (props) => (
@@ -113,6 +115,27 @@ const NodeFormButtons: Component<NodeFormButtonsProps> = (props) => {
         <AddButton onClick={onAdd} />
         <button onClick={onEdit}>Edit</button>
         <button onClick={onRemovePreviewNode}>Delete</button>
+        <Show
+          when={props.group}
+          fallback={
+            <button onClick={() => groupBranch(props.nodeData!.id)}>
+              Group branch
+            </button>
+          }
+        >
+          {(group) => (
+            <>
+              <button
+                onClick={() => nodeflowData.toggleGroupCollapsed(group().id)}
+              >
+                {group().collapsed ? "Expand branch" : "Collapse branch"}
+              </button>
+              <button onClick={() => nodeflowData.removeGroup(group().id)}>
+                Ungroup
+              </button>
+            </>
+          )}
+        </Show>
       </Show>
       <Show when={props.mode === "edit"}>
         <button onClick={onUpdateNode}>Save</button>

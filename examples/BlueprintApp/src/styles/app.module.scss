@@ -166,3 +166,92 @@
     0 0 30px rgba(132, 195, 255, 0.16);
   transform: rotate(-3deg) scale(1.02);
 }
+
+.savedSlot {
+  flex-direction: column;
+  gap: 4px;
+  border-color: rgba(195, 255, 132, 0.28);
+
+  &::before {
+    background: linear-gradient(
+      90deg,
+      colors.$connection-color,
+      colors.$new-connection-color
+    );
+  }
+}
+
+.slotTag {
+  font-size: 0.58rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: colors.$font-color-muted;
+}
+
+.slotRemove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: colors.$font-color-muted;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: colors.$dark-9;
+  }
+}
+
+.selectionToolbar {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 32px);
+  padding: 8px 10px 8px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(164, 181, 178, 0.18);
+  background-color: colors.$panel-background-color;
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 0 16px 34px -18px rgba(0, 0, 0, 0.85);
+  flex-wrap: wrap;
+}
+
+.selectionCount {
+  margin-right: 4px;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: colors.$font-color-muted;
+}
+
+.toolbarButton {
+  padding: 7px 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(132, 195, 255, 0.35);
+  background-color: rgba(132, 195, 255, 0.1);
+  color: colors.$dark-9;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+
+  &:hover {
+    background-color: rgba(132, 195, 255, 0.2);
+    border-color: rgba(132, 195, 255, 0.6);
+  }
+}

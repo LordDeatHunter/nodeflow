@@ -178,6 +178,18 @@ export type NodeflowSettings = {
    */
   virtualizationMargin: number;
   zoomMultiplier: number;
+  /**
+   * Canvas-space padding between a group's members and its frame.
+   * Defaults to 16.
+   */
+  groupPadding: number;
+  /** Canvas-space height of an expanded group's header bar. Defaults to 32. */
+  groupHeaderHeight: number;
+  /**
+   * Supplies `display` for nodes added without one, e.g. nodes restored from
+   * JSON (templates, saved graphs), since components cannot be stored.
+   */
+  resolveNodeDisplay?: (node: Partial<SerializedNodeflowNode>) => unknown;
 };
 
 export enum SelectableElementType {
@@ -220,6 +232,60 @@ export interface SerializedNodeflowNode {
   offset: SerializedVec2;
   position: SerializedVec2;
   size: SerializedVec2;
+  /**
+   * Set on composite nodes: the inner graph the node stands in for. See
+   * `NodeflowData.createCompositeNode`.
+   */
+  composite?: SerializedCompositeDefinition;
+}
+
+/** Maps one connector of a composite node to the inner connector it exposes. */
+export interface CompositePort {
+  /** Connector id on the composite node. */
+  id: string;
+  innerNodeId: string;
+  innerConnectorId: string;
+}
+
+/**
+ * The inner graph of a composite node. Node positions are relative to the
+ * composite node's position.
+ */
+export interface SerializedCompositeDefinition {
+  nodes: Record<string, SerializedNodeflowNode>;
+  /** Connections between inner nodes. */
+  connections: Array<SerializedConnection>;
+  inputs: Array<CompositePort>;
+  outputs: Array<CompositePort>;
+}
+
+/** A reusable composite node type. Plain JSON once `display` is stripped. */
+export interface NodeTemplate {
+  id: string;
+  name: string;
+  definition: SerializedCompositeDefinition;
+  /** What spawned nodes are created with, minus position and `composite`. */
+  node: Partial<SerializedNodeflowNode>;
+}
+
+export interface NodeflowGroupCss {
+  /** Expanded frame. */
+  frame?: string;
+  /** Expanded frame's header bar. */
+  header?: string;
+  /** Collapsed box. */
+  collapsed?: string;
+  /** Added to the frame or box while every member is selected. */
+  selected?: string;
+}
+
+export interface SerializedNodeflowGroup {
+  id: string;
+  title: string;
+  nodeIds: Array<string>;
+  collapsed: boolean;
+  css?: NodeflowGroupCss;
+  customData?: Record<string, unknown>;
 }
 
 export interface SerializedNodeflowData {
@@ -228,6 +294,8 @@ export interface SerializedNodeflowData {
   currentMoveSpeed: SerializedVec2;
   mouseData: SerializedMouseData;
   nodes: Record<string, SerializedNodeflowNode>;
+  /** Absent in data saved before groups existed. */
+  groups?: Record<string, SerializedNodeflowGroup>;
   pinchDistance: number;
   position: SerializedVec2;
   size: SerializedVec2;

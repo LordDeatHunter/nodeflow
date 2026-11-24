@@ -1,6 +1,7 @@
 import {
   Optional,
   SelectableElementCSS,
+  SerializedCompositeDefinition,
   SerializedConnection,
   SerializedConnectorSection,
   SerializedNodeConnector,
@@ -26,6 +27,7 @@ export default class NodeflowNodeData {
   private _offset: Vec2;
   private _position: Vec2;
   private _size: Vec2;
+  private _composite: SerializedCompositeDefinition | undefined;
   private readonly nodeflowData: NodeflowData;
 
   constructor(nodeflowData: NodeflowData, data: NodeflowNodeType) {
@@ -42,6 +44,7 @@ export default class NodeflowNodeData {
     this._offset = data.offset ?? Vec2.zero();
     this._position = data.position ?? Vec2.zero();
     this._size = data.size ?? Vec2.zero();
+    this._composite = data.composite;
     this._position = this.normalizedPosition(this._position);
     this.nodeflowData.chunking.addNodeToChunk(this.id, this._position);
     this.trackExtent();
@@ -90,6 +93,20 @@ export default class NodeflowNodeData {
 
   public get size(): Vec2 {
     return this._size;
+  }
+
+  /** The inner graph of a composite node; `undefined` for plain nodes. */
+  public get composite(): SerializedCompositeDefinition | undefined {
+    return this._composite;
+  }
+
+  public get isComposite(): boolean {
+    return this._composite !== undefined;
+  }
+
+  public set composite(value: SerializedCompositeDefinition | undefined) {
+    this._composite = value;
+    this.nodeflowData.publishContentChanged();
   }
 
   public set centered(value: boolean) {
@@ -281,6 +298,7 @@ export default class NodeflowNodeData {
     if (data.id !== undefined) this.reindexId(data.id);
     if (data.offset !== undefined) this._offset = data.offset;
     if (data.size !== undefined) this._size = data.size;
+    if (data.composite !== undefined) this._composite = data.composite;
     if (data.size !== undefined || data.offset !== undefined) {
       this.trackExtent();
     }
@@ -318,6 +336,7 @@ export default class NodeflowNodeData {
       offset: this._offset,
       position: this._position,
       size: this._size,
+      composite: this._composite,
     };
     const updates = updater(current);
     this.update(updates);
@@ -344,6 +363,7 @@ export default class NodeflowNodeData {
       offset: this._offset.serialize(),
       position: this._position.serialize(),
       size: this._size.serialize(),
+      ...(this._composite && { composite: deepCopy(this._composite) }),
     };
   }
 
@@ -359,11 +379,15 @@ export default class NodeflowNodeData {
       connectorSections: new Map<string, ConnectorSection>(),
       css: deepCopy(data.css) ?? {},
       customData: deepCopy(data.customData) ?? ({} as CustomNodeflowDataType),
-      display: data.display ?? (() => undefined),
+      display:
+        data.display ??
+        nodeflowData.settings.resolveNodeDisplay?.(data) ??
+        (() => undefined),
       id,
       offset: Vec2.deserializeOrDefault(data.offset),
       position: Vec2.deserializeOrDefault(data.position),
       size: Vec2.deserializeOrDefault(data.size),
+      composite: deepCopy(data.composite),
     });
 
     const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);

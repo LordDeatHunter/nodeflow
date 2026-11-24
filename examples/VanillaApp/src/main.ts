@@ -150,9 +150,40 @@ const addRandomConnection = () => {
   }
 };
 
+const selectedNodeIds = () =>
+  nodeflowData.mouseData.heldNodes.map((node) => node.id as string);
+
+// Groups draw a frame with a collapse toggle; a collapsed group stands in
+// for its nodes and can be dragged like one.
+const groupSelected = () => {
+  nodeflowData.addGroup(selectedNodeIds(), {
+    title: `Group ${nodeflowData.groups.size + 1}`,
+  });
+};
+
+// Replaces the selection with one composite node exposing its free and
+// boundary connectors.
+const combineSelected = () => {
+  nodeflowData.createCompositeNode(selectedNodeIds(), {
+    display: nodeDisplay,
+    isInput: (connector) => connector.parentSection.id === "inputs",
+  });
+};
+
+const breakApartSelected = () => {
+  selectedNodeIds().forEach((id) => nodeflowData.explodeCompositeNode(id));
+};
+
 document
   .getElementById("btn-add-node")
   ?.addEventListener("click", addRandomNode);
+document.getElementById("btn-group")?.addEventListener("click", groupSelected);
+document
+  .getElementById("btn-combine")
+  ?.addEventListener("click", combineSelected);
+document
+  .getElementById("btn-break-apart")
+  ?.addEventListener("click", breakApartSelected);
 document
   .getElementById("btn-add-connection")
   ?.addEventListener("click", addRandomConnection);

@@ -8,6 +8,7 @@ import {
   SelectableElementCSS,
 } from "@nodeflow-lib/core";
 import NodeflowNode from "./NodeflowNode";
+import NodeflowGroup from "./NodeflowGroup";
 import NodeCurve from "./NodeCurve";
 import Curve from "./Curve";
 import SelectionBox from "./SelectionBox";
@@ -65,23 +66,31 @@ const NodeflowCanvas =
       );
     });
 
+    const sameIds = (prev: Array<string>, next: Array<string>) =>
+      prev.length === next.length &&
+      prev.every((id, index) => id === next[index]);
+
     // With virtualization on, only nodes near the viewport are mounted, so
     // this also re-runs on `viewTick`. Unchanged lists keep the previous array
-    // so panning within the same set of nodes does not touch <For>.
+    // so panning within the same set of nodes does not touch <For>. Nodes
+    // hidden in collapsed groups are left out.
     const nodeIds = createMemo(
       () => {
         tick();
         viewTick();
-        const visible = nodeflowData.getVisibleNodeIds();
-        const ids = Array.from(nodeflowData.nodes.keys());
-        return visible ? ids.filter((id) => visible.has(id)) : ids;
+        return nodeflowData.getRenderedNodeIds();
       },
       [],
-      {
-        equals: (prev, next) =>
-          prev.length === next.length &&
-          prev.every((id, index) => id === next[index]),
+      { equals: sameIds },
+    );
+
+    const groupIds = createMemo(
+      () => {
+        tick();
+        return Array.from(nodeflowData.groups.keys());
       },
+      [],
+      { equals: sameIds },
     );
 
     // <For> keys items by reference, so each connection must map to the same
@@ -101,6 +110,9 @@ const NodeflowCanvas =
             for (const dest of connector.destinations.array) {
               const destinationNodeId =
                 dest.destinationConnector.parentSection.parentNode.id;
+              if (nodeflowData.isConnectionHidden(nodeId, destinationNodeId)) {
+                continue;
+              }
               const destinationConnectorId = dest.destinationConnector.id;
               let entry = connectionEntries.get(dest);
 
@@ -278,6 +290,15 @@ const NodeflowCanvas =
               );
             }}
           </Show>
+          <For each={groupIds()}>
+            {(groupId) => (
+              <NodeflowGroup
+                groupId={groupId}
+                nodeflowData={nodeflowData}
+                tick={tick}
+              />
+            )}
+          </For>
           <svg
             style={{
               position: "absolute",

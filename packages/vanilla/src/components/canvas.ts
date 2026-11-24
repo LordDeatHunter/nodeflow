@@ -7,6 +7,7 @@ import {
 } from "@nodeflow-lib/core";
 import { applyLineDash, buildCurvePathD } from "./curve";
 import { renderNode, unmountNode } from "./node";
+import { GroupElement, syncGroups } from "./group";
 import { applyGridSize, gridSizingKey } from "./grid-sizing";
 
 export const renderCanvas = (
@@ -58,6 +59,7 @@ export const renderCanvas = (
   let lastBoundaryKey = "";
   let lastGridSizingKey = gridSizingKey(data);
   const curveElements = new Map<string, SVGPathElement>();
+  const groupElements = new Map<string, GroupElement>();
 
   const syncBoundary = () => {
     const boundary = data.settings.nodeBoundary;
@@ -83,19 +85,20 @@ export const renderCanvas = (
   };
 
   // Mounts nodes that should be in the DOM and unmounts the rest: deleted
-  // nodes, and with virtualization on, nodes outside the viewport margin.
+  // nodes, nodes hidden in collapsed groups, and with virtualization on,
+  // nodes outside the viewport margin.
   const syncNodes = () => {
-    const visible = data.getVisibleNodeIds();
+    const rendered = new Set(data.getRenderedNodeIds());
 
     nodeElements.forEach((_el, nodeId) => {
-      if (!data.nodes.has(nodeId) || (visible && !visible.has(nodeId))) {
+      if (!rendered.has(nodeId)) {
         unmountNode(nodeId, nodeElements);
       }
     });
 
-    data.nodes.forEach((node, nodeId) => {
-      if (!nodeElements.has(nodeId) && (!visible || visible.has(nodeId))) {
-        renderNode(innerDiv, node, data, nodeElements);
+    rendered.forEach((nodeId) => {
+      if (!nodeElements.has(nodeId)) {
+        renderNode(innerDiv, data.nodes.get(nodeId)!, data, nodeElements);
       }
     });
   };
@@ -114,6 +117,7 @@ export const renderCanvas = (
 
     syncBoundary();
 
+    syncGroups(innerDiv, svg, data, groupElements);
     syncNodes();
 
     // Newly mounted nodes size themselves on their first resize; re-apply to
@@ -326,6 +330,7 @@ const syncCurves = (
       connector.destinations.array.forEach((dest) => {
         const destNodeId =
           dest.destinationConnector.parentSection.parentNode.id;
+        if (data.isConnectionHidden(nodeId, destNodeId)) return;
         const destConnectorId = dest.destinationConnector.id;
         const curveId = makeCurveId(
           nodeId,

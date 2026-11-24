@@ -1,4 +1,5 @@
 import { Change, SerializedChanges } from "./nodeflow-types";
+import { generateId } from "./misc-utils";
 
 export default class Changes {
   private changes: Array<Change>;
@@ -69,24 +70,9 @@ export default class Changes {
     return true;
   }
 
-  private static historyGroupCounter = 0;
-
-  /**
-   * Creates a unique history group id. `crypto.randomUUID` only exists in
-   * secure contexts (HTTPS or localhost), so pages served over plain HTTP,
-   * e.g. a dev server opened by LAN IP, fall back to a generated id.
-   */
+  /** Creates a unique history group id. */
   public static createHistoryGroup(): string {
-    if (
-      typeof crypto !== "undefined" &&
-      typeof crypto.randomUUID === "function"
-    ) {
-      return crypto.randomUUID();
-    }
-
-    const counter = (++Changes.historyGroupCounter).toString(36);
-    const random = Math.random().toString(36).slice(2);
-    return `${Date.now().toString(36)}-${counter}-${random}`;
+    return generateId();
   }
 
   public static evaluateHistoryGroup(historyGroup: string | boolean = true) {

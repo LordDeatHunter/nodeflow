@@ -6,8 +6,17 @@ import {
   SelectableElementType,
   SerializedConnection,
   SerializedNodeflowData,
+  SerializedNodeflowGroup,
   SerializedNodeflowNode,
 } from "./nodeflow-types";
+import NodeflowGroupData from "./NodeflowGroupData";
+import NodeTemplates from "./NodeTemplates";
+import {
+  allocateInnerNodeIds,
+  analyzeCompositeSelection,
+  CompositeNodeOptions,
+  createCompositeSections,
+} from "./CompositeNodes";
 import { NodeflowEventRecord } from "./EventPublishers";
 import { NodeflowDataType, NodeflowNodeType } from "./types";
 import { clamp } from "./math-utils";
@@ -66,6 +75,12 @@ export default class NodeflowData {
   public readonly eventStore: NodeflowEventRecord;
   public readonly chunking: NodeflowChunking;
   public readonly id: string;
+  /** Node groups (frames) by id. Mutate through `addGroup` and friends. */
+  public readonly groups = new Map<string, NodeflowGroupData>();
+  /** Reusable composite node types. */
+  public readonly templates: NodeTemplates;
+  /** node id -> id of the group it belongs to. */
+  private readonly nodeGroupIndex = new Map<string, string>();
 
   public static readonly DEFAULT_SETTINGS: NodeflowSettings = {
     allowCollision: false,
@@ -83,6 +98,8 @@ export default class NodeflowData {
     dragEdgeScrollSpeed: 10,
     gestureMovementThreshold: 6,
     gridSize: 20,
+    groupHeaderHeight: 32,
+    groupPadding: 16,
     keyboardZoomMultiplier: 15,
     maxMovementSpeed: 15,
     maxZoom: 200,
@@ -135,17 +152,28 @@ export default class NodeflowData {
     this.keyboardData = new KeyboardData(this);
     this.nodes = new Map<string, NodeflowNodeData>();
     this.chunking = new NodeflowChunking(this);
+    this.templates = new NodeTemplates(this);
 
     this.eventStore = {
       onCanvasTransformChanged:
         new NodeflowEventPublisher<"onCanvasTransformChanged">(this),
+      onCompositeCreated: new NodeflowEventPublisher<"onCompositeCreated">(
+        this,
+      ),
+      onCompositeExploded:
+        new NodeflowEventPublisher<"onCompositeExploded">(this),
       onContentChanged: new NodeflowEventPublisher<"onContentChanged">(this),
+      onGroupCollapseToggled:
+        new NodeflowEventPublisher<"onGroupCollapseToggled">(this),
       onKeyDownInNodeflow: new NodeflowEventPublisher<"onKeyDownInNodeflow">(
         this,
       ),
       onKeyUpInNodeflow: new NodeflowEventPublisher<"onKeyUpInNodeflow">(this),
       onMouseDownInConnector:
         new NodeflowEventPublisher<"onMouseDownInConnector">(this),
+      onMouseDownInGroup: new NodeflowEventPublisher<"onMouseDownInGroup">(
+        this,
+      ),
       onMouseDownInNode: new NodeflowEventPublisher<"onMouseDownInNode">(this),
       onMouseDownInNodeflow:
         new NodeflowEventPublisher<"onMouseDownInNodeflow">(this),
@@ -160,6 +188,9 @@ export default class NodeflowData {
       onPointerUpInNode: new NodeflowEventPublisher<"onPointerUpInNode">(this),
       onPointerUpInNodeflow:
         new NodeflowEventPublisher<"onPointerUpInNodeflow">(this),
+      onTemplatesChanged: new NodeflowEventPublisher<"onTemplatesChanged">(
+        this,
+      ),
       onTouchMoveInNodeflow:
         new NodeflowEventPublisher<"onTouchMoveInNodeflow">(this),
       onTouchEndInNodeflow:
@@ -168,6 +199,9 @@ export default class NodeflowData {
         new NodeflowEventPublisher<"onTouchCancelInNodeflow">(this),
       onTouchStartInConnector:
         new NodeflowEventPublisher<"onTouchStartInConnector">(this),
+      onTouchStartInGroup: new NodeflowEventPublisher<"onTouchStartInGroup">(
+        this,
+      ),
       onTouchStartInNode: new NodeflowEventPublisher<"onTouchStartInNode">(
         this,
       ),
@@ -236,6 +270,12 @@ export default class NodeflowData {
           node.serialize(),
         ]),
       ),
+      groups: Object.fromEntries(
+        Array.from(this.groups.entries()).map(([id, group]) => [
+          id,
+          group.serialize(),
+        ]),
+      ),
       pinchDistance: this.pinchDistance,
       position: this.position.serialize(),
       size: this.size.serialize(),
@@ -260,11 +300,17 @@ export default class NodeflowData {
     const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
 
     this.nodes.clear();
+    this.groups.clear();
+    this.nodeGroupIndex.clear();
     this.chunking.rebuild();
     this.publishContentChanged();
     Object.values(data.nodes).forEach((node) => {
       this.addNode(node, historyGroup);
     });
+
+    Object.values(data.groups ?? {}).forEach((group) =>
+      this.applyGroupState(group.id, group),
+    );
 
     this.mouseData.deserialize(data.mouseData);
 
@@ -818,6 +864,7 @@ export default class NodeflowData {
 
     this.removeIncomingConnections(nodeId);
     this.removeOutgoingConnections(nodeId);
+    this.removeNodesFromGroup([nodeId], historyGroup);
 
     this.chunking.removeNodeFromChunk(nodeId, this.nodes.get(nodeId)!.position);
     this.nodes.delete(nodeId);
@@ -1861,6 +1908,65 @@ export default class NodeflowData {
       },
     ]);
 
+    this.eventStore.onGroupCollapseToggled.subscribe(
+      "nodeflow:toggle-group",
+      ({ groupId }) => this.toggleGroupCollapsed(groupId),
+    );
+
+    this.eventStore.onMouseDownInGroup.blacklist(
+      "nodeflow:allow-pan",
+      (data, eventName) =>
+        data.event.button !== MOUSE_BUTTONS.LEFT &&
+        eventName.startsWith("nodeflow"),
+    );
+    this.eventStore.onMouseDownInGroup.subscribeMultiple([
+      {
+        name: "nodeflow:select-group",
+        event: ({ event, groupId }) =>
+          this.selectGroup(
+            groupId,
+            Vec2.fromEvent(event),
+            this.keyboardData.isActionPressed(this.keymap.SELECT_MULTIPLE),
+          ),
+      },
+      {
+        name: "nodeflow:handle-click",
+        event: ({ event }) => {
+          this.mouseData.heldMouseButtons.add(event.button);
+        },
+      },
+      {
+        name: "nodeflow:stop-propagation",
+        event: ({ event }) => event.stopPropagation(),
+      },
+    ]);
+
+    this.eventStore.onTouchStartInGroup.subscribeMultiple([
+      {
+        name: "nodeflow:select-group",
+        event: ({ event, groupId }) => {
+          const { clientX: x, clientY: y } = event.touches[0];
+          const position = Vec2.of(x, y);
+
+          this.mouseData.pinching = false;
+          this.mouseData.touchStartPosition = position;
+          this.mouseData.touchMoved = false;
+          this.selectGroup(
+            groupId,
+            position,
+            this.keyboardData.isActionPressed(this.keymap.SELECT_MULTIPLE),
+          );
+        },
+      },
+      {
+        name: "nodeflow:stop-propagation",
+        event: ({ event }) => {
+          event.stopPropagation();
+          event.preventDefault();
+        },
+      },
+    ]);
+
     this.eventStore.onPointerUpInNode.subscribeMultiple([
       {
         name: "nodeflow:reset-mouse-data",
@@ -1877,6 +1983,543 @@ export default class NodeflowData {
         },
       },
     ]);
+  }
+
+  // ─── Composite nodes ──────────────────────────────────────────────────────
+
+  /**
+   * Replaces `nodeIds` with one composite node standing in for them. Its
+   * inputs and outputs are the selection's unconnected connectors plus those
+   * wired to nodes outside the selection (see `analyzeCompositeSelection`);
+   * those outside connections are re-attached to the composite. The inner
+   * graph is kept on `node.composite`, so `explodeCompositeNode` can restore
+   * it. Recorded as one undo step unless `hasHistoryGroup` is false.
+   */
+  public createCompositeNode(
+    nodeIds: Iterable<string>,
+    options: CompositeNodeOptions = {},
+    hasHistoryGroup: string | boolean = true,
+  ): NodeflowNodeData | undefined {
+    const analysis = analyzeCompositeSelection(this, nodeIds, options.isInput);
+    if (!analysis) return undefined;
+
+    const { origin, definition, external } = analysis;
+    const innerIds = Object.keys(definition.nodes);
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+    const sharedGroup = this.getSharedGroup(innerIds);
+
+    // Add the composite first so a group made only of the inner nodes is not
+    // deleted for being empty while they are removed.
+    const composite = this.addNode(
+      {
+        position: (options.position ?? origin).serialize(),
+        css: options.css,
+        customData: options.customData,
+        display: options.display,
+        connectorSections: createCompositeSections(definition, options),
+        composite: definition,
+      },
+      historyGroup,
+    );
+
+    if (sharedGroup) {
+      this.addNodesToGroup(sharedGroup.id, [composite.id], historyGroup);
+    }
+
+    innerIds.forEach((id) => this.removeNode(id, historyGroup));
+
+    external.forEach(({ connection, side, port }) =>
+      this.addConnection(
+        side === "input"
+          ? {
+              ...connection,
+              destinationNodeId: composite.id,
+              destinationConnectorId: port.id,
+            }
+          : {
+              ...connection,
+              sourceNodeId: composite.id,
+              sourceConnectorId: port.id,
+            },
+        historyGroup,
+      ),
+    );
+
+    this.mouseData.clearSelections();
+    this.mouseData.selections.addNode(composite);
+
+    this.eventStore.onCompositeCreated.publish({
+      nodeId: composite.id,
+      innerNodeIds: innerIds,
+    });
+
+    return composite;
+  }
+
+  /**
+   * Replaces a composite node with its inner nodes, restoring the
+   * connections between them and re-attaching every connection of the
+   * composite to the inner connector its port maps to. Inner nodes keep
+   * their original ids unless those are taken. Returns the restored nodes.
+   */
+  public explodeCompositeNode(
+    nodeId: string,
+    hasHistoryGroup: string | boolean = true,
+  ): Array<NodeflowNodeData> {
+    const composite = this.nodes.get(nodeId);
+    const definition = composite?.composite;
+    if (!composite || !definition) return [];
+
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+    const origin = composite.position;
+    const outerConnections = composite.serializeConnections();
+    const group = this.getGroupOfNode(nodeId)?.serialize();
+    const ports = [...definition.inputs, ...definition.outputs];
+
+    // Removing the composite first frees its id for an inner node.
+    this.removeNode(nodeId, historyGroup);
+
+    const innerIds = Object.keys(definition.nodes);
+    const idMap = allocateInnerNodeIds(this, innerIds);
+
+    const restored = innerIds.map((innerId) => {
+      const data = definition.nodes[innerId];
+      return this.addNode(
+        {
+          ...data,
+          id: idMap.get(innerId),
+          position: origin
+            .add(Vec2.of(data.position.x, data.position.y))
+            .serialize(),
+          centered: false,
+        },
+        historyGroup,
+      );
+    });
+
+    definition.connections.forEach((connection) =>
+      this.addConnection(
+        {
+          ...connection,
+          sourceNodeId: idMap.get(connection.sourceNodeId)!,
+          destinationNodeId: idMap.get(connection.destinationNodeId)!,
+        },
+        historyGroup,
+      ),
+    );
+
+    const resolvePort = (connectorId: string) => {
+      const port = ports.find((candidate) => candidate.id === connectorId);
+      return port && idMap.has(port.innerNodeId)
+        ? {
+            nodeId: idMap.get(port.innerNodeId)!,
+            connectorId: port.innerConnectorId,
+          }
+        : undefined;
+    };
+
+    outerConnections.forEach((connection) => {
+      const next = { ...connection };
+
+      if (connection.sourceNodeId === nodeId) {
+        const inner = resolvePort(connection.sourceConnectorId);
+        if (!inner) return;
+        next.sourceNodeId = inner.nodeId;
+        next.sourceConnectorId = inner.connectorId;
+      }
+      if (connection.destinationNodeId === nodeId) {
+        const inner = resolvePort(connection.destinationConnectorId);
+        if (!inner) return;
+        next.destinationNodeId = inner.nodeId;
+        next.destinationConnectorId = inner.connectorId;
+      }
+
+      this.addConnection(next, historyGroup);
+    });
+
+    if (group) {
+      this.commitGroup(
+        group.id,
+        {
+          ...group,
+          nodeIds: [
+            ...group.nodeIds.filter((id) => id !== nodeId),
+            ...restored.map((node) => node.id),
+          ],
+        },
+        historyGroup,
+      );
+    }
+
+    this.mouseData.clearSelections();
+    restored.forEach((node) => this.mouseData.selections.addNode(node));
+
+    this.eventStore.onCompositeExploded.publish({
+      compositeNodeId: nodeId,
+      nodeIds: restored.map((node) => node.id),
+    });
+
+    return restored;
+  }
+
+  /**
+   * Adds a composite node from a saved template (see `templates`). Its inner
+   * nodes are only created if it is broken apart.
+   */
+  public instantiateTemplate(
+    templateId: string,
+    position: Vec2,
+    options: { centered?: boolean } = {},
+    hasHistoryGroup: string | boolean = true,
+  ): NodeflowNodeData | undefined {
+    const template = this.templates.get(templateId);
+    if (!template) return undefined;
+
+    return this.addNode(
+      {
+        ...deepCopy(template.node),
+        id: undefined,
+        position: position.serialize(),
+        centered: options.centered ?? false,
+        composite: deepCopy(template.definition),
+      },
+      hasHistoryGroup,
+    );
+  }
+
+  // ─── Groups ───────────────────────────────────────────────────────────────
+
+  public getGroupOfNode(nodeId: string): NodeflowGroupData | undefined {
+    const groupId = this.nodeGroupIndex.get(nodeId);
+    return groupId === undefined ? undefined : this.groups.get(groupId);
+  }
+
+  /** The collapsed group hiding `nodeId`, if any. */
+  public getCollapsedGroupOfNode(
+    nodeId: string,
+  ): NodeflowGroupData | undefined {
+    const group = this.getGroupOfNode(nodeId);
+    return group?.collapsed ? group : undefined;
+  }
+
+  /** Whether a collapsed group hides `nodeId`. */
+  public isNodeHidden(nodeId: string): boolean {
+    return this.getCollapsedGroupOfNode(nodeId) !== undefined;
+  }
+
+  public getNextFreeGroupId(): string {
+    let index = 0;
+    while (this.groups.has(`group-${index}`)) ++index;
+    return `group-${index}`;
+  }
+
+  /**
+   * Groups `nodeIds`, taking them out of any group they were in (a node
+   * belongs to at most one group).
+   */
+  public addGroup(
+    nodeIds: Iterable<string>,
+    options: Partial<Omit<SerializedNodeflowGroup, "nodeIds">> = {},
+    hasHistoryGroup: string | boolean = true,
+  ): NodeflowGroupData | undefined {
+    const ids = Array.from(new Set(nodeIds)).filter((id) =>
+      this.nodes.has(id),
+    );
+    if (ids.length === 0) return undefined;
+
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+    const id =
+      options.id && !this.groups.has(options.id)
+        ? options.id
+        : this.getNextFreeGroupId();
+
+    this.removeNodesFromGroup(ids, historyGroup);
+    this.commitGroup(
+      id,
+      {
+        id,
+        title: options.title ?? "Group",
+        nodeIds: ids,
+        collapsed: options.collapsed ?? false,
+        css: options.css,
+        customData: options.customData,
+      },
+      historyGroup,
+    );
+
+    return this.groups.get(id);
+  }
+
+  /** Dissolves a group. Its nodes stay where they are. */
+  public removeGroup(
+    groupId: string,
+    hasHistoryGroup: string | boolean = true,
+  ): void {
+    if (!this.groups.has(groupId)) return;
+    this.commitGroup(groupId, undefined, hasHistoryGroup);
+  }
+
+  public updateGroup(
+    groupId: string,
+    data: Partial<Omit<SerializedNodeflowGroup, "id" | "nodeIds">>,
+    hasHistoryGroup: string | boolean = true,
+  ): void {
+    const group = this.groups.get(groupId);
+    if (!group) return;
+
+    this.commitGroup(
+      groupId,
+      { ...group.serialize(), ...deepCopy(data), id: groupId },
+      hasHistoryGroup,
+    );
+  }
+
+  public setGroupCollapsed(
+    groupId: string,
+    collapsed: boolean,
+    hasHistoryGroup: string | boolean = true,
+  ): void {
+    const group = this.groups.get(groupId);
+    if (!group || group.collapsed === collapsed) return;
+    this.updateGroup(groupId, { collapsed }, hasHistoryGroup);
+  }
+
+  public toggleGroupCollapsed(
+    groupId: string,
+    hasHistoryGroup: string | boolean = true,
+  ): void {
+    const group = this.groups.get(groupId);
+    if (!group) return;
+    this.setGroupCollapsed(groupId, !group.collapsed, hasHistoryGroup);
+  }
+
+  public addNodesToGroup(
+    groupId: string,
+    nodeIds: Iterable<string>,
+    hasHistoryGroup: string | boolean = true,
+  ): void {
+    const group = this.groups.get(groupId);
+    if (!group) return;
+
+    const ids = Array.from(new Set(nodeIds)).filter(
+      (id) => this.nodes.has(id) && !group.nodeIds.has(id),
+    );
+    if (ids.length === 0) return;
+
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+    this.removeNodesFromGroup(ids, historyGroup);
+
+    const current = this.groups.get(groupId)!.serialize();
+    this.commitGroup(
+      groupId,
+      { ...current, nodeIds: [...current.nodeIds, ...ids] },
+      historyGroup,
+    );
+  }
+
+  /** Takes nodes out of their groups; groups left empty are removed. */
+  public removeNodesFromGroup(
+    nodeIds: Iterable<string>,
+    hasHistoryGroup: string | boolean = true,
+  ): void {
+    const byGroup = new Map<string, Set<string>>();
+
+    for (const nodeId of nodeIds) {
+      const groupId = this.nodeGroupIndex.get(nodeId);
+      if (groupId === undefined) continue;
+      if (!byGroup.has(groupId)) byGroup.set(groupId, new Set());
+      byGroup.get(groupId)!.add(nodeId);
+    }
+    if (byGroup.size === 0) return;
+
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+
+    byGroup.forEach((removed, groupId) => {
+      const group = this.groups.get(groupId);
+      if (!group) return;
+
+      const current = group.serialize();
+      const remaining = current.nodeIds.filter((id) => !removed.has(id));
+      this.commitGroup(
+        groupId,
+        remaining.length > 0 ? { ...current, nodeIds: remaining } : undefined,
+        historyGroup,
+      );
+    });
+  }
+
+  /** Selects every member of a group, ready to be dragged as one. */
+  public selectGroup(
+    groupId: string,
+    position: Vec2 = Vec2.zero(),
+    additive = false,
+  ): void {
+    const group = this.groups.get(groupId);
+    if (!group) return;
+
+    if (!additive) this.mouseData.clearSelections();
+
+    group.members.forEach((node) => {
+      if (!this.mouseData.hasSelectedNode(node.id)) {
+        this.mouseData.selections.addNode(node);
+      }
+    });
+
+    this.mouseData.update({
+      pointerDown: this.settings.canMoveNodes,
+      mousePosition: position,
+    });
+  }
+
+  /** The group every one of `nodeIds` belongs to, if they share one. */
+  private getSharedGroup(
+    nodeIds: Array<string>,
+  ): NodeflowGroupData | undefined {
+    const groupIds = new Set(
+      nodeIds.map((nodeId) => this.nodeGroupIndex.get(nodeId)),
+    );
+    if (groupIds.size !== 1) return undefined;
+
+    const [groupId] = groupIds;
+    return groupId === undefined ? undefined : this.groups.get(groupId);
+  }
+
+  /**
+   * Sets a group's state (`undefined` removes it), recording the previous
+   * state for undo. Every group mutation goes through here.
+   */
+  private commitGroup(
+    groupId: string,
+    next: SerializedNodeflowGroup | undefined,
+    hasHistoryGroup: string | boolean,
+  ): void {
+    const previous = this.groups.get(groupId)?.serialize();
+    const snapshot = deepCopy(next);
+    const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
+
+    if (historyGroup) {
+      this.changes.addChange({
+        type: !previous ? "add" : snapshot ? "update" : "remove",
+        source: "group",
+        applyChange: () => this.applyGroupState(groupId, snapshot),
+        undoChange: () => this.applyGroupState(groupId, previous),
+        historyGroup: historyGroup as string,
+      });
+    }
+
+    this.applyGroupState(groupId, snapshot);
+  }
+
+  private applyGroupState(
+    groupId: string,
+    state: SerializedNodeflowGroup | undefined,
+  ): void {
+    const existing = this.groups.get(groupId);
+
+    existing?.nodeIds.forEach((nodeId) => {
+      if (this.nodeGroupIndex.get(nodeId) === groupId) {
+        this.nodeGroupIndex.delete(nodeId);
+      }
+    });
+
+    if (!state) {
+      this.groups.delete(groupId);
+    } else {
+      const group = existing ?? new NodeflowGroupData(this, state);
+      group.apply(state);
+      this.groups.set(groupId, group);
+      state.nodeIds.forEach((nodeId) =>
+        this.nodeGroupIndex.set(nodeId, groupId),
+      );
+    }
+
+    this.publishContentChanged();
+  }
+
+  // ─── Rendering helpers ────────────────────────────────────────────────────
+
+  /**
+   * Ids of the nodes adapters should mount, in insertion order: those
+   * `getVisibleNodeIds` reports (all with virtualization off), minus nodes
+   * hidden inside collapsed groups.
+   */
+  public getRenderedNodeIds(): Array<string> {
+    const visible = this.getVisibleNodeIds();
+    const out: Array<string> = [];
+
+    for (const id of this.nodes.keys()) {
+      if (visible ? visible.has(id) : !this.isNodeHidden(id)) out.push(id);
+    }
+
+    return out;
+  }
+
+  /** Whether a connection runs entirely inside one collapsed group. */
+  public isConnectionHidden(
+    sourceNodeId: string,
+    destinationNodeId: string,
+  ): boolean {
+    const group = this.getCollapsedGroupOfNode(sourceNodeId);
+    return (
+      group !== undefined &&
+      group === this.getCollapsedGroupOfNode(destinationNodeId)
+    );
+  }
+
+  /**
+   * Where a connection's line should start and end, and the node centers
+   * that orient it. An end whose node is hidden in a collapsed group attaches
+   * to that group's box, on the side facing the other end.
+   */
+  public getConnectionEndpoints(
+    sourceConnector: NodeConnector,
+    destinationConnector: NodeConnector,
+  ): { start: Vec2; end: Vec2; startAnchor: Vec2; endAnchor: Vec2 } {
+    const sourceNode = sourceConnector.parentNode as NodeflowNodeData;
+    const destinationNode =
+      destinationConnector.parentNode as NodeflowNodeData;
+
+    const sourceBox = this.getCollapsedGroupOfNode(
+      sourceNode.id,
+    )?.getCollapsedRect();
+    const destinationBox = this.getCollapsedGroupOfNode(
+      destinationNode.id,
+    )?.getCollapsedRect();
+
+    const startReference = sourceBox?.center ?? sourceConnector.getCenter();
+    const endReference =
+      destinationBox?.center ?? destinationConnector.getCenter();
+
+    return {
+      start: sourceBox
+        ? NodeflowData.pointOnRectToward(sourceBox, endReference)
+        : startReference,
+      end: destinationBox
+        ? NodeflowData.pointOnRectToward(destinationBox, startReference)
+        : endReference,
+      startAnchor: sourceBox?.center ?? sourceNode.getCenter(),
+      endAnchor: destinationBox?.center ?? destinationNode.getCenter(),
+    };
+  }
+
+  /**
+   * Where the segment from `rect`'s center toward `target` crosses the
+   * rect's border; `target` itself when it lies inside.
+   */
+  public static pointOnRectToward(rect: Rect, target: Vec2): Vec2 {
+    const center = rect.center;
+    const direction = target.subtract(center);
+    if (direction.x === 0 && direction.y === 0) return center;
+
+    const halfWidth = Math.abs(rect.size.x) / 2;
+    const halfHeight = Math.abs(rect.size.y) / 2;
+    const scale = Math.min(
+      direction.x === 0 ? Infinity : halfWidth / Math.abs(direction.x),
+      direction.y === 0 ? Infinity : halfHeight / Math.abs(direction.y),
+      1,
+    );
+
+    return center.add(direction.multiplyBy(scale));
   }
 
   public selectNode(nodeId: string, position?: Vec2) {
@@ -1927,6 +2570,11 @@ export default class NodeflowData {
     this.mouseData.heldConnectors.forEach((connector: NodeConnector) =>
       ids.add(connector.parentNode.id),
     );
+
+    // Members of collapsed groups are drawn as the group's box instead.
+    ids.forEach((id) => {
+      if (this.isNodeHidden(id)) ids.delete(id);
+    });
 
     return ids;
   }

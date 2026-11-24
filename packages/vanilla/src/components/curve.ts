@@ -22,15 +22,18 @@ export const buildCurvePathD = (
   dest: NodeConnector,
   shape?: LineShape,
 ): string => {
-  const start = source.getCenter();
-  const end = dest.getCenter();
+  // Ends hidden in a collapsed group attach to the group's box.
+  const { start, end, startAnchor, endAnchor } = data.getConnectionEndpoints(
+    source,
+    dest,
+  );
 
   return data.curveFunctions.createPathForShape(
     resolveLineShape(data, shape),
     start,
     end,
-    source.parentNode.getCenter(),
-    dest.parentNode.getCenter(),
+    startAnchor,
+    endAnchor,
   ).path;
 };
 

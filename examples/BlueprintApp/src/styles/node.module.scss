@@ -113,3 +113,18 @@ $node-radius: 16px;
   right: calc($connector-size / 2 + $connector-border);
   left: auto;
 }
+
+// Derived nodes size to their port list instead of the fixed node size.
+.derivedNode {
+  width: 320px;
+  height: auto;
+  min-height: 180px;
+
+  &::before {
+    background: linear-gradient(
+      90deg,
+      colors.$connection-color,
+      colors.$new-connection-color
+    );
+  }
+}
