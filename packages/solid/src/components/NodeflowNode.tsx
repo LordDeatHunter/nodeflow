@@ -46,6 +46,18 @@ const NodeflowNode: Component<NodeProps> = (props) => {
     );
   });
 
+  // Read css straight off the tick: node() keeps the same object reference
+  // when the node is updated in place, so it never re-notifies on css changes.
+  const nodeCss = createMemo(
+    () => {
+      props.tick();
+      const css = props.nodeflowData.nodes.get(props.nodeId)?.css;
+      return { normal: css?.normal ?? "", selected: css?.selected ?? "" };
+    },
+    undefined,
+    { equals: (a, b) => a.normal === b.normal && a.selected === b.selected },
+  );
+
   // <For> keys items by reference, so list the section and connector objects
   // themselves (stable across redraws) rather than fresh [id, value] pairs.
   const connectorSections = createMemo(() => {
@@ -117,8 +129,8 @@ const NodeflowNode: Component<NodeProps> = (props) => {
       data-nodeflow-node={props.nodeId}
       class="nodeflowNode"
       classList={{
-        [node()?.css?.normal ?? ""]: true,
-        [node()?.css?.selected ?? ""]: isSelected(),
+        [nodeCss().normal]: true,
+        [nodeCss().selected]: isSelected(),
       }}
       onMouseDown={(event) =>
         props.nodeflowData.eventStore.onMouseDownInNode.publish({
