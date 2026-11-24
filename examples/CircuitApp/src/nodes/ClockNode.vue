@@ -2,15 +2,11 @@
 import { computed } from "vue";
 import type { NodeflowNodeData } from "@nodeflow-lib/vue";
 import { outputLevel, stop, updateCustomData, useCustomData } from "./common";
-
-const PERIODS = [250, 500, 1000, 2000];
+import { CLOCK_PERIODS, clockPeriod } from "../simulation";
 
 const props = defineProps<{ node: NodeflowNodeData }>();
 const data = useCustomData(props.node);
 const high = computed(() => !!outputLevel(props.node, "output-0"));
-
-const label = (period: number) =>
-  period < 1000 ? `${period} ms` : `${period / 1000} s`;
 </script>
 
 <template>
@@ -21,8 +17,8 @@ const label = (period: number) =>
     </span>
     <select
       class="node-control"
-      :value="data.period ?? 1000"
-      aria-label="Clock period"
+      :value="clockPeriod(data.period)"
+      aria-label="Clock period in frames"
       @change="
         updateCustomData(node, {
           period: Number(($event.target as HTMLSelectElement).value),
@@ -32,8 +28,8 @@ const label = (period: number) =>
       @pointerdown="stop"
       @mousedown="stop"
     >
-      <option v-for="period in PERIODS" :key="period" :value="period">
-        {{ label(period) }}
+      <option v-for="period in CLOCK_PERIODS" :key="period" :value="period">
+        {{ period }} frames
       </option>
     </select>
   </div>

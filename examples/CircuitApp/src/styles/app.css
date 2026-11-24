@@ -49,6 +49,24 @@
   color: var(--text-color);
 }
 
+.sim-speed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.7rem;
+  color: var(--text-color);
+}
+
+.sim-speed input {
+  width: 120px;
+  accent-color: var(--signal);
+}
+
+.sim-speed-value {
+  min-width: 52px;
+  font-variant-numeric: tabular-nums;
+}
+
 .sim-warning {
   padding: 4px 10px;
   border-radius: 999px;

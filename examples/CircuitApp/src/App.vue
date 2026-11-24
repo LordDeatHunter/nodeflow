@@ -32,10 +32,12 @@ import {
 } from "./chipEditor";
 import {
   clocksPaused,
-  setClocksPaused,
+  FRAME_MS_MAX,
+  FRAME_MS_MIN,
+  frameMs,
   simulationOf,
   startSimulation,
-  stepClocks,
+  stepFrame,
   type CircuitSimulation,
 } from "./simulation";
 import { syncBackgroundGrid } from "./backgroundGrid";
@@ -225,19 +227,31 @@ const oscillating = computed(() => !!mainSimulation.value?.oscillating.value);
             type="button"
             class="toolbar-button"
             :aria-pressed="clocksPaused"
-            @click="setClocksPaused(!clocksPaused)"
+            @click="clocksPaused = !clocksPaused"
           >
-            {{ clocksPaused ? "Resume clocks" : "Pause clocks" }}
+            {{ clocksPaused ? "Resume" : "Pause" }}
           </button>
           <button
             type="button"
             class="toolbar-button"
             :disabled="!clocksPaused"
-            title="Advance every clock half a cycle"
-            @click="stepClocks"
+            title="Advance time one frame"
+            @click="stepFrame"
           >
             Step
           </button>
+          <label class="sim-speed">
+            <span>Frame</span>
+            <input
+              v-model.number="frameMs"
+              type="range"
+              :min="FRAME_MS_MIN"
+              :max="FRAME_MS_MAX"
+              step="25"
+              aria-label="Frame length in milliseconds"
+            />
+            <output class="sim-speed-value">{{ frameMs }} ms</output>
+          </label>
           <span v-if="oscillating" class="sim-warning" role="status">
             Oscillating — a loop never settles
           </span>

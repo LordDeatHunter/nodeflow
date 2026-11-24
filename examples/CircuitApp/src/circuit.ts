@@ -29,7 +29,7 @@ interface NodeConfig {
 const NODE_CONFIG: Record<PaletteType, NodeConfig> = {
   switch: { inputs: 0, outputs: 1, customData: { type: "switch", on: false } },
   button: { inputs: 0, outputs: 1, customData: { type: "button" } },
-  clock: { inputs: 0, outputs: 1, customData: { type: "clock", period: 1000 } },
+  clock: { inputs: 0, outputs: 1, customData: { type: "clock", period: 4 } },
   gate: { inputs: 2, outputs: 1, customData: { type: "gate", gate: "AND" } },
   lamp: { inputs: 1, outputs: 0, customData: { type: "lamp" } },
   hex: { inputs: 4, outputs: 0, customData: { type: "hex" } },

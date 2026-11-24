@@ -15,7 +15,7 @@ declare global {
     gate?: "AND" | "OR" | "NOT" | "NAND" | "NOR" | "XOR" | "XNOR" | "BUFFER";
     /** Switch nodes: whether the switch is closed (output high). */
     on?: boolean;
-    /** Clock nodes: length of one full cycle, in milliseconds. */
+    /** Clock nodes: length of one full cycle, in simulation frames. */
     period?: number;
     /** Chips, switches and lamps: shown name. */
     name?: string;

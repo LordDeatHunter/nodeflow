@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import {
   getCompositePortTargets,
   type NodeflowData,
@@ -223,7 +223,19 @@ const collectPrimitives = (graph: Graph, into: Array<Primitive>) => {
 
 /** Passes over the gates before a circuit counts as oscillating. */
 const MAX_SETTLE_PASSES = 100;
-const DEFAULT_CLOCK_PERIOD = 1000;
+/** Clock periods a clock node offers, in frames per full cycle. */
+export const CLOCK_PERIODS = [2, 4, 8, 16];
+export const DEFAULT_CLOCK_PERIOD = 4;
+/** Frame lengths the step-time slider allows, in milliseconds. */
+export const FRAME_MS_MIN = 25;
+export const FRAME_MS_MAX = 1000;
+const DEFAULT_FRAME_MS = 250;
+
+/** A clock's period in frames; anything unknown falls back to the default. */
+export const clockPeriod = (period: number | undefined) =>
+  period !== undefined && CLOCK_PERIODS.includes(period)
+    ? period
+    : DEFAULT_CLOCK_PERIOD;
 
 export const WIRE_CSS = { normal: "wire", selected: "wire--selected" };
 const WIRE_ON_CSS = { normal: "wire wire--on", selected: "wire--selected" };
@@ -232,8 +244,10 @@ const WIRE_ON_CSS = { normal: "wire wire--on", selected: "wire--selected" };
 const signalRevision = ref(0);
 export const trackSignals = () => signalRevision.value;
 
-/** Whether the clocks are paused (Step still advances them). */
+/** Whether time is paused (Step still advances it a frame at a time). */
 export const clocksPaused = ref(false);
+/** How long one frame lasts, in milliseconds. Clocks count frames. */
+export const frameMs = ref(DEFAULT_FRAME_MS);
 
 /**
  * Simulates one canvas. Signals settle by repeated passes over every gate
@@ -247,7 +261,11 @@ export class CircuitSimulation {
   private readonly signals = new Map<string, boolean>();
   /** Buttons held down, by primitive key. */
   private readonly pressed = new Set<string>();
-  private readonly clocks = new Map<string, { level: boolean; last: number }>();
+  /** Each clock's level and the frames since it last flipped. */
+  private readonly clocks = new Map<
+    string,
+    { level: boolean; frames: number }
+  >();
   private primitives: Array<Primitive> = [];
   /** What feeds what, to tell displays when the wiring changed. */
   private wiring = "";
@@ -281,36 +299,20 @@ export class CircuitSimulation {
     this.run();
   }
 
-  /** Flips clocks whose half cycle is over; returns whether any flipped. */
-  public tick(now: number) {
+  /** Advances time one frame, flipping clocks whose half cycle is over. */
+  public frame() {
     let flipped = false;
     this.primitives.forEach(({ key, data }) => {
       if (data.type !== "clock") return;
       const clock = this.clocks.get(key);
       if (!clock) return;
-      const half = (data.period ?? DEFAULT_CLOCK_PERIOD) / 2;
-      if (now - clock.last < half) return;
+      clock.frames++;
+      if (clock.frames < clockPeriod(data.period) / 2) return;
       clock.level = !clock.level;
-      clock.last = now;
+      clock.frames = 0;
       flipped = true;
     });
     if (flipped) this.run();
-  }
-
-  /** Flips every clock once: half a cycle. */
-  public step(now: number) {
-    this.clocks.forEach((clock) => {
-      clock.level = !clock.level;
-      clock.last = now;
-    });
-    this.run();
-  }
-
-  /** Restarts each clock's current half cycle, e.g. after a pause. */
-  public resetClockTimers(now: number) {
-    this.clocks.forEach((clock) => {
-      clock.last = now;
-    });
   }
 
   /** The level on output `outputId` of a node; `undefined` if undriven. */
@@ -326,7 +328,6 @@ export class CircuitSimulation {
   }
 
   private run() {
-    const now = performance.now();
     const primitives: Array<Primitive> = [];
     collectPrimitives(liveGraph(this.nodeflow), primitives);
     this.primitives = primitives;
@@ -335,7 +336,7 @@ export class CircuitSimulation {
     const keys = new Set(primitives.map((primitive) => primitive.key));
     primitives.forEach(({ key, data }) => {
       if (data.type === "clock" && !this.clocks.has(key)) {
-        this.clocks.set(key, { level: false, last: now });
+        this.clocks.set(key, { level: false, frames: 0 });
       }
     });
     this.clocks.forEach((_, key) => {
@@ -442,23 +443,18 @@ export const simulationOf = (
   nodeflow: NodeflowData,
 ): CircuitSimulation | undefined => simulations.get(nodeflow);
 
-const CLOCK_INTERVAL_MS = 25;
+/** Advances every canvas one frame. */
+export const stepFrame = () =>
+  simulations.forEach((simulation) => simulation.frame());
 
-setInterval(() => {
-  if (clocksPaused.value) return;
-  const now = performance.now();
-  simulations.forEach((simulation) => simulation.tick(now));
-}, CLOCK_INTERVAL_MS);
-
-export const setClocksPaused = (paused: boolean) => {
-  clocksPaused.value = paused;
-  if (paused) return;
-  const now = performance.now();
-  simulations.forEach((simulation) => simulation.resetClockTimers(now));
-};
-
-/** Advances every clock half a cycle, e.g. while paused. */
-export const stepClocks = () => {
-  const now = performance.now();
-  simulations.forEach((simulation) => simulation.step(now));
-};
+let frameTimer: ReturnType<typeof setInterval> | undefined;
+watch(
+  frameMs,
+  (ms) => {
+    clearInterval(frameTimer);
+    frameTimer = setInterval(() => {
+      if (!clocksPaused.value) stepFrame();
+    }, ms);
+  },
+  { immediate: true },
+);
