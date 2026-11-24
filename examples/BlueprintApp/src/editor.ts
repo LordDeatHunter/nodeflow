@@ -104,9 +104,13 @@ const resetEditor = () => {
 const terminal = (
   id: string,
   side: "inputs" | "outputs",
-  portCount: number,
+  ports: Array<CompositePort>,
   position: Vec2,
 ): Partial<SerializedNodeflowNode> => {
+  const portCount = ports.length;
+  const portNames = Object.fromEntries(
+    ports.flatMap((port, i) => (port.name ? [[`port-${i}`, port.name]] : [])),
+  );
   // The inputs terminal offers its ports as outputs, and vice versa.
   const sectionId = side === "inputs" ? "outputs" : "inputs";
   return {
@@ -117,7 +121,7 @@ const terminal = (
       normal: `${nodeCss.node} ${nodeCss.terminalNode}`,
       selected: nodeCss.selectedNode,
     },
-    customData: { type: "terminal", side },
+    customData: { type: "terminal", side, portNames },
     connectorSections: {
       [sectionId]: {
         id: sectionId,
@@ -185,7 +189,7 @@ export const openTemplateEditor = (templateId: string) => {
     terminal(
       INPUTS_TERMINAL_ID,
       "inputs",
-      definition.inputs.length,
+      definition.inputs,
       Vec2.of(MARGIN, MARGIN),
     ),
     false,
@@ -194,7 +198,7 @@ export const openTemplateEditor = (templateId: string) => {
     terminal(
       OUTPUTS_TERMINAL_ID,
       "outputs",
-      definition.outputs.length,
+      definition.outputs,
       Vec2.of(innerRight + TERMINAL_GAP, MARGIN),
     ),
     false,
@@ -339,6 +343,10 @@ const buildDefinition = (): SerializedCompositeDefinition => {
       .filter((connection) => innerIds.has(connection.destinationNodeId)),
   );
 
+  const portName = (terminalId: string, portId: string) =>
+    editorData.nodes.get(terminalId)?.customData.portNames?.[portId]?.trim() ||
+    undefined;
+
   const portIds = (terminalId: string, sectionId: string) =>
     Array.from(
       editorData.nodes
@@ -364,8 +372,10 @@ const buildDefinition = (): SerializedCompositeDefinition => {
       }));
     // Unused ports are dropped.
     if (!first) return;
+    const name = portName(INPUTS_TERMINAL_ID, portId);
     inputs.push({
       id: `input-${inputs.length}`,
+      ...(name && { name }),
       ...first,
       ...(rest.length > 0 && { extraTargets: rest }),
     });
@@ -381,8 +391,10 @@ const buildDefinition = (): SerializedCompositeDefinition => {
         innerIds.has(candidate.sourceNodeId),
     );
     if (!wire) return;
+    const name = portName(OUTPUTS_TERMINAL_ID, portId);
     outputs.push({
       id: `output-${outputs.length}`,
+      ...(name && { name }),
       innerNodeId: wire.sourceNodeId,
       innerConnectorId: wire.sourceConnectorId,
     });

@@ -8,7 +8,7 @@ export const describeNodeKind = (
     case "derived":
       return data.name ?? "Derived";
     case "number":
-      return "Number";
+      return data.name || "Number";
     case "negation":
       return "Negation";
     case "plusMinus":

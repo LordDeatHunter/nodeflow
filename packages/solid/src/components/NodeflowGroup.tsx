@@ -2,10 +2,84 @@ import {
   type Component,
   createEffect,
   createMemo,
+  createSignal,
   onCleanup,
   Show,
+  untrack,
 } from "solid-js";
 import { NodeflowData, Vec2 } from "@nodeflow-lib/core";
+
+/**
+ * A group's title. With `canRenameGroups`, double-clicking it swaps in an
+ * input: Enter or leaving it saves, Escape cancels.
+ */
+const GroupTitle: Component<{
+  title: string;
+  groupId: string;
+  nodeflowData: NodeflowData;
+}> = (props) => {
+  const [editing, setEditing] = createSignal(false);
+  const stop = (event: Event) => event.stopPropagation();
+
+  return (
+    <Show
+      when={editing()}
+      fallback={
+        <span
+          class="nodeflowGroupTitle"
+          title={
+            props.nodeflowData.settings.canRenameGroups
+              ? "Double-click to rename"
+              : undefined
+          }
+          onDblClick={(event) => {
+            if (!props.nodeflowData.settings.canRenameGroups) return;
+            event.stopPropagation();
+            setEditing(true);
+          }}
+        >
+          {props.title}
+        </span>
+      }
+    >
+      {(() => {
+        let done = false;
+        const finish = (value: string | undefined) => {
+          if (done) return;
+          done = true;
+          setEditing(false);
+          if (value !== undefined) {
+            props.nodeflowData.renameGroup(props.groupId, value);
+          }
+        };
+        return (
+          <input
+            class="nodeflowGroupTitle nodeflowGroupTitleInput"
+            value={untrack(() => props.title)}
+            aria-label="Group name"
+            ref={(el) =>
+              requestAnimationFrame(() => {
+                el.focus();
+                el.select();
+              })
+            }
+            onMouseDown={stop}
+            onTouchStart={stop}
+            onPointerDown={stop}
+            onDblClick={stop}
+            onKeyDown={(event) => {
+              // Keep typing (e.g. Delete) away from the canvas shortcuts.
+              event.stopPropagation();
+              if (event.key === "Enter") finish(event.currentTarget.value);
+              else if (event.key === "Escape") finish(undefined);
+            }}
+            onBlur={(event) => finish(event.currentTarget.value)}
+          />
+        );
+      })()}
+    </Show>
+  );
+};
 
 interface GroupProps {
   groupId: string;
@@ -103,7 +177,11 @@ const NodeflowGroup: Component<GroupProps> = (props) => {
               onMouseDown={onMouseDown}
               onTouchStart={onTouchStart}
             >
-              <span class="nodeflowGroupTitle">{state()?.title}</span>
+              <GroupTitle
+                title={state()?.title ?? ""}
+                groupId={props.groupId}
+                nodeflowData={props.nodeflowData}
+              />
               <button
                 type="button"
                 class="nodeflowGroupToggle"
@@ -144,7 +222,11 @@ const NodeflowGroup: Component<GroupProps> = (props) => {
           onMouseDown={onMouseDown}
           onTouchStart={onTouchStart}
         >
-          <span class="nodeflowGroupTitle">{state()?.title}</span>
+          <GroupTitle
+            title={state()?.title ?? ""}
+            groupId={props.groupId}
+            nodeflowData={props.nodeflowData}
+          />
           <span class="nodeflowGroupCount">{state()?.count}</span>
           <button
             type="button"

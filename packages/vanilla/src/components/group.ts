@@ -63,6 +63,7 @@ export const renderGroup = (
 
   const title = document.createElement("span");
   title.className = "nodeflowGroupTitle";
+  addRenameListener(title, data, group.id);
 
   let element: GroupElement;
 
@@ -73,10 +74,11 @@ export const renderGroup = (
     root.append(title, count, createToggle(data, group.id, true));
     addDragListeners(root, data, group.id);
 
-    const observer = new ResizeObserver(() =>
-      data.groups
-        .get(group.id)
-        ?.updateCollapsedSize(Vec2.of(root.offsetWidth, root.offsetHeight)),
+    const observer = new ResizeObserver(
+      () =>
+        data.groups
+          .get(group.id)
+          ?.updateCollapsedSize(Vec2.of(root.offsetWidth, root.offsetHeight)),
     );
     observer.observe(root);
 
@@ -96,6 +98,50 @@ export const renderGroup = (
   parent.insertBefore(root, before);
   groupElements.set(group.id, element);
   return element;
+};
+
+/**
+ * With `canRenameGroups`, double-clicking a group's title swaps in an input:
+ * Enter or leaving it saves, Escape cancels.
+ */
+const addRenameListener = (
+  title: HTMLSpanElement,
+  data: NodeflowData,
+  groupId: string,
+): void => {
+  title.addEventListener("dblclick", (event) => {
+    if (!data.settings.canRenameGroups) return;
+    event.stopPropagation();
+
+    const input = document.createElement("input");
+    input.className = "nodeflowGroupTitle nodeflowGroupTitleInput";
+    input.setAttribute("aria-label", "Group name");
+    input.value = data.groups.get(groupId)?.title ?? title.textContent ?? "";
+
+    let done = false;
+    const finish = (save: boolean) => {
+      if (done) return;
+      done = true;
+      input.replaceWith(title);
+      if (save) data.renameGroup(groupId, input.value);
+    };
+
+    const stop = (inner: Event) => inner.stopPropagation();
+    ["mousedown", "touchstart", "pointerdown", "dblclick"].forEach((type) =>
+      input.addEventListener(type, stop),
+    );
+    input.addEventListener("keydown", (inner) => {
+      // Keep typing (e.g. Delete) away from the canvas shortcuts.
+      inner.stopPropagation();
+      if (inner.key === "Enter") finish(true);
+      else if (inner.key === "Escape") finish(false);
+    });
+    input.addEventListener("blur", () => finish(true));
+
+    title.replaceWith(input);
+    input.focus();
+    input.select();
+  });
 };
 
 export const unmountGroup = (
@@ -148,11 +194,7 @@ const updateGroupElement = (
     ? "nodeflowGroupCollapsed"
     : "nodeflowGroupFrame";
   const customClass = element.collapsed ? css.collapsed : css.frame;
-  root.className = [
-    baseClass,
-    customClass,
-    selected ? css.selected : undefined,
-  ]
+  root.className = [baseClass, customClass, selected ? css.selected : undefined]
     .filter(Boolean)
     .join(" ");
 

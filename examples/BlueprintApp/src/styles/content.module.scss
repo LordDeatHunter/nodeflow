@@ -18,6 +18,32 @@
   color: colors.$dark-7;
 }
 
+// A `.label` that can be typed into, e.g. to name a value node.
+.labelInput {
+  display: block;
+  width: calc(100% + 0.8rem);
+  margin-left: -0.4rem;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 0.4rem;
+  box-sizing: border-box;
+  background: transparent;
+  font-family: inherit;
+  outline: none;
+
+  &::placeholder {
+    color: colors.$dark-7;
+    opacity: 1;
+  }
+
+  &:hover,
+  &:focus {
+    border-color: rgba(132, 195, 255, 0.35);
+    background-color: rgba(10, 15, 23, 0.5);
+    color: colors.$dark-9;
+  }
+}
+
 .control {
   width: 100%;
   padding: 0.55rem 0.7rem;
@@ -132,6 +158,12 @@ select.control {
   text-align: right;
 }
 
+// A port the type's author named, e.g. "a" or "positive solution".
+.portName {
+  color: colors.$dark-9;
+  font-weight: 600;
+}
+
 .portValue {
   margin-left: 0.5rem;
   color: colors.$connection-color;
@@ -239,4 +271,34 @@ select.control {
 
 .terminalPortsRight {
   align-items: flex-end;
+
+  .portNameInput {
+    text-align: right;
+  }
+}
+
+// Names the port on its row; the placeholder shows the default "in 1".
+.portNameInput {
+  width: 128px;
+  height: 22px;
+  padding: 0 0.35rem;
+  border: 1px solid transparent;
+  border-radius: 0.35rem;
+  box-sizing: border-box;
+  background: transparent;
+  color: colors.$dark-9;
+  font: inherit;
+  letter-spacing: inherit;
+  outline: none;
+
+  &::placeholder {
+    color: colors.$dark-7;
+    opacity: 1;
+  }
+
+  &:hover,
+  &:focus {
+    border-color: rgba(132, 195, 255, 0.35);
+    background-color: rgba(10, 15, 23, 0.5);
+  }
 }

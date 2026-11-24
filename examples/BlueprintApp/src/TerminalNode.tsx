@@ -24,11 +24,29 @@ const TerminalNode: Component<{ node: NodeflowNodeData }> = (props) => {
     );
   });
 
+  const portNames = createMemo(() => {
+    blueprintRevision();
+    return props.node.customData.portNames ?? {};
+  });
+
+  /** Sets a port's name; a blank name drops it. */
+  const setPortName = (portId: string, name: string | undefined) => {
+    const { [portId]: _old, ...rest } = props.node.customData.portNames ?? {};
+    props.node.customData = {
+      ...props.node.customData,
+      portNames: name?.trim() ? { ...rest, [portId]: name } : rest,
+    };
+    markBlueprintDirty();
+  };
+
   const addPort = () => {
     const section = props.node.connectorSections.get(sectionId());
     if (!section) return;
+    const id = `port-${section.connectors.size}`;
+    // A port re-added under a removed one's id starts unnamed.
+    setPortName(id, undefined);
     section.addConnector({
-      id: `port-${section.connectors.size}`,
+      id,
       css: isInputs() ? nodeCss.outputConnector : nodeCss.inputConnector,
     });
     markBlueprintDirty();
@@ -62,6 +80,7 @@ const TerminalNode: Component<{ node: NodeflowNodeData }> = (props) => {
         ),
       );
     section.removeConnector(lastId, historyGroup);
+    setPortName(lastId, undefined);
     markBlueprintDirty();
   };
 
@@ -102,9 +121,20 @@ const TerminalNode: Component<{ node: NodeflowNodeData }> = (props) => {
         classList={{ [contentCss.terminalPortsRight]: isInputs() }}
       >
         <For each={portIds()}>
-          {(_id, index) => (
+          {(id, index) => (
             <li>
-              {isInputs() ? "in" : "out"} {index() + 1}
+              <input
+                class={contentCss.portNameInput}
+                value={portNames()[id] ?? ""}
+                placeholder={`${isInputs() ? "in" : "out"} ${index() + 1}`}
+                aria-label={`Name of ${isInputs() ? "input" : "output"} ${
+                  index() + 1
+                }`}
+                onInput={(event) => setPortName(id, event.currentTarget.value)}
+                onKeyDown={stop}
+                onPointerDown={stop}
+                onMouseDown={stop}
+              />
             </li>
           )}
         </For>

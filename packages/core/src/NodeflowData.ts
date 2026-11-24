@@ -92,6 +92,7 @@ export default class NodeflowData {
     canDeleteNodes: true,
     canMoveNodes: true,
     canPan: true,
+    canRenameGroups: true,
     canZoom: true,
     debugMode: false,
     defaultLineDash: "solid",
@@ -2357,6 +2358,22 @@ export default class NodeflowData {
       { ...group.serialize(), ...deepCopy(data), id: groupId },
       hasHistoryGroup,
     );
+  }
+
+  /**
+   * Sets a group's title, trimmed. Blank titles and unchanged ones are
+   * ignored. Returns whether the title changed.
+   */
+  public renameGroup(
+    groupId: string,
+    title: string,
+    hasHistoryGroup: string | boolean = true,
+  ): boolean {
+    const group = this.groups.get(groupId);
+    const trimmed = title.trim();
+    if (!group || trimmed === "" || trimmed === group.title) return false;
+    this.updateGroup(groupId, { title: trimmed }, hasHistoryGroup);
+    return true;
   }
 
   public setGroupCollapsed(

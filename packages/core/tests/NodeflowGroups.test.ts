@@ -183,6 +183,22 @@ describe("groups", () => {
     expect(nf.getGroupOfNode("a")?.title).toBe("Pair");
   });
 
+  it("renameGroup trims, ignores blank or unchanged titles, and undoes", () => {
+    const nf = build();
+    const group = nf.addGroup(["a", "b"], { title: "Pair" })!;
+
+    expect(nf.renameGroup(group.id, "   ")).toBe(false);
+    expect(nf.renameGroup(group.id, "Pair")).toBe(false);
+    expect(nf.renameGroup("missing", "X")).toBe(false);
+    expect(nf.groups.get(group.id)!.title).toBe("Pair");
+
+    expect(nf.renameGroup(group.id, "  Inputs  ")).toBe(true);
+    expect(nf.groups.get(group.id)!.title).toBe("Inputs");
+
+    nf.changes.undo();
+    expect(nf.groups.get(group.id)!.title).toBe("Pair");
+  });
+
   it("removeNode prunes members and deletes emptied groups, undoably", () => {
     const nf = build();
     const group = nf.addGroup(["a", "b"])!;

@@ -72,6 +72,20 @@
     text-overflow: ellipsis;
   }
 
+  .nodeflowGroupTitleInput {
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 1px 4px;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.2);
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    outline: none;
+  }
+
   .nodeflowGroupToggle {
     flex: none;
     cursor: pointer;

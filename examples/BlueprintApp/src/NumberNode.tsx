@@ -9,6 +9,16 @@ const NumberNode: Component<{ node: NodeflowNodeData }> = (props) => {
     return props.node.customData.value ?? 0;
   });
 
+  const name = createMemo(() => {
+    blueprintRevision();
+    return props.node.customData.name ?? "";
+  });
+
+  const rename = (value: string) => {
+    props.node.customData = { ...props.node.customData, name: value };
+    markBlueprintDirty();
+  };
+
   const updateValue = (raw: string): number => {
     const parsed = Number(raw.replaceAll(/[^0-9.]/g, ""));
     const value = Number.isNaN(parsed) ? 0 : parsed;
@@ -19,7 +29,17 @@ const NumberNode: Component<{ node: NodeflowNodeData }> = (props) => {
 
   return (
     <div class={contentCss.pad}>
-      <span class={contentCss.label}>Value</span>
+      <input
+        class={`${contentCss.label} ${contentCss.labelInput}`}
+        value={name()}
+        placeholder="Value"
+        aria-label="Value name"
+        title="Name this value"
+        onInput={(event) => rename(event.currentTarget.value)}
+        onKeyDown={(event) => event.stopPropagation()}
+        onPointerDown={(event) => event.stopPropagation()}
+        onMouseDown={(event) => event.stopPropagation()}
+      />
       <input
         class={contentCss.control}
         value={number()}

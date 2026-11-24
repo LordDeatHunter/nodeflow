@@ -17,8 +17,31 @@ const describePort = (
 ): string => {
   const inner = node.composite?.nodes[port.innerNodeId]?.customData;
   const extra = port.extraTargets?.length ?? 0;
-  const label = `${describeNodeKind(inner)} · ${direction} ${connectorNumber(port.innerConnectorId)}`;
+  const label = `${describeNodeKind(inner)} · ${direction} ${connectorNumber(
+    port.innerConnectorId,
+  )}`;
   return extra > 0 ? `${label} +${extra}` : label;
+};
+
+/**
+ * A port's name if it was given one, else where it leads inside. The inner
+ * connector is always in the tooltip.
+ */
+const PortLabel: Component<{
+  node: NodeflowNodeData;
+  port: CompositePort;
+  direction: "in" | "out";
+}> = (props) => {
+  const description = () =>
+    describePort(props.node, props.port, props.direction);
+  return (
+    <span
+      class={props.port.name ? contentCss.portName : undefined}
+      title={description()}
+    >
+      {props.port.name ?? description()}
+    </span>
+  );
 };
 
 const DerivedNode: Component<{ node: NodeflowNodeData }> = (props) => {
@@ -60,7 +83,11 @@ const DerivedNode: Component<{ node: NodeflowNodeData }> = (props) => {
       <div class={contentCss.derivedPorts}>
         <ul class={contentCss.portList}>
           <For each={ports().inputs}>
-            {(port) => <li>{describePort(props.node, port, "in")}</li>}
+            {(port) => (
+              <li>
+                <PortLabel node={props.node} port={port} direction="in" />
+              </li>
+            )}
           </For>
         </ul>
         <ul class={`${contentCss.portList} ${contentCss.portListOutputs}`}>
@@ -71,7 +98,7 @@ const DerivedNode: Component<{ node: NodeflowNodeData }> = (props) => {
               );
               return (
                 <li>
-                  {describePort(props.node, port, "out")}
+                  <PortLabel node={props.node} port={port} direction="out" />
                   <Show when={value() !== undefined}>
                     <span class={contentCss.portValue}>
                       {formatValue(value()!)}
@@ -85,26 +112,26 @@ const DerivedNode: Component<{ node: NodeflowNodeData }> = (props) => {
       </div>
       {/* Breaking apart and saving act on the main canvas only. */}
       <Show when={props.node.nodeflow === nodeflowData}>
-      <div class={contentCss.derivedActions}>
-        <button
-          type="button"
-          class={contentCss.button}
-          onPointerDown={stop}
-          onMouseDown={stop}
-          onClick={() => breakApartDerivedNode(props.node.id)}
-        >
-          Break apart
-        </button>
-        <button
-          type="button"
-          class={contentCss.button}
-          onPointerDown={stop}
-          onMouseDown={stop}
-          onClick={() => saveDerivedNodeType(props.node.id)}
-        >
-          {isSaved() ? "Update type" : "Save type"}
-        </button>
-      </div>
+        <div class={contentCss.derivedActions}>
+          <button
+            type="button"
+            class={contentCss.button}
+            onPointerDown={stop}
+            onMouseDown={stop}
+            onClick={() => breakApartDerivedNode(props.node.id)}
+          >
+            Break apart
+          </button>
+          <button
+            type="button"
+            class={contentCss.button}
+            onPointerDown={stop}
+            onMouseDown={stop}
+            onClick={() => saveDerivedNodeType(props.node.id)}
+          >
+            {isSaved() ? "Update type" : "Save type"}
+          </button>
+        </div>
       </Show>
     </div>
   );

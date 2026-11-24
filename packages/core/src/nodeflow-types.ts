@@ -108,6 +108,11 @@ export type NodeflowSettings = {
   canDeleteNodes: boolean;
   canMoveNodes: boolean;
   canPan: boolean;
+  /**
+   * Whether a group's title can be renamed in place by double-clicking it.
+   * Defaults to true.
+   */
+  canRenameGroups: boolean;
   canZoom: boolean;
   debugMode: boolean;
   /**
@@ -254,6 +259,8 @@ export interface CompositePort extends CompositePortTarget {
    * besides `innerNodeId`/`innerConnectorId`.
    */
   extraTargets?: Array<CompositePortTarget>;
+  /** Optional label for the port, e.g. "a" or "positive solution". */
+  name?: string;
 }
 
 /**
