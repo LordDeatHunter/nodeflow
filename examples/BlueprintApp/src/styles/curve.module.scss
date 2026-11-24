@@ -1,6 +1,10 @@
 @use "sass:color";
 @use "colors";
 
+// No `filter: drop-shadow` glows on curves: the blur scales with the zoom
+// and Chrome re-rasterizes filtered paths on every pan frame, which made
+// panning while zoomed in crawl. Emphasis comes from stroke color and width.
+
 @mixin baseCurve($strokeColor) {
   position: relative;
   width: 100%;
@@ -12,7 +16,6 @@
   transition:
     stroke 140ms ease-in-out,
     stroke-width 140ms ease-in-out,
-    filter 140ms ease-in-out,
     opacity 140ms ease-in-out;
   stroke: $strokeColor;
 }
@@ -21,9 +24,6 @@
   &:hover {
     stroke: color.adjust($strokeColor, $saturation: 15%, $lightness: -12%);
     stroke-width: 5px;
-    filter: drop-shadow(
-      0 0 4px color.adjust($strokeColor, $saturation: 15%, $lightness: -12%)
-    );
   }
 }
 
@@ -36,15 +36,11 @@
   @include curveWithHover(
     color.adjust(colors.$connection-color, $saturation: -8%, $lightness: 6%)
   );
-  filter: drop-shadow(0 0 2px rgba(132, 195, 255, 0.5))
-    drop-shadow(0 0 7px rgba(132, 195, 255, 0.22));
 }
 
 .selectedConnection {
   @include baseCurve(colors.$connection-color);
-  stroke-width: 4.5px;
-  filter: drop-shadow(0 0 3px rgba(132, 195, 255, 0.85))
-    drop-shadow(0 0 12px rgba(132, 195, 255, 0.45));
+  stroke-width: 5px;
 }
 
 .newConnection {
@@ -56,8 +52,6 @@
     )
   );
   stroke-dasharray: 10 12;
-  filter: drop-shadow(0 0 2px rgba(195, 255, 132, 0.6))
-    drop-shadow(0 0 8px rgba(195, 255, 132, 0.3));
   animation: nodeflow-dash-flow 0.55s linear infinite;
 
   @media (prefers-reduced-motion: reduce) {

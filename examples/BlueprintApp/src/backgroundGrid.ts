@@ -45,83 +45,160 @@ const fade = (spacing: number, { hidden, full }: typeof DOTS_FADE) =>
 const firstLine = (offset: number, step: number) =>
   offset - Math.floor(offset / step) * step;
 
+/**
+ * A repeating fill with one dot per `spacing` CSS pixels. The dot is drawn
+ * once on a small tile that is rebuilt only when the spacing changes; each
+ * frame then fills the canvas with it in a single call, however many dots
+ * are on screen.
+ */
+class DotPattern {
+  private tile = document.createElement("canvas");
+  private pattern: CanvasPattern | null = null;
+  private key = "";
+
+  /** The pattern for `spacing`, positioned so dots land on the origin. */
+  get(
+    ctx: CanvasRenderingContext2D,
+    color: string,
+    spacing: number,
+    originX: number,
+    originY: number,
+    pixelRatio: number,
+  ): CanvasPattern | null {
+    // Tiles are whole device pixels; the pattern transform stretches them by
+    // under a pixel to the exact spacing so dots do not drift.
+    const size = Math.max(1, Math.round(spacing * pixelRatio));
+    const key = `${size}:${color}:${pixelRatio}`;
+    if (key !== this.key) {
+      this.key = key;
+      this.tile.width = size;
+      this.tile.height = size;
+      const tileCtx = this.tile.getContext("2d");
+      if (!tileCtx) return null;
+      tileCtx.fillStyle = color;
+      tileCtx.beginPath();
+      tileCtx.arc(size / 2, size / 2, DOT_RADIUS * pixelRatio, 0, Math.PI * 2);
+      tileCtx.fill();
+      this.pattern = ctx.createPattern(this.tile, "repeat");
+    }
+    if (!this.pattern) return null;
+
+    const stretch = (spacing * pixelRatio) / size;
+    const half = (spacing * pixelRatio) / 2;
+    this.pattern.setTransform(
+      new DOMMatrix()
+        .translate(originX * pixelRatio - half, originY * pixelRatio - half)
+        .scale(stretch),
+    );
+    return this.pattern;
+  }
+}
+
+/**
+ * The key light and vignette, which depend only on the canvas size, drawn
+ * once per size and then copied over the grid each frame.
+ */
+class Lighting {
+  private canvas = document.createElement("canvas");
+  private key = "";
+
+  get(colors: GridColors, pixelWidth: number, pixelHeight: number) {
+    const key = `${pixelWidth}:${pixelHeight}`;
+    if (key === this.key) return this.canvas;
+    this.key = key;
+    this.canvas.width = pixelWidth;
+    this.canvas.height = pixelHeight;
+    const ctx = this.canvas.getContext("2d");
+    if (!ctx) return this.canvas;
+    const width = pixelWidth;
+    const height = pixelHeight;
+
+    // A soft key light near the top...
+    const glowX = width / 2;
+    const glowY = height * 0.32;
+    const glowReach = Math.hypot(
+      Math.max(glowX, width - glowX),
+      height - glowY,
+    );
+    const glow = ctx.createRadialGradient(
+      glowX,
+      glowY,
+      0,
+      glowX,
+      glowY,
+      glowReach,
+    );
+    glow.addColorStop(0, colors.glow);
+    glow.addColorStop(0.62, clear(colors.glow));
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, width, height);
+
+    // ...then a vignette: an ellipse with the canvas's proportions reaching
+    // its corners, as in a CSS `radial-gradient(ellipse at center, ...)`.
+    const radiusX = (width / 2) * Math.SQRT2;
+    const radiusY = (height / 2) * Math.SQRT2;
+    ctx.translate(width / 2, height / 2);
+    ctx.scale(1, radiusY / radiusX);
+    const vignette = ctx.createRadialGradient(0, 0, 0, 0, 0, radiusX);
+    vignette.addColorStop(0.42, clear(colors.vignette));
+    vignette.addColorStop(1, colors.vignette);
+    ctx.fillStyle = vignette;
+    ctx.fillRect(-radiusX, -radiusX, radiusX * 2, radiusX * 2);
+    return this.canvas;
+  }
+}
+
+interface GridView {
+  width: number;
+  height: number;
+  originX: number;
+  originY: number;
+  scale: number;
+  pixelRatio: number;
+}
+
 const drawGrid = (
   ctx: CanvasRenderingContext2D,
   colors: GridColors,
-  width: number,
-  height: number,
-  originX: number,
-  originY: number,
-  scale: number,
-  pixelRatio: number,
+  dots: DotPattern,
+  lighting: Lighting,
+  { width, height, originX, originY, scale, pixelRatio }: GridView,
 ) => {
-  ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-  ctx.clearRect(0, 0, width, height);
-
-  // Lines and dots sit on device pixels so they stay crisp.
-  const snap = (value: number) => Math.round(value * pixelRatio) / pixelRatio;
+  const pixelWidth = ctx.canvas.width;
+  const pixelHeight = ctx.canvas.height;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1;
+  ctx.clearRect(0, 0, pixelWidth, pixelHeight);
 
   const minor = GRID_SIZE * scale;
   const major = minor * MAJOR_EVERY;
 
   const linesAlpha = fade(major, LINES_FADE);
   if (linesAlpha > 0) {
+    // Lines sit on device pixels so they stay crisp.
+    const line = Math.max(1, Math.round(pixelRatio));
     ctx.globalAlpha = linesAlpha;
     ctx.fillStyle = colors.line;
     for (let x = firstLine(originX, major); x < width; x += major) {
-      ctx.fillRect(snap(x), 0, 1, height);
+      ctx.fillRect(Math.round(x * pixelRatio), 0, line, pixelHeight);
     }
     for (let y = firstLine(originY, major); y < height; y += major) {
-      ctx.fillRect(0, snap(y), width, 1);
+      ctx.fillRect(0, Math.round(y * pixelRatio), pixelWidth, line);
     }
   }
 
   const dotsAlpha = fade(minor, DOTS_FADE);
-  if (dotsAlpha > 0) {
+  const pattern =
+    dotsAlpha > 0 &&
+    dots.get(ctx, colors.dot, minor, originX, originY, pixelRatio);
+  if (pattern) {
     ctx.globalAlpha = dotsAlpha;
-    ctx.fillStyle = colors.dot;
-    ctx.beginPath();
-    const startX = firstLine(originX, minor);
-    for (let y = firstLine(originY, minor); y < height + minor; y += minor) {
-      const dotY = snap(y);
-      for (let x = startX; x < width + minor; x += minor) {
-        const dotX = snap(x);
-        ctx.moveTo(dotX + DOT_RADIUS, dotY);
-        ctx.arc(dotX, dotY, DOT_RADIUS, 0, Math.PI * 2);
-      }
-    }
-    ctx.fill();
+    ctx.fillStyle = pattern;
+    ctx.fillRect(0, 0, pixelWidth, pixelHeight);
   }
+
   ctx.globalAlpha = 1;
-
-  // A soft key light near the top, then a vignette, both over the grid.
-  const glowX = width / 2;
-  const glowY = height * 0.32;
-  const glowReach = Math.hypot(Math.max(glowX, width - glowX), height - glowY);
-  const glow = ctx.createRadialGradient(
-    glowX,
-    glowY,
-    0,
-    glowX,
-    glowY,
-    glowReach,
-  );
-  glow.addColorStop(0, colors.glow);
-  glow.addColorStop(0.62, clear(colors.glow));
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, width, height);
-
-  // An ellipse with the canvas's proportions reaching its corners, as in a
-  // CSS `radial-gradient(ellipse at center, ...)`.
-  const radiusX = (width / 2) * Math.SQRT2;
-  const radiusY = (height / 2) * Math.SQRT2;
-  ctx.translate(width / 2, height / 2);
-  ctx.scale(1, radiusY / radiusX);
-  const vignette = ctx.createRadialGradient(0, 0, 0, 0, 0, radiusX);
-  vignette.addColorStop(0.42, clear(colors.vignette));
-  vignette.addColorStop(1, colors.vignette);
-  ctx.fillStyle = vignette;
-  ctx.fillRect(-radiusX, -radiusX, radiusX * 2, radiusX * 2);
+  ctx.drawImage(lighting.get(colors, pixelWidth, pixelHeight), 0, 0);
 };
 
 /**
@@ -140,6 +217,8 @@ export const syncBackgroundGrid = (nodeflow: NodeflowData): (() => void) => {
   let grid: HTMLCanvasElement | undefined;
   let ctx: CanvasRenderingContext2D | null = null;
   let colors: GridColors | undefined;
+  const dots = new DotPattern();
+  const lighting = new Lighting();
 
   const sync = () => {
     frame = requestAnimationFrame(sync);
@@ -187,7 +266,14 @@ export const syncBackgroundGrid = (nodeflow: NodeflowData): (() => void) => {
       grid.style.height = `${height}px`;
     }
 
-    drawGrid(ctx, colors, width, height, x, y, scale, pixelRatio);
+    drawGrid(ctx, colors, dots, lighting, {
+      width,
+      height,
+      originX: x,
+      originY: y,
+      scale,
+      pixelRatio,
+    });
   };
 
   frame = requestAnimationFrame(sync);

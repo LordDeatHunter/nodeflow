@@ -12,6 +12,7 @@ import {
 import nodeCss from "./styles/node.module.scss";
 import curveCss from "./styles/curve.module.scss";
 import groupCss from "./styles/group.module.scss";
+import { restyleTemplate } from "./restyle";
 import NumberNode from "./NumberNode";
 import OperationNode from "./OperationNode";
 import NegationNode from "./NegationNode";
@@ -248,7 +249,9 @@ export const setupSavedTypePersistence = () => {
   try {
     const stored = localStorage.getItem(TEMPLATES_STORAGE_KEY);
     if (stored) {
-      nodeflowData.templates.load(JSON.parse(stored) as Array<NodeTemplate>);
+      nodeflowData.templates.load(
+        (JSON.parse(stored) as Array<NodeTemplate>).map(restyleTemplate),
+      );
     }
   } catch {
     // Unavailable or corrupt storage: start without saved types.

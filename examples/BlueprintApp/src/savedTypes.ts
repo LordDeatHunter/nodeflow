@@ -1,5 +1,6 @@
 import { generateId, NodeTemplate } from "@nodeflow-lib/solid";
 import { markBlueprintDirty } from "./reactivity";
+import { restyleTemplate } from "./restyle";
 import { nodeflowData } from "./App";
 
 /**
@@ -134,7 +135,7 @@ export const importSavedTypes = (text: string): ImportResult => {
   const added: Array<NodeTemplate> = [];
   let skipped = 0;
 
-  types.forEach((template) => {
+  types.map(restyleTemplate).forEach((template) => {
     const current = existing.get(template.id);
     if (current && JSON.stringify(current) === JSON.stringify(template)) {
       skipped++;
