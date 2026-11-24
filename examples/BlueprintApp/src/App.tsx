@@ -92,6 +92,8 @@ const App: Component = () => {
     equals: sameIds,
   });
   const [menu, setMenu] = createSignal<Optional<PaletteMenu>>(undefined);
+  const [paletteOpen, setPaletteOpen] = createSignal(false);
+  let palette: HTMLDivElement | undefined;
 
   const openMenu = (entry: Preview, x: number, y: number) => {
     // A right-click or long press is not a drag.
@@ -144,6 +146,11 @@ const App: Component = () => {
     const nodeflowSize = canvas.size;
 
     if (!clickPos.isWithinRect(nodeflowPosition, nodeflowSize)) return;
+    // The open palette covers the bottom of the canvas; dropping on it
+    // cancels the drag. Tested by point, since touch pointerups target the
+    // slot the drag began on.
+    const paletteRect = palette?.getBoundingClientRect();
+    if (paletteRect && clickPos.y >= paletteRect.top) return;
 
     const nodePosition = clickPos
       .subtract(nodeflowPosition)
@@ -252,75 +259,107 @@ const App: Component = () => {
           <DerivedTypeEditor />
         </Show>
       </div>
-      <div class={appCss.hotbar}>
-        <div class={appCss.hotbarHeader}>
-          <h1 class={appCss.hotbarTitle}>Node palette</h1>
-          <p class={appCss.hotbarHint}>
-            <Show
-              when={editorSession()}
-              fallback={
-                <>
-                  Drag a node onto the canvas to add it, or right-click
-                  (long-press) it for more. Select nodes to group them or turn
-                  them into a derived node.
-                </>
-              }
-            >
-              Drag a node into the type being edited to add it. The type
-              itself, and types built from it, can't be added.
-            </Show>
-          </p>
-        </div>
-        <div class={appCss.slots}>
-          <For each={BUILT_IN_TYPES}>
-            {(type) => (
-              <NewNodeSlot
-                onClick={(event) => startPreview({ kind: "node", type }, event)}
-                onContextMenu={(x, y) =>
-                  openMenu({ kind: "node", type }, x, y)
+      <div
+        ref={palette}
+        class={appCss.palette}
+        classList={{ [appCss.paletteOpen]: paletteOpen() }}
+      >
+        <button
+          type="button"
+          class={appCss.paletteToggle}
+          aria-expanded={paletteOpen()}
+          aria-controls="node-palette"
+          onClick={() => setPaletteOpen((open) => !open)}
+        >
+          <svg viewBox="0 0 12 12" aria-hidden="true">
+            <path
+              d="M2 8l4-4 4 4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          {paletteOpen() ? "Hide nodes" : "Nodes"}
+        </button>
+        <div
+          id="node-palette"
+          class={appCss.hotbar}
+          // Closed: out of the tab order and away from screen readers.
+          inert={!paletteOpen() || undefined}
+        >
+          <div class={appCss.hotbarHeader}>
+            <h1 class={appCss.hotbarTitle}>Node palette</h1>
+            <p class={appCss.hotbarHint}>
+              <Show
+                when={editorSession()}
+                fallback={
+                  <>
+                    Drag a node onto the canvas to add it, or right-click
+                    (long-press) it for more. Select nodes to group them or turn
+                    them into a derived node.
+                  </>
                 }
               >
-                {PREVIEW_LABELS[type]}
-              </NewNodeSlot>
-            )}
-          </For>
-          <For each={savedTypes()}>
-            {(template) => (
-              <NewNodeSlot
-                saved
-                disabled={isTypeLockedInEditor(template.id)}
-                disabledReason="A type can't contain itself"
-                onClick={(event) =>
-                  startPreview(
-                    {
-                      kind: "saved",
-                      templateId: template.id,
-                      name: template.name,
-                    },
-                    event,
-                  )
-                }
-                onContextMenu={(x, y) =>
-                  openMenu(
-                    {
-                      kind: "saved",
-                      templateId: template.id,
-                      name: template.name,
-                    },
-                    x,
-                    y,
-                  )
-                }
-                onRemove={
-                  isTypeLockedInEditor(template.id)
-                    ? undefined
-                    : () => nodeflowData.templates.remove(template.id)
-                }
-              >
-                {template.name}
-              </NewNodeSlot>
-            )}
-          </For>
+                Drag a node into the type being edited to add it. The type
+                itself, and types built from it, can't be added.
+              </Show>
+            </p>
+          </div>
+          <div class={appCss.slots}>
+            <For each={BUILT_IN_TYPES}>
+              {(type) => (
+                <NewNodeSlot
+                  onClick={(event) =>
+                    startPreview({ kind: "node", type }, event)
+                  }
+                  onContextMenu={(x, y) =>
+                    openMenu({ kind: "node", type }, x, y)
+                  }
+                >
+                  {PREVIEW_LABELS[type]}
+                </NewNodeSlot>
+              )}
+            </For>
+            <For each={savedTypes()}>
+              {(template) => (
+                <NewNodeSlot
+                  saved
+                  disabled={isTypeLockedInEditor(template.id)}
+                  disabledReason="A type can't contain itself"
+                  onClick={(event) =>
+                    startPreview(
+                      {
+                        kind: "saved",
+                        templateId: template.id,
+                        name: template.name,
+                      },
+                      event,
+                    )
+                  }
+                  onContextMenu={(x, y) =>
+                    openMenu(
+                      {
+                        kind: "saved",
+                        templateId: template.id,
+                        name: template.name,
+                      },
+                      x,
+                      y,
+                    )
+                  }
+                  onRemove={
+                    isTypeLockedInEditor(template.id)
+                      ? undefined
+                      : () => nodeflowData.templates.remove(template.id)
+                  }
+                >
+                  {template.name}
+                </NewNodeSlot>
+              )}
+            </For>
+          </div>
         </div>
       </div>
       <Show when={nodePreview()}>
