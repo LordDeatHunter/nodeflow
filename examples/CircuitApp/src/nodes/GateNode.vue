@@ -21,22 +21,24 @@ const label = computed(() => gateGeometry(gate.value).label);
 
 <template>
   <div class="gate-node">
-    <GateSymbol :kind="gate" :on="high" :inputs-on="inputsOn" />
-    <select
-      class="gate-kind"
-      :value="gate"
-      :style="{ left: `${label.x}px`, top: `${label.y}px` }"
-      aria-label="Gate type"
-      @change="
-        setGateKind(node, ($event.target as HTMLSelectElement).value as GateKind)
-      "
-      @keydown="stop"
-      @pointerdown="stop"
-      @mousedown="stop"
-    >
-      <option v-for="kind in GATE_KINDS" :key="kind" :value="kind">
-        {{ kind }}
-      </option>
-    </select>
+    <div class="part-stage">
+      <GateSymbol :kind="gate" :on="high" :inputs-on="inputsOn" />
+      <select
+        class="gate-kind"
+        :value="gate"
+        :style="{ left: `${label.x}px`, top: `${label.y}px` }"
+        aria-label="Gate type"
+        @change="
+          setGateKind(node, ($event.target as HTMLSelectElement).value as GateKind)
+        "
+        @keydown="stop"
+        @pointerdown="stop"
+        @mousedown="stop"
+      >
+        <option v-for="kind in GATE_KINDS" :key="kind" :value="kind">
+          {{ kind }}
+        </option>
+      </select>
+    </div>
   </div>
 </template>

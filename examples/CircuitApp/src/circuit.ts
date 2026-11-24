@@ -312,6 +312,38 @@ export const connectNodes = (
 };
 
 /** Wires up a canvas: redraw on change, and the wiring rules. */
+/** Every part rotates except chips and chip-editor terminals. */
+export const isRotatable = (node: NodeflowNodeData) =>
+  node.customData.type !== "chip" && node.customData.type !== "terminal";
+
+/**
+ * Turns the given parts a quarter turn clockwise about their centers, as one
+ * undo step. Rotated parts swap width and height (see node.css), so each
+ * moves by half the difference to stay centered.
+ */
+export const rotateNodes = (
+  nodeIds: Array<string>,
+  nodeflow: NodeflowData = getMainCanvas(),
+) => {
+  const historyGroup = Changes.createHistoryGroup();
+  nodeIds.forEach((nodeId) => {
+    const node = nodeflow.nodes.get(nodeId);
+    if (!node || !isRotatable(node)) return;
+    const { x: width, y: height } = node.size;
+    nodeflow.updateNode(
+      nodeId,
+      {
+        rotation: node.rotatedBy(1),
+        position: node.position.add(
+          Vec2.of((width - height) / 2, (height - width) / 2),
+        ),
+      },
+      historyGroup,
+    );
+  });
+  markCircuitDirty();
+};
+
 export const setupEvents = (nodeflow: NodeflowData) => {
   nodeflow.eventStore.onNodeDataChanged.subscribe(
     "circuit:node-data-changed",
@@ -320,6 +352,17 @@ export const setupEvents = (nodeflow: NodeflowData) => {
   nodeflow.eventStore.onKeyDownInNodeflow.subscribe(
     "circuit:history-changed",
     markCircuitDirty,
+  );
+  nodeflow.eventStore.onKeyDownInNodeflow.subscribe(
+    "circuit:rotate",
+    ({ event }) => {
+      if (event.code !== "KeyR" || event.ctrlKey || event.metaKey) return;
+      if (event.altKey || event.repeat) return;
+      rotateNodes(
+        nodeflow.mouseData.heldNodes.map((node) => node.id),
+        nodeflow,
+      );
+    },
   );
 
   // Replaces core's default handler: a wire runs from an output to a free

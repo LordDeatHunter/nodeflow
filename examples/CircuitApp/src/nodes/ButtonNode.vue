@@ -42,21 +42,23 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="part">
-    <ButtonSymbol :pressed="pressed" />
-    <button
-      type="button"
-      class="part-hit push-button"
-      :aria-pressed="pressed"
-      aria-label="Hold to send a high signal"
-      title="Hold to send a high signal"
-      @pointerdown="press"
-      @mousedown="stop"
-      @keydown="onKey($event, true)"
-      @keyup="onKey($event, false)"
-      @blur="release"
-    />
+    <div class="part-stage">
+      <ButtonSymbol :pressed="pressed" />
+      <button
+        type="button"
+        class="part-hit push-button"
+        :aria-pressed="pressed"
+        aria-label="Hold to send a high signal"
+        title="Hold to send a high signal"
+        @pointerdown="press"
+        @mousedown="stop"
+        @keydown="onKey($event, true)"
+        @keyup="onKey($event, false)"
+        @blur="release"
+      />
+    </div>
     <input
-      class="node-name part-name"
+      class="node-name part-name part-label"
       :value="data.name ?? ''"
       placeholder="Button"
       aria-label="Button name"

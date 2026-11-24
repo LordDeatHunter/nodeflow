@@ -22,9 +22,11 @@ const trace = computed(() => [...history.value, high.value]);
 
 <template>
   <div class="part">
-    <ClockSymbol :trace="trace" />
+    <div class="part-stage">
+      <ClockSymbol :trace="trace" />
+    </div>
     <select
-      class="part-picker part-picker--clock"
+      class="part-picker part-picker--clock part-label"
       :value="clockPeriod(data.period)"
       aria-label="Clock period in frames"
       @change="

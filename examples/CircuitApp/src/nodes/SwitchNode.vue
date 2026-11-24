@@ -11,19 +11,21 @@ const on = computed(() => !!data.value.on);
 
 <template>
   <div class="part">
-    <SwitchSymbol :on="on" />
-    <button
-      type="button"
-      class="part-hit toggle"
-      role="switch"
-      :aria-checked="on"
-      :aria-label="`Turn ${on ? 'off' : 'on'}`"
-      @pointerdown="stop"
-      @mousedown="stop"
-      @click="updateCustomData(node, { on: !on })"
-    />
+    <div class="part-stage">
+      <SwitchSymbol :on="on" />
+      <button
+        type="button"
+        class="part-hit toggle"
+        role="switch"
+        :aria-checked="on"
+        :aria-label="`Turn ${on ? 'off' : 'on'}`"
+        @pointerdown="stop"
+        @mousedown="stop"
+        @click="updateCustomData(node, { on: !on })"
+      />
+    </div>
     <input
-      class="node-name part-name"
+      class="node-name part-name part-label"
       :value="data.name ?? ''"
       placeholder="Switch"
       aria-label="Switch name"

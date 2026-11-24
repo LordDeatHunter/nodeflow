@@ -11,9 +11,11 @@ const on = computed(() => inputLevel(props.node, "input-0"));
 
 <template>
   <div class="part">
-    <LampSymbol :on="on" />
+    <div class="part-stage">
+      <LampSymbol :on="on" />
+    </div>
     <input
-      class="node-name part-name"
+      class="node-name part-name part-label"
       :value="data.name ?? ''"
       placeholder="Lamp"
       aria-label="Lamp name"

@@ -43,18 +43,31 @@
   height: 100%;
 }
 
-/* Parts are drawn at this size (components/parts/geometry.ts). */
+/*
+ * Parts are drawn at this size (components/parts/geometry.ts). Turned a
+ * quarter, they swap width and height; their drawing turns inside
+ * `.part-stage`.
+ */
 .node--gate,
 .node--switch,
 .node--button,
 .node--clock,
-.node--lamp {
-  width: 144px;
+.node--lamp,
+.node--hex {
+  --part-width: 144px;
+  --part-height: 96px;
+  width: var(--part-width);
+  height: var(--part-height);
 }
 
 .node--hex {
-  width: 144px;
-  height: 120px;
+  --part-height: 120px;
+}
+
+.node[data-nodeflow-rotation="90"],
+.node[data-nodeflow-rotation="270"] {
+  width: var(--part-height);
+  height: var(--part-width);
 }
 
 /* Chips size to their pin list. */
@@ -268,7 +281,7 @@
   height: 100%;
 }
 
-.gate-node .gate-symbol {
+.part-stage .gate-symbol {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -317,10 +330,10 @@
   stroke: var(--signal);
 }
 
-/* The kind picker reads as the label inside the symbol. */
+/* The kind picker reads as the label inside the symbol, kept upright. */
 .gate-kind {
   position: absolute;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) rotate(calc(-1 * var(--rotation)));
   padding: 1px 2px;
   border-color: transparent;
   background: none;
@@ -372,7 +385,17 @@
   height: 100%;
 }
 
-.part .part-symbol {
+/* The part's drawing at its unrotated size, turned about the node center. */
+.part-stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--part-width);
+  height: var(--part-height);
+  transform: translate(-50%, -50%) rotate(var(--rotation));
+}
+
+.part-stage .part-symbol {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -440,6 +463,26 @@
   text-align: center;
 }
 
+/*
+ * Names and the clock's picker stay outside the turning stage. Upside down,
+ * the bottom is where the drawing reaches (switch blade, button cap), so
+ * they move to the top; on their side they sit beside the part.
+ */
+.node[data-nodeflow-rotation="180"] .part-label {
+  top: 4px;
+  bottom: auto;
+}
+
+.node[data-nodeflow-rotation="90"] .part-label,
+.node[data-nodeflow-rotation="270"] .part-label {
+  left: calc(100% + 4px);
+  top: 50%;
+  bottom: auto;
+  width: 96px;
+  transform: translateY(-50%);
+  text-align: left;
+}
+
 .part-picker {
   position: absolute;
   left: 58px;
@@ -454,6 +497,11 @@
   font-size: 0.6rem;
   letter-spacing: 0.06em;
   text-align: center;
+}
+
+/* Under the scope, which sits on the right when upside down. */
+.node[data-nodeflow-rotation="180"] .part-picker--clock {
+  left: 86px;
 }
 
 .part-picker:hover {
@@ -559,6 +607,13 @@
 
 .lamp--on .lamp-filament {
   stroke: #e9fff1;
+}
+
+.bit-label,
+.hex-digit {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: rotate(calc(-1 * var(--rotation)));
 }
 
 .bit-label {

@@ -14,6 +14,8 @@ const bits = computed(() =>
 
 <template>
   <div class="part">
-    <HexSymbol :bits="bits" />
+    <div class="part-stage">
+      <HexSymbol :bits="bits" />
+    </div>
   </div>
 </template>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from "vue";
 import type { NodeflowData, NodeflowNodeData } from "@nodeflow-lib/vue";
-import { createChip, groupNodes } from "../circuit";
+import { createChip, groupNodes, isRotatable, rotateNodes } from "../circuit";
 
 /**
  * Actions for the nodes selected on `nodeflow`: turn them into a chip, group
@@ -18,6 +18,8 @@ const SUBSCRIPTION = "circuit:selection-toolbar";
 const selectedIds = ref<Array<string>>([]);
 /** The group every selected node is in, if they all share one. */
 const selectedGroupId = ref<string>();
+/** Whether any selected node can be rotated. */
+const canRotate = ref(false);
 
 const update = () => {
   const next = props.nodeflow.mouseData.heldNodes
@@ -32,6 +34,11 @@ const update = () => {
   const groupIds = new Set(
     next.map((id) => props.nodeflow.getGroupOfNode(id)?.id),
   );
+  canRotate.value = next.some((id) => {
+    const node = props.nodeflow.nodes.get(id);
+    return !!node && isRotatable(node);
+  });
+
   const [groupId] = groupIds;
   selectedGroupId.value =
     next.length > 0 && groupIds.size === 1 ? groupId : undefined;
@@ -47,7 +54,13 @@ onBeforeUnmount(() =>
 </script>
 
 <template>
-  <div v-if="selectedIds.length > 0" :class="toolbarClass ?? 'selection-toolbar'">
+  <!-- mousedown.prevent: keep focus on the canvas, so its keys (R, Delete,
+       Ctrl+Z) still work after clicking a button here. -->
+  <div
+    v-if="selectedIds.length > 0"
+    :class="toolbarClass ?? 'selection-toolbar'"
+    @mousedown.prevent
+  >
     <span class="selection-count">{{ selectedIds.length }} selected</span>
     <button
       type="button"
@@ -55,6 +68,15 @@ onBeforeUnmount(() =>
       @click="createChip(selectedIds, nodeflow)"
     >
       Make chip
+    </button>
+    <button
+      v-if="canRotate"
+      type="button"
+      class="toolbar-button"
+      title="Rotate clockwise (R)"
+      @click="rotateNodes(selectedIds, nodeflow)"
+    >
+      Rotate
     </button>
     <button
       v-if="selectedGroupId"

@@ -44,14 +44,17 @@ const lit = computed(() => DIGITS[value.value]);
       </text>
     </g>
     <rect class="scope" x="44" y="6" width="90" height="108" rx="8" />
-    <g transform="translate(91 60) skewX(-6) translate(-91 -60)">
-      <path
-        v-for="name in SEGMENT_NAMES"
-        :key="name"
-        class="segment"
-        :class="{ 'segment--on': lit.includes(name) }"
-        :d="SEGMENTS[name]"
-      />
+    <!-- Stays upright when the part is rotated (see node.css). -->
+    <g class="hex-digit">
+      <g transform="translate(91 60) skewX(-6) translate(-91 -60)">
+        <path
+          v-for="name in SEGMENT_NAMES"
+          :key="name"
+          class="segment"
+          :class="{ 'segment--on': lit.includes(name) }"
+          :d="SEGMENTS[name]"
+        />
+      </g>
     </g>
   </svg>
 </template>

@@ -82,6 +82,70 @@ body {
   height: 100%;
 }
 
+/*
+ * Rotated parts (`data-nodeflow-rotation`, clockwise): the input and output
+ * edges turn with the drawing, and so does connector order, e.g. the top
+ * input ends up on the right after a quarter turn.
+ */
+:root {
+  --rotation: 0deg;
+}
+
+.nodeflowNode[data-nodeflow-rotation="90"] {
+  --rotation: 90deg;
+}
+
+.nodeflowNode[data-nodeflow-rotation="180"] {
+  --rotation: 180deg;
+}
+
+.nodeflowNode[data-nodeflow-rotation="270"] {
+  --rotation: 270deg;
+}
+
+[data-nodeflow-rotation="90"] > .nodeflowConnectorSection,
+[data-nodeflow-rotation="270"] > .nodeflowConnectorSection {
+  left: 0;
+  right: auto;
+  width: 100%;
+  height: 0;
+}
+
+[data-nodeflow-rotation="90"] > .nodeflowConnectorSection {
+  flex-direction: row-reverse;
+}
+
+[data-nodeflow-rotation="180"] > .nodeflowConnectorSection {
+  flex-direction: column-reverse;
+}
+
+[data-nodeflow-rotation="270"] > .nodeflowConnectorSection {
+  flex-direction: row;
+}
+
+/* Inputs: left → top → right → bottom. Outputs: the opposite edge. */
+[data-nodeflow-rotation="90"] > .inputs-section,
+[data-nodeflow-rotation="270"] > .outputs-section {
+  top: -10px;
+  bottom: auto;
+}
+
+[data-nodeflow-rotation="90"] > .outputs-section,
+[data-nodeflow-rotation="270"] > .inputs-section {
+  top: auto;
+  bottom: 10px;
+}
+
+[data-nodeflow-rotation="180"] > .inputs-section {
+  left: auto;
+  right: 10px;
+}
+
+[data-nodeflow-rotation="180"] > .outputs-section {
+  left: -10px;
+  right: auto;
+}
+
 .nodeflowSelectionBox {
   background-color: rgba(89, 255, 156, 0.06);
   border: 1.5px dashed rgba(89, 255, 156, 0.55);
