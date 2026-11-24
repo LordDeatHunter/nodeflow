@@ -12,12 +12,14 @@ import {
   EditorCanvas,
   editorData,
   editorSession,
+  isTerminal,
   renameEditedType,
   saveTemplateEdit,
   validateEditor,
 } from "./editor";
 import { blueprintRevision } from "./reactivity";
 import { syncBackgroundGrid } from "./backgroundGrid";
+import SelectionToolbar from "./SelectionToolbar";
 import appCss from "./styles/app.module.scss";
 
 const MAX_LISTED_PROBLEMS = 5;
@@ -65,11 +67,19 @@ const DerivedTypeEditor: Component = () => {
             onKeyDown={(event) => event.stopPropagation()}
           />
         </div>
-        <p class={appCss.editorHint}>
-          Drag nodes in from the palette and wire the Inputs and Outputs
-          terminals to them. Use + / − to change how many ports there are;
-          unused ports are dropped on save.
-        </p>
+        <SelectionToolbar
+          nodeflow={editorData}
+          include={(node) => !isTerminal(node)}
+          class={appCss.editorSelection}
+          fallback={
+            <p class={appCss.editorHint}>
+              Drag nodes in from the palette and wire the Inputs and Outputs
+              terminals to them. Use + / − to change how many ports there are;
+              unused ports are dropped on save. Select nodes to group them or
+              turn them into a derived node.
+            </p>
+          }
+        />
         <div class={appCss.editorActions}>
           <button
             type="button"

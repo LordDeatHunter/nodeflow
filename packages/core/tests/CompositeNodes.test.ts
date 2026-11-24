@@ -389,3 +389,69 @@ describe("composite serialization", () => {
     );
   });
 });
+
+describe("groups inside composite nodes", () => {
+  it("moves groups lying inside the selection into the definition", () => {
+    const nf = buildDemo();
+    nf.addGroup(["a", "b"], { title: "Inputs" }, false);
+
+    const composite = nf.createCompositeNode(["a", "b", "sum"])!;
+
+    expect(composite.composite!.groups).toHaveLength(1);
+    expect(composite.composite!.groups![0].title).toBe("Inputs");
+    expect(composite.composite!.groups![0].nodeIds.sort()).toEqual(["a", "b"]);
+    expect(nf.groups.size).toBe(0);
+  });
+
+  it("leaves partly selected and shared groups out of the definition", () => {
+    const nf = buildDemo();
+    nf.addGroup(["a", "b", "sum"], { title: "Shared" }, false);
+    const composite = nf.createCompositeNode(["a", "b"])!;
+    expect(composite.composite!.groups).toBeUndefined();
+    expect(nf.getGroupOfNode(composite.id)?.title).toBe("Shared");
+
+    const other = buildDemo();
+    other.addGroup(["sum", "display"], { title: "Partial" }, false);
+    expect(
+      other.createCompositeNode(["a", "b", "sum"])!.composite!.groups,
+    ).toBeUndefined();
+  });
+
+  it("restores inner groups when broken apart, as one undo step", () => {
+    const nf = buildDemo();
+    nf.addGroup(["a", "b"], { title: "Inputs" }, false);
+    const composite = nf.createCompositeNode(["a", "b", "sum"])!;
+    nf.addGroup([composite.id, "display"], { title: "Outer" }, false);
+
+    nf.explodeCompositeNode(composite.id);
+
+    expect(nf.getGroupOfNode("a")?.title).toBe("Inputs");
+    expect(nf.getGroupOfNode("b")?.title).toBe("Inputs");
+    // The inner group takes its nodes; the rest join the composite's group.
+    expect(nf.getGroupOfNode("sum")?.title).toBe("Outer");
+    expect(nf.getGroupOfNode("display")?.title).toBe("Outer");
+
+    nf.changes.undo();
+    expect(nf.nodes.has(composite.id)).toBe(true);
+    expect(nf.getGroupOfNode(composite.id)?.title).toBe("Outer");
+    expect(Array.from(nf.groups.values()).map((group) => group.title)).toEqual([
+      "Outer",
+    ]);
+  });
+
+  it("drops the outer group when inner groups take every restored node", () => {
+    const nf = buildDemo();
+    nf.addGroup(["a", "b"], { title: "Inputs" }, false);
+    nf.addGroup(["sum"], { title: "Sum" }, false);
+    const composite = nf.createCompositeNode(["a", "b", "sum"])!;
+    nf.addGroup([composite.id], { title: "Alone" }, false);
+
+    nf.explodeCompositeNode(composite.id);
+
+    expect(
+      Array.from(nf.groups.values())
+        .map((group) => group.title)
+        .sort(),
+    ).toEqual(["Inputs", "Sum"]);
+  });
+});

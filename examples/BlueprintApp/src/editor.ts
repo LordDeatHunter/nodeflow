@@ -69,7 +69,7 @@ export const editorSession = session;
 
 let eventsReady = false;
 
-const isTerminal = (node: NodeflowNodeData) =>
+export const isTerminal = (node: NodeflowNodeData) =>
   node.customData.type === "terminal";
 
 /** Keeps the terminals out of a Delete: only inner nodes can be removed. */
@@ -202,6 +202,11 @@ export const openTemplateEditor = (templateId: string) => {
       Vec2.of(innerRight + TERMINAL_GAP, MARGIN),
     ),
     false,
+  );
+
+  // Groups the type was saved with, e.g. ones made in this editor.
+  definition.groups?.forEach(({ nodeIds, ...group }) =>
+    editorData.addGroup(nodeIds, group, false),
   );
 
   definition.connections.forEach((connection) =>
@@ -400,7 +405,22 @@ const buildDefinition = (): SerializedCompositeDefinition => {
     });
   });
 
-  return { nodes, connections, inputs, outputs };
+  // Groups of inner nodes are kept; terminals never belong in one.
+  const groups = Array.from(editorData.groups.values())
+    .map((group) => group.serialize())
+    .map((group) => ({
+      ...group,
+      nodeIds: group.nodeIds.filter((id) => innerIds.has(id)),
+    }))
+    .filter((group) => group.nodeIds.length > 0);
+
+  return {
+    nodes,
+    connections,
+    inputs,
+    outputs,
+    ...(groups.length > 0 && { groups }),
+  };
 };
 
 /**

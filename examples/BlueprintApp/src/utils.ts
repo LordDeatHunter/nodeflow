@@ -152,12 +152,13 @@ export const createBlueprintNode = (
 /** Replaces `nodeIds` with one derived node. */
 export const createDerivedNode = (
   nodeIds: Array<string>,
+  nodeflow: NodeflowData = nodeflowData,
 ): NodeflowNodeData | undefined => {
-  const count = Array.from(nodeflowData.nodes.values()).filter(
+  const count = Array.from(nodeflow.nodes.values()).filter(
     (node) => node.customData.type === "derived",
   ).length;
 
-  const node = nodeflowData.createCompositeNode(nodeIds, {
+  const node = nodeflow.createCompositeNode(nodeIds, {
     css: {
       normal: `${nodeCss.node} ${nodeCss.derivedNode}`,
       selected: nodeCss.selectedNode,
@@ -172,23 +173,33 @@ export const createDerivedNode = (
   return node;
 };
 
-export const breakApartDerivedNode = (nodeId: string) => {
-  nodeflowData.explodeCompositeNode(nodeId);
+export const breakApartDerivedNode = (
+  nodeId: string,
+  nodeflow: NodeflowData = nodeflowData,
+) => {
+  nodeflow.explodeCompositeNode(nodeId);
   markBlueprintDirty();
 };
 
-/** Saves a derived node as a reusable type, or updates the one it came from. */
-export const saveDerivedNodeType = (nodeId: string) => {
-  const node = nodeflowData.nodes.get(nodeId);
+/**
+ * Saves a derived node as a reusable type, or updates the one it came from.
+ * Saved types live on the main canvas, also when the node is in the editor.
+ */
+export const saveDerivedNodeType = (
+  nodeId: string,
+  nodeflow: NodeflowData = nodeflowData,
+) => {
+  const node = nodeflow.nodes.get(nodeId);
   if (!node?.composite) return;
 
   const templateId = node.customData.templateId ?? generateId();
   node.customData = { ...node.customData, templateId };
-  nodeflowData.templates.saveFromNode(
+  const saved = nodeflow.templates.saveFromNode(
     nodeId,
     node.customData.name ?? "Derived node",
     templateId,
   );
+  if (saved && nodeflow !== nodeflowData) nodeflowData.templates.add(saved);
   markBlueprintDirty();
 };
 
@@ -213,9 +224,12 @@ export const spawnSavedType = (
   return node;
 };
 
-export const groupNodes = (nodeIds: Array<string>) =>
-  nodeflowData.addGroup(nodeIds, {
-    title: `Group ${nodeflowData.groups.size + 1}`,
+export const groupNodes = (
+  nodeIds: Array<string>,
+  nodeflow: NodeflowData = nodeflowData,
+) =>
+  nodeflow.addGroup(nodeIds, {
+    title: `Group ${nodeflow.groups.size + 1}`,
     css: {
       frame: groupCss.frame,
       header: groupCss.header,

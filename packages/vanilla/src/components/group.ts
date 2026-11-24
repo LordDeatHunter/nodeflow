@@ -74,11 +74,10 @@ export const renderGroup = (
     root.append(title, count, createToggle(data, group.id, true));
     addDragListeners(root, data, group.id);
 
-    const observer = new ResizeObserver(
-      () =>
-        data.groups
-          .get(group.id)
-          ?.updateCollapsedSize(Vec2.of(root.offsetWidth, root.offsetHeight)),
+    const observer = new ResizeObserver(() =>
+      data.groups
+        .get(group.id)
+        ?.updateCollapsedSize(Vec2.of(root.offsetWidth, root.offsetHeight)),
     );
     observer.observe(root);
 
@@ -194,7 +193,11 @@ const updateGroupElement = (
     ? "nodeflowGroupCollapsed"
     : "nodeflowGroupFrame";
   const customClass = element.collapsed ? css.collapsed : css.frame;
-  root.className = [baseClass, customClass, selected ? css.selected : undefined]
+  root.className = [
+    baseClass,
+    customClass,
+    selected ? css.selected : undefined,
+  ]
     .filter(Boolean)
     .join(" ");
 

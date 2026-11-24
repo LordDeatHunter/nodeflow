@@ -1,6 +1,5 @@
 import {
   type Component,
-  createMemo,
   createSignal,
   For,
   onCleanup,
@@ -21,6 +20,7 @@ import appCss from "./styles/app.module.scss";
 import NewNodeSlot from "./NewNodeSlot";
 import ContextMenu, { ContextMenuItem } from "./ContextMenu";
 import DerivedTypeEditor from "./DerivedTypeEditor";
+import SelectionToolbar from "./SelectionToolbar";
 import SavedTypeDialogs, { SavedTypeDialogState } from "./SavedTypeDialogs";
 import {
   editorData,
@@ -32,8 +32,6 @@ import { syncBackgroundGrid } from "./backgroundGrid";
 import { BLUEPRINT_SETTINGS } from "./settings";
 import {
   createBlueprintNode,
-  createDerivedNode,
-  groupNodes,
   NodeType,
   resolveNodeDisplay,
   setupDemoGraph,
@@ -81,17 +79,11 @@ type PaletteMenu = { x: number; y: number; entry: Preview };
 /** The canvas the palette adds to: the type editor while it is open. */
 const activeCanvas = () => (editorSession() ? editorData : nodeflowData);
 
-const sameIds = (prev: Array<string>, next: Array<string>) =>
-  prev.length === next.length && prev.every((id, i) => id === next[i]);
-
 const App: Component = () => {
   const [nodePreview, setNodePreview] =
     createSignal<Optional<Preview>>(undefined);
   const [cursor, setCursor] = createSignal(Vec2.of(0, 0));
   const [savedTypes, setSavedTypes] = createSignal<Array<NodeTemplate>>([]);
-  const [selectedIds, setSelectedIds] = createSignal<Array<string>>([], {
-    equals: sameIds,
-  });
   const [menu, setMenu] = createSignal<Optional<PaletteMenu>>(undefined);
   const [paletteOpen, setPaletteOpen] = createSignal(false);
   const [dialog, setDialog] =
@@ -177,16 +169,6 @@ const App: Component = () => {
     }
   };
 
-  // The group every selected node is in, if they all share one.
-  const selectedGroupId = createMemo(() => {
-    const ids = selectedIds();
-    const groupIds = new Set(
-      ids.map((id) => nodeflowData.getGroupOfNode(id)?.id),
-    );
-    const [groupId] = groupIds;
-    return ids.length > 0 && groupIds.size === 1 ? groupId : undefined;
-  });
-
   onMount(() => {
     setupEvents();
     setupSavedTypePersistence();
@@ -197,12 +179,6 @@ const App: Component = () => {
     nodeflowData.eventStore.onTemplatesChanged.subscribe(
       "blueprint:palette",
       ({ templates }) => setSavedTypes([...templates]),
-    );
-
-    nodeflowData.eventStore.onContentChanged.subscribe(
-      "blueprint:track-selection",
-      () =>
-        setSelectedIds(nodeflowData.mouseData.heldNodes.map((node) => node.id)),
     );
 
     NodeflowRegistry.get().globalEventStore.onMouseMoveInDocument.subscribe(
@@ -232,41 +208,9 @@ const App: Component = () => {
           height="100%"
           width="100%"
         />
-        <Show when={selectedIds().length > 0}>
-          <div class={appCss.selectionToolbar}>
-            <span class={appCss.selectionCount}>
-              {selectedIds().length} selected
-            </span>
-            <button
-              type="button"
-              class={appCss.toolbarButton}
-              onClick={() => createDerivedNode(selectedIds())}
-            >
-              Create derived node
-            </button>
-            <Show
-              when={selectedGroupId()}
-              fallback={
-                <button
-                  type="button"
-                  class={appCss.toolbarButton}
-                  onClick={() => groupNodes(selectedIds())}
-                >
-                  Group
-                </button>
-              }
-            >
-              {(groupId) => (
-                <button
-                  type="button"
-                  class={appCss.toolbarButton}
-                  onClick={() => nodeflowData.removeGroup(groupId())}
-                >
-                  Ungroup
-                </button>
-              )}
-            </Show>
-          </div>
+        {/* The editor covers the main canvas and has its own toolbar. */}
+        <Show when={!editorSession()}>
+          <SelectionToolbar nodeflow={nodeflowData} />
         </Show>
         <Show when={editorSession()}>
           <DerivedTypeEditor />

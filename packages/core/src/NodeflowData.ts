@@ -2006,10 +2006,25 @@ export default class NodeflowData {
     const analysis = analyzeCompositeSelection(this, nodeIds, options.isInput);
     if (!analysis) return undefined;
 
-    const { origin, definition, external } = analysis;
+    const { origin, external } = analysis;
+    let { definition } = analysis;
     const innerIds = Object.keys(definition.nodes);
     const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
     const sharedGroup = this.getSharedGroup(innerIds);
+
+    // Groups lying entirely inside the selection move into the composite.
+    // The group all inner nodes share, if any, stays outside and holds it.
+    const inner = new Set(innerIds);
+    const innerGroups = Array.from(this.groups.values())
+      .filter(
+        (group) =>
+          group !== sharedGroup &&
+          Array.from(group.nodeIds).every((id) => inner.has(id)),
+      )
+      .map((group) => group.serialize());
+    if (innerGroups.length > 0) {
+      definition = { ...definition, groups: innerGroups };
+    }
 
     // Add the composite first so a group made only of the inner nodes is not
     // deleted for being empty while they are removed.
@@ -2159,19 +2174,36 @@ export default class NodeflowData {
       );
     });
 
+    // Inner groups come back; their nodes leave the composite's own group,
+    // since a node is in at most one group.
+    const innerGroups = (definition.groups ?? [])
+      .map((innerGroup) => ({
+        ...innerGroup,
+        nodeIds: innerGroup.nodeIds
+          .filter((id) => idMap.has(id))
+          .map((id) => idMap.get(id)!),
+      }))
+      .filter((innerGroup) => innerGroup.nodeIds.length > 0);
+    const innerGrouped = new Set(
+      innerGroups.flatMap((innerGroup) => innerGroup.nodeIds),
+    );
+
     if (group) {
-      this.commitGroup(
-        group.id,
-        {
-          ...group,
-          nodeIds: [
-            ...group.nodeIds.filter((id) => id !== nodeId),
-            ...restored.map((node) => node.id),
-          ],
-        },
-        historyGroup,
-      );
+      const nodeIds = [
+        ...group.nodeIds.filter((id) => id !== nodeId),
+        ...restored
+          .map((node) => node.id)
+          .filter((id) => !innerGrouped.has(id)),
+      ];
+      // Removing the composite already dropped a group it was alone in.
+      if (nodeIds.length > 0) {
+        this.commitGroup(group.id, { ...group, nodeIds }, historyGroup);
+      }
     }
+
+    innerGroups.forEach(({ nodeIds, ...options }) =>
+      this.addGroup(nodeIds, options, historyGroup),
+    );
 
     this.mouseData.clearSelections();
     restored.forEach((node) => this.mouseData.selections.addNode(node));

@@ -273,6 +273,11 @@ export interface SerializedCompositeDefinition {
   connections: Array<SerializedConnection>;
   inputs: Array<CompositePort>;
   outputs: Array<CompositePort>;
+  /**
+   * Groups made only of inner nodes, restored when the composite is broken
+   * apart. Their `nodeIds` are inner node ids.
+   */
+  groups?: Array<SerializedNodeflowGroup>;
 }
 
 /** A reusable composite node type. Plain JSON once `display` is stripped. */

@@ -61,7 +61,8 @@ const DerivedNode: Component<{ node: NodeflowNodeData }> = (props) => {
   const isSaved = createMemo(() => {
     blueprintRevision();
     const id = props.node.customData.templateId;
-    return id !== undefined && props.node.nodeflow.templates.has(id);
+    // Saved types live on the main canvas, also for nodes in the editor.
+    return id !== undefined && nodeflowData.templates.has(id);
   });
 
   const rename = (value: string) => {
@@ -110,29 +111,30 @@ const DerivedNode: Component<{ node: NodeflowNodeData }> = (props) => {
           </For>
         </ul>
       </div>
-      {/* Breaking apart and saving act on the main canvas only. */}
-      <Show when={props.node.nodeflow === nodeflowData}>
-        <div class={contentCss.derivedActions}>
-          <button
-            type="button"
-            class={contentCss.button}
-            onPointerDown={stop}
-            onMouseDown={stop}
-            onClick={() => breakApartDerivedNode(props.node.id)}
-          >
-            Break apart
-          </button>
-          <button
-            type="button"
-            class={contentCss.button}
-            onPointerDown={stop}
-            onMouseDown={stop}
-            onClick={() => saveDerivedNodeType(props.node.id)}
-          >
-            {isSaved() ? "Update type" : "Save type"}
-          </button>
-        </div>
-      </Show>
+      <div class={contentCss.derivedActions}>
+        <button
+          type="button"
+          class={contentCss.button}
+          onPointerDown={stop}
+          onMouseDown={stop}
+          onClick={() =>
+            breakApartDerivedNode(props.node.id, props.node.nodeflow)
+          }
+        >
+          Break apart
+        </button>
+        <button
+          type="button"
+          class={contentCss.button}
+          onPointerDown={stop}
+          onMouseDown={stop}
+          onClick={() =>
+            saveDerivedNodeType(props.node.id, props.node.nodeflow)
+          }
+        >
+          {isSaved() ? "Update type" : "Save type"}
+        </button>
+      </div>
     </div>
   );
 };
