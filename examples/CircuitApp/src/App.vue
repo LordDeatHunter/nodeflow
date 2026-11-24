@@ -11,6 +11,7 @@ import PaletteSlot from "./components/PaletteSlot.vue";
 import ContextMenu from "./components/ContextMenu.vue";
 import SelectionToolbar from "./components/SelectionToolbar.vue";
 import ChipEditor from "./components/ChipEditor.vue";
+import GateSymbol from "./components/GateSymbol.vue";
 import ChipTypeDialogs from "./components/ChipTypeDialogs.vue";
 import type {
   ChipTypeDialogState,
@@ -323,7 +324,12 @@ const oscillating = computed(() => !!mainSimulation.value?.oscillating.value);
             @drag="startPreview({ kind: 'node', entry }, $event)"
             @menu="(x, y) => openMenu({ kind: 'node', entry }, x, y)"
           >
-            {{ entry.label }}
+            <GateSymbol
+              v-if="entry.data?.gate"
+              class="slot-icon"
+              :kind="entry.data.gate"
+            />
+            <span>{{ entry.label }}</span>
           </PaletteSlot>
           <PaletteSlot
             v-for="template in savedTypes"
@@ -347,7 +353,12 @@ const oscillating = computed(() => !!mainSimulation.value?.oscillating.value);
       class="preview-card"
       :style="{ left: `${cursor.x - 60}px`, top: `${cursor.y - 32}px` }"
     >
-      {{ labelOf(nodePreview) }}
+      <GateSymbol
+        v-if="nodePreview.kind === 'node' && nodePreview.entry.data?.gate"
+        class="slot-icon"
+        :kind="nodePreview.entry.data.gate"
+      />
+      <span>{{ labelOf(nodePreview) }}</span>
     </div>
     <ContextMenu
       v-if="menu"
