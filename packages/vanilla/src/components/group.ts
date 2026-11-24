@@ -86,7 +86,6 @@ export const renderGroup = (
     root.className = "nodeflowGroupFrame";
     const header = document.createElement("div");
     header.className = "nodeflowGroupHeader";
-    if (group.css.header) header.classList.add(group.css.header);
     header.append(title, createToggle(data, group.id, false));
     addDragListeners(header, data, group.id);
     root.appendChild(header);
@@ -176,6 +175,7 @@ const updateGroupElement = (
     selected,
     headerHeight,
     css.frame,
+    css.header,
     css.collapsed,
     css.selected,
   ].join("|");
@@ -206,7 +206,11 @@ const updateGroupElement = (
   } else {
     root.style.width = `${rect.size.x}px`;
     root.style.height = `${rect.size.y}px`;
-    (root.firstElementChild as HTMLElement).style.height = `${headerHeight}px`;
+    const header = root.firstElementChild as HTMLElement;
+    header.style.height = `${headerHeight}px`;
+    header.className = ["nodeflowGroupHeader", css.header]
+      .filter(Boolean)
+      .join(" ");
   }
 };
 

@@ -1,17 +1,24 @@
-import { useEffect, useRef } from "react";
-import type { HTMLAttributes } from "react";
-import { createVanillaNodeflow, NodeflowRegistry } from "@nodeflow-lib/vanilla";
-import type { NodeflowData, NodeflowSettings } from "@nodeflow-lib/vanilla";
+import { useEffect, useRef, type HTMLAttributes } from "react";
+import {
+  createVanillaNodeflow,
+  destroyVanillaNodeflow,
+  type NodeflowCss,
+  type NodeflowData,
+  type NodeflowSettings,
+} from "@nodeflow-lib/vanilla";
 
 type NodeflowProps = HTMLAttributes<HTMLDivElement> & {
   id: string;
   options?: Partial<NodeflowSettings>;
+  /** Extra classes for the canvas and the in-progress connection curve. */
+  css?: NodeflowCss;
   onReady?: (data: NodeflowData) => void;
 };
 
 export const Nodeflow = ({
   id,
   options,
+  css,
   onReady,
   style,
   ...rest
@@ -22,16 +29,15 @@ export const Nodeflow = ({
     const container = containerRef.current;
     if (!container) return;
 
-    const nodeflowData = createVanillaNodeflow(id, container, options);
+    const nodeflowData = createVanillaNodeflow(id, container, options, {
+      css,
+    });
 
     if (onReady) {
       onReady(nodeflowData);
     }
 
-    return () => {
-      NodeflowRegistry.get().removeNodeflow(id);
-      container.innerHTML = "";
-    };
+    return () => destroyVanillaNodeflow(nodeflowData);
   }, []);
 
   return (

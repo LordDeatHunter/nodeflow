@@ -1,10 +1,16 @@
 import { createRoot } from "react-dom/client";
 import type { ComponentType } from "react";
+import {
+  onNodeDisplayUnmount,
+  type NodeflowNodeData,
+} from "@nodeflow-lib/vanilla";
 
 export const createNodeDisplay =
-  <P extends { node: any }>(Component: ComponentType<P>) =>
-  ({ node }: { node: any }): HTMLElement => {
+  (Component: ComponentType<{ node: NodeflowNodeData }>) =>
+  ({ node }: { node: NodeflowNodeData }): HTMLElement => {
     const container = document.createElement("div");
-    createRoot(container).render(<Component {...({ node } as P)} />);
+    const root = createRoot(container);
+    root.render(<Component node={node} />);
+    onNodeDisplayUnmount(container, () => root.unmount());
     return container;
   };

@@ -235,6 +235,10 @@ const NodeflowCanvas =
           nodeflowData.eventStore.onWheelInNodeflow.publish({ event });
         }}
         onMouseDown={(event) => {
+          // Keeps middle-button panning from starting the browser's autoscroll.
+          if (event.button === 1) {
+            event.preventDefault();
+          }
           nodeflowData.eventStore.onMouseDownInNodeflow.publish({ event });
         }}
         onKeyDown={(event) => {

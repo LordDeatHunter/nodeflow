@@ -5,36 +5,50 @@ import {
   Vec2,
 } from "@nodeflow-lib/core";
 
+/**
+ * Stores a connector element's position inside its node's padding box. Uses
+ * offsets rather than client rects so the result does not depend on zoom.
+ */
+export const measureConnector = (
+  el: HTMLElement,
+  connector: NodeConnector,
+): void => {
+  if (!el.isConnected) return;
+
+  connector.updateMeasurements(
+    Vec2.of(
+      (el.parentElement?.offsetLeft ?? 0) + el.offsetLeft,
+      (el.parentElement?.offsetTop ?? 0) + el.offsetTop,
+    ),
+    Vec2.of(el.offsetWidth, el.offsetHeight),
+  );
+};
+
+/** Applies the connector's current css class to its element. */
+export const syncConnector = (
+  el: HTMLDivElement,
+  connector: NodeConnector,
+): void => {
+  const css = connector.css ?? "";
+  if (el.className !== css) el.className = css;
+};
+
 export const renderConnector = (
   parent: HTMLElement,
   connector: NodeConnector,
   node: NodeflowNodeData,
   data: NodeflowData,
-  observers: ResizeObserver[] = [],
+  observers: Array<ResizeObserver | MutationObserver> = [],
 ): HTMLDivElement => {
   const connectorDiv = document.createElement("div");
   connectorDiv.id = `connector-${connector.id}`;
   connectorDiv.dataset.nodeflowConnector = connector.id;
   connectorDiv.dataset.nodeflowNode = node.id;
-  if (connector.css) {
-    connectorDiv.className = connector.css;
-  }
-  connectorDiv.style.cursor = "crosshair";
-  connectorDiv.style.display = "inline-block";
+  syncConnector(connectorDiv, connector);
 
-  const measureConnector = () => {
-    const rect = connectorDiv.getBoundingClientRect();
-    const nodeEl = document.getElementById(`node-${node.id}`);
-    if (!nodeEl) return;
-    const nodeRect = nodeEl.getBoundingClientRect();
-    const position = Vec2.of(
-      rect.left - nodeRect.left,
-      rect.top - nodeRect.top,
-    );
-    connector.updateMeasurements(position, Vec2.of(rect.width, rect.height));
-  };
-
-  const resizeObserver = new ResizeObserver(measureConnector);
+  const resizeObserver = new ResizeObserver(() =>
+    measureConnector(connectorDiv, connector),
+  );
   resizeObserver.observe(connectorDiv);
   observers.push(resizeObserver);
 

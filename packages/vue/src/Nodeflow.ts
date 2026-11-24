@@ -1,6 +1,11 @@
-import { defineComponent, h, onMounted, ref } from "vue";
-import { createVanillaNodeflow } from "@nodeflow-lib/vanilla";
-import type { NodeflowData, NodeflowSettings } from "@nodeflow-lib/vanilla";
+import { defineComponent, h, onBeforeUnmount, onMounted, ref } from "vue";
+import {
+  createVanillaNodeflow,
+  destroyVanillaNodeflow,
+  type NodeflowCss,
+  type NodeflowData,
+  type NodeflowSettings,
+} from "@nodeflow-lib/vanilla";
 
 export const Nodeflow = defineComponent({
   name: "Nodeflow",
@@ -10,18 +15,30 @@ export const Nodeflow = defineComponent({
       type: Object as () => Partial<NodeflowSettings>,
       default: undefined,
     },
+    /** Extra classes for the canvas and the in-progress connection curve. */
+    css: {
+      type: Object as () => NodeflowCss,
+      default: undefined,
+    },
   },
   emits: ["ready"],
   setup(props, { emit }) {
     const containerRef = ref<HTMLDivElement | null>(null);
+    let nodeflowData: NodeflowData | undefined;
 
     onMounted(() => {
-      const nodeflowData: NodeflowData = createVanillaNodeflow(
+      nodeflowData = createVanillaNodeflow(
         props.id,
         containerRef.value as HTMLElement,
         props.options,
+        { css: props.css },
       );
       emit("ready", nodeflowData);
+    });
+
+    onBeforeUnmount(() => {
+      if (nodeflowData) destroyVanillaNodeflow(nodeflowData);
+      nodeflowData = undefined;
     });
 
     return () =>
