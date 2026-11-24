@@ -1,52 +1,63 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { GateKind } from "../simulation";
+import {
+  BODY_TRANSFORM,
+  GATE_HEIGHT,
+  GATE_WIDTH,
+  gateGeometry,
+} from "./gateShape";
 
-/** The distinctive-shape (ANSI) symbol of a gate, in a 70×40 box. */
-const props = defineProps<{ kind: GateKind; on?: boolean }>();
+/**
+ * A gate's distinctive-shape (ANSI) symbol with its pins, in node pixels.
+ * Lit pins and outline show which signals are high.
+ */
+const props = defineProps<{
+  kind: GateKind;
+  /** Whether the output is high. */
+  on?: boolean;
+  /** Which inputs are high, by index. */
+  inputsOn?: Array<boolean>;
+}>();
 
-const AND_BODY = "M8 4 H30 A16 16 0 0 1 30 36 H8 Z";
-const OR_BODY = "M8 4 Q30 4 54 20 Q30 36 8 36 Q18 20 8 4 Z";
-const XOR_TAIL = "M2 4 Q12 20 2 36";
-const BUFFER_BODY = "M10 4 L50 20 L10 36 Z";
-
-const symbol = computed(() => {
-  switch (props.kind) {
-    case "AND":
-      return { body: AND_BODY };
-    case "NAND":
-      return { body: AND_BODY, bubble: 50 };
-    case "OR":
-      return { body: OR_BODY };
-    case "NOR":
-      return { body: OR_BODY, bubble: 58 };
-    case "XOR":
-      return { body: OR_BODY, tail: XOR_TAIL };
-    case "XNOR":
-      return { body: OR_BODY, tail: XOR_TAIL, bubble: 58 };
-    case "BUFFER":
-      return { body: BUFFER_BODY };
-    case "NOT":
-      return { body: BUFFER_BODY, bubble: 54 };
-  }
-});
+const geometry = computed(() => gateGeometry(props.kind));
 </script>
 
 <template>
   <svg
     class="gate-symbol"
     :class="{ 'gate-symbol--on': on }"
-    viewBox="0 0 70 40"
+    :viewBox="`0 0 ${GATE_WIDTH} ${GATE_HEIGHT}`"
     aria-hidden="true"
   >
-    <path v-if="symbol.tail" class="gate-line" :d="symbol.tail" />
-    <path class="gate-body" :d="symbol.body" />
-    <circle
-      v-if="symbol.bubble !== undefined"
-      class="gate-body"
-      :cx="symbol.bubble"
-      cy="20"
-      r="4"
+    <line
+      v-for="(pin, i) in geometry.inputs"
+      :key="i"
+      class="gate-pin"
+      :class="{ 'gate-pin--on': inputsOn?.[i] }"
+      :x1="pin.x1"
+      :x2="pin.x2"
+      :y1="pin.y"
+      :y2="pin.y"
     />
+    <line
+      class="gate-pin"
+      :class="{ 'gate-pin--on': on }"
+      :x1="geometry.output.x1"
+      :x2="geometry.output.x2"
+      :y1="geometry.output.y"
+      :y2="geometry.output.y"
+    />
+    <g :transform="BODY_TRANSFORM">
+      <path v-if="geometry.tail" class="gate-line" :d="geometry.tail" />
+      <path class="gate-body" :d="geometry.body" />
+      <circle
+        v-if="geometry.bubble"
+        class="gate-body"
+        :cx="geometry.bubble.cx"
+        :cy="geometry.bubble.cy"
+        :r="geometry.bubble.r"
+      />
+    </g>
   </svg>
 </template>

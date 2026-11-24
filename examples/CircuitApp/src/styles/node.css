@@ -72,11 +72,11 @@
 
 /* ─── Connectors (pads) ───────────────────────────────────────────────────── */
 
-/* 14px pad + 3px ring = 20px, centered on the node edge. */
+/* 14px pad + 3px ring = 20px (border-box), centered on the node edge. */
 .connector {
   position: relative;
-  width: 14px;
-  height: 14px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   border: 3px solid var(--node-border-color);
   cursor: crosshair;
@@ -293,24 +293,51 @@
 
 /* ─── Gates ───────────────────────────────────────────────────────────────── */
 
-.node-body--gate {
-  align-items: center;
-  gap: 4px;
-  padding: 8px 16px;
+/*
+ * A gate node is just its symbol: no frame, pins drawn from the node edges
+ * (where the connectors sit) to the body.
+ */
+.node.node--gate {
+  border: none;
+  border-radius: 12px;
+  background: none;
+  box-shadow: none;
+}
+
+.node.node--gate:hover {
+  background-color: rgba(89, 255, 156, 0.03);
+}
+
+.node.node--gate.node--selected {
+  background-color: var(--accent-soft);
+  box-shadow: 0 0 0 1.5px var(--accent);
+}
+
+.gate-node {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.gate-node .gate-symbol {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .gate-symbol {
-  width: 84px;
-  height: 48px;
   overflow: visible;
 }
 
+/* Opaque fills hide wires routed behind the symbol. */
 .gate-body,
 .gate-line {
-  fill: rgba(201, 139, 69, 0.08);
+  fill: color-mix(in srgb, var(--copper) 10%, var(--board-color));
   stroke: var(--copper);
   stroke-width: 2.2px;
   stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
   transition:
     stroke 90ms linear,
     fill 90ms linear;
@@ -326,13 +353,56 @@
 }
 
 .gate-symbol--on .gate-body {
-  fill: rgba(89, 255, 156, 0.12);
+  fill: color-mix(in srgb, var(--signal) 12%, var(--board-color));
 }
 
+/* Pins match the wires they meet. */
+.gate-pin {
+  stroke: var(--copper);
+  stroke-width: 3.5px;
+  stroke-linecap: round;
+  transition: stroke 90ms linear;
+}
+
+.gate-pin--on {
+  stroke: var(--signal);
+}
+
+/* The kind picker reads as the label inside the symbol. */
 .gate-kind {
-  padding: 1px 4px;
-  font-size: 0.66rem;
-  letter-spacing: 0.1em;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 1px 2px;
+  border-color: transparent;
+  background: none;
+  appearance: none;
+  -webkit-appearance: none;
+  color: var(--text-color);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.gate-kind:hover {
+  border-color: var(--panel-border);
+  background-color: rgba(3, 8, 6, 0.6);
+}
+
+.gate-kind option {
+  background-color: var(--node-color);
+}
+
+/* Connectors are the pin tips: invisible until hovered. */
+.node--gate .connector {
+  border-color: transparent;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.node--gate .connector:hover {
+  border-color: var(--accent);
+  transform: none;
 }
 
 /* ─── Lamp and hex display ────────────────────────────────────────────────── */
