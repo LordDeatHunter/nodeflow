@@ -41,6 +41,11 @@ const buildExamples = async () => {
             if (!fs.lstatSync(path.join(examplesPath, file)).isDirectory()) {
                 return;
             }
+            const packageJsonPath = path.join(examplesPath, file, "package.json");
+            if (!fs.existsSync(packageJsonPath) || !JSON.parse(fs.readFileSync(packageJsonPath, "utf8")).scripts?.build) {
+                console.log(`Skipping ${file} (no package.json with a build script).`);
+                return;
+            }
             const outputFolderName = file in FOLDER_MAP ? FOLDER_MAP[file] : file;
             recreateFolder(path.join(buildPath, outputFolderName), { recursive: true });
 
