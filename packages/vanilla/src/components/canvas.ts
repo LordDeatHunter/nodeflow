@@ -361,9 +361,10 @@ export const renderCanvas = (
 
   const measureCanvas = () => {
     data.updateCanvasSize(Vec2.of(outerDiv.clientWidth, outerDiv.clientHeight));
-    data.update({
-      startPosition: Vec2.of(outerDiv.offsetLeft, outerDiv.offsetTop),
-    });
+    // Core pairs startPosition with client coordinates, so measure in viewport
+    // space (offsetLeft/Top is relative to offsetParent).
+    const rect = outerDiv.getBoundingClientRect();
+    data.update({ startPosition: Vec2.of(rect.left, rect.top) });
   };
   // Measure now so the first node pass already knows the viewport.
   measureCanvas();

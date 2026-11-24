@@ -206,8 +206,11 @@ const NodeflowCanvas =
             nodeflowData.updateCanvasSize(
               Vec2.of(el.clientWidth, el.clientHeight),
             );
+            // Core pairs startPosition with client coordinates, so measure in
+            // viewport space (offsetLeft/Top is relative to offsetParent).
+            const rect = el.getBoundingClientRect();
             nodeflowData.update({
-              startPosition: Vec2.of(el.offsetLeft, el.offsetTop),
+              startPosition: Vec2.of(rect.left, rect.top),
             });
             // A resize changes which nodes are visible.
             markViewDirty();
