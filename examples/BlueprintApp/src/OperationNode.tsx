@@ -17,7 +17,7 @@ const OperationNode: Component<{ node: NodeflowNodeData }> = (props) => {
 
   return (
     <div class={contentCss.pad}>
-      <span class={contentCss.label}>Operation</span>
+      <span class={contentCss.label}>Operator</span>
       <select
         class={contentCss.control}
         value={operator()}
@@ -31,6 +31,8 @@ const OperationNode: Component<{ node: NodeflowNodeData }> = (props) => {
         <option value="*">*</option>
         <option value="/">/</option>
         <option value="%">%</option>
+        <option value="^">^ (power)</option>
+        <option value="√">√ (root)</option>
       </select>
     </div>
   );

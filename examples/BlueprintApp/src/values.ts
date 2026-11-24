@@ -5,7 +5,13 @@ import {
 } from "@nodeflow-lib/solid";
 import { blueprintRevision } from "./reactivity";
 
-export type Operator = "+" | "-" | "*" | "/" | "%";
+export type Operator = NonNullable<CustomNodeflowDataType["operator"]>;
+
+/** The `degree`-th root of `value`, keeping odd roots of negatives real. */
+const root = (value: number, degree: number): number =>
+  value < 0 && Number.isInteger(degree) && degree % 2 !== 0
+    ? -Math.pow(-value, 1 / degree)
+    : Math.pow(value, 1 / degree);
 
 const applyOperator = (operator: Operator, a: number, b: number): number => {
   switch (operator) {
@@ -19,6 +25,10 @@ const applyOperator = (operator: Operator, a: number, b: number): number => {
       return a / b;
     case "%":
       return a % b;
+    case "^":
+      return Math.pow(a, b);
+    case "√":
+      return root(a, b);
   }
 };
 
@@ -41,7 +51,7 @@ interface Graph {
   /** Unique per derived-node instance, for cycle detection. */
   scope: string;
   getNode(nodeId: string): GraphNode | undefined;
-  /** Input connector ids, in order (order matters for -, / and %). */
+  /** Input connector ids, in order (order matters for -, /, %, ^ and √). */
   getInputIds(nodeId: string): Array<string>;
   /** The output feeding `inputId`, possibly in an enclosing graph. */
   getSource(nodeId: string, inputId: string): Source | undefined;
@@ -149,10 +159,24 @@ const evaluate = (
 
         const [first, ...rest] = values as number[];
         const operator = data.operator ?? "+";
+        // A lone input to √ is a square root; otherwise input 2 is the degree.
+        if (operator === "√" && rest.length === 0) return Math.sqrt(first);
         return rest.reduce(
           (total, value) => applyOperator(operator, total, value),
           first,
         );
+      }
+      case "negation": {
+        const [source] = getSources(graph, nodeId);
+        const value = source ? valueOf(source) : undefined;
+        return value === undefined ? undefined : -value;
+      }
+      case "plusMinus": {
+        // Top output is the positive value, bottom output the negative one.
+        const [source] = getSources(graph, nodeId);
+        const value = source ? valueOf(source) : undefined;
+        if (value === undefined) return undefined;
+        return outputId === "output-1" ? -Math.abs(value) : Math.abs(value);
       }
       case "display": {
         const [source] = getSources(graph, nodeId);

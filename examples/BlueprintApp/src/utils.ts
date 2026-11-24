@@ -12,18 +12,27 @@ import curveCss from "./styles/curve.module.scss";
 import groupCss from "./styles/group.module.scss";
 import NumberNode from "./NumberNode";
 import OperationNode from "./OperationNode";
+import NegationNode from "./NegationNode";
+import PlusMinusNode from "./PlusMinusNode";
 import DisplayNode from "./DisplayNode";
 import DerivedNode from "./DerivedNode";
 import { markBlueprintDirty } from "./reactivity";
 import { nodeflowData } from "./App";
 
-export type NodeType = "number" | "operation" | "display";
+export type NodeType =
+  | "number"
+  | "operation"
+  | "negation"
+  | "plusMinus"
+  | "display";
 
 type NodeDisplay = Component<{ node: NodeflowNodeData }>;
 
 const DISPLAYS: Record<CustomNodeflowDataType["type"], NodeDisplay> = {
   number: NumberNode,
   operation: OperationNode,
+  negation: NegationNode,
+  plusMinus: PlusMinusNode,
   display: DisplayNode,
   derived: DerivedNode,
 };
@@ -53,6 +62,16 @@ const NODE_CONFIG: Record<NodeType, NodeConfig> = {
     inputs: 2,
     outputs: 1,
     customData: { type: "operation", operator: "+" },
+  },
+  negation: {
+    inputs: 1,
+    outputs: 1,
+    customData: { type: "negation" },
+  },
+  plusMinus: {
+    inputs: 1,
+    outputs: 2,
+    customData: { type: "plusMinus" },
   },
   display: {
     inputs: 1,

@@ -7,7 +7,7 @@ import contentCss from "./styles/content.module.scss";
 
 const stop = (event: Event) => event.stopPropagation();
 
-/** What a port connects to inside, e.g. "Sum · in 2". */
+/** What a port connects to inside, e.g. "Op + · in 2". */
 const describePort = (
   node: NodeflowNodeData,
   port: CompositePort,
@@ -15,14 +15,22 @@ const describePort = (
 ): string => {
   const inner = node.composite?.nodes[port.innerNodeId]?.customData;
   const index = Number(port.innerConnectorId.split("-").at(-1)) + 1;
-  const kind =
-    inner?.type === "operation"
-      ? `Op ${inner.operator ?? "+"}`
-      : inner?.type === "derived"
-        ? (inner.name ?? "Derived")
-        : inner?.type === "number"
-          ? "Number"
-          : "Display";
+  const kind = (() => {
+    switch (inner?.type) {
+      case "operation":
+        return `Op ${inner.operator ?? "+"}`;
+      case "derived":
+        return inner.name ?? "Derived";
+      case "number":
+        return "Number";
+      case "negation":
+        return "Negation";
+      case "plusMinus":
+        return "±";
+      default:
+        return "Display";
+    }
+  })();
   return `${kind} · ${direction} ${index}`;
 };
 

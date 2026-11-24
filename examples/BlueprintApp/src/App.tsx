@@ -52,7 +52,9 @@ const [nodeflowData, Nodeflow] = createSolidNodeflow(
 
 const PREVIEW_LABELS: Record<NodeType, string> = {
   number: "Number node",
-  operation: "Sum node",
+  operation: "Operator node",
+  negation: "Negation node",
+  plusMinus: "Plus-minus node",
   display: "Display node",
 };
 
@@ -215,7 +217,21 @@ const App: Component = () => {
               startPreview({ kind: "node", type: "operation" }, event)
             }
           >
-            Sum node
+            Operator node
+          </NewNodeSlot>
+          <NewNodeSlot
+            onClick={(event) =>
+              startPreview({ kind: "node", type: "negation" }, event)
+            }
+          >
+            Negation node
+          </NewNodeSlot>
+          <NewNodeSlot
+            onClick={(event) =>
+              startPreview({ kind: "node", type: "plusMinus" }, event)
+            }
+          >
+            Plus-minus node
           </NewNodeSlot>
           <NewNodeSlot
             onClick={(event) =>
