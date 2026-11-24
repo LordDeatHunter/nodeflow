@@ -286,6 +286,17 @@ export default class NodeflowNodeData {
   }
 
   public update(data: Partial<NodeflowNodeType>): void {
+    // Undoing `NodeflowData.updateNode` passes back serialized `{ x, y }`s.
+    const toVec2 = (value: Vec2 | undefined) =>
+      value === undefined || value instanceof Vec2
+        ? value
+        : Vec2.deserialize(value);
+    data = {
+      ...data,
+      offset: toVec2(data.offset),
+      position: toVec2(data.position),
+      size: toVec2(data.size),
+    };
     if (data.centered !== undefined) this._centered = data.centered;
     if (data.connectorSections !== undefined)
       this._connectorSections = data.connectorSections as Map<
