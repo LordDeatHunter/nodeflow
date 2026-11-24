@@ -1,3 +1,4 @@
+import type NodeflowData from "./NodeflowData";
 import {
   DocumentEvent,
   DocumentEventsDataMap,
@@ -116,9 +117,9 @@ export class BaseEventPublisher<
 export class NodeflowEventPublisher<
   T extends keyof NodeflowEventsDataMap,
 > extends BaseEventPublisher<NodeflowEventsDataMap[T], NodeflowEvent<T>> {
-  public readonly nodeflowData: any;
+  public readonly nodeflowData: NodeflowData;
 
-  public constructor(nodeflowData: any) {
+  public constructor(nodeflowData: NodeflowData) {
     super();
     this.nodeflowData = nodeflowData;
   }

@@ -7,7 +7,7 @@ import {
   SerializedNodeConnector,
   SerializedNodeflowNode,
 } from "./nodeflow-types";
-import { NodeflowNodeType } from "./types";
+import { DisplayFunc, NodeflowNodeType } from "./types";
 import Vec2 from "./Vec2";
 import ConnectorSection from "./ConnectorSection";
 import NodeConnector from "./NodeConnector";
@@ -22,7 +22,7 @@ export default class NodeflowNodeData {
   private _connectorSections: Map<string, ConnectorSection>;
   private _css: SelectableElementCSS;
   private _customData: CustomNodeflowDataType;
-  private _display: any;
+  private _display: DisplayFunc;
   private _id: string;
   private _offset: Vec2;
   private _position: Vec2;
@@ -75,7 +75,7 @@ export default class NodeflowNodeData {
     return this._customData;
   }
 
-  public get display(): any {
+  public get display(): DisplayFunc {
     return this._display;
   }
 
@@ -128,7 +128,7 @@ export default class NodeflowNodeData {
     this.nodeflowData.publishContentChanged();
   }
 
-  public set display(value: any) {
+  public set display(value: DisplayFunc) {
     this._display = value;
     this.nodeflowData.publishContentChanged();
   }

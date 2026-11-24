@@ -1,3 +1,6 @@
+import type NodeflowData from "./NodeflowData";
+import type NodeflowNodeData from "./NodeflowNodeData";
+import type NodeConnector from "./NodeConnector";
 import Vec2 from "./Vec2";
 import { SerializedMouseData, SelectableElementType } from "./nodeflow-types";
 import { SelectableConnection } from "./types";
@@ -18,12 +21,12 @@ export default class MouseData {
   public pinching: boolean = false;
   public selections: SelectionMap;
   public selectionBox: SelectionBoxData;
-  private readonly nodeflowData: any;
+  private readonly nodeflowData: NodeflowData;
 
   /**
    * @param nodeflowData - The nodeflow object of the canvas that this mouse data will be used in
    */
-  public constructor(nodeflowData: any) {
+  public constructor(nodeflowData: NodeflowData) {
     this.nodeflowData = nodeflowData;
     this.selections = new SelectionMap(this.nodeflowData);
     this.selectionBox = new SelectionBoxData(this.nodeflowData);
@@ -52,11 +55,11 @@ export default class MouseData {
     return this.selections.selectedConnections;
   }
 
-  public get heldConnectors(): Array<any> {
+  public get heldConnectors(): Array<NodeConnector> {
     return this.selections.selectedConnectors;
   }
 
-  public get heldNodes(): Array<any> {
+  public get heldNodes(): Array<NodeflowNodeData> {
     return this.selections.selectedNodes;
   }
 
@@ -64,11 +67,11 @@ export default class MouseData {
     return this.heldMouseButtons.has(button);
   }
 
-  public deleteNodes(callback: (node: any) => boolean) {
+  public deleteNodes(callback: (node: NodeflowNodeData) => boolean) {
     this.selections.deleteNodes(callback);
   }
 
-  public deleteConnectors(callback: (connector: any) => boolean) {
+  public deleteConnectors(callback: (connector: NodeConnector) => boolean) {
     this.selections.deleteConnectors(callback);
   }
 

@@ -12,6 +12,13 @@ import Vec2 from "./Vec2";
 import Rect from "./Rect";
 import ArrayWrapper from "./ArrayWrapper";
 import { MOUSE_BUTTONS, KeyboardKeyCode } from "./constants";
+import type NodeflowNodeData from "./NodeflowNodeData";
+import type NodeConnector from "./NodeConnector";
+import type ConnectorSection from "./ConnectorSection";
+import type ConnectorSource from "./ConnectorSource";
+import type ConnectorDestination from "./ConnectorDestination";
+import type SelectionMap from "./SelectionMap";
+import type SelectionBoxData from "./SelectionBoxData";
 
 export type {
   Optional,
@@ -23,11 +30,11 @@ export type {
   NodeflowSettings,
 };
 
-export type DisplayFunc<T = unknown> = (props: { node: any }) => Optional<T>;
+export type DisplayFunc<T = unknown> = (props: { node: NodeflowNodeData }) => Optional<T>;
 
 export interface SelectionBoxDataType {
   boundingBox?: Rect;
-  selections: any;
+  selections: SelectionMap;
 }
 
 export interface MouseDataType {
@@ -35,8 +42,8 @@ export interface MouseDataType {
   mousePosition: Vec2;
   heldMouseButtons: Set<MOUSE_BUTTONS>;
   pointerDown: boolean;
-  selections: any;
-  selectionBox: any;
+  selections: SelectionMap;
+  selectionBox: SelectionBoxData;
 }
 
 export interface KeyboardDataType {
@@ -44,17 +51,17 @@ export interface KeyboardDataType {
 }
 
 export interface ConnectionType {
-  sourceConnector: any;
-  destinationConnector: any;
+  sourceConnector: NodeConnector;
+  destinationConnector: NodeConnector;
 }
 
 export interface SelectableConnector {
-  connector: any;
+  connector: NodeConnector;
   type: SelectableElementType.Connector;
 }
 
 export interface SelectableNode {
-  node: any;
+  node: NodeflowNodeData;
   type: SelectableElementType.Node;
 }
 
@@ -75,7 +82,7 @@ export type SelectableElement =
 
 export type NodeflowNodeType = {
   centered: boolean;
-  connectorSections: Map<string, any>;
+  connectorSections: Map<string, ConnectorSection>;
   css: SelectableElementCSS;
   customData: CustomNodeflowDataType;
   readonly display: DisplayFunc;
@@ -87,10 +94,10 @@ export type NodeflowNodeType = {
 };
 
 export type ConnectorSectionType = {
-  connectors: Map<string, any>;
+  connectors: Map<string, NodeConnector>;
   css?: string;
   id: string;
-  parentNode: any;
+  parentNode: NodeflowNodeData;
 };
 
 export interface NodeflowDataType {
@@ -104,17 +111,17 @@ export interface NodeflowDataType {
 }
 
 export interface NodeflowCss {
-  getNewCurveCss?: (heldConnector?: any) => string | undefined;
+  getNewCurveCss?: (heldConnector?: NodeConnector) => string | undefined;
   nodeflow?: string;
 }
 
 export interface NodeConnectorType {
   css?: string;
-  destinations: ArrayWrapper<any>;
+  destinations: ArrayWrapper<ConnectorDestination>;
   hovered: boolean;
   id: string;
   parentSection: ConnectorSectionType;
   position: Vec2;
   size: Vec2;
-  sources: ArrayWrapper<any>;
+  sources: ArrayWrapper<ConnectorSource>;
 }

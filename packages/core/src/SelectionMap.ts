@@ -1,3 +1,6 @@
+import type NodeflowData from "./NodeflowData";
+import type NodeflowNodeData from "./NodeflowNodeData";
+import type NodeConnector from "./NodeConnector";
 import {
   SelectableElementType,
   SerializedSelectableElement,
@@ -5,13 +8,13 @@ import {
 import { SelectableConnection, SelectableElement } from "./types";
 
 export default class SelectionMap {
-  private readonly connectorsMap = new Map<string, any>();
-  private readonly nodesMap = new Map<string, any>();
+  private readonly connectorsMap = new Map<string, NodeConnector>();
+  private readonly nodesMap = new Map<string, NodeflowNodeData>();
   private readonly connectionsMap = new Map<string, SelectableConnection>();
-  private readonly nodeflowData: any;
+  private readonly nodeflowData: NodeflowData;
   private _hasSelectedNodeflow: boolean = false;
 
-  public constructor(nodeflowData: any) {
+  public constructor(nodeflowData: NodeflowData) {
     this.nodeflowData = nodeflowData;
   }
 
@@ -28,7 +31,7 @@ export default class SelectionMap {
     }
   }
 
-  public addNode(node: any) {
+  public addNode(node: NodeflowNodeData) {
     const hash = SelectionMap.createHash({
       node,
       type: SelectableElementType.Node,
@@ -38,7 +41,7 @@ export default class SelectionMap {
     return this.nodesMap;
   }
 
-  public addConnector(connector: any) {
+  public addConnector(connector: NodeConnector) {
     const hash = SelectionMap.createHash({
       connector,
       type: SelectableElementType.Connector,
@@ -157,7 +160,7 @@ export default class SelectionMap {
 
   public static deserialize(
     element: SerializedSelectableElement,
-    nodeflowData: any,
+    nodeflowData: NodeflowData,
   ): SelectableElement {
     switch (element.type) {
       case SelectableElementType.Connector: {
@@ -240,7 +243,7 @@ export default class SelectionMap {
 
   public static fromObject(
     obj: Record<string, SerializedSelectableElement>,
-    nodeflowData: any,
+    nodeflowData: NodeflowData,
   ): SelectionMap {
     const selectionMap = new SelectionMap(nodeflowData);
     for (const key in obj) {
@@ -259,15 +262,15 @@ export default class SelectionMap {
     return selectionMap;
   }
 
-  public get selectedConnectors(): any[] {
+  public get selectedConnectors(): NodeConnector[] {
     return Array.from(this.connectorsMap.values());
   }
 
-  public get selectedNodes(): any[] {
+  public get selectedNodes(): NodeflowNodeData[] {
     return Array.from(this.nodesMap.values());
   }
 
-  public get selectedNodesMap(): Map<string, any> {
+  public get selectedNodesMap(): Map<string, NodeflowNodeData> {
     return this.nodesMap;
   }
 
@@ -330,7 +333,7 @@ export default class SelectionMap {
     );
   }
 
-  public deleteNodes(predicate: (node: any) => boolean) {
+  public deleteNodes(predicate: (node: NodeflowNodeData) => boolean) {
     for (const node of this.nodesMap.values()) {
       if (predicate(node)) {
         this.nodesMap.delete(node.id);
@@ -339,7 +342,7 @@ export default class SelectionMap {
     this.nodeflowData.publishContentChanged();
   }
 
-  public deleteConnectors(predicate: (connector: any) => boolean) {
+  public deleteConnectors(predicate: (connector: NodeConnector) => boolean) {
     for (const connector of this.connectorsMap.values()) {
       if (predicate(connector)) {
         this.connectorsMap.delete(`${connector.parentNode.id}-${connector.id}`);

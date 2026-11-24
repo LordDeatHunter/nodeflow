@@ -3,6 +3,7 @@ import { deepCopy } from "./misc-utils";
 import type NodeflowData from "./NodeflowData";
 import type NodeflowNodeData from "./NodeflowNodeData";
 import type NodeConnector from "./NodeConnector";
+import type { DisplayFunc } from "./types";
 import type {
   CompositePort,
   CompositePortTarget,
@@ -19,7 +20,7 @@ export interface CompositeNodeOptions {
   css?: SelectableElementCSS;
   customData?: CustomNodeflowDataType;
   /** Falls back to `settings.resolveNodeDisplay`. */
-  display?: unknown;
+  display?: DisplayFunc;
   /** Section holding the exposed inputs. Id defaults to `"inputs"`. */
   inputSection?: { id?: string; css?: string };
   /** Section holding the exposed outputs. Id defaults to `"outputs"`. */

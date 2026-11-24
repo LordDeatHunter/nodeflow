@@ -19,7 +19,7 @@ TypeScript library for flowcharts/graphs/diagrams, now a framework-agnostic mono
 - Build all packages: `bunx turbo build`. **There is no root `build` script.**
 - Test: `bun run test` (`bunx turbo test`) — vitest, `packages/core` only.
 - Typecheck: `bun run typecheck` (`turbo typecheck`) — per-package `tsc --noEmit`.
-- Lint: `bun run lint` — root ESLint flat config; ignores `scripts/`, `dist/`, `examples-build/`.
+- Lint: `bun run lint` (`eslint .`) — ESLint 10 root flat config (`eslint.config.js`); ignores `dist/`, `examples-build/`. Solid rules apply only to `packages/solid` and the Solid examples. Must pass with zero problems.
 - Run one test: from `packages/core`: `bunx vitest run tests/NodeflowData.test.ts` (add `-t "name"` to filter).
 - Build one example: `bun --cwd=examples/ReactApp run build`.
 - Deploy examples: automatic on push to `master` via `.github/workflows/deploy-examples.yml` (GitHub Actions → Pages). Locally, `bun run build-examples` produces the same `examples-build/` output (gitignored). There is no `gh-pages` branch flow anymore.

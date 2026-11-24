@@ -1,4 +1,6 @@
 import type Rect from "./Rect";
+import type NodeConnector from "./NodeConnector";
+import type { DisplayFunc } from "./types";
 
 export type Optional<T> = T | undefined;
 
@@ -71,12 +73,12 @@ export interface PathData {
 }
 
 export interface ConnectorSourceType {
-  sourceConnector: any;
+  sourceConnector: NodeConnector;
 }
 
 export interface ConnectorDestinationType {
   css: SelectableElementCSS;
-  destinationConnector: any;
+  destinationConnector: NodeConnector;
   path?: PathData;
   shape?: LineShape;
   dash?: LineDash;
@@ -194,7 +196,9 @@ export type NodeflowSettings = {
    * Supplies `display` for nodes added without one, e.g. nodes restored from
    * JSON (templates, saved graphs), since components cannot be stored.
    */
-  resolveNodeDisplay?: (node: Partial<SerializedNodeflowNode>) => unknown;
+  resolveNodeDisplay?: (
+    node: Partial<SerializedNodeflowNode>,
+  ) => DisplayFunc | undefined;
 };
 
 export enum SelectableElementType {
@@ -232,7 +236,7 @@ export interface SerializedNodeflowNode {
   connectorSections: Record<string, SerializedConnectorSection>;
   css: SelectableElementCSS;
   customData: CustomNodeflowDataType;
-  display: any;
+  display: DisplayFunc;
   id: string;
   offset: SerializedVec2;
   position: SerializedVec2;

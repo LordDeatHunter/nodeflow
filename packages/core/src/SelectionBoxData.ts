@@ -1,3 +1,4 @@
+import type NodeflowData from "./NodeflowData";
 import { SelectableElementType } from "./nodeflow-types";
 import SelectionMap from "./SelectionMap";
 import Rect from "./Rect";
@@ -6,9 +7,9 @@ import type NodeflowNodeData from "./NodeflowNodeData";
 export default class SelectionBoxData {
   private _boundingBox: Rect | undefined = undefined;
   public readonly selections: SelectionMap;
-  private readonly nodeflowData: any;
+  private readonly nodeflowData: NodeflowData;
 
-  public constructor(nodeflowData: any) {
+  public constructor(nodeflowData: NodeflowData) {
     this.nodeflowData = nodeflowData;
     this.selections = new SelectionMap(this.nodeflowData);
   }
@@ -49,7 +50,7 @@ export default class SelectionBoxData {
       );
 
     this.selections.clear();
-    highlightedNodes.forEach((node: any) => {
+    highlightedNodes.forEach((node: NodeflowNodeData) => {
       this.selections.add({
         type: SelectableElementType.Node,
         node,

@@ -1,15 +1,15 @@
-import { KeyboardDataType } from "./types";
+import type NodeflowData from "./NodeflowData";
 import { KeyboardKeyCode } from "./constants";
 import { intersectionOfSets, isSetEmpty } from "./misc-utils";
 
 export default class KeyboardData {
   private _heldKeys: Set<KeyboardKeyCode> = new Set<KeyboardKeyCode>();
-  private readonly nodeflowData: any;
+  private readonly nodeflowData: NodeflowData;
 
   /**
    * @param nodeflowData - The nodeflow object of the canvas that this keyboard data will be used in
    */
-  public constructor(nodeflowData: any) {
+  public constructor(nodeflowData: NodeflowData) {
     this.nodeflowData = nodeflowData;
   }
 

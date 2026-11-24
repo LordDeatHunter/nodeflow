@@ -1,11 +1,9 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import ConnectorSection from "../src/ConnectorSection";
-import Vec2 from "../src/Vec2";
-import { ReactiveMap } from "@solid-primitives/map";
-import type { SerializedConnectorSection } from "../src/nodeflow-types";
 import type { ConnectorSectionType } from "../src/types";
 import type NodeConnector from "../src/NodeConnector";
 import type { NodeflowData } from "../src";
+import type NodeflowNodeData from "../src/NodeflowNodeData";
 
 function makeMockNode(nodeId = "node-1") {
   let connectorIdCounter = 0;
@@ -14,10 +12,10 @@ function makeMockNode(nodeId = "node-1") {
     getNextFreeConnectorId: () => `connector-${connectorIdCounter++}`,
     getNextFreeConnectorSectionId: () => "section-auto",
     connectorSections: new Map(),
-    nodeflow: { publishContentChanged: () => {} } as any,
+    nodeflow: { publishContentChanged: () => {} },
     addConnector: () => {},
     removeConnector: () => {},
-  } as any;
+  } as unknown as NodeflowNodeData;
 }
 
 function makeMockNodeflowData(): NodeflowData {
@@ -27,7 +25,7 @@ function makeMockNodeflowData(): NodeflowData {
     changes: {
       addChange: () => {},
     },
-  } as any;
+  } as unknown as NodeflowData;
 }
 
 function makeSection(
@@ -37,7 +35,7 @@ function makeSection(
   const mockNode = makeMockNode(nodeId);
   const mockNodeflowData = makeMockNodeflowData();
   const data: ConnectorSectionType = {
-    connectors: new ReactiveMap<string, NodeConnector>(),
+    connectors: new Map<string, NodeConnector>(),
     css: undefined,
     id: sectionId,
     parentNode: mockNode,

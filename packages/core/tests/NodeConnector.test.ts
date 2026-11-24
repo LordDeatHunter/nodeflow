@@ -1,10 +1,11 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import NodeConnector from "../src/NodeConnector";
 import ArrayWrapper from "../src/ArrayWrapper";
 import Vec2 from "../src/Vec2";
 import ConnectorDestination from "../src/ConnectorDestination";
 import ConnectorSource from "../src/ConnectorSource";
 import type { ConnectorSectionType, NodeConnectorType } from "../src/types";
+import type NodeflowNodeData from "../src/NodeflowNodeData";
 
 function makeMockSection(sectionId = "section-1"): ConnectorSectionType {
   const mockNode = {
@@ -13,10 +14,10 @@ function makeMockSection(sectionId = "section-1"): ConnectorSectionType {
     position: Vec2.zero(),
     offset: Vec2.zero(),
     nodeflow: { publishContentChanged: () => {} },
-  } as any;
+  } as unknown as NodeflowNodeData;
 
   return {
-    connectors: new Map() as any,
+    connectors: new Map(),
     css: undefined,
     id: sectionId,
     parentNode: mockNode,

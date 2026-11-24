@@ -3,6 +3,7 @@ import NodeflowData from "../src/NodeflowData";
 import NodeflowNodeData from "../src/NodeflowNodeData";
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface CustomNodeflowDataType {}
 }
 

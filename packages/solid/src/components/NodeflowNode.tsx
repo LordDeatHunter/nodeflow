@@ -4,6 +4,7 @@ import {
   createMemo,
   createSignal,
   For,
+  type JSX,
   onCleanup,
 } from "solid-js";
 import {
@@ -138,7 +139,8 @@ const NodeflowNode: Component<NodeProps> = (props) => {
         })
       }
     >
-      {node().display({ node: node() })}
+      {/* Core types displays as returning unknown; Solid displays return JSX. */}
+      {node().display({ node: node() }) as JSX.Element}
       <For each={connectorSections()}>
         {(section) => (
           <div

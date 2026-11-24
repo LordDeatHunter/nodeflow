@@ -1,11 +1,12 @@
 import Vec2 from "./Vec2";
 import { createLinePath } from "./LineShapes";
 import { LineShape } from "./nodeflow-types";
+import type NodeflowData from "./NodeflowData";
 
 export default class CurveFunctions {
-  private readonly nodeflowData: any;
+  private readonly nodeflowData: NodeflowData;
 
-  public constructor(nodeflowData: any) {
+  public constructor(nodeflowData: NodeflowData) {
     this.nodeflowData = nodeflowData;
   }
 

@@ -2,7 +2,6 @@ import Vec2 from "./Vec2";
 import {
   DeepPartial,
   NodeflowSettings,
-  Optional,
   SelectableElementType,
   SerializedCompositeDefinition,
   SerializedConnection,
@@ -19,7 +18,7 @@ import {
   createCompositeSections,
   getCompositePortTargets,
 } from "./CompositeNodes";
-import { NodeflowEventRecord } from "./EventPublishers";
+import { NodeflowEventPublisher, NodeflowEventRecord } from "./EventPublishers";
 import { NodeflowDataType, NodeflowNodeType } from "./types";
 import { clamp } from "./math-utils";
 import Changes from "./Changes";
@@ -30,7 +29,6 @@ import ConnectorSource from "./ConnectorSource";
 import ArrayWrapper from "./ArrayWrapper";
 import ConnectorDestination from "./ConnectorDestination";
 import { deepCopy, intersectionOfSets, isSetEmpty } from "./misc-utils";
-import { NodeflowEventPublisher } from "./EventPublishers";
 import CurveFunctions from "./CurveFunctions";
 import {
   DRAG_EDGE_SCROLL_INTERVAL,
@@ -766,20 +764,19 @@ export default class NodeflowData {
     if (historyGroup) {
       const oldConnections = node.serializeConnections();
       const serializedNode = node.serialize();
-      const nodeflowData = this;
 
       this.changes.addChange({
         type: "add",
         source: "node",
         applyChange: () => {
-          nodeflowData.addNode(serializedNode, false);
+          this.addNode(serializedNode, false);
 
           oldConnections.forEach((connection) => {
-            nodeflowData.addConnection(connection, false);
+            this.addConnection(connection, false);
           });
         },
         undoChange: () => {
-          nodeflowData.removeNode(node.id, false);
+          this.removeNode(node.id, false);
         },
         historyGroup: historyGroup as string,
       });
@@ -803,7 +800,6 @@ export default class NodeflowData {
       const oldNode = this.nodes.get(nodeId)!;
       const serializedNode = oldNode.serialize();
       const oldConnections = oldNode.serializeConnections();
-      const nodeflowData = this;
 
       const oldData = Object.entries(serializedNode).reduce(
         (acc, [key, value]) => {
@@ -819,12 +815,12 @@ export default class NodeflowData {
         type: "update",
         source: "node",
         applyChange: () => {
-          nodeflowData.updateNode(nodeId, data, false);
+          this.updateNode(nodeId, data, false);
         },
         undoChange: () => {
-          nodeflowData.updateNode(nodeId, oldData, false);
+          this.updateNode(nodeId, oldData, false);
           oldConnections.forEach((connection) => {
-            nodeflowData.addConnection(connection, false);
+            this.addConnection(connection, false);
           });
         },
         historyGroup: historyGroup as string,
@@ -846,19 +842,18 @@ export default class NodeflowData {
     if (historyGroup) {
       const oldNode = this.nodes.get(nodeId)!;
       const oldConnections = oldNode.serializeConnections();
-      const nodeflowData = this;
 
       this.changes.addChange({
         type: "remove",
         source: "node",
         applyChange: () => {
-          nodeflowData.removeNode(nodeId, false);
+          this.removeNode(nodeId, false);
         },
         undoChange: () => {
-          nodeflowData.addNode(oldNode.serialize(), false);
+          this.addNode(oldNode.serialize(), false);
 
           oldConnections.forEach((connection) => {
-            nodeflowData.addConnection(connection, false);
+            this.addConnection(connection, false);
           });
         },
         historyGroup: historyGroup as string,
@@ -997,14 +992,13 @@ export default class NodeflowData {
     const historyGroup = Changes.evaluateHistoryGroup(hasHistoryGroup);
 
     if (historyGroup) {
-      const nodeflowData = this;
 
       this.changes.addChange({
         type: "add",
         source: "connection",
-        applyChange: () => nodeflowData.addConnection(data, false),
+        applyChange: () => this.addConnection(data, false),
         undoChange: () =>
-          nodeflowData.removeConnection(
+          this.removeConnection(
             sourceNodeId,
             sourceConnectorId,
             destinationNodeId,
@@ -1062,10 +1056,9 @@ export default class NodeflowData {
           destination.destinationConnector.parentNode.id === destinationNodeId,
       );
       const { css, shape, dash } = destination ?? {};
-      const nodeflowData = this;
 
       const undoChange = () => {
-        nodeflowData.addConnection(
+        this.addConnection(
           {
             sourceNodeId,
             sourceConnectorId,
@@ -1080,7 +1073,7 @@ export default class NodeflowData {
       };
 
       const applyChange = () => {
-        nodeflowData.removeConnection(
+        this.removeConnection(
           sourceNodeId,
           sourceConnectorId,
           destinationNodeId,

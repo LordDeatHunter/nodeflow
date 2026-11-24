@@ -10,15 +10,15 @@ const FOLDER_MAP = {
     "BlueprintApp": "blueprint",
     "FamilyTreeApp": "familytree",
     "NoStyle": "nostyle",
-}
+};
 
 const recreateFolder = (path) => {
     if (fs.existsSync(path)) {
-        fs.rmSync(path, { recursive: true })
+        fs.rmSync(path, { recursive: true });
     }
 
     fs.mkdirSync(path);
-}
+};
 
 const copyFolder = (from, to) => {
     console.log(`Copying folder from ${from} to ${to}...`);
@@ -30,7 +30,7 @@ const copyFolder = (from, to) => {
             console.log(`Successfully copied folder from ${from} to ${to}.`);
         }
     });
-}
+};
 
 const buildExamples = async () => {
     recreateFolder(buildPath);
@@ -71,6 +71,6 @@ const buildExamples = async () => {
             });
         });
     });
-}
+};
 
 buildExamples();

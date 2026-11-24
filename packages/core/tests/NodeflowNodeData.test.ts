@@ -4,6 +4,7 @@ import NodeflowNodeData from "../src/NodeflowNodeData";
 import Vec2 from "../src/Vec2";
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface CustomNodeflowDataType {}
 }
 
