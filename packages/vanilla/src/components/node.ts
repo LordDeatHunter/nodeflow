@@ -17,6 +17,8 @@ interface SectionElement {
 }
 
 interface NodeElementState {
+  /** The core node this element was rendered for. */
+  node: NodeflowNodeData;
   observers: Array<ResizeObserver | MutationObserver>;
   sections: Map<ConnectorSection, SectionElement>;
   /** Last applied class list, so unchanged nodes skip DOM writes. */
@@ -68,6 +70,16 @@ export const unmountNode = (
   el.remove();
   nodeElements.delete(nodeId);
 };
+
+/**
+ * Whether `el` was rendered for `node` itself. Core may replace a node with a
+ * new object under the same id (e.g. `updateCompositeNode`, or undoing a
+ * removal), and the old element's display still points at the old object.
+ */
+export const isRenderedFor = (
+  el: HTMLDivElement,
+  node: NodeflowNodeData,
+): boolean => nodeStates.get(el)?.node === node;
 
 const measureNode = (nodeDiv: HTMLDivElement, data: NodeflowData, nodeId: string) => {
   applyGridSize(nodeDiv, data);
@@ -211,6 +223,7 @@ export const renderNode = (
   nodeDiv.style.opacity = "0";
 
   const state: NodeElementState = {
+    node,
     observers: [],
     sections: new Map(),
     className: "",

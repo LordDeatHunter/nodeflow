@@ -14,7 +14,7 @@ import {
   removeDebugAnchors,
   updateDebugAnchors,
 } from "./curve";
-import { renderNode, syncNode, unmountNode } from "./node";
+import { isRenderedFor, renderNode, syncNode, unmountNode } from "./node";
 import { GroupElement, syncGroups, unmountGroup } from "./group";
 import { applyGridSize, gridSizingKey } from "./grid-sizing";
 
@@ -162,9 +162,12 @@ export const renderCanvas = (
     });
 
     rendered.forEach((nodeId) => {
-      if (!nodeElements.has(nodeId)) {
-        renderNode(innerDiv, data.nodes.get(nodeId)!, data, nodeElements);
-      }
+      const node = data.nodes.get(nodeId)!;
+      const el = nodeElements.get(nodeId);
+      if (el && isRenderedFor(el, node)) return;
+      // A node replaced under the same id gets a fresh element and display.
+      if (el) unmountNode(nodeId, nodeElements);
+      renderNode(innerDiv, node, data, nodeElements);
     });
   };
 
