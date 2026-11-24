@@ -1,6 +1,6 @@
 @use "sass:color";
 @use "styles/colors";
-@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
 @layer nodeflow, famtree;
 
@@ -22,7 +22,13 @@ body {
   height: 100vh;
   padding: 0;
   margin: 0;
-  font-family: "Roboto Mono", monospace;
+  font-family:
+    "Inter",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: auto;
@@ -37,46 +43,43 @@ body {
 }
 
 button {
-  font-size: 100%;
+  font-size: 0.9rem;
+  font-weight: 600;
   font-family: inherit;
-  line-height: 1.15;
+  line-height: 1;
   margin: 0;
   overflow: visible;
   text-transform: none;
   text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
-  padding: 0.5rem 1rem;
+  padding: 0.55rem 0.95rem;
 
   min-width: 6rem;
 
-  border-radius: 0.25rem;
-  border-width: 2px;
-  border-color: colors.$border-color;
-  border-style: solid;
+  border: 1px solid colors.$hairline-strong;
+  border-radius: 8px;
 
-  background-color: colors.$background-color;
+  background-color: colors.$surface;
+  color: colors.$ink;
 
   outline: none;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease;
 
   &:hover {
-    background-color: color.adjust(colors.$background-color, $lightness: 15%);
-    border-color: color.adjust(colors.$border-color, $lightness: -15%);
-    color: color.adjust(colors.$font-color, $lightness: 10%);
+    background-color: colors.$surface-muted;
+    border-color: colors.$ink-faint;
   }
 
-  &:focus {
-    background-color: color.adjust(colors.$background-color, $lightness: -5%);
-    border-color: color.adjust(colors.$border-color, $lightness: -10%);
-    color: color.adjust(colors.$font-color, $lightness: -5%);
-    filter: drop-shadow(
-      0 0 2px color.adjust(colors.$border-color, $lightness: -10%)
-    );
+  &:focus-visible {
+    outline: 2px solid colors.$ink;
+    outline-offset: 2px;
   }
 
   &:active {
-    background-color: color.adjust(colors.$background-color, $lightness: -10%);
-    border-color: color.adjust(colors.$border-color, $lightness: -20%);
-    color: color.adjust(colors.$font-color, $lightness: -10%);
+    background-color: colors.$surface-sunken;
   }
 }
 

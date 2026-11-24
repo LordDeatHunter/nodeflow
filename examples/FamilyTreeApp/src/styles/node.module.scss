@@ -1,36 +1,48 @@
-@use "sass:color";
 @use "colors";
 
-$connector-height: 1rem;
-$connector-border: 6px;
-
-@mixin baseNode {
+@mixin baseNode($tint, $ring) {
   width: max-content;
-  min-width: 300px;
-  min-height: 100px;
-  padding: 10px;
-  border-radius: 8px;
-  outline: 6px solid colors.$node-border-color;
-  outline-offset: -3px;
-
+  min-width: 240px;
+  min-height: 88px;
+  padding: 1rem 1.25rem;
+  border: none;
+  border-radius: 16px;
+  background-color: colors.$surface;
+  color: colors.$ink;
+  box-shadow:
+    0 0 0 1px colors.$hairline,
+    colors.$shadow-card;
+  cursor: grab;
   transition:
-    background-color 0.2s ease-in-out 0s,
-    opacity 0.8s ease-in-out,
-    border-color 0.2s ease-in-out 0s;
-
-  background-color: colors.$node-background-color;
+    background-color 200ms ease,
+    box-shadow 200ms ease;
 
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+
+  &:hover {
+    z-index: 3;
+    background-color: $tint;
+    box-shadow:
+      0 0 0 1px $ring,
+      colors.$shadow-card-hover;
+  }
 }
 
-@mixin baseSelectedNode($bg-color) {
-  @include baseNode;
-  background-color: color.mix(colors.$node-background-color, $bg-color, 40%);
-  cursor: grabbing;
-  z-index: 3;
+// Also matches `:hover`, so the base node's hover ring can't override it.
+@mixin selectedNode($tint, $strong, $glow) {
+  &,
+  &:hover {
+    background-color: $tint;
+    box-shadow:
+      0 0 0 2px $strong,
+      0 0 0 6px $glow,
+      colors.$shadow-card-hover;
+    cursor: grabbing;
+    z-index: 3;
+  }
 }
 
 @mixin connectorSection {
@@ -41,120 +53,131 @@ $connector-border: 6px;
   height: 0;
 }
 
-@mixin baseConnector($bg-color) {
+@mixin baseConnector {
   position: relative;
-  height: $connector-height;
-  border-radius: 0.75rem 0.75rem 0 0;
-  cursor: crosshair;
-
-  background-color: $bg-color;
-
-  &:hover {
-    background-color: color.adjust($bg-color, $lightness: 10%);
-  }
-
-  outline: $connector-border solid colors.$node-border-color;
-  outline-offset: -3px;
   border: none;
+  border-radius: 999px;
+  cursor: crosshair;
+  transition:
+    background-color 180ms ease,
+    box-shadow 180ms ease;
 }
 
-@mixin outputConnector($bg-color) {
-  @include baseConnector($bg-color);
+@mixin outputConnector($color, $strong) {
+  @include baseConnector;
 
   width: 25%;
+  height: 16px;
   bottom: 5px;
+  background-color: $color;
+  box-shadow: inset 0 0 0 1px colors.$connector-hairline;
+
+  &:hover {
+    background-color: $strong;
+    box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.6);
+  }
 }
 
 .femaleNode {
-  @include baseNode;
-
-  &:hover {
-    background-color: color.mix(
-      colors.$node-background-color,
-      colors.$female-color,
-      80%
-    );
-    z-index: 3;
-  }
+  @include baseNode(colors.$female-soft, colors.$female-ring);
 }
 
 .maleNode {
-  @include baseNode;
-
-  &:hover {
-    background-color: color.mix(
-      colors.$node-background-color,
-      colors.$male-color,
-      80%
-    );
-    z-index: 3;
-  }
-}
-
-.selectedMaleNode {
-  @include baseSelectedNode(colors.$male-color);
+  @include baseNode(colors.$male-soft, colors.$male-ring);
 }
 
 .selectedFemaleNode {
-  @include baseSelectedNode(colors.$female-color);
+  @include selectedNode(
+    colors.$female-soft,
+    colors.$female-dark-color,
+    rgb(219 42 131 / 0.16)
+  );
+}
+
+.selectedMaleNode {
+  @include selectedNode(
+    colors.$male-soft,
+    colors.$male-dark-color,
+    rgb(31 127 214 / 0.16)
+  );
 }
 
 .inputConnector {
-  @include baseConnector(colors.$dark-4);
+  @include baseConnector;
 
-  width: 100%;
+  width: 64px;
+  height: 10px;
+  background-color: colors.$hairline-strong;
+
+  &:hover {
+    background-color: colors.$ink-faint;
+  }
 }
 
 .maleOutputConnector {
-  @include outputConnector(colors.$male-color);
+  @include outputConnector(colors.$male-color, colors.$male-dark-color);
 }
 
 .femaleOutputConnector {
-  @include outputConnector(colors.$female-color);
+  @include outputConnector(colors.$female-color, colors.$female-dark-color);
 }
 
 .inputsSection {
   @include connectorSection;
-  top: calc(($connector-height + $connector-border) / -2);
+  top: -5px;
 }
 
 .outputsSection {
   @include connectorSection;
-  bottom: calc(($connector-height + $connector-border) / 2);
+  bottom: 11px;
+}
+
+.nodeCaption {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: colors.$ink-muted;
+  user-select: none;
 }
 
 .nodeFont {
-  margin: 2rem;
-  font-size: 4rem;
-  font-weight: bold;
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.25;
   user-select: none;
 }
 
 .groupFrame {
-  border: 2px dashed colors.$dark-4;
-  border-radius: 12px;
-  background-color: rgba(166, 158, 154, 0.08);
+  border: 2px dashed colors.$ink-faint;
+  border-radius: 16px;
+  background-color: rgb(166 158 154 / 0.06);
 }
 
 .groupHeader {
-  border-radius: 10px 10px 0 0;
-  background-color: rgba(166, 158, 154, 0.25);
-  color: colors.$dark-8;
-  font-weight: bold;
+  border-radius: 14px 14px 0 0;
+  background-color: rgb(166 158 154 / 0.18);
+  color: colors.$ink;
+  font-weight: 600;
 }
 
 .groupCollapsed {
   min-width: 200px;
   min-height: 64px;
   padding: 0 16px;
-  border: 2px solid colors.$node-border-color;
-  border-radius: 12px;
-  background-color: colors.$node-background-color;
-  color: colors.$node-text-color;
-  font-weight: bold;
+  border-radius: 16px;
+  background-color: colors.$surface;
+  color: colors.$ink;
+  font-weight: 600;
+  box-shadow:
+    0 0 0 1px colors.$hairline-strong,
+    colors.$shadow-card;
 }
 
 .groupSelected {
-  border-color: colors.$dark-7;
-  box-shadow: 0 0 0 3px rgba(50, 50, 50, 0.25);
+  box-shadow:
+    0 0 0 2px colors.$ink-soft,
+    0 0 0 6px rgb(34 31 27 / 0.12);
 }

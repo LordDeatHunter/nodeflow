@@ -1,5 +1,18 @@
+@use "colors";
+
 .nodeflow {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  background-color: colors.$canvas;
+  background-image:
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 58%,
+      colors.$canvas-vignette 100%
+    ),
+    radial-gradient(colors.$canvas-dot 1px, transparent 1.1px);
+  background-size:
+    100% 100%,
+    26px 26px;
 }

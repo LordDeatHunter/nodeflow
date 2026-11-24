@@ -1,68 +1,59 @@
-@use "sass:color";
 @use "colors";
 
-@mixin baseCurve($strokeColor) {
-  stroke-width: 12px;
+@mixin baseCurve($color) {
+  fill: none;
+  stroke: $color;
+  stroke-width: 3px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   transition:
-    stroke 100ms ease-in-out,
-    filter 100ms ease-in-out;
-  stroke: $strokeColor;
+    stroke 160ms ease,
+    stroke-width 160ms ease,
+    filter 160ms ease;
 }
 
-@mixin hoverHighlight($strokeColor) {
+@mixin hoverHighlight($strong, $glow) {
   &:hover {
-    stroke: color.adjust($strokeColor, $saturation: 10%, $lightness: -30%);
-    filter: drop-shadow(0 0 2px $strokeColor);
+    stroke: $strong;
+    stroke-width: 4px;
+    filter: drop-shadow(0 0 4px $glow);
   }
 }
 
-@mixin curveWithHover($strokeColor) {
-  @include baseCurve($strokeColor);
-  @include hoverHighlight($strokeColor);
-}
-
 .fatherCurve {
-  @include curveWithHover(colors.$male-color);
+  @include baseCurve(colors.$male-color);
+  @include hoverHighlight(colors.$male-dark-color, rgb(31 127 214 / 0.45));
 }
 
 .motherCurve {
-  @include curveWithHover(colors.$female-color);
+  @include baseCurve(colors.$female-color);
+  @include hoverHighlight(colors.$female-dark-color, rgb(219 42 131 / 0.45));
 }
 
 .selectedFatherCurve {
-  @include baseCurve(
-    color.adjust(colors.$male-color, $saturation: 25%, $lightness: -15%)
-  );
-  filter: drop-shadow(
-    0 0 2px color.adjust(colors.$male-color, $saturation: 25%, $lightness: -15%)
-  );
+  @include baseCurve(colors.$male-dark-color);
+  filter: drop-shadow(0 0 5px rgb(31 127 214 / 0.55));
 }
 
 .selectedMotherCurve {
-  @include baseCurve(
-    color.adjust(colors.$female-color, $saturation: 25%, $lightness: -15%)
-  );
-  filter: drop-shadow(
-    0 0 2px
-      color.adjust(colors.$female-color, $saturation: 25%, $lightness: -15%)
-  );
+  @include baseCurve(colors.$female-dark-color);
+  filter: drop-shadow(0 0 5px rgb(219 42 131 / 0.55));
 }
 
 .newFatherCurve {
-  @include baseCurve(
-    color.adjust(colors.$male-color, $saturation: -25%, $lightness: 15%)
-  );
-  filter: drop-shadow(
-    0 0 2px color.adjust(colors.$male-color, $saturation: 25%, $lightness: -15%)
-  );
+  @include baseCurve(colors.$male-color);
+  stroke-dasharray: 8 7;
+  animation: march 800ms linear infinite;
 }
 
 .newMotherCurve {
-  @include baseCurve(
-    color.adjust(colors.$female-color, $saturation: -25%, $lightness: 15%)
-  );
-  filter: drop-shadow(
-    0 0 2px
-      color.adjust(colors.$female-color, $saturation: 25%, $lightness: -15%)
-  );
+  @include baseCurve(colors.$female-color);
+  stroke-dasharray: 8 7;
+  animation: march 800ms linear infinite;
+}
+
+@keyframes march {
+  to {
+    stroke-dashoffset: -15;
+  }
 }
