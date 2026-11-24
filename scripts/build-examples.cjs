@@ -3,6 +3,8 @@ const path = require('path');
 const child_process = require("child_process");
 const buildPath = path.resolve(__dirname, "..", "examples-build");
 const examplesPath = path.resolve(__dirname, "..", "examples");
+// Single landing page shared with the `bun dev` landing server (scripts/dev-landing.ts).
+const landingPath = path.resolve(__dirname, "landing.html");
 
 const FOLDER_MAP = {
     "BlueprintApp": "blueprint",
@@ -31,6 +33,9 @@ const copyFolder = (from, to) => {
 }
 
 const buildExamples = async () => {
+    recreateFolder(buildPath);
+    fs.copyFileSync(landingPath, path.join(buildPath, "index.html"));
+
     await fs.readdir(examplesPath, (err, files) => {
         if (err) {
             console.error("Could not list the directory.", err);
@@ -47,7 +52,7 @@ const buildExamples = async () => {
                 return;
             }
             const outputFolderName = file in FOLDER_MAP ? FOLDER_MAP[file] : file;
-            recreateFolder(path.join(buildPath, outputFolderName), { recursive: true });
+            recreateFolder(path.join(buildPath, outputFolderName));
 
             const examplePath = path.join(examplesPath, file);
             console.log(`Building ${examplePath}...`);

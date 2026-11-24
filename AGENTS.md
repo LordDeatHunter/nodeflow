@@ -22,7 +22,8 @@ TypeScript library for flowcharts/graphs/diagrams, now a framework-agnostic mono
 - Lint: `bun run lint` — root ESLint flat config; ignores `scripts/`, `dist/`, `examples-build/`.
 - Run one test: from `packages/core`: `bunx vitest run tests/NodeflowData.test.ts` (add `-t "name"` to filter).
 - Build one example: `bun --cwd=examples/ReactApp run build`.
-- Deploy examples: `bun run deploy-examples` (builds to `examples-build/`, publishes via `gh-pages`).
+- Deploy examples: automatic on push to `master` via `.github/workflows/deploy-examples.yml` (GitHub Actions → Pages). Locally, `bun run build-examples` produces the same `examples-build/` output (gitignored). There is no `gh-pages` branch flow anymore.
+- Landing page: `scripts/landing.html` is the **only** copy. It is served in dev by `scripts/dev-landing.ts` (redirecting `/<folder>/` to each example's port) and copied to `examples-build/index.html` by `build-examples`. A new example needs a card there, plus an entry in `DEV_PORTS` (and in `FOLDER_MAP` if its deployed folder name differs).
 
 ### Dev servers
 
