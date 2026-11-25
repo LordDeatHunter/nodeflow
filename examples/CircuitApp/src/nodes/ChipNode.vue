@@ -54,6 +54,7 @@ const describePort = (port: CompositePort, direction: "in" | "out") => {
       "
       @keydown="stop"
       @pointerdown="stop"
+      @touchstart="stop"
       @mousedown="stop"
     />
     <div class="chip-ports">
@@ -93,6 +94,7 @@ const describePort = (port: CompositePort, direction: "in" | "out") => {
         type="button"
         class="node-button"
         @pointerdown="stop"
+        @touchstart="stop"
         @mousedown="stop"
         @click="breakApartChip(node.id, node.nodeflow)"
       >
@@ -102,6 +104,7 @@ const describePort = (port: CompositePort, direction: "in" | "out") => {
         type="button"
         class="node-button"
         @pointerdown="stop"
+        @touchstart="stop"
         @mousedown="stop"
         @click="saveChipType(node.id, node.nodeflow)"
       >

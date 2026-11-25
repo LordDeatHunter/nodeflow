@@ -20,6 +20,7 @@ const on = computed(() => !!data.value.on);
         :aria-checked="on"
         :aria-label="`Turn ${on ? 'off' : 'on'}`"
         @pointerdown="stop"
+        @touchstart="stop"
         @mousedown="stop"
         @click="updateCustomData(node, { on: !on })"
       />
@@ -36,6 +37,7 @@ const on = computed(() => !!data.value.on);
       "
       @keydown="stop"
       @pointerdown="stop"
+      @touchstart="stop"
       @mousedown="stop"
     />
   </div>

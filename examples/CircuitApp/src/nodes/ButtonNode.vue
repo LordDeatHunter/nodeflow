@@ -8,6 +8,7 @@ import ButtonSymbol from "../components/parts/ButtonSymbol.vue";
 const props = defineProps<{ node: NodeflowNodeData }>();
 const data = useCustomData(props.node);
 const pressed = ref(false);
+const LISTEN = { once: true, capture: true };
 
 const setPressed = (value: boolean) => {
   if (pressed.value === value) return;
@@ -15,15 +16,16 @@ const setPressed = (value: boolean) => {
   simulationOf(props.node.nodeflow)?.setPressed(props.node.id, value);
 };
 
-// The pointer may be released anywhere, not only over the button.
+// The pointer may be released anywhere, not only over the button. Captured,
+// since nodes and the canvas stop their pointerups from bubbling.
 const release = () => setPressed(false);
 
 const press = (event: PointerEvent) => {
   event.stopPropagation();
   if (event.button !== 0) return;
   setPressed(true);
-  document.addEventListener("pointerup", release, { once: true });
-  document.addEventListener("pointercancel", release, { once: true });
+  document.addEventListener("pointerup", release, LISTEN);
+  document.addEventListener("pointercancel", release, LISTEN);
 };
 
 const onKey = (event: KeyboardEvent, down: boolean) => {
@@ -35,8 +37,8 @@ const onKey = (event: KeyboardEvent, down: boolean) => {
 };
 
 onBeforeUnmount(() => {
-  document.removeEventListener("pointerup", release);
-  document.removeEventListener("pointercancel", release);
+  document.removeEventListener("pointerup", release, true);
+  document.removeEventListener("pointercancel", release, true);
 });
 </script>
 
@@ -51,6 +53,7 @@ onBeforeUnmount(() => {
         aria-label="Hold to send a high signal"
         title="Hold to send a high signal"
         @pointerdown="press"
+        @touchstart="stop"
         @mousedown="stop"
         @keydown="onKey($event, true)"
         @keyup="onKey($event, false)"
@@ -69,6 +72,7 @@ onBeforeUnmount(() => {
       "
       @keydown="stop"
       @pointerdown="stop"
+      @touchstart="stop"
       @mousedown="stop"
     />
   </div>

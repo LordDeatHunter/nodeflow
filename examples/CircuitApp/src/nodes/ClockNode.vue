@@ -36,6 +36,7 @@ const trace = computed(() => [...history.value, high.value]);
       "
       @keydown="stop"
       @pointerdown="stop"
+      @touchstart="stop"
       @mousedown="stop"
     >
       <option v-for="period in CLOCK_PERIODS" :key="period" :value="period">

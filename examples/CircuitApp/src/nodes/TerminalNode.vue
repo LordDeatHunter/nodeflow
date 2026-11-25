@@ -95,6 +95,7 @@ const removePort = () => {
           aria-label="Remove the last pin"
           :disabled="portIds.length === 0"
           @pointerdown="stop"
+          @touchstart="stop"
           @mousedown="stop"
           @click="removePort"
         >
@@ -106,6 +107,7 @@ const removePort = () => {
           title="Add a pin"
           aria-label="Add a pin"
           @pointerdown="stop"
+          @touchstart="stop"
           @mousedown="stop"
           @click="addPort"
         >
@@ -132,6 +134,7 @@ const removePort = () => {
           @input="setPortName(id, ($event.target as HTMLInputElement).value)"
           @keydown="stop"
           @pointerdown="stop"
+          @touchstart="stop"
           @mousedown="stop"
         />
       </li>

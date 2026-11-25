@@ -33,6 +33,7 @@ const label = computed(() => gateGeometry(gate.value).label);
         "
         @keydown="stop"
         @pointerdown="stop"
+        @touchstart="stop"
         @mousedown="stop"
       >
         <option v-for="kind in GATE_KINDS" :key="kind" :value="kind">

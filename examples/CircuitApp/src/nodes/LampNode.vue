@@ -26,6 +26,7 @@ const on = computed(() => inputLevel(props.node, "input-0"));
       "
       @keydown="stop"
       @pointerdown="stop"
+      @touchstart="stop"
       @mousedown="stop"
     />
   </div>
