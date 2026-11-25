@@ -70,7 +70,10 @@ export default class NodeflowRegistry {
     this.globalEventStore.onPointerLeaveFromDocument.subscribeMultiple([
       {
         name: "reset-mouse-data",
-        event: () => {
+        event: ({ event }) => {
+          // A lifted finger "leaves" the document too, before its touchend
+          // could drop a held connection.
+          if (event.pointerType === "touch") return;
           this.nodeflows.forEach((nodeflow) => {
             nodeflow.mouseData.reset();
           });

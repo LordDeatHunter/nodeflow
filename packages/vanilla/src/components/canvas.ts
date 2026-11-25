@@ -450,6 +450,15 @@ export const renderCanvas = (
 };
 
 const resolveTouchDrop = (data: NodeflowData, touch: Touch): void => {
+  // Core's pointerup handlers stop the event and read its button, so they
+  // need a real one. Its pointerType stays empty: core ignores "touch"
+  // pointerups, which land on the connector the drag started from.
+  const event = new PointerEvent("pointerup", {
+    clientX: touch.clientX,
+    clientY: touch.clientY,
+    screenX: touch.screenX,
+    screenY: touch.screenY,
+  });
   const target = document.elementFromPoint(touch.clientX, touch.clientY);
   const connectorEl = target?.closest<HTMLElement>("[data-nodeflow-connector]");
   if (
@@ -459,7 +468,7 @@ const resolveTouchDrop = (data: NodeflowData, touch: Touch): void => {
     data.eventStore.onPointerUpInConnector.publish({
       nodeId: connectorEl.dataset.nodeflowNode,
       connectorId: connectorEl.dataset.nodeflowConnector,
-      event: touch as unknown as PointerEvent,
+      event,
     });
     return;
   }
@@ -468,13 +477,13 @@ const resolveTouchDrop = (data: NodeflowData, touch: Touch): void => {
   if (nodeEl?.dataset.nodeflowNode) {
     data.eventStore.onPointerUpInNode.publish({
       nodeId: nodeEl.dataset.nodeflowNode,
-      event: touch as unknown as PointerEvent,
+      event,
     });
     return;
   }
 
   data.eventStore.onPointerUpInNodeflow.publish({
-    event: touch as unknown as PointerEvent,
+    event,
   });
 };
 
