@@ -18,12 +18,13 @@ const attachGlobalListeners = () => {
 
   const registry = NodeflowRegistry.get();
 
-  // Capture phase for mousemove and pointerup: core stops some events from
+  // Pointermove rather than mousemove: touch drags never fire mousemove.
+  // Capture phase for pointermove and pointerup: core stops some events from
   // propagating out of a canvas (e.g. its pointerup), and "in document" must
   // include those too. Not for pointerleave, which doesn't bubble: captured,
   // it would fire whenever the pointer left any element.
   document.addEventListener(
-    "mousemove",
+    "pointermove",
     (event) =>
       registry.globalEventStore.onMouseMoveInDocument.publish({ event }),
     true,

@@ -9,7 +9,8 @@ const attachGlobalListeners = () => {
 
   const registry = NodeflowRegistry.get();
 
-  document.addEventListener("mousemove", (event) =>
+  // Pointermove rather than mousemove: touch drags never fire mousemove.
+  document.addEventListener("pointermove", (event) =>
     registry.globalEventStore.onMouseMoveInDocument.publish({ event }),
   );
   document.addEventListener("pointerleave", (event) =>

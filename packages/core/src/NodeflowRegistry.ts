@@ -56,6 +56,9 @@ export default class NodeflowRegistry {
       {
         name: "update-mouse-position",
         event: ({ event }) => {
+          // Touch gestures track their own position in the touch handlers,
+          // which measure each move from the last one they saw.
+          if ((event as Partial<PointerEvent>).pointerType === "touch") return;
           this.nodeflows.forEach((nodeflow) => {
             nodeflow.mouseData.mousePosition = Vec2.fromEvent(event);
             nodeflow.updateDragEdgeScroll();

@@ -95,6 +95,7 @@ export type NodeflowEvent<T extends keyof NodeflowEventsDataMap> = (
 ) => void;
 
 export interface DocumentEventsDataMap {
+  /** Published for every pointer, so touch and pen moves arrive too. */
   onMouseMoveInDocument: { event: MouseEvent };
   onPointerLeaveFromDocument: { event: PointerEvent };
   onPointerUpInDocument: { event: PointerEvent };
