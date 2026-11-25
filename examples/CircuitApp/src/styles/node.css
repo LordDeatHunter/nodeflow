@@ -107,6 +107,16 @@
   transform: scale(1.35);
 }
 
+/* Fingers get a 40px target: the pads are small and, on parts, invisible. */
+@media (pointer: coarse) {
+  .connector::after {
+    content: "";
+    position: absolute;
+    inset: -10px;
+    border-radius: 50%;
+  }
+}
+
 .connector--input {
   background-color: var(--input-connector-color);
 }
